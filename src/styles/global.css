@@ -1,0 +1,8 @@
+@import 'tailwindcss';
+
+/* Light only until W-03 adds dark tokens and the no-flash theme bootstrap. */
+@layer base {
+  body {
+    margin: 0;
+  }
+}
