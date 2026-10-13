@@ -48,7 +48,8 @@ Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-
 - `src/features/<feature>/` holds components, hooks, and `api.ts` (TanStack Query hooks, from W-02). All server I/O goes through `src/lib/api` (from W-02), never raw `fetch`. Until then only `src/lib/backendStatus.ts` uses a plain `fetch`.
 - Lean rule (D-034): add a dependency only in the task that first uses it, and justify it in the PR.
 - `src/generated/` is generated, so **never edit** it. Regenerate with `api:sync`.
-- `src/components/ui/` is the design-system primitives. Use tokens from `src/styles/tokens.css` (arrives in W-03), with no hard-coded colors, radii, or spacing.
+- `src/components/ui/` is the design-system primitives (barrel `index.ts`, all 18 of UI_SPEC §11). Compose them; use tokens from `src/styles/tokens.css`, with no hard-coded colors, radii, or spacing. Lucide icons are imported only in `src/components/ui/icons.ts`.
+- `/dev/ui` is a dev-only gallery of every primitive and state (`src/dev/DevUiRoute.tsx`, lazy route, absent from the prod bundle). Add new primitives or states there.
 - Editable resources: `If-Match` is built from the resource `version` by `lib/api`. Drafts are never discarded on 412 or network errors (UI_SPEC §9).
 - Accessibility is required: labels, focus-visible, keyboard paths, and no color-only state.
 - Tests: names reference acceptance IDs (`describe("AT-13 external links")`). Mock the API with MSW handlers built from spec examples.
@@ -61,6 +62,11 @@ Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-
 - 2026-10-13: React Router 8 has no `react-router-dom`. Import from `react-router` and `RouterProvider` from `react-router/dom`.
 - 2026-10-13: Tailwind 4 is CSS-first (`@import 'tailwindcss'` in `src/styles/global.css`, `@tailwindcss/vite` plugin). There is no `tailwind.config.js`.
 - 2026-10-13: Vitest config lives in `vite.config.ts` (jsdom, globals, `src/test-setup.ts`). Tests render with `createTestRouter` from `src/app/router.tsx`.
+- 2026-10-14: Tokens: Tailwind's default palette, radii, shadows and type scale are dropped (`--color-*: initial`, etc. in `global.css`), so `bg-stone-100` or `rounded-2xl` do nothing. Use semantic classes (`bg-surface`, `text-text-muted`, `border-border`, `bg-accent`, `rounded-md`, `shadow-md`). Colors are mapped with `@theme inline`; radii and easing live in an `@theme` block inside `tokens.css`, because mapping `--radius-sm: var(--radius-sm)` creates a self-referencing cycle. Shadows differ per theme, so `shadow-*` are `@utility` rules in `global.css`.
+- 2026-10-14: Theme: preference is stored in `localStorage['collection:theme']` (`system` removes the key). The inline script in `index.html` and `src/lib/theme.ts` must agree on that key. **Q-03:** the inline script needs a CSP `script-src` hash in the Caddyfile (recompute whenever the script changes).
+- 2026-10-14: jsdom lacks `ResizeObserver`, pointer-capture methods and `scrollIntoView`; `src/test-setup.ts` stubs them for Radix Select/Menu/Popover. Radix exit animations do not run in jsdom, so closed overlays unmount immediately.
+- 2026-10-14: Fraunces uses `full.css` (the only Fontsource entry with both `opsz` and `SOFT` axes, ~120 KB latin); Inter uses the default `wght` entry.
+- 2026-10-14: Radix `Dialog.Content` animations use `transform` only (`scale`); Tailwind 4 positions with the `translate` property, so never put translate in the keyframes.
 - 2026-10-13: npm 11 prints an `install-scripts` warning for the optional `fsevents` package. It is harmless.
 
 ## Working guidelines

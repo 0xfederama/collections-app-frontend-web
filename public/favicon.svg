@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .glyph { fill: #0f766e; }
+    .ink { fill: #fafaf9; }
+    @media (prefers-color-scheme: dark) {
+      .glyph { fill: #2dd4bf; }
+      .ink { fill: #0c0a09; }
+    }
+  </style>
+  <rect class="glyph" x="2" y="2" width="28" height="28" rx="8" />
+  <rect class="ink" x="8" y="9" width="7" height="7" rx="1.75" />
+  <rect class="ink" x="17" y="9" width="7" height="7" rx="1.75" />
+  <rect class="ink" x="8" y="18" width="7" height="5" rx="1.75" />
+  <rect class="ink" x="17" y="18" width="7" height="5" rx="1.75" opacity="0.55" />
+</svg>
