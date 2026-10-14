@@ -153,6 +153,14 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
       const target = itemsOf(item.list_id)
       target?.push({ ...item, sort_order: target.length })
     },
+    /** Replaces an item in place (PATCH), keeping its position in the list. */
+    replace: (item: ItemSummary) => {
+      const target = itemsOf(item.list_id)
+      const index = target?.findIndex((candidate) => candidate.id === item.id) ?? -1
+      if (target && index >= 0) target[index] = item
+    },
+    /** Items of a list the dev worker does not know yet start empty, so `itemsOf` creates them. */
+    has: (listId: string) => findList(listId) !== undefined,
   }
 
   return { handlers, store }

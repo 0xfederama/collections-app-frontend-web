@@ -7,6 +7,8 @@ import { treeKeys } from '../tree/api'
 export type Item = components['schemas']['Item']
 export type ItemKind = components['schemas']['ItemKind']
 export type ItemContent = components['schemas']['Content']
+export type UpdateItemRequest = components['schemas']['UpdateItemRequest']
+export type CreateItemRequest = components['schemas']['CreateItemRequest']
 
 /** Exported so other features (W-08, W-09, W-10) invalidate by key, not by string literal. */
 export const itemKeys = {
@@ -89,4 +91,38 @@ export function useMoveItem() {
     },
     (_vars, moved) => [moved.list_id],
   )
+}
+
+/**
+ * `PATCH /items/{id}`: `If-Match` comes from the version of the item the form was opened on, never
+ * from a refetch, and a 412 is not retried (UI_SPEC §9). The answer replaces the cached detail.
+ */
+export function useUpdateItem() {
+  const client = useQueryClient()
+  return useItemMutation(async ({ item, patch }: { item: Item; patch: UpdateItemRequest }) => {
+    const updated = await unwrap(
+      api.PATCH('/api/v1/items/{id}', {
+        params: { path: { id: item.id }, header: ifMatch('item', item.version) },
+        body: patch,
+      }),
+    )
+    client.setQueryData<Item>(itemKeys.detail(item.id), updated)
+    return updated
+  })
+}
+
+/** `POST /lists/{id}/items`: the new item is cached so its page opens without a loading state. */
+export function useCreateItem(listId: string) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: CreateItemRequest) =>
+      unwrap(api.POST('/api/v1/lists/{id}/items', { params: { path: { id: listId } }, body })),
+    onSuccess: (created) => {
+      client.setQueryData<Item>(itemKeys.detail(created.id), created)
+      void client.invalidateQueries({ queryKey: listKeys.items(listId) })
+      // `item_count` of the list header and the sidebar.
+      void client.invalidateQueries({ queryKey: listKeys.detail(listId) })
+      void client.invalidateQueries({ queryKey: treeKeys.tree })
+    },
+  })
 }

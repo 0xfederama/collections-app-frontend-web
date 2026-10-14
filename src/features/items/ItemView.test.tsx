@@ -94,9 +94,16 @@ describe('AT-13 item view: the example movie', () => {
     expect(screen.getByText(/Great film/)).toBeInTheDocument()
   })
 
-  it('shows the Edit button disabled', async () => {
+  it('the Edit button is enabled and opens the form (?edit=1)', async () => {
     await renderItem()
-    expect(await screen.findByRole('button', { name: 'Edit' })).toBeDisabled()
+    const user = userEvent.setup()
+    const edit = await screen.findByRole('button', { name: 'Edit' })
+    expect(edit).toBeEnabled()
+    await user.click(edit)
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Edit “The Matrix”' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
   })
 
   it('has a Back link to the list on a full page', async () => {
