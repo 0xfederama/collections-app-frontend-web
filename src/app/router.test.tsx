@@ -2,15 +2,23 @@ import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { server } from '../mocks/server'
-import { renderAt } from '../test-utils'
+import { mockViewport, renderAt } from '../test-utils'
 
 const readyz = `${location.origin}/readyz`
 
 describe('AppShell', () => {
-  it('renders banner, Collections navigation and main landmarks', async () => {
+  it('renders Collections navigation and main landmarks, without a banner, on desktop', async () => {
+    renderAt('/')
+    expect(screen.getByRole('navigation', { name: 'Collections' })).toBeInTheDocument()
+    expect(screen.getByRole('main')).toBeInTheDocument()
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    await screen.findByText('Backend: ready')
+  })
+
+  it('renders the banner top bar and main landmarks on mobile', async () => {
+    mockViewport(375)
     renderAt('/')
     expect(screen.getByRole('banner')).toBeInTheDocument()
-    expect(screen.getByRole('navigation', { name: 'Collections' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     await screen.findByText('Backend: ready')
   })
@@ -51,6 +59,15 @@ describe('Unknown route', () => {
     renderAt('/does/not/exist')
     expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /home/i })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('main')).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Collections' })).toBeInTheDocument()
+    await screen.findByText('Backend: ready')
+  })
+
+  it('renders "Page not found" inside the mobile shell (banner and main)', async () => {
+    mockViewport(375)
+    renderAt('/does/not/exist')
+    expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(screen.getByRole('banner')).toBeInTheDocument()
     await screen.findByText('Backend: ready')
