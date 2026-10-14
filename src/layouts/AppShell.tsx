@@ -1,5 +1,5 @@
 import { Link, Outlet } from 'react-router'
-import { useBackendStatus } from '../lib/backendStatus'
+import { useBackendStatus } from '../features/health/api'
 
 export function AppShell() {
   const status = useBackendStatus()

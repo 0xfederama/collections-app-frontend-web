@@ -1,20 +1,10 @@
-import { render, screen } from '@testing-library/react'
-import { RouterProvider } from 'react-router/dom'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createTestRouter } from './router'
+import { screen } from '@testing-library/react'
+import { http, HttpResponse } from 'msw/http'
+import { describe, expect, it } from 'vitest'
+import { server } from '../mocks/server'
+import { renderAt } from '../test-utils'
 
-function renderAt(path: string) {
-  return render(<RouterProvider router={createTestRouter([path])} />)
-}
-
-beforeEach(() => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200 }))
-})
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-  vi.restoreAllMocks()
-})
+const readyz = `${location.origin}/readyz`
 
 describe('AppShell', () => {
   it('renders banner, Collections navigation and main landmarks', async () => {
@@ -25,20 +15,24 @@ describe('AppShell', () => {
     await screen.findByText('Backend: ready')
   })
 
-  it('requests /readyz and shows "Backend: ready" after a 200', async () => {
+  it('shows "Backend: ready" after the mocked /readyz answers 200', async () => {
     renderAt('/')
     expect(await screen.findByText('Backend: ready')).toBeInTheDocument()
-    expect(vi.mocked(fetch).mock.calls[0]?.[0]).toBe('/readyz')
   })
 
-  it('shows "Backend: down" after a non-OK response', async () => {
-    vi.mocked(fetch).mockResolvedValue({ ok: false, status: 503 } as Response)
+  it('shows "Backend: checking" before the first answer', () => {
+    renderAt('/')
+    expect(screen.getByText('Backend: checking')).toBeInTheDocument()
+  })
+
+  it('shows "Backend: down" after a 503', async () => {
+    server.use(http.get(readyz, () => new HttpResponse('database unavailable', { status: 503 })))
     renderAt('/')
     expect(await screen.findByText('Backend: down')).toBeInTheDocument()
   })
 
-  it('shows "Backend: down" after a rejected fetch', async () => {
-    vi.mocked(fetch).mockRejectedValue(new TypeError('network error'))
+  it('shows "Backend: down" when the server is unreachable', async () => {
+    server.use(http.get(readyz, () => HttpResponse.error()))
     renderAt('/')
     expect(await screen.findByText('Backend: down')).toBeInTheDocument()
   })
