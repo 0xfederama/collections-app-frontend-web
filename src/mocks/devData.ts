@@ -1,5 +1,5 @@
-import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
+import { createTreeBackend } from './devTree'
 
 type Folder = components['schemas']['Folder']
 type List = components['schemas']['List']
@@ -63,6 +63,4 @@ export const devTree: Tree = {
 }
 
 /** Dev worker only: listed before the spec-example handlers, so it wins. Tests keep the spec example. */
-export const devHandlers = [
-  http.get(`${globalThis.location?.origin ?? ''}/api/v1/tree`, () => HttpResponse.json(devTree)),
-]
+export const devHandlers = createTreeBackend(devTree).handlers

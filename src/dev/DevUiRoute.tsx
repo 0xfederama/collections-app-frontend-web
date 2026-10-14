@@ -39,6 +39,7 @@ import {
   Sun,
   Trash2,
 } from '../components/ui/icons'
+import { arrayMove } from '../components/ui/sortable'
 import { useThemePreference, type ThemePreference } from '../lib/theme'
 
 const sections = [
@@ -373,7 +374,35 @@ function Navigation() {
           )}
         />
       </div>
+
+      <SortableTreeDemo />
     </Section>
+  )
+}
+
+/** Tree with drag reorder: grab the handle (hover or focus a row) or use Space, arrows, Space on it. */
+function SortableTreeDemo() {
+  const [names, setNames] = useState(['Alpha', 'Beta', 'Gamma', 'Delta'])
+  return (
+    <div className="max-w-xs rounded-lg border border-border bg-surface p-2">
+      <p className="px-2 pb-1 text-xs text-text-muted">Reorderable (drag handle, keyboard)</p>
+      <Tree
+        aria-label="Reorderable lists"
+        nodes={names.map((name) => ({ id: name, name }))}
+        expanded={new Set()}
+        onExpandedChange={() => {}}
+        selected={null}
+        onSelectedChange={() => {}}
+        sortable={(node) => ({
+          group: 'demo',
+          index: names.indexOf(node.id),
+          size: names.length,
+          label: node.id,
+        })}
+        onReorder={({ from, to }) => setNames((current) => arrayMove(current, from, to))}
+        renderRow={(node) => <span className="min-w-0 flex-1 truncate">{node.name}</span>}
+      />
+    </div>
   )
 }
 

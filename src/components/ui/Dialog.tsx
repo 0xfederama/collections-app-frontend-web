@@ -1,5 +1,5 @@
 import * as RadixDialog from '@radix-ui/react-dialog'
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import { cx } from '../../lib/cx'
 import { IconButton } from './IconButton'
 import { X } from './icons'
@@ -15,6 +15,8 @@ export interface DialogProps {
   /** Action row, usually Buttons. */
   footer?: ReactNode
   className?: string
+  /** Element to focus when the dialog opens, instead of the first focusable one (the Close button). */
+  initialFocus?: RefObject<HTMLElement | null>
 }
 
 export const overlayClasses =
@@ -29,6 +31,7 @@ export function Dialog({
   children,
   footer,
   className,
+  initialFocus,
 }: DialogProps) {
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -36,6 +39,11 @@ export function Dialog({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className={overlayClasses} />
         <RadixDialog.Content
+          onOpenAutoFocus={(event) => {
+            if (!initialFocus?.current) return
+            event.preventDefault()
+            initialFocus.current.focus()
+          }}
           className={cx(
             'fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-xl border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in',
             className,

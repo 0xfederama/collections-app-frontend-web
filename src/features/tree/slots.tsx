@@ -1,27 +1,56 @@
 import type { ReactNode } from 'react'
+import { Button, IconButton, Menu } from '../../components/ui'
+import { FolderPlus, ListPlus, Plus } from '../../components/ui/icons'
 import type { TreeNode } from './api'
-
-/**
- * Extension points for W-05 (tree actions). Each renders nothing today. W-05 fills them in this
- * file (and new files under `src/features/tree/`) without touching `src/layouts/*` or
- * `src/routes/*`.
- */
+import { NodeMenu } from './NodeMenu'
+import { useTreeActions } from './TreeActionsContext'
 
 /** Right side of the "Collections" heading above the tree: the "+" menu (new folder / list). */
 export function TreeHeaderActions(): ReactNode {
-  return null
+  const actions = useTreeActions()
+  return (
+    <Menu
+      trigger={
+        <IconButton aria-label="New folder or list" className="size-8 pointer-coarse:size-11">
+          <Plus aria-hidden />
+        </IconButton>
+      }
+      items={[
+        { label: 'New folder', icon: <FolderPlus />, onSelect: () => actions.createFolder(null) },
+        { label: 'New list', icon: <ListPlus />, onSelect: () => actions.createList(null) },
+      ]}
+    />
+  )
 }
 
 /**
- * End of each row: the context menu (rename / move / delete). The row itself selects on click and
- * Enter, so interactive content here must stop click propagation.
+ * End of each row: the "More" menu. The row selects on click, so this wrapper stops the click
+ * (React bubbles it through the menu's portal too) before it reaches the row.
  */
 export function TreeRowActions({ node }: { node: TreeNode }): ReactNode {
-  void node
-  return null
+  const actions = useTreeActions()
+  const name = node.kind === 'folder' ? node.folder.name : node.list.name
+  return (
+    <span onClick={(event) => event.stopPropagation()} className="flex shrink-0">
+      <NodeMenu
+        node={node}
+        actions={actions}
+        name={name}
+        className="size-8 pointer-coarse:size-11"
+      />
+    </span>
+  )
 }
 
-/** Primary action of the "no collections yet" empty state (create the first folder or list). */
+/** Primary action of the "no collections yet" empty state. */
 export function TreeEmptyAction(): ReactNode {
-  return null
+  const actions = useTreeActions()
+  return (
+    <div className="flex flex-wrap justify-center gap-2">
+      <Button onClick={() => actions.createList(null)}>New list</Button>
+      <Button variant="secondary" onClick={() => actions.createFolder(null)}>
+        New folder
+      </Button>
+    </div>
+  )
 }
