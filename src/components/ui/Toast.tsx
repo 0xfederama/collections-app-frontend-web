@@ -1,6 +1,7 @@
 import * as RadixToast from '@radix-ui/react-toast'
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
+import { Button } from './Button'
 import { IconButton } from './IconButton'
 import { CircleAlert, CircleCheck, Info, X } from './icons'
 
@@ -10,6 +11,11 @@ export interface ToastOptions {
   kind?: ToastKind
   title: string
   description?: string
+  /**
+   * One follow-up action, e.g. "Open". The provider sits above the router, so this is a callback
+   * (the caller navigates), not a `<Link>`. Running it dismisses the toast.
+   */
+  action?: { label: string; onAction: () => void }
 }
 
 interface ToastEntry extends ToastOptions {
@@ -63,6 +69,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   </RadixToast.Description>
                 )}
               </div>
+              {t.action && (
+                <RadixToast.Action asChild altText={t.action.label}>
+                  <Button size="sm" variant="secondary" onClick={t.action.onAction}>
+                    {t.action.label}
+                  </Button>
+                </RadixToast.Action>
+              )}
               <RadixToast.Close asChild>
                 <IconButton aria-label="Dismiss notification" className="-my-2 -mr-2 size-9">
                   <X aria-hidden />

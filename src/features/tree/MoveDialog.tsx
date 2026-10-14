@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Button, Dialog, Tooltip } from '../../components/ui'
-import { cx } from '../../lib/cx'
+import { Button, Dialog } from '../../components/ui'
 import type { TreeIndex, TreeNode } from './api'
+import { DestinationPicker } from './DestinationPicker'
 import { FormError } from './FormError'
 import { flattenFolders, parentIdOf } from './order'
 import { useAction } from './useAction'
@@ -87,44 +87,11 @@ export function MoveDialog({ node, index, onSubmit, onClose, onReload }: MoveDia
         </>
       }
     >
-      <div
-        role="radiogroup"
-        aria-label="Destination"
-        className="flex max-h-72 flex-col gap-0.5 overflow-y-auto rounded-md border border-border p-1"
-      >
-        {destinations.map((d) => {
-          const key = d.id ?? ROOT
-          const reasonId = `move-reason-${key}`
-          const row = (
-            <label
-              className={cx(
-                'flex min-h-9 items-center gap-2 rounded-sm pr-2 text-sm pointer-coarse:min-h-11',
-                d.reason ? 'cursor-not-allowed text-text-muted' : 'cursor-pointer hover:bg-border',
-                choice?.id === d.id && 'bg-border font-medium',
-              )}
-              style={{ paddingInlineStart: `${d.depth * 16 + 8}px` }}
-            >
-              <input
-                type="radio"
-                name="move-destination"
-                className="size-4 accent-[var(--accent)]"
-                checked={choice?.id === d.id}
-                disabled={!!d.reason}
-                aria-describedby={d.reason ? reasonId : undefined}
-                onChange={() => setChosen(d.id)}
-              />
-              <span className="min-w-0 flex-1 truncate">{d.name}</span>
-              {d.reason && (
-                <span id={reasonId} className="text-xs">
-                  {d.reason}
-                </span>
-              )}
-            </label>
-          )
-          // The reason is always visible (and read out); the tooltip repeats it for hover.
-          return <div key={key}>{d.reason ? <Tooltip content={d.reason}>{row}</Tooltip> : row}</div>
-        })}
-      </div>
+      <DestinationPicker
+        options={destinations.map((d) => ({ ...d, key: d.id ?? ROOT }))}
+        value={choice ? (choice.id ?? ROOT) : undefined}
+        onChange={(key) => setChosen(key === ROOT ? null : key)}
+      />
       {error && (
         <FormError
           error={error}

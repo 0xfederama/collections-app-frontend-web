@@ -12,8 +12,9 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `src/features/tree/mutations.ts`: folder and list write hooks, `useReorderSiblings`.
 - `src/features/tree/useTreeDialogs.tsx`: all write flows; returns `{ actions, dialogs }`.
 - `src/features/tree/NameDialog.tsx`, `DescriptionDialog.tsx`, `MoveDialog.tsx`, `DeleteDialog.tsx`, `FormError.tsx`, `useAction.ts`: dialogs, pending and error state.
+- `src/features/tree/DestinationPicker.tsx`: radio list of destinations (Move, trash "Restore to…").
 - `src/features/tree/NodeMenu.tsx`, `ListActionsMenu.tsx`, `TreeActionsContext.tsx`: row and list menus, and their context.
-- `src/features/tree/slots.tsx`: W-05 slots, filled with the "+" menu, row "More" menu and empty-state buttons.
+- `src/features/tree/slots.tsx`: W-05 slots (header "+" menu, row "More", empty-state buttons).
 - `src/features/tree/order.ts`, `errors.ts`: sibling groups, order helpers, error classification.
 - `src/features/tree/ListGate.tsx`, `breadcrumbs.ts`: list gate; breadcrumb trail (rendered by the shell).
 - `src/features/settings/api.ts`: `useSettings`, `useWorkspaceName`, `settingsKeys`.
@@ -23,10 +24,11 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `useTree()`: query for `/api/v1/tree`, key `treeKeys.tree` (`['tree']`).
 - `useTreeIndex()`: `{ status: 'pending' }`, `{ status: 'error', refetch }` or `{ status: 'success', index }`.
 - `createTreeIndex(data)`: `nodes`, `folders` and `lists` maps, `ancestorsOf(id)`.
-- `SidebarTree()`: the tree; provides `TreeActionsContext` and renders the dialogs. `useTreeActions()` throws outside it.
+- `SidebarTree()`: provides `TreeActionsContext` and renders the dialogs. `useTreeActions()` throws outside it.
 - `useCreateFolder()`, `useCreateList()`, `useRenameFolder()`, `useUpdateList()`, `useMoveFolder()`, `useMoveList()`, `useDeleteFolder()`, `useDeleteList()`: mutations; `If-Match` from `version`; success invalidates `treeKeys.tree`.
 - `useReorderSiblings()`: `mutate({ kind, parentId, ids })`; optimistic, rolled back on error.
 - `useTreeDialogs({ onCreatedFolder? })`: `{ actions: TreeActions, dialogs }`; `TreeActions` has create, rename, editDescription, move, remove, nudge, position, applyMove.
+- `DestinationPicker({ options, value, onChange, label? })`: options `{ key, name, depth, reason?, group? }`; `reason` disables an option, `group` is a label with no radio.
 - `ListActionsMenu({ list })`: list overflow menu (rename, description, move, delete) with its own dialogs.
 - `NodeMenu({ node, actions, name, reorder?, className? })`: row "More" menu.
 - `TreeHeaderActions()`, `TreeRowActions({ node })`, `TreeEmptyAction()`: W-05 slots.
@@ -45,4 +47,4 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - Sub-folders come first in each parent, then lists, each by `(sort_order, id)`. Folders with a missing parent, and anything in a parent cycle, are left out.
 - Expanded ids persist under `collection:tree-expanded`; ids of deleted folders are dropped on the next write. Nothing is written before the tree loads.
 - When the active list changes, its ancestors open once; a manual collapse sticks until then. Mutations invalidate `treeKeys.tree`, not a string literal.
-- The item crumb is a generic "Item" until W-07 supplies a title.
+- The item crumb is always the generic label "Item" (`breadcrumbs.ts`).
