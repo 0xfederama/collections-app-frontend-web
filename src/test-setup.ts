@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { server } from './mocks/server'
+import { resetViewport } from './test-utils'
 
 // jsdom lacks these browser APIs; Radix Select/Menu/Popover need them.
 class ResizeObserverStub {
@@ -15,5 +16,9 @@ Element.prototype.scrollIntoView ??= () => {}
 
 // Every test talks to the spec-example mocks; anything unmocked fails loudly.
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))
-afterEach(() => server.resetHandlers())
+afterEach(() => {
+  server.resetHandlers()
+  resetViewport()
+  localStorage.clear()
+})
 afterAll(() => server.close())
