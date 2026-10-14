@@ -1,11 +1,17 @@
 import { createBrowserRouter, createMemoryRouter, type RouteObject } from 'react-router'
 import { AppShell } from '../layouts/AppShell'
 import { HomeRoute } from '../routes/HomeRoute'
-import { ListRoute } from '../routes/ListRoute'
 import { NotFoundRoute } from '../routes/NotFoundRoute'
-import { SearchRoute } from '../routes/SearchRoute'
-import { SettingsRoute } from '../routes/SettingsRoute'
-import { TrashRoute } from '../routes/TrashRoute'
+import { lazyRoute } from './lazyRoute'
+
+// Route screens load on first visit, so the entry bundle only holds the shell (item routes are
+// split inside `ItemRoute`, which the shell renders itself).
+const ListRoute = lazyRoute(() => import('../routes/ListRoute').then((m) => m.ListRoute))
+const SearchRoute = lazyRoute(() => import('../routes/SearchRoute').then((m) => m.SearchRoute))
+const SettingsRoute = lazyRoute(() =>
+  import('../routes/SettingsRoute').then((m) => m.SettingsRoute),
+)
+const TrashRoute = lazyRoute(() => import('../routes/TrashRoute').then((m) => m.TrashRoute))
 
 // Component gallery: dev only, lazy, so it never reaches the production bundle.
 const devRoutes: RouteObject[] = import.meta.env.DEV

@@ -111,7 +111,7 @@ describe('W-04 sidebar search submit', () => {
     await user.type(field(), 'red bike{Enter}')
     expect(router.state.location.pathname).toBe('/search')
     expect(router.state.location.search).toBe('?q=red%20bike')
-    expect(screen.getByRole('heading', { name: 'Search' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Search' })).toBeInTheDocument()
     expect(screen.getByText(/red bike/)).toBeInTheDocument()
   })
 

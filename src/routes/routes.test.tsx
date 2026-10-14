@@ -55,8 +55,8 @@ describe('W-04 routes render their heading', () => {
   it('/lists/:listId/items/:itemId is the item page (full page below 1280)', async () => {
     mockViewport(1100)
     renderAt(`/lists/${WATCHLIST}/items/${ITEM}`)
-    expect(await heading('Item')).toBeInTheDocument()
-    expect(within(main()).getByText(new RegExp(ITEM))).toBeInTheDocument()
+    expect(await heading('The Matrix')).toBeInTheDocument()
+    expect(within(main()).getByRole('link', { name: /Back to Watchlist/ })).toBeInTheDocument()
   })
 
   it('/search?q= is Search and shows the query', async () => {

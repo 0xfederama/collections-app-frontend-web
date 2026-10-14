@@ -136,9 +136,30 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
     }),
   ]
 
-  return { handlers }
+  /** Direct access to the stored items for the detail fake (`devItemDetail.ts`). */
+  const store = {
+    find: (id: string) => [...items.values()].flat().find((item) => item.id === id),
+    remove: (id: string) => {
+      for (const [listId, list] of items) {
+        items.set(
+          listId,
+          list.filter((item) => item.id !== id),
+        )
+      }
+    },
+    append: (item: ItemSummary) => {
+      const target = itemsOf(item.list_id)
+      target?.push({ ...item, sort_order: target.length })
+    },
+  }
+
+  return { handlers, store }
 }
 
-export const devItemHandlers = createItemsBackend(devTree, (id) =>
+const devItems = createItemsBackend(devTree, (id) =>
   devTreeState.lists.find((list) => list.id === id),
-).handlers
+)
+
+export const devItemStore = devItems.store
+
+export const devItemHandlers = devItems.handlers
