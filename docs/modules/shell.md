@@ -12,9 +12,9 @@ Top-level providers, router, and the responsive frame every route renders into (
 - `src/layouts/AppShell.tsx`: layout per breakpoint, drawer state, detail panel, `/` shortcut.
 - `src/layouts/Sidebar.tsx`, `SidebarResizer.tsx`, `useSidebarState.ts`: sidebar nav, splitter, persisted state.
 - `src/lib/breakpoints.ts`, `src/lib/storage.ts`: breakpoint hook; `collection:` storage helpers.
-- `src/features/search/`: `SidebarSearch` form and `useSearchShortcut`.
+- `src/features/search/`: sidebar search and `/` shortcut (see [search](search.md)).
 - `src/features/tree/breadcrumbs.ts`: `useBreadcrumbs`.
-- `src/routes/*Route.tsx`: route components; `ItemRoute` is a lazy wrapper of `features/items`.
+- `src/routes/*Route.tsx`: route components; `ItemRoute` is a lazy wrapper of `features/items`; `ListRoute` and `SearchRoute` are implemented.
 - `vite.config.ts`: dev server on :5173; proxies `/api` and `/readyz` to `API_PROXY_TARGET`.
 
 ## Interfaces
@@ -41,5 +41,5 @@ Top-level providers, router, and the responsive frame every route renders into (
 - Sidebar state persists as `collection:sidebar` (`{ collapsed, width }`); `collapsed` only applies at tablet.
 - Resizer: `role="separator"` labelled "Resize sidebar", `aria-controls="app-sidebar"`; ←/→ move 16 px, Home/End jump to min/max; pointer drag also works.
 - `/` focuses the sidebar search. On the tablet rail it expands the sidebar first. On mobile it opens the drawer but does not focus the field.
-- Route owners: `/` Home placeholder (W-13); `/lists/:listId` ListRoute (W-06); `/lists/:listId/items/:itemId` ItemRoute (W-07); `/search` (W-11); `/trash` (W-12); `/settings` (W-13). `*` is NotFoundRoute.
+- Route owners: `/` Home placeholder (W-13); `/lists/:listId` ListRoute (W-06); `/lists/:listId/items/:itemId` ItemRoute (W-07); `/search` SearchRoute (W-11); `/trash` (W-12); `/settings` (W-13). `*` is NotFoundRoute.
 - Seams: tree writes live in `src/features/tree/*`; W-06 owns `src/routes/ListRoute.tsx` and `src/features/lists/*`; W-07 owns `src/features/items/*`. `router.tsx` already registers every route.

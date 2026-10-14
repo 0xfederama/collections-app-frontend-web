@@ -62,7 +62,7 @@ describe('W-04 routes render their heading', () => {
   it('/search?q= is Search and shows the query', async () => {
     renderAt('/search?q=tiger')
     expect(await heading('Search')).toBeInTheDocument()
-    expect(within(main()).getByText(/tiger/)).toBeInTheDocument()
+    expect(await within(main()).findByText(/for “tiger”/)).toBeInTheDocument()
   })
 
   it('/search without q is still Search', async () => {
