@@ -19,7 +19,7 @@ function renderRouter(path = '/') {
   return router
 }
 
-const field = () => screen.getByRole('searchbox', { name: 'Search' })
+const field = () => screen.getByRole('combobox', { name: 'Search' })
 
 describe('W-04 "/" focuses the search field', () => {
   it('focuses the field when "/" is pressed outside a text field', async () => {
@@ -82,7 +82,7 @@ describe('W-04 "/" focuses the search field', () => {
     localStorage.setItem('collection:sidebar', JSON.stringify({ collapsed: true, width: 280 }))
     const user = userEvent.setup()
     renderRouter()
-    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: 'Search' })).not.toBeInTheDocument()
 
     await user.keyboard('/')
     await waitFor(() => expect(field()).toHaveFocus())
@@ -112,7 +112,7 @@ describe('W-04 sidebar search submit', () => {
     expect(router.state.location.pathname).toBe('/search')
     expect(router.state.location.search).toBe('?q=red%20bike')
     expect(await screen.findByRole('heading', { name: 'Search' })).toBeInTheDocument()
-    expect(screen.getByText(/red bike/)).toBeInTheDocument()
+    expect(await screen.findByText(/red bike/)).toBeInTheDocument()
   })
 
   it('URL-encodes reserved characters', async () => {

@@ -136,8 +136,10 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
     }),
   ]
 
-  /** Direct access to the stored items for the detail fake (`devItemDetail.ts`). */
+  /** Direct access to the stored items for the detail fake (`devItemDetail.ts`) and the search fake (`devSearch.ts`). */
   const store = {
+    /** Every item of every list (the search fake in `devSearch.ts`). */
+    all: () => [...items.values()].flat(),
     find: (id: string) => [...items.values()].flat().find((item) => item.id === id),
     remove: (id: string) => {
       for (const [listId, list] of items) {
