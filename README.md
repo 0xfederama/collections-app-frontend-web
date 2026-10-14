@@ -17,13 +17,13 @@ There is no CI. Quality gates run locally with `npm run check`.
 
 ## What exists today (M0 skeleton)
 
-| Piece       | State                                                                                                                                 |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| App shell   | Placeholder header, sidebar and main area (`src/layouts/AppShell.tsx`), with a `Backend: ready/down/checking` indicator in the header |
-| Routes      | Home (`/`) and a not-found page, via a React Router data router                                                                       |
-| Styling     | Tailwind 4 (CSS-first, entry in `src/styles/global.css`). Design tokens, fonts and dark mode arrive in W-03                           |
-| Server data | Nothing yet. TanStack Query, the OpenAPI client and MSW mocks arrive in W-02                                                          |
-| Tooling     | Strict TypeScript, ESLint (flat config), Prettier, Vitest + Testing Library on jsdom                                                  |
+| Piece       | State                                                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| App shell   | Responsive shell (drawer / rail / resizable sidebar / detail panel), folder and list tree, breadcrumbs, backend indicator (`src/layouts/`, W-04) |
+| Routes      | Home, list, item, search, trash and settings placeholders plus a not-found page, via a React Router data router                                  |
+| Styling     | Tailwind 4 (CSS-first, entry in `src/styles/global.css`). Design tokens, fonts and dark mode arrive in W-03                                      |
+| Server data | Nothing yet. TanStack Query, the OpenAPI client and MSW mocks arrive in W-02                                                                     |
+| Tooling     | Strict TypeScript, ESLint (flat config), Prettier, Vitest + Testing Library on jsdom                                                             |
 
 Dependencies are added only in the task that first uses them (D-034), so the lockfile stays small.
 

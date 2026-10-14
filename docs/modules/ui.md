@@ -7,7 +7,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 ## Key files
 
 - `src/components/ui/index.ts`: barrel; import primitives from `components/ui`.
-- `src/components/ui/icons.ts`: the only Lucide import site; `kindIcons` and `kindLabels` per `ItemKind`.
+- `src/components/ui/icons.ts`: the only Lucide import site; re-exports named glyphs (`FolderOpen`, `MenuIcon`, `PanelLeftClose`, `PanelLeftOpen`, `Settings`, …); `kindIcons` and `kindLabels` per `ItemKind`.
 - `src/components/ui/fieldStyles.ts`: shared input chrome (`controlBase`, `controlBorder`).
 - `src/lib/cx.ts`: class-name joiner used by every primitive.
 - `src/dev/DevUiRoute.tsx`: component gallery at `/dev/ui`, dev builds only.
