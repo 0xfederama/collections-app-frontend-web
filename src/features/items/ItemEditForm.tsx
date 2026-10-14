@@ -21,6 +21,7 @@ import {
   type ErrorMap,
 } from './form/draft'
 import { BasicsFields, FormSection, KindFieldsSection, type FormState } from './form/FormFields'
+import { ImageSection } from './image/ImageSection'
 import { MoveItemDialog } from './ItemActions'
 
 /** Why the last save did not go through, other than field errors. */
@@ -35,7 +36,7 @@ const bannerBase = 'flex flex-col gap-3 rounded-md border p-3 text-sm'
  * overwrite of somebody else's change. Whatever goes wrong, the draft stays.
  */
 export function ItemEditForm({ item, listName }: { item: Item; listName: string }) {
-  const [base] = useState(item)
+  const [base, setBase] = useState(item)
   const client = useQueryClient()
   const toast = useToast()
   const navigate = useNavigate()
@@ -299,7 +300,20 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
       </FormSection>
 
       <FormSection id="item-form-image" title="Image">
-        <p className="text-sm text-text-muted">Adding or changing the image is coming soon.</p>
+        <ImageSection
+          item={base}
+          // An image change is its own request and bumps the item's version: move the base
+          // forward so the next save sends the new `If-Match`, and leave the draft alone.
+          onChanged={(updated) =>
+            setBase((current) => ({
+              ...current,
+              version: updated.version,
+              image: updated.image,
+              updated_at: updated.updated_at,
+            }))
+          }
+          onStale={(kind) => setFailure({ kind })}
+        />
       </FormSection>
 
       <KindFieldsSection form={form} />
