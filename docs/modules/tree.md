@@ -2,36 +2,47 @@
 
 ## Purpose
 
-The sidebar folder and list tree: the `GET /api/v1/tree` query, its nested index, expanded-folder state, the W-05 extension slots, and the list gate used by list and item routes. Ordering spec: `/Users/federico/Developer/collections-app/design-docs/UI_SPEC.md` §2.
+The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expanded state, folder and list writes (create, rename, describe, move, delete, reorder), and the list gate for list routes. Ordering spec: `/Users/federico/Developer/collections-app/design-docs/UI_SPEC.md` §2; write errors: §9.
 
 ## Key files
 
-- `src/features/tree/api.ts`: `useTree`, `useTreeIndex`, `buildTree`, `createTreeIndex`, `treeKeys`.
-- `src/features/tree/SidebarTree.tsx`: sidebar tree with loading, error and empty states.
+- `src/features/tree/api.ts`: query hooks, `buildTree`, `createTreeIndex`, `treeKeys`.
+- `src/features/tree/SidebarTree.tsx`: sidebar tree, its four UI states, mounts the dialogs.
 - `src/features/tree/useExpandedFolders.ts`: persisted expanded folder ids.
-- `src/features/tree/slots.tsx`: W-05 extension points (render nothing yet).
-- `src/features/tree/ListGate.tsx`: resolves a list id for `/lists/:listId` routes.
-- `src/features/tree/breadcrumbs.ts`: breadcrumb trail, rendered by the shell.
+- `src/features/tree/mutations.ts`: folder and list write hooks, `useReorderSiblings`.
+- `src/features/tree/useTreeDialogs.tsx`: all write flows; returns `{ actions, dialogs }`.
+- `src/features/tree/NameDialog.tsx`, `DescriptionDialog.tsx`, `MoveDialog.tsx`, `DeleteDialog.tsx`, `FormError.tsx`, `useAction.ts`: dialogs, pending and error state.
+- `src/features/tree/NodeMenu.tsx`, `ListActionsMenu.tsx`, `TreeActionsContext.tsx`: row and list menus, and their context.
+- `src/features/tree/slots.tsx`: W-05 slots, filled with the "+" menu, row "More" menu and empty-state buttons.
+- `src/features/tree/order.ts`, `errors.ts`: sibling groups, order helpers, error classification.
+- `src/features/tree/ListGate.tsx`, `breadcrumbs.ts`: list gate; breadcrumb trail (rendered by the shell).
 - `src/features/settings/api.ts`: `useSettings`, `useWorkspaceName`, `settingsKeys`.
 
 ## Interfaces
 
 - `useTree()`: query for `/api/v1/tree`, key `treeKeys.tree` (`['tree']`).
 - `useTreeIndex()`: `{ status: 'pending' }`, `{ status: 'error', refetch }` or `{ status: 'success', index }`.
-- `buildTree(folders, lists): TreeNode[]`: nests by `parent_folder_id` / `folder_id`.
-- `createTreeIndex(data): TreeIndex`: `nodes`, `folders` and `lists` maps, `ancestorsOf(id)` (root first; unknown id gives `[]`).
-- `SidebarTree()`: the tree; folder rows toggle, list rows navigate to `/lists/:id`.
-- `useExpandedFolders(index, activeListId): [Set<string>, setExpanded]`.
-- `ListGate({ listId, children(list, ancestors) })`: skeleton while pending, Retry on error, "List not found" for unknown ids.
-- `useBreadcrumbs(): BreadcrumbItem[]`.
-- `TreeHeaderActions()`, `TreeRowActions({ node })`, `TreeEmptyAction()`: W-05 slots, all render `null`.
-- `useWorkspaceName(): string`: `workspace_name`, or `'Collection'` while loading or on error.
+- `createTreeIndex(data)`: `nodes`, `folders` and `lists` maps, `ancestorsOf(id)`.
+- `SidebarTree()`: the tree; provides `TreeActionsContext` and renders the dialogs. `useTreeActions()` throws outside it.
+- `useCreateFolder()`, `useCreateList()`, `useRenameFolder()`, `useUpdateList()`, `useMoveFolder()`, `useMoveList()`, `useDeleteFolder()`, `useDeleteList()`: mutations; `If-Match` from `version`; success invalidates `treeKeys.tree`.
+- `useReorderSiblings()`: `mutate({ kind, parentId, ids })`; optimistic, rolled back on error.
+- `useTreeDialogs({ onCreatedFolder? })`: `{ actions: TreeActions, dialogs }`; `TreeActions` has create, rename, editDescription, move, remove, nudge, position, applyMove.
+- `ListActionsMenu({ list })`: list overflow menu (rename, description, move, delete) with its own dialogs.
+- `NodeMenu({ node, actions, name, reorder?, className? })`: row "More" menu.
+- `TreeHeaderActions()`, `TreeRowActions({ node })`, `TreeEmptyAction()`: W-05 slots.
+- `classifyError(error, noun)`: `conflict`, `cycle`, `unavailable`, `not_found`, `validation`, `network`, `other`.
+- `buildSortable`, `applyOrder`, `flattenFolders`, `subtreeCounts`: order helpers in `order.ts`.
+- `useExpandedFolders(index, activeListId)`, `ListGate({ listId, children })`, `useBreadcrumbs()`, `useWorkspaceName()`.
 
 ## Gotchas
 
-- Inside each parent, sub-folders come first, then lists, each by `(sort_order, id)`. Folders whose parent is missing, and anything in a parent cycle, are left out.
-- Expanded ids persist as an array under `collection:tree-expanded`. Ids of folders that no longer exist are ignored and dropped on the next write. Nothing is written until the tree has loaded.
-- When the active list changes, its ancestors open once. A manual collapse sticks until the active list changes.
-- Mutations must invalidate `treeKeys.tree`, not a string literal.
-- W-05 row actions must stop click propagation, because the row selects on click.
+- Move, reorder and create bodies always send the parent field (`parent_folder_id` / `folder_id`); `null` means root (D-060).
+- A 412 keeps the draft and the stale version, and the dialog offers "Reload latest". The tree refetches on success and on 404/409, never on 412.
+- Reorder only moves same-kind siblings under one parent. Cross-parent moves use the Move dialog; "Move up" / "Move down" in the menu are the keyboard fallback.
+- A Radix Dialog opened from a menu needs `initialFocus` on `Dialog` (see the ui module).
+- The drag handle is a real button labelled `Reorder <name>`, rendered only on sortable rows. Row actions stop click propagation.
+- Delete moves to Trash and navigates to `/` when the open list is the deleted node or lives inside it.
+- Sub-folders come first in each parent, then lists, each by `(sort_order, id)`. Folders with a missing parent, and anything in a parent cycle, are left out.
+- Expanded ids persist under `collection:tree-expanded`; ids of deleted folders are dropped on the next write. Nothing is written before the tree loads.
+- When the active list changes, its ancestors open once; a manual collapse sticks until then. Mutations invalidate `treeKeys.tree`, not a string literal.
 - The item crumb is a generic "Item" until W-07 supplies a title.

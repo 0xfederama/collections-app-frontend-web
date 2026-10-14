@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
-import { ChevronRight } from './icons'
+import { ChevronRight, GripVertical } from './icons'
+import { SortableProvider, useSortableRow, type SortableMove, type SortableSlot } from './sortable'
 
 export interface TreeNodeBase {
   id: string
@@ -25,6 +26,13 @@ export interface TreeProps<T extends TreeNodeBase> {
   onSelectedChange: (id: string) => void
   /** Row content (icon, name, count). The chevron and indentation are drawn by the Tree. */
   renderRow: (node: T, state: TreeRowState) => ReactNode
+  /**
+   * Opt-in drag reorder: which sortable group and position a node has (`undefined` = not
+   * sortable). Dragging only reorders inside a group, never across groups or parents.
+   */
+  sortable?: (node: T) => SortableSlot | undefined
+  /** Called once when a drag ends with a changed position. Not called on cancel. */
+  onReorder?: (move: SortableMove) => void
   className?: string
 }
 
@@ -38,7 +46,9 @@ interface FlatRow<T> {
 
 /**
  * ARIA tree (flat treeitems with aria-level): roving tabindex, arrows, Home/End, Enter/Space.
- * Presentational: no data fetching and no drag and drop.
+ * Presentational: no data fetching. Drag reorder is opt-in through `sortable` + `onReorder`: each
+ * sortable row gets a drag handle (a real button, so the keyboard sensor works) and the library
+ * itself stays behind `./sortable`.
  */
 export function Tree<T extends TreeNodeBase>({
   nodes,
@@ -47,6 +57,8 @@ export function Tree<T extends TreeNodeBase>({
   selected,
   onSelectedChange,
   renderRow,
+  sortable,
+  onReorder,
   className,
   ...rest
 }: TreeProps<T>) {
@@ -80,7 +92,8 @@ export function Tree<T extends TreeNodeBase>({
 
   const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
     const row = rows[focusIndex]
-    if (!row || event.target !== document.activeElement) return
+    // Keys pressed inside a row's own buttons or links (menu, drag handle) are theirs, not the tree's.
+    if (!row || (event.target as HTMLElement).getAttribute('role') !== 'treeitem') return
     const container = event.currentTarget
     const hasChildren = !!row.node.children?.length
     const isExpanded = expanded.has(row.node.id)
@@ -124,59 +137,115 @@ export function Tree<T extends TreeNodeBase>({
   }
 
   return (
-    <ul
-      role="tree"
-      aria-label={rest['aria-label']}
-      onKeyDown={onKeyDown}
-      className={cx('flex flex-col gap-0.5', className)}
-    >
-      {rows.map(({ node, level, setSize, posInSet }, index) => {
-        const hasChildren = !!node.children?.length
-        const isExpanded = expanded.has(node.id)
-        const isSelected = node.id === selected
-        return (
-          <li
+    <SortableProvider onMove={(move) => onReorder?.(move)}>
+      <ul
+        role="tree"
+        aria-label={rest['aria-label']}
+        onKeyDown={onKeyDown}
+        className={cx('flex flex-col gap-0.5', className)}
+      >
+        {rows.map(({ node, level, setSize, posInSet }, index) => (
+          <TreeRow
             key={node.id}
-            role="treeitem"
-            data-tree-id={node.id}
-            aria-level={level}
-            aria-setsize={setSize}
-            aria-posinset={posInSet}
-            aria-expanded={hasChildren ? isExpanded : undefined}
-            aria-selected={isSelected}
-            tabIndex={index === focusIndex ? 0 : -1}
-            onFocus={(e) => e.target === e.currentTarget && setFocusedId(node.id)}
-            onClick={() => {
-              setFocusedId(node.id)
-              onSelectedChange(node.id)
-            }}
-            style={{ paddingInlineStart: `${(level - 1) * 16 + 4}px` }}
-            className="flex min-h-9 cursor-pointer items-center gap-1 rounded-sm pr-2 text-sm text-text hover:bg-border aria-selected:bg-border aria-selected:font-medium aria-selected:shadow-[inset_3px_0_0_var(--accent)] pointer-coarse:min-h-11"
-          >
-            <span
-              aria-hidden
-              onClick={(e) => {
-                if (!hasChildren) return
-                e.stopPropagation()
-                toggle(node.id)
-              }}
-              className="flex size-6 shrink-0 items-center justify-center text-text-muted"
-            >
-              {hasChildren && (
-                <ChevronRight
-                  className={cx('size-4 transition-transform', isExpanded && 'rotate-90')}
-                />
-              )}
-            </span>
-            {renderRow(node as T, {
-              level,
-              expanded: isExpanded,
-              selected: isSelected,
-              hasChildren,
-            })}
-          </li>
-        )
-      })}
-    </ul>
+            node={node}
+            level={level}
+            setSize={setSize}
+            posInSet={posInSet}
+            tabbable={index === focusIndex}
+            expanded={expanded}
+            selected={node.id === selected}
+            slot={sortable?.(node)}
+            onFocusRow={setFocusedId}
+            onSelect={onSelectedChange}
+            onToggle={toggle}
+            renderRow={renderRow}
+          />
+        ))}
+      </ul>
+    </SortableProvider>
+  )
+}
+
+interface TreeRowProps<T extends TreeNodeBase> {
+  node: T
+  level: number
+  setSize: number
+  posInSet: number
+  tabbable: boolean
+  expanded: ReadonlySet<string>
+  selected: boolean
+  slot: SortableSlot | undefined
+  onFocusRow: (id: string) => void
+  onSelect: (id: string) => void
+  onToggle: (id: string) => void
+  renderRow: TreeProps<T>['renderRow']
+}
+
+function TreeRow<T extends TreeNodeBase>({
+  node,
+  level,
+  setSize,
+  posInSet,
+  tabbable,
+  expanded,
+  selected,
+  slot,
+  onFocusRow,
+  onSelect,
+  onToggle,
+  renderRow,
+}: TreeRowProps<T>) {
+  const { ref, handleRef, isDragging } = useSortableRow(node.id, slot)
+  const hasChildren = !!node.children?.length
+  const isExpanded = expanded.has(node.id)
+  return (
+    <li
+      ref={ref}
+      role="treeitem"
+      data-tree-id={node.id}
+      aria-level={level}
+      aria-setsize={setSize}
+      aria-posinset={posInSet}
+      aria-expanded={hasChildren ? isExpanded : undefined}
+      aria-selected={selected}
+      tabIndex={tabbable ? 0 : -1}
+      // Focus anywhere inside the row (its link, menu button or drag handle) makes it the roving stop.
+      onFocus={() => onFocusRow(node.id)}
+      onClick={() => {
+        onFocusRow(node.id)
+        onSelect(node.id)
+      }}
+      style={{ paddingInlineStart: `${(level - 1) * 16 + 4}px` }}
+      className={cx(
+        'group/row flex min-h-9 cursor-pointer items-center gap-1 rounded-sm pr-2 text-sm text-text hover:bg-border aria-selected:bg-border aria-selected:font-medium aria-selected:shadow-[inset_3px_0_0_var(--accent)] pointer-coarse:min-h-11',
+        isDragging && 'bg-surface-raised opacity-80 shadow-md',
+      )}
+    >
+      <span
+        aria-hidden
+        onClick={(e) => {
+          if (!hasChildren) return
+          e.stopPropagation()
+          onToggle(node.id)
+        }}
+        className="flex size-6 shrink-0 items-center justify-center text-text-muted"
+      >
+        {hasChildren && (
+          <ChevronRight className={cx('size-4 transition-transform', isExpanded && 'rotate-90')} />
+        )}
+      </span>
+      {renderRow(node, { level, expanded: isExpanded, selected, hasChildren })}
+      {slot && (
+        <button
+          ref={handleRef}
+          type="button"
+          aria-label={`Reorder ${slot.label}`}
+          onClick={(e) => e.stopPropagation()}
+          className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-sm text-text-muted opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 [&_svg]:size-4"
+        >
+          <GripVertical aria-hidden />
+        </button>
+      )}
+    </li>
   )
 }

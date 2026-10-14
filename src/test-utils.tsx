@@ -3,6 +3,7 @@ import { act, render } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from './app/router'
+import { ToastProvider } from './components/ui'
 
 /** A fresh client per render, with no retries and no cache sharing between tests. */
 export function createTestQueryClient() {
@@ -12,7 +13,11 @@ export function createTestQueryClient() {
 }
 
 export function renderWithProviders(ui: ReactElement, client = createTestQueryClient()) {
-  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
+  return render(
+    <QueryClientProvider client={client}>
+      <ToastProvider>{ui}</ToastProvider>
+    </QueryClientProvider>,
+  )
 }
 
 /** Renders the real routes (app shell included) at a path. */

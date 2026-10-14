@@ -6,7 +6,7 @@ Top-level providers, router, and the responsive frame every route renders into (
 
 ## Key files
 
-- `src/app/App.tsx`: mounts `QueryClientProvider` and `RouterProvider`; client and router are created once at module load.
+- `src/app/App.tsx`: mounts `QueryClientProvider`, `ToastProvider` and `RouterProvider`; client and router are created once at module load.
 - `src/app/router.tsx`: `routes` (every route is registered here), `createAppRouter`, `createTestRouter`.
 - `src/layouts/AppShell.tsx`: layout per breakpoint, drawer state, detail panel, `/` shortcut.
 - `src/layouts/Sidebar.tsx`, `SidebarResizer.tsx`, `useSidebarState.ts`: sidebar nav, splitter, persisted state.
@@ -39,4 +39,4 @@ Top-level providers, router, and the responsive frame every route renders into (
 - Resizer: `role="separator"` labelled "Resize sidebar", `aria-controls="app-sidebar"`; ←/→ move 16 px, Home/End jump to min/max; pointer drag also works.
 - `/` focuses the sidebar search. On the tablet rail it expands the sidebar first. On mobile it opens the drawer but does not focus the field.
 - Route owners: `/` Home placeholder (W-13); `/lists/:listId` ListRoute (W-06); `/lists/:listId/items/:itemId` ItemRoute (W-07); `/search` (W-11); `/trash` (W-12); `/settings` (W-13). `*` is NotFoundRoute.
-- Seams: W-05 edits only `src/features/tree/*` (fill the slots in `slots.tsx`). W-06 edits only `src/routes/ListRoute.tsx` and `src/features/lists/*`. `router.tsx` already registers every route.
+- Seams: the W-05 slots in `src/features/tree/slots.tsx` are filled, so tree writes live in `src/features/tree/*`. W-06 edits only `src/routes/ListRoute.tsx` and `src/features/lists/*`. `router.tsx` already registers every route.

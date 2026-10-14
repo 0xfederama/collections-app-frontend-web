@@ -15,6 +15,10 @@ export interface AlertDialogProps {
   /** Destructive confirm (red). Focus still starts on Cancel. */
   destructive?: boolean
   pending?: boolean
+  /** Extra content under the description, e.g. an error message. */
+  children?: ReactNode
+  /** Do not close on confirm: the caller closes `open` itself once the action succeeded. */
+  keepOpen?: boolean
 }
 
 /** Confirmation that needs an explicit answer: no outside-click dismissal, no close icon. */
@@ -29,6 +33,8 @@ export function AlertDialog({
   onConfirm,
   destructive,
   pending,
+  children,
+  keepOpen,
 }: AlertDialogProps) {
   return (
     <RadixAlertDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -44,6 +50,7 @@ export function AlertDialog({
               {description}
             </RadixAlertDialog.Description>
           </div>
+          {children}
           <div className="flex flex-wrap justify-end gap-2">
             <RadixAlertDialog.Cancel asChild>
               <Button variant="secondary">{cancelLabel}</Button>
@@ -52,7 +59,10 @@ export function AlertDialog({
               <Button
                 variant={destructive ? 'danger' : 'primary'}
                 pending={pending}
-                onClick={onConfirm}
+                onClick={(event) => {
+                  if (keepOpen) event.preventDefault()
+                  onConfirm()
+                }}
               >
                 {confirmLabel}
               </Button>

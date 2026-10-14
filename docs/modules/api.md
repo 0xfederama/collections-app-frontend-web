@@ -13,7 +13,7 @@ Vendors the backend OpenAPI contract at a pinned tag, generates its TypeScript t
 - `src/generated/schema.d.ts`, `examples.ts`: generated types and first 2xx example per operation.
 - `src/lib/api/client.ts`, `errors.ts`, `etag.ts`: client, error classes, `If-Match` builder.
 - `src/app/queryClient.ts`: app-wide QueryClient defaults and `shouldRetry`.
-- `src/mocks/`: `handlers.ts`, `server.ts` (Node), `browser.ts` (worker), `devData.ts` (dev-only tree), `problems.ts`.
+- `src/mocks/`: `handlers.ts`, `server.ts` (Node), `browser.ts` (worker), `devData.ts` (dev-only tree), `devTree.ts` (`createTreeBackend`, stateful folders and lists fake), `problems.ts`.
 - `src/test-utils.tsx`: render helpers with a fresh QueryClient.
 - `src/main.tsx`, `vite.config.ts`, `public/mockServiceWorker.js`: dev-only mock worker.
 
@@ -35,9 +35,9 @@ Vendors the backend OpenAPI contract at a pinned tag, generates its TypeScript t
 - Retries: one retry only for `NetworkError` or 5xx. 4xx (including 412) is never retried.
 - `ifMatch` has no way to send `*`. The 412 `currentVersion` is exposed on `ApiError` for the conflict UI.
 - Client and MSW handlers use absolute `location.origin` URLs, because Node's fetch rejects relative URLs.
-- Mocks are stateless: each operation answers with its first 2xx example. Image endpoints return a placeholder SVG.
+- Mocks are stateless: each operation answers with its first 2xx example, except folders and lists, which `createTreeBackend` keeps in memory (checks `If-Match`, cycles and order_stale). Image endpoints return a placeholder SVG.
 - `/readyz` is `text/plain`: call it with `parseAs: 'text'`.
 - MSW 3 imports from `msw/http`. Tests use `onUnhandledFrame: 'error'`; the dev worker uses `'bypass'`.
 - `package.json` `overrides` lets openapi-typescript use the root TypeScript 6. Keep it.
 - `api:sync` without `--from` needs network. `js-yaml` is a devDependency used only by `generate.mjs`.
-- `VITE_API_MOCKS=1 npm run dev` starts the worker, which prepends the richer tree in `devData.ts`. Vitest uses only the spec examples. A Vite plugin removes `dist/mockServiceWorker.js` from builds.
+- `VITE_API_MOCKS=1 npm run dev` starts the worker, which prepends the richer, stateful tree from `devData.ts`. Vitest uses only the spec examples. A Vite plugin removes `dist/mockServiceWorker.js` from builds.
