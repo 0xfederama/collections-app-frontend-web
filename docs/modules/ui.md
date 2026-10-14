@@ -26,7 +26,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `AlertDialog`: `title`, `description`, `onConfirm`, `destructive`, `pending`, `confirmLabel` / `cancelLabel`, `children` (extra content, e.g. an error), `keepOpen` (caller closes it).
 - `Drawer`: `title`, `side` (left, right), `open` / `onOpenChange`, `trigger`; Radix Dialog.
 - `Tooltip`: `content`, `side`, single child element (asChild); 300 ms delay.
-- `ToastProvider` / `useToast()`: `useToast()` returns `(options: { kind?, title, description? }) => void`.
+- `ToastProvider` / `useToast()`: `useToast()` returns `(options: { kind?, title, description?, action? }) => void`; `action: { label, onAction }` renders a Radix `Toast.Action` button.
 - `Tree<T>`: `nodes`, `expanded` / `onExpandedChange`, `selected` / `onSelectedChange`, `renderRow`, `sortable(node)`, `onReorder(move)`, `aria-label`.
 - `Card`: `interactive`. `Chip`: `tone` (neutral, accent, success, warning, danger), `icon`. `Badge`: `kind: ItemKind`.
 - `Breadcrumbs`: `items: { label, to? }[]`. `EmptyState`: `icon`, `title`, `description`, `action`, `headingLevel`. `Skeleton`: `className`.
@@ -38,6 +38,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `Tree` is controlled: the parent owns `expanded` and `selected`. Drag reorder is opt-in: only nodes with a `sortable` slot get a `Reorder <label>` handle, and `onReorder` fires once per changed drop.
 - Focus anywhere in a row (its link, menu or handle) makes it the roving stop. Keys pressed inside a row's own buttons are ignored by the tree.
 - `useToast()` throws outside `ToastProvider`, which `App.tsx` mounts. Error toasts stay 8 s, others 5 s.
+- Toast `action` is a callback, not a `Link`, because the provider sits above the router. Running it dismisses the toast.
 - `Chip` always renders its text, so state is never color alone.
 - `/dev/ui` is lazy-loaded only when `import.meta.env.DEV`; it is absent from production.
 - Use semantic token classes only (see the theme module doc); no raw colors or radii.

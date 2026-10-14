@@ -294,6 +294,18 @@ function Feedback() {
         >
           Info
         </Button>
+        <Button
+          variant="secondary"
+          onClick={() =>
+            toast({
+              kind: 'success',
+              title: 'Restored “Old cameras”',
+              action: { label: 'Open', onAction: () => {} },
+            })
+          }
+        >
+          With action
+        </Button>
       </Row>
       <Row label="Chip (text always shown)">
         <Chip>Backlog</Chip>

@@ -50,6 +50,17 @@ describe('Toast', () => {
     await vi.waitFor(() => expect(screen.queryByText('Saved')).not.toBeInTheDocument())
   })
 
+  it('runs the action and dismisses the toast', async () => {
+    const user = userEvent.setup()
+    const onAction = vi.fn()
+    setup({ kind: 'success', title: 'Restored', action: { label: 'Open', onAction } })
+    await user.click(screen.getByRole('button', { name: 'Fire' }))
+    await screen.findByText('Restored')
+    await user.click(screen.getByRole('button', { name: 'Open' }))
+    expect(onAction).toHaveBeenCalledOnce()
+    await vi.waitFor(() => expect(screen.queryByText('Restored')).not.toBeInTheDocument())
+  })
+
   it('useToast outside a ToastProvider throws', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     expect(() => render(<Trigger options={{ title: 'x' }} />)).toThrow(
