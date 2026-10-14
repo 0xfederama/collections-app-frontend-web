@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
-import { devTree } from './devData'
+import { devTree, devTreeState } from './devData'
 import { problemResponse } from './problems'
 
 type Tree = components['schemas']['Tree']
@@ -8,7 +8,6 @@ type List = components['schemas']['List']
 type ItemSummary = components['schemas']['ItemSummary']
 type ItemKind = ItemSummary['kind']
 type SortMode = components['schemas']['SortMode']
-type DisplayMode = components['schemas']['DisplayMode']
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 const stamp = '2026-10-14T09:00:00Z'
@@ -78,53 +77,20 @@ function makeItems(list: List, count: number): ItemSummary[] {
 }
 
 /**
- * Stateful in-memory fake of the list-view endpoints (`VITE_API_MOCKS=1` dev worker only): `GET`
- * and `PATCH` of a list's display and sort mode, `GET` of its items (sort, `q`, paging) and
- * `PUT …/items/order` (with `order_stale`). A few items per list, covering every kind, with and
- * without images and with one image that fails to load. Folder and list CRUD stays in `devData`.
+ * Stateful in-memory fake of the item endpoints of a list (`VITE_API_MOCKS=1` dev worker only):
+ * `GET …/items` (sort, `q`, paging) and `PUT …/items/order` (with `order_stale`). A few items per
+ * list, covering every kind, with and without images and with one image that fails to load.
+ * The list record itself (`GET`/`PATCH /lists/:id`, display and sort mode) belongs to the tree
+ * backend (`devTree.ts`), so a rename and a display-mode change use the same version.
  */
-export function createItemsBackend(tree: Tree) {
+export function createItemsBackend(tree: Tree, findList: (id: string) => List | undefined) {
   const items = new Map<string, ItemSummary[]>()
   for (const list of tree.lists) items.set(list.id, makeItems(list, Math.min(list.item_count, 48)))
-  // Display/sort changes and the version bumps they cause; everything else comes from the tree.
-  const overlay = new Map<
-    string,
-    { display_mode?: DisplayMode; sort_mode?: SortMode; bumps: number }
-  >()
 
-  /** The tree as the dev worker serves it now (so renames elsewhere show), else the initial one. */
-  async function currentTree(): Promise<Tree> {
-    try {
-      const response = await fetch(url('/api/v1/tree'))
-      if (response.ok) return (await response.json()) as Tree
-    } catch {
-      // fall back to the initial tree
-    }
-    return tree
-  }
-
-  async function detail(id: string): Promise<List | undefined> {
-    const now = await currentTree()
-    const list = now.lists.find((l) => l.id === id)
-    if (!list) return undefined
-    const extra = overlay.get(id)
-    const path: NonNullable<List['path']> = []
-    for (
-      let parent = list.folder_id ? now.folders.find((f) => f.id === list.folder_id) : undefined;
-      parent;
-      parent = parent.parent_folder_id
-        ? now.folders.find((f) => f.id === parent!.parent_folder_id)
-        : undefined
-    ) {
-      path.unshift({ type: 'folder', id: parent.id, name: parent.name })
-    }
-    return {
-      ...list,
-      ...extra,
-      item_count: items.get(id)?.length ?? list.item_count,
-      version: list.version + (extra?.bumps ?? 0),
-      path,
-    }
+  /** Items of a list; a list created in dev after startup starts empty. */
+  const itemsOf = (id: string) => {
+    if (!items.has(id) && findList(id)) items.set(id, [])
+    return items.get(id)
   }
 
   const bySort = (sort: SortMode) => (a: ItemSummary, b: ItemSummary) =>
@@ -135,35 +101,10 @@ export function createItemsBackend(tree: Tree) {
         : a.sort_order - b.sort_order
 
   const handlers = [
-    http.get(url('/api/v1/lists/:id'), async ({ params }) => {
-      const list = await detail(String(params.id))
-      if (!list) return problemResponse(404, 'not_found')
-      return HttpResponse.json(list, { headers: { ETag: `"l-${list.version}"` } })
-    }),
-
-    http.patch(url('/api/v1/lists/:id'), async ({ request, params }) => {
-      const body = (await request.clone().json()) as Record<string, unknown>
-      const keys = Object.keys(body)
-      // Renames and the like belong to the tree backend: fall through to the next handler.
-      if (keys.length === 0 || keys.some((k) => k !== 'display_mode' && k !== 'sort_mode')) return
+    http.get(url('/api/v1/lists/:id/items'), ({ request, params }) => {
       const id = String(params.id)
-      const list = await detail(id)
-      if (!list) return problemResponse(404, 'not_found')
-      const header = request.headers.get('If-Match')
-      if (!header) return problemResponse(428, 'precondition_required')
-      if (header !== `"l-${list.version}"`) {
-        return problemResponse(412, 'version_conflict', { current_version: list.version })
-      }
-      const current = overlay.get(id) ?? { bumps: 0 }
-      overlay.set(id, { ...current, ...body, bumps: current.bumps + 1 })
-      const updated = (await detail(id)) as List
-      return HttpResponse.json(updated, { headers: { ETag: `"l-${updated.version}"` } })
-    }),
-
-    http.get(url('/api/v1/lists/:id/items'), async ({ request, params }) => {
-      const id = String(params.id)
-      const all = items.get(id)
-      const list = await detail(id)
+      const all = itemsOf(id)
+      const list = findList(id)
       if (!all || !list) return problemResponse(404, 'not_found')
       const query = new URL(request.url).searchParams
       const sort = (query.get('sort') as SortMode | null) ?? list.sort_mode
@@ -178,7 +119,7 @@ export function createItemsBackend(tree: Tree) {
     }),
 
     http.put(url('/api/v1/lists/:id/items/order'), async ({ request, params }) => {
-      const all = items.get(String(params.id))
+      const all = itemsOf(String(params.id))
       if (!all) return problemResponse(404, 'not_found')
       const { ids } = (await request.json()) as { ids: string[] }
       const same =
@@ -198,4 +139,6 @@ export function createItemsBackend(tree: Tree) {
   return { handlers }
 }
 
-export const devItemHandlers = createItemsBackend(devTree).handlers
+export const devItemHandlers = createItemsBackend(devTree, (id) =>
+  devTreeState.lists.find((list) => list.id === id),
+).handlers

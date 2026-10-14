@@ -5,6 +5,11 @@ import { problemResponse } from './problems'
 type Folder = components['schemas']['Folder']
 type List = components['schemas']['List']
 type Tree = components['schemas']['Tree']
+type DisplayMode = components['schemas']['DisplayMode']
+type SortMode = components['schemas']['SortMode']
+
+const DISPLAY_MODES: DisplayMode[] = ['compact', 'thumbnail', 'grid']
+const SORT_MODES: SortMode[] = ['manual', 'title', 'updated']
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 
@@ -195,13 +200,45 @@ export function createTreeBackend(initial: Tree) {
       body.ids.forEach((id, i) => (siblings.find((s) => s.id === id)!.sort_order = i))
       return new HttpResponse(null, { status: 204 })
     }),
+    http.get(url('/api/v1/lists/:id'), ({ params }) => {
+      const list = state.lists.find((l) => l.id === params.id)
+      if (!list) return problemResponse(404, 'not_found')
+      const path: NonNullable<List['path']> = []
+      for (
+        let parent = folderOf(list.folder_id);
+        parent;
+        parent = folderOf(parent.parent_folder_id)
+      ) {
+        path.unshift({ type: 'folder', id: parent.id, name: parent.name })
+      }
+      return HttpResponse.json({ ...list, path }, { headers: etag('l', list.version) })
+    }),
     http.patch(url('/api/v1/lists/:id'), async ({ request, params }) => {
       const list = state.lists.find((l) => l.id === params.id)
       if (!list) return problemResponse(404, 'not_found')
       const mismatch = checkMatch(request, 'l', list.version)
       if (mismatch) return mismatch
-      const body = (await request.json()) as { name?: unknown; description?: string | null }
+      const body = (await request.json()) as {
+        name?: unknown
+        description?: string | null
+        display_mode?: unknown
+        sort_mode?: unknown
+      }
       let changed = false
+      if (body.display_mode !== undefined) {
+        if (!DISPLAY_MODES.includes(body.display_mode as DisplayMode)) {
+          return invalid('display_mode', 'Unknown display mode.')
+        }
+        list.display_mode = body.display_mode as DisplayMode
+        changed = true
+      }
+      if (body.sort_mode !== undefined) {
+        if (!SORT_MODES.includes(body.sort_mode as SortMode)) {
+          return invalid('sort_mode', 'Unknown sort mode.')
+        }
+        list.sort_mode = body.sort_mode as SortMode
+        changed = true
+      }
       if (body.name !== undefined) {
         const name = validName(body.name)
         if (!name) return invalid('name', 'Name must be 1 to 200 characters.')

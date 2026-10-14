@@ -541,7 +541,13 @@ describe('W-06 reorder', () => {
   })
 
   describe('handles are not offered', () => {
-    const noHandles = () => expect(screen.queryByRole('button', { name: /^Reorder / })).toBeNull()
+    // The sidebar tree has its own reorder handles, so look inside the items list only.
+    const noHandles = () =>
+      expect(
+        within(screen.getByRole('list', { name: 'Items' })).queryByRole('button', {
+          name: /^Reorder /,
+        }),
+      ).toBeNull()
 
     it('with a filter: hint to clear it', async () => {
       useBackend()
@@ -647,5 +653,55 @@ describe('W-06 scroll restore', () => {
     await itemsList()
     await waitFor(() => expect(screen.getByRole('main').scrollTop).toBe(240))
     expect(filterField()).toHaveValue('item')
+  })
+})
+
+describe('W-06 list actions menu (W-05) in the header', () => {
+  const treeUrl = `${location.origin}/api/v1/tree`
+  const tree = exampleResponses.getTree.body as components['schemas']['Tree']
+
+  it('offers rename, move and delete for the open list', async () => {
+    useBackend()
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    const main = screen.getByRole('main')
+    await user.click(within(main).getByRole('button', { name: /More actions for/ }))
+    expect(await screen.findByRole('menuitem', { name: 'Rename' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Edit description' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: /^Move/ })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument()
+  })
+
+  it('after a rename the header follows the tree and the next display-mode PATCH uses the new version', async () => {
+    const backend = useBackend()
+    // The tree mirrors the fake list, as the real backend would.
+    server.use(
+      http.get(treeUrl, () =>
+        HttpResponse.json({
+          ...tree,
+          lists: tree.lists.map((l) =>
+            l.id === LIST ? { ...l, name: backend.list.name, version: backend.list.version } : l,
+          ),
+        }),
+      ),
+    )
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    const main = screen.getByRole('main')
+    await user.click(within(main).getByRole('button', { name: /More actions for/ }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Rename' }))
+    const field = await screen.findByRole('textbox', { name: 'Name' })
+    await user.clear(field)
+    await user.type(field, 'Seen it{Enter}')
+    expect(await within(main).findByRole('heading', { name: 'Seen it' })).toBeInTheDocument()
+
+    await user.click(within(main).getByRole('radio', { name: radioName.compact }))
+    await waitFor(() => expect(backend.patches.at(-1)?.body).toEqual({ display_mode: 'compact' }))
+    // The rename PATCH went out with the version the tree had; the display PATCH with the bumped one.
+    const renameVersion = backend.patches[0]?.ifMatch
+    expect(backend.patches.at(-1)?.ifMatch).not.toBe(renameVersion)
+    expect(backend.patches.at(-1)?.ifMatch).toBe(`"l-${backend.list.version - 1}"`)
   })
 })

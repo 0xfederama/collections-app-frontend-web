@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { Button, EmptyState, Skeleton, useToast } from '../../components/ui'
@@ -8,7 +9,9 @@ import {
   useList,
   useListItems,
   useUpdateList,
+  listKeys,
   type DisplayMode,
+  type List,
   type SortMode,
 } from './api'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
@@ -26,7 +29,9 @@ function parseSort(value: string | null): SortMode | null {
  * The list screen below the shell's breadcrumbs. URL state (UI_SPEC §1, D-063): `?q=` is the title
  * filter and `?sort=` overrides the list's saved `sort_mode`. Display mode is saved on the list.
  */
-export function ListView({ listId, name }: { listId: string; name: string }) {
+export function ListView({ treeList }: { treeList: List }) {
+  const listId = treeList.id
+  const client = useQueryClient()
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const sortOverride = parseSort(searchParams.get('sort'))
@@ -35,6 +40,16 @@ export function ListView({ listId, name }: { listId: string; name: string }) {
 
   const listQuery = useList(listId)
   const list = listQuery.data
+  // The tree is the source of truth for renames, moves and description edits (W-05 refetches it
+  // after each one). When it holds a newer version than our detail, refetch the detail, or the
+  // next `If-Match` would be stale and fail with a 412.
+  const treeVersion = treeList.version
+  useEffect(() => {
+    const cached = client.getQueryData<List>(listKeys.detail(listId))
+    if (cached && cached.version !== treeVersion) {
+      void client.invalidateQueries({ queryKey: listKeys.detail(listId) })
+    }
+  }, [client, listId, treeVersion])
   const params = { sort: sortOverride, q }
   const itemsQuery = useListItems(listId, params)
   const { items, total } = flattenItems(itemsQuery.data)
@@ -139,7 +154,7 @@ export function ListView({ listId, name }: { listId: string; name: string }) {
   return (
     <div ref={root} className="flex flex-col gap-4">
       <ListHeader
-        name={name}
+        treeList={treeList}
         list={list}
         countLabel={countLabel}
         displayMode={mode}

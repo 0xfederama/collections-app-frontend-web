@@ -14,7 +14,7 @@ The list screen at `/lists/:listId`: items in the list's display mode (compact, 
 - `src/features/lists/ItemThumb.tsx`: cover image or fallback tile.
 - `src/features/lists/price.ts`: `formatPrice`.
 - `src/features/lists/scrollRestore.ts`: scroll restore for `main`.
-- `src/features/lists/sortable.tsx`: the only dnd-kit import in this feature.
+- Reorder uses `src/components/ui/sortable.tsx` (shared with the sidebar tree; one group, `items`); the feature has no dnd-kit import of its own.
 - `src/routes/ListRoute.tsx`: route; `ListGate` wraps `ListView`.
 - `src/mocks/devItems.ts`: stateful dev fake of list and item endpoints (dev worker only).
 
@@ -37,5 +37,5 @@ The list screen at `/lists/:listId`: items in the list's display mode (compact, 
 - Item links carry the list's query string, so `?q=` and `?sort=` survive opening an item.
 - "Make this the default sort" saves `sort_mode`, but the `?sort=` override stays in the URL.
 - At ≥ 1280 px, closing the detail panel navigates to the bare list URL, so `?q=` and `?sort=` are dropped.
-- Add item is a stub toast until W-08. The W-05 `ListActionsMenu` spot in `ListHeader` is marked by a comment.
+- Add item is a stub toast until W-08. `ListHeader` renders W-05's `ListActionsMenu` (rename, description, move, delete) for the tree's copy of the list; the heading and breadcrumbs read the tree, so they follow a rename. `ListView` refetches the list detail when the tree holds a newer version (otherwise the next `If-Match` would 412).
 - A 412 on list update refetches the list and shows a toast. A 409 `order_stale` on reorder refetches the items with a toast; other reorder errors roll back.

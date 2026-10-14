@@ -13,7 +13,12 @@ import {
   type SortMode,
 } from './api'
 import { ItemEntry } from './ItemEntry'
-import { SortableProvider, arrayMove, useSortableRow, type SortableMove } from './sortable'
+import {
+  SortableProvider,
+  arrayMove,
+  useSortableRow,
+  type SortableMove,
+} from '../../components/ui/sortable'
 
 /** Container classes per mode. Grid: 2 columns on mobile, 3 on tablet, then auto-fill (UI_SPEC §2). */
 const containerClass: Record<DisplayMode, string> = {
@@ -216,7 +221,12 @@ function SortableEntry({
   onOpen: () => void
   onMoveBy: (delta: -1 | 1) => void
 }) {
-  const { ref, handleRef, isDragging } = useSortableRow(item.id, index, item.title, size)
+  const { ref, handleRef, isDragging } = useSortableRow(item.id, {
+    group: 'items',
+    index,
+    size,
+    label: item.title,
+  })
   return (
     <ItemEntry
       item={item}

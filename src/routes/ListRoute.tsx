@@ -9,9 +9,5 @@ import { ListGate } from '../features/tree/ListGate'
  */
 export function ListRoute() {
   const { listId = '' } = useParams()
-  return (
-    <ListGate listId={listId}>
-      {(list) => <ListView key={listId} listId={listId} name={list.name} />}
-    </ListGate>
-  )
+  return <ListGate listId={listId}>{(list) => <ListView key={listId} treeList={list} />}</ListGate>
 }

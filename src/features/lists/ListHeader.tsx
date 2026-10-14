@@ -9,6 +9,8 @@ import {
   type SegmentedOption,
 } from '../../components/ui'
 import { LayoutGrid, List as ListIcon, Plus, Rows3, Search } from '../../components/ui/icons'
+import type { List as TreeList } from '../tree/api'
+import { ListActionsMenu } from '../tree/ListActionsMenu'
 import type { DisplayMode, List, SortMode } from './api'
 
 const modeOptions: SegmentedOption[] = [
@@ -46,8 +48,8 @@ function Description({ text }: { text: string }) {
 }
 
 export interface ListHeaderProps {
-  /** From the sidebar tree, like the breadcrumbs, so both always agree (and it shows before the list loads). */
-  name: string
+  /** The list as the sidebar tree has it: its name matches the breadcrumbs, shows before the list loads, and feeds the actions menu. */
+  treeList: TreeList
   list: List | undefined
   /** e.g. `12 items` or `3 of 12 items`. */
   countLabel: string
@@ -71,14 +73,13 @@ export function ListHeader(props: ListHeaderProps) {
     <header className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="min-w-0 flex-1 font-display text-2xl font-semibold break-words">
-          {props.name}
+          {props.treeList.name}
         </h1>
         <Button onClick={props.onAddItem}>
           <Plus aria-hidden className="size-4" />
           Add item
         </Button>
-        {/* W-05's <ListActionsMenu list={…} /> (rename, description, move, delete) goes here.
-            Whichever of W-05 / W-06 merges second wires it in. */}
+        <ListActionsMenu list={props.treeList} />
       </div>
       {list ? (
         list.description && <Description text={list.description} />

@@ -63,4 +63,7 @@ export const devTree: Tree = {
 }
 
 /** Dev worker only: listed before the spec-example handlers, so it wins. Tests keep the spec example. */
-export const devHandlers = createTreeBackend(devTree).handlers
+const treeBackend = createTreeBackend(devTree)
+export const devHandlers = treeBackend.handlers
+/** Live folders and lists of the dev tree (devItems reads list records from here, so both share one). */
+export const devTreeState = treeBackend.state
