@@ -91,7 +91,8 @@ describe('W-11 search results page', () => {
     const requests = serveSearch(3)
     renderRouter('/search?q=matrix')
 
-    expect(input()).toHaveValue('matrix')
+    // The route is lazy: wait for its field to appear.
+    expect(await screen.findByRole('searchbox', { name: 'Search all items' })).toHaveValue('matrix')
     const list = await resultList()
     expect(within(list).getAllByRole('link')).toHaveLength(3)
     expect(requests).toHaveLength(1)

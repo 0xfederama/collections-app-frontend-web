@@ -112,7 +112,7 @@ describe('W-04 sidebar search submit', () => {
     expect(router.state.location.pathname).toBe('/search')
     expect(router.state.location.search).toBe('?q=red%20bike')
     expect(await screen.findByRole('heading', { name: 'Search' })).toBeInTheDocument()
-    expect(screen.getByText(/red bike/)).toBeInTheDocument()
+    expect(await screen.findByText(/red bike/)).toBeInTheDocument()
   })
 
   it('URL-encodes reserved characters', async () => {

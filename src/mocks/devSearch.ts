@@ -37,7 +37,8 @@ export const devSearchHandlers = [
     const offset = Number(query.get('offset') ?? 0)
 
     const needle = q.toLowerCase()
-    const matching = devItemStore.all()
+    const matching = devItemStore
+      .all()
       // Only items of lists that still exist in the (stateful) dev tree.
       .filter((item) => item.title.toLowerCase().includes(needle))
       .filter((item) => devTreeState.lists.some((list) => list.id === item.list_id))
