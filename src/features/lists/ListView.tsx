@@ -1,0 +1,187 @@
+import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
+import { Button, EmptyState, Skeleton, useToast } from '../../components/ui'
+import { List as ListIcon } from '../../components/ui/icons'
+import { ApiError } from '../../lib/api'
+import {
+  flattenItems,
+  useList,
+  useListItems,
+  useUpdateList,
+  type DisplayMode,
+  type SortMode,
+} from './api'
+import { ItemsSkeleton, ItemsView } from './ItemsView'
+import { ListHeader } from './ListHeader'
+import { useScrollRestore } from './scrollRestore'
+
+const SORTS: readonly SortMode[] = ['manual', 'title', 'updated']
+const FILTER_DEBOUNCE_MS = 250
+
+function parseSort(value: string | null): SortMode | null {
+  return SORTS.find((sort) => sort === value) ?? null
+}
+
+/**
+ * The list screen below the shell's breadcrumbs. URL state (UI_SPEC §1, D-063): `?q=` is the title
+ * filter and `?sort=` overrides the list's saved `sort_mode`. Display mode is saved on the list.
+ */
+export function ListView({ listId, name }: { listId: string; name: string }) {
+  const toast = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const sortOverride = parseSort(searchParams.get('sort'))
+  const q = (searchParams.get('q') ?? '').trim()
+  const search = searchParams.size > 0 ? `?${searchParams.toString()}` : ''
+
+  const listQuery = useList(listId)
+  const list = listQuery.data
+  const params = { sort: sortOverride, q }
+  const itemsQuery = useListItems(listId, params)
+  const { items, total } = flattenItems(itemsQuery.data)
+  const updateList = useUpdateList(listId)
+
+  const root = useRef<HTMLDivElement>(null)
+  const remember = useScrollRestore(root, itemsQuery.isSuccess)
+
+  // The filter field updates at once; the URL follows after a pause.
+  const [filter, setFilter] = useState(q)
+  useEffect(() => {
+    if (filter.trim() === q) return
+    const timer = setTimeout(() => {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current)
+          if (filter.trim()) next.set('q', filter.trim())
+          else next.delete('q')
+          return next
+        },
+        { replace: true },
+      )
+    }, FILTER_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [filter, q, setSearchParams])
+  // The URL changed elsewhere (back/forward): the field follows it.
+  const [seenQ, setSeenQ] = useState(q)
+  if (q !== seenQ) {
+    setSeenQ(q)
+    if (filter.trim() !== q) setFilter(q)
+  }
+
+  const effectiveSort = sortOverride ?? list?.sort_mode ?? 'manual'
+  const setSort = (sort: SortMode) =>
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        // Choosing the saved sort needs no override.
+        if (sort === list?.sort_mode) next.delete('sort')
+        else next.set('sort', sort)
+        return next
+      },
+      { replace: true },
+    )
+
+  const onUpdateError = (error: Error) => {
+    if (error instanceof ApiError && error.status === 412) {
+      toast({
+        kind: 'error',
+        title: 'This list was changed elsewhere',
+        description: 'It has been refreshed. Try again.',
+      })
+    } else {
+      toast({ kind: 'error', title: 'Couldn’t save the change', description: 'Try again.' })
+    }
+  }
+  const setDisplayMode = (display_mode: DisplayMode) =>
+    updateList.mutate({ display_mode }, { onError: onUpdateError })
+  const makeDefault = () =>
+    updateList.mutate(
+      { sort_mode: effectiveSort },
+      {
+        onSuccess: () => toast({ kind: 'success', title: 'Default sort saved' }),
+        onError: onUpdateError,
+      },
+    )
+
+  const clearFilter = () => setFilter('')
+  const addItem = () =>
+    // Creating items is W-08 scope; this stays a stub until then.
+    toast({ kind: 'info', title: 'Adding items isn’t available yet' })
+
+  if (listQuery.isError) {
+    if (listQuery.error instanceof ApiError && listQuery.error.status === 404) {
+      return (
+        <EmptyState
+          icon={ListIcon}
+          headingLevel="h1"
+          title="List not found"
+          description="It may have been deleted or moved to Trash."
+        />
+      )
+    }
+    return (
+      <div role="alert" className="flex flex-col items-start gap-2">
+        <p>Couldn’t load this list.</p>
+        <Button variant="secondary" onClick={() => void listQuery.refetch()}>
+          Retry
+        </Button>
+      </div>
+    )
+  }
+
+  const mode = list?.display_mode ?? 'grid'
+  const filtered = q !== ''
+  const countLabel = !list
+    ? ''
+    : filtered && itemsQuery.isSuccess
+      ? `${total} of ${list.item_count} ${list.item_count === 1 ? 'item' : 'items'}`
+      : `${list.item_count} ${list.item_count === 1 ? 'item' : 'items'}`
+
+  return (
+    <div ref={root} className="flex flex-col gap-4">
+      <ListHeader
+        name={name}
+        list={list}
+        countLabel={countLabel}
+        displayMode={mode}
+        onDisplayMode={setDisplayMode}
+        sort={effectiveSort}
+        onSort={setSort}
+        canMakeDefault={!!list && effectiveSort !== list.sort_mode}
+        onMakeDefault={makeDefault}
+        makeDefaultPending={updateList.isPending}
+        filter={filter}
+        onFilter={setFilter}
+        onAddItem={addItem}
+      />
+      {itemsQuery.isError ? (
+        <div role="alert" className="flex flex-col items-start gap-2">
+          <p>Couldn’t load the items.</p>
+          <Button variant="secondary" onClick={() => void itemsQuery.refetch()}>
+            Retry
+          </Button>
+        </div>
+      ) : !itemsQuery.isSuccess || !list ? (
+        <>
+          <ItemsSkeleton mode={mode} />
+          {!list && <Skeleton className="sr-only" />}
+        </>
+      ) : (
+        <ItemsView
+          listId={listId}
+          mode={mode}
+          items={items}
+          total={total}
+          params={params}
+          effectiveSort={effectiveSort}
+          hasNextPage={itemsQuery.hasNextPage}
+          isFetchingNextPage={itemsQuery.isFetchingNextPage}
+          onLoadMore={() => void itemsQuery.fetchNextPage()}
+          search={search}
+          onOpenItem={remember}
+          onClearFilter={clearFilter}
+          onAddItem={addItem}
+        />
+      )}
+    </div>
+  )
+}
