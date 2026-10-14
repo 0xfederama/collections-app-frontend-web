@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
 import { devTreeState } from './devData'
+import { kindFields } from '../features/items/kinds'
 import { devItemStore } from './devItems'
 import { problemResponse } from './problems'
 
@@ -91,6 +92,12 @@ Bought **second hand**, still in great shape. See the [official page](https://ex
 A broken link: [x](javascript:alert(1)). Raw HTML <script>alert(1)</script> is not rendered.
 `
 
+/** Kind details and official site of items created or edited in this session. */
+const extras = new Map<
+  string,
+  { metadata: Record<string, unknown>; official_website_url: string | null }
+>()
+
 function fullItem(summary: ItemSummary): Item {
   const list = devTreeState.lists.find((l) => l.id === summary.list_id)
   const folders = new Map<string, Folder>(devTreeState.folders.map((f) => [f.id, f]))
@@ -103,19 +110,145 @@ function fullItem(summary: ItemSummary): Item {
   return {
     ...rest,
     image: image ? { source: 'url', url: image.url } : null,
-    official_website_url: seed(summary.id) % 3 === 0 ? 'https://example.com/product' : null,
+    official_website_url:
+      extras.get(summary.id)?.official_website_url ??
+      (seed(summary.id) % 3 === 0 ? 'https://example.com/product' : null),
     content_version: 1,
-    metadata: metadataFor(summary),
+    metadata: extras.get(summary.id)?.metadata ?? metadataFor(summary),
     path,
   } as Item
 }
 
+type FieldIssue = { field: string; message: string }
+type Body = Record<string, unknown>
+const KINDS = ['generic', 'movie', 'tv_show', 'motorcycle', 'car', 'camera']
+
+/** A light version of the server's rules (DATA_MODEL §2), enough to exercise the form's 422 paths. */
+function validateBody(body: Body, kind: string, metadata: Body | undefined): FieldIssue[] {
+  const issues: FieldIssue[] = []
+  const add = (field: string, message: string) => issues.push({ field, message })
+  if ('title' in body && (typeof body.title !== 'string' || !body.title.trim())) {
+    add('title', 'Title must not be blank.')
+  }
+  if ('kind' in body && !KINDS.includes(String(body.kind))) add('kind', 'Unknown kind.')
+  const price = body.price as { min: string | null; max: string | null; currency?: string } | null
+  if (price) {
+    if (price.min === null && price.max === null) add('price', 'Set a minimum or a maximum.')
+    else if (!price.currency) add('price.currency', 'Currency is required with a price.')
+    if (price.min && price.max && Number(price.min) > Number(price.max)) {
+      add('price.max', 'Maximum must not be lower than the minimum.')
+    }
+  }
+  const url = body.official_website_url
+  if (typeof url === 'string' && !/^https?:\/\//.test(url)) {
+    add('official_website_url', 'Must be an http or https address.')
+  }
+  for (const [key, value] of Object.entries(metadata ?? {})) {
+    const field = kindFields[kind as keyof typeof kindFields]?.find((f) => f.key === key)
+    if (!field) continue
+    if (typeof value === 'number' && field.min !== undefined && value < field.min) {
+      add(`metadata.${key}`, `Must be at least ${field.min}.`)
+    }
+    if (typeof value === 'number' && field.max !== undefined && value > field.max) {
+      add(`metadata.${key}`, `Must be at most ${field.max}.`)
+    }
+  }
+  return issues
+}
+
+const unknownKey = (body: Body, allowed: string[]) =>
+  Object.keys(body).find((key) => !allowed.includes(key))
+const ITEM_KEYS = [
+  'title',
+  'kind',
+  'summary',
+  'status',
+  'price',
+  'official_website_url',
+  'metadata',
+]
+
 /**
- * Dev fake of `GET`/`DELETE /items/{id}`, `POST /items/{id}/move` and `GET …/content`, on top of
+ * Dev fake of `GET`/`PATCH`/`DELETE /items/{id}`, `POST /items/{id}/move` and `GET …/content`, on top of
  * the item store of `devItems.ts` (`VITE_API_MOCKS=1` worker only). Every item has kind details
  * (except every fifth), no official site except every third, and a short Markdown description.
  */
 export const devItemDetailHandlers = [
+  http.post(url('/api/v1/lists/:id/items'), async ({ params, request }) => {
+    const listId = String(params.id)
+    if (!devItemStore.has(listId)) return problemResponse(404, 'not_found')
+    const body = (await request.json()) as Body
+    const unknown = unknownKey(body, ITEM_KEYS)
+    if (unknown) return problemResponse(400, 'unknown_field', { detail: unknown })
+    const kind = String(body.kind ?? 'generic')
+    const issues = validateBody({ ...body, title: body.title ?? '' }, kind, body.metadata as Body)
+    if (issues.length > 0) return problemResponse(422, 'validation_failed', { errors: issues })
+    const now = new Date().toISOString()
+    const created = {
+      id: crypto.randomUUID(),
+      list_id: listId,
+      title: String(body.title).trim(),
+      kind,
+      summary: (body.summary as string | null) ?? null,
+      status: (body.status as string | null) ?? null,
+      image: null,
+      price: (body.price as ItemSummary['price']) ?? null,
+      official_website_url: null,
+      content_version: 0,
+      sort_order: 0,
+      version: 1,
+      created_at: now,
+      updated_at: now,
+    } as ItemSummary
+    devItemStore.append(created)
+    extras.set(created.id, {
+      metadata: (body.metadata as Body | undefined) ?? {},
+      official_website_url: (body.official_website_url as string | null) ?? null,
+    })
+    return HttpResponse.json(fullItem(created), {
+      status: 201,
+      headers: { ETag: `"i-1"`, Location: `/api/v1/items/${created.id}` },
+    })
+  }),
+
+  http.patch(url('/api/v1/items/:id'), async ({ params, request }) => {
+    const summary = devItemStore.find(String(params.id))
+    if (!summary) return problemResponse(404, 'not_found')
+    const header = request.headers.get('If-Match')
+    if (!header) return problemResponse(428, 'precondition_required')
+    if (header !== `"i-${summary.version}"`) {
+      return problemResponse(412, 'version_conflict', { current_version: summary.version })
+    }
+    const body = (await request.json()) as Body
+    const unknown = unknownKey(body, ITEM_KEYS)
+    if (unknown) return problemResponse(400, 'unknown_field', { detail: unknown })
+    const current = fullItem(summary)
+    const kind = String(body.kind ?? summary.kind)
+    const metadata = (
+      'metadata' in body ? body.metadata : kind === summary.kind ? current.metadata : {}
+    ) as Body
+    const issues = validateBody(body, kind, metadata)
+    if (issues.length > 0) return problemResponse(422, 'validation_failed', { errors: issues })
+    const { official_website_url, metadata: _ignored, ...summaryPatch } = body
+    void _ignored
+    const changed = Object.keys(body).length > 0
+    const next = {
+      ...summary,
+      ...summaryPatch,
+      version: changed ? summary.version + 1 : summary.version,
+      updated_at: changed ? new Date().toISOString() : summary.updated_at,
+    } as ItemSummary
+    devItemStore.replace(next)
+    extras.set(next.id, {
+      metadata,
+      official_website_url:
+        official_website_url === undefined
+          ? current.official_website_url
+          : (official_website_url as string | null),
+    })
+    return HttpResponse.json(fullItem(next), { headers: { ETag: `"i-${next.version}"` } })
+  }),
+
   http.get(url('/api/v1/items/:id'), ({ params }) => {
     const summary = devItemStore.find(String(params.id))
     if (!summary) return problemResponse(404, 'not_found')

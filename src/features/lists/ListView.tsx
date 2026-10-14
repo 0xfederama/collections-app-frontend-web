@@ -14,6 +14,8 @@ import {
   type List,
   type SortMode,
 } from './api'
+import { CreateItemDialog } from '../items/CreateItemDialog'
+import { withoutEdit } from '../items/editMode'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { useScrollRestore } from './scrollRestore'
@@ -36,7 +38,8 @@ export function ListView({ treeList }: { treeList: List }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const sortOverride = parseSort(searchParams.get('sort'))
   const q = (searchParams.get('q') ?? '').trim()
-  const search = searchParams.size > 0 ? `?${searchParams.toString()}` : ''
+  // `?edit=1` belongs to the open item's page; links to other items must not carry it.
+  const search = withoutEdit(searchParams)
 
   const listQuery = useList(listId)
   const list = listQuery.data
@@ -118,9 +121,8 @@ export function ListView({ treeList }: { treeList: List }) {
     )
 
   const clearFilter = () => setFilter('')
-  const addItem = () =>
-    // Creating items is W-08 scope; this stays a stub until then.
-    toast({ kind: 'info', title: 'Adding items isn’t available yet' })
+  const [adding, setAdding] = useState(false)
+  const addItem = () => setAdding(true)
 
   if (listQuery.isError) {
     if (listQuery.error instanceof ApiError && listQuery.error.status === 404) {
@@ -196,6 +198,9 @@ export function ListView({ treeList }: { treeList: List }) {
           onClearFilter={clearFilter}
           onAddItem={addItem}
         />
+      )}
+      {adding && (
+        <CreateItemDialog listId={listId} search={search} onClose={() => setAdding(false)} />
       )}
     </div>
   )

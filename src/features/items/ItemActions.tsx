@@ -5,6 +5,7 @@ import { AlertDialog, Button, Combobox, Dialog, useToast } from '../../component
 import { FolderInput, Pencil, Trash2 } from '../../components/ui/icons'
 import { treeKeys, useTreeIndex, type TreeIndex, type TreeNode } from '../tree/api'
 import { itemKeys, useDeleteItem, useMoveItem, type Item } from './api'
+import { withEdit, withoutEdit } from './editMode'
 import { classifyItemError, type ItemError } from './errors'
 
 function ErrorBox({ error }: { error: ItemError }) {
@@ -40,15 +41,21 @@ function listOptions(index: TreeIndex, currentListId: string) {
 }
 
 /**
- * Edit (disabled until W-08), Move and Delete, with their dialogs. Errors follow UI_SPEC §9: 412
+ * Edit (switches the page to the form, `?edit=1`), Move and Delete, with their dialogs. Errors follow UI_SPEC §9: 412
  * loads the latest item and asks to try again, 404 says the item is gone and goes back to the
  * list, 409 asks for another destination, a network failure keeps the dialog open to retry.
  */
 export function ItemActions({ item }: { item: Item }) {
   const [dialog, setDialog] = useState<'move' | 'delete' | null>(null)
+  const navigate = useNavigate()
+  const { pathname, search } = useLocation()
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variant="secondary" size="sm" disabled title="Editing arrives soon">
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => void navigate({ pathname, search: withEdit(search) }, { replace: true })}
+      >
         <Pencil aria-hidden className="size-4" />
         Edit
       </Button>
@@ -86,7 +93,10 @@ function useFailure(item: Item, onClose: () => void) {
       void client.invalidateQueries({ queryKey: treeKeys.tree })
       toast({ kind: 'error', title: classified.message })
       onClose()
-      void navigate({ pathname: `/lists/${item.list_id}`, search }, { replace: true })
+      void navigate(
+        { pathname: `/lists/${item.list_id}`, search: withoutEdit(search) },
+        { replace: true },
+      )
       return
     }
     setError(classified)
@@ -94,7 +104,7 @@ function useFailure(item: Item, onClose: () => void) {
   return { error, setError, fail }
 }
 
-function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
+export function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
   const tree = useTreeIndex()
   const move = useMoveItem()
   const toast = useToast()
@@ -168,7 +178,10 @@ function DeleteItemDialog({ item, onClose }: { item: Item; onClose: () => void }
       await remove.mutateAsync({ item })
       toast({ kind: 'success', title: 'Item moved to Trash', description: item.title })
       onClose()
-      void navigate({ pathname: `/lists/${item.list_id}`, search }, { replace: true })
+      void navigate(
+        { pathname: `/lists/${item.list_id}`, search: withoutEdit(search) },
+        { replace: true },
+      )
     } catch (caught) {
       fail(caught)
     }

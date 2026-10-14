@@ -1,9 +1,11 @@
-import { Link, Navigate, useLocation, useParams } from 'react-router'
+import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router'
 import { Button, EmptyState, kindIcons } from '../../components/ui'
 import { ApiError } from '../../lib/api'
 import { useBreakpoint } from '../../lib/breakpoints'
 import { ListGate } from '../tree/ListGate'
 import { useItem } from './api'
+import { isEditing, withoutEdit } from './editMode'
+import { ItemEditForm } from './ItemEditForm'
 import { ItemSkeleton } from './ItemSkeleton'
 import { ItemView } from './ItemView'
 
@@ -18,11 +20,15 @@ function ItemDetail({
 }) {
   const item = useItem(itemId)
   const { search } = useLocation()
-  const backTo = { pathname: `/lists/${listId}`, search }
+  const [searchParams] = useSearchParams()
+  const editing = isEditing(searchParams)
+  const backTo = { pathname: `/lists/${listId}`, search: withoutEdit(search) }
   const panel = useBreakpoint() === 'wide'
 
   if (item.status === 'pending') return <ItemSkeleton />
-  if (item.status === 'error') {
+  // A failed background refetch keeps the cached item: only show the error when there is none,
+  // or an open edit form (and its draft) would vanish.
+  if (item.status === 'error' && !item.data) {
     if (item.error instanceof ApiError && item.error.status === 404) {
       return (
         <EmptyState
@@ -61,7 +67,11 @@ function ItemDetail({
           ← Back to {listName}
         </Link>
       )}
-      <ItemView item={item.data} />
+      {editing ? (
+        <ItemEditForm item={item.data} listName={listName} />
+      ) : (
+        <ItemView item={item.data} />
+      )}
     </div>
   )
 }
