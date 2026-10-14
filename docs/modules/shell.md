@@ -13,7 +13,7 @@ Top-level providers, router, and the responsive frame every route renders into (
 - `src/lib/breakpoints.ts`, `src/lib/storage.ts`: breakpoint hook; `collection:` storage helpers.
 - `src/features/search/`: `SidebarSearch` form and `useSearchShortcut`.
 - `src/features/tree/breadcrumbs.ts`: `useBreadcrumbs`.
-- `src/routes/*Route.tsx`: route placeholders.
+- `src/routes/*Route.tsx`: route components; `ListRoute` is the list view, the others are placeholders.
 - `vite.config.ts`: dev server on :5173; proxies `/api` and `/readyz` to `API_PROXY_TARGET` (default `http://localhost:8080`).
 
 ## Interfaces
