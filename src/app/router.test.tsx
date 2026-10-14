@@ -62,3 +62,11 @@ describe('Unknown route', () => {
     await screen.findByText('Backend: ready')
   })
 })
+
+describe('Dev UI route', () => {
+  it('renders the UI gallery at /dev/ui in dev builds', async () => {
+    expect(import.meta.env.DEV).toBe(true)
+    renderAt('/dev/ui')
+    expect(await screen.findByRole('heading', { name: 'UI gallery' })).toBeInTheDocument()
+  })
+})

@@ -1,0 +1,65 @@
+import * as RadixAlertDialog from '@radix-ui/react-alert-dialog'
+import type { ReactNode } from 'react'
+import { Button } from './Button'
+import { overlayClasses } from './Dialog'
+
+export interface AlertDialogProps {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  trigger?: ReactNode
+  title: string
+  description: string
+  confirmLabel?: string
+  cancelLabel?: string
+  onConfirm: () => void
+  /** Destructive confirm (red). Focus still starts on Cancel. */
+  destructive?: boolean
+  pending?: boolean
+}
+
+/** Confirmation that needs an explicit answer: no outside-click dismissal, no close icon. */
+export function AlertDialog({
+  open,
+  onOpenChange,
+  trigger,
+  title,
+  description,
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  onConfirm,
+  destructive,
+  pending,
+}: AlertDialogProps) {
+  return (
+    <RadixAlertDialog.Root open={open} onOpenChange={onOpenChange}>
+      {trigger && <RadixAlertDialog.Trigger asChild>{trigger}</RadixAlertDialog.Trigger>}
+      <RadixAlertDialog.Portal>
+        <RadixAlertDialog.Overlay className={overlayClasses} />
+        <RadixAlertDialog.Content className="fixed top-1/2 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-xl border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in">
+          <div className="flex flex-col gap-1">
+            <RadixAlertDialog.Title className="font-display text-xl font-semibold">
+              {title}
+            </RadixAlertDialog.Title>
+            <RadixAlertDialog.Description className="text-sm text-text-muted">
+              {description}
+            </RadixAlertDialog.Description>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
+            <RadixAlertDialog.Cancel asChild>
+              <Button variant="secondary">{cancelLabel}</Button>
+            </RadixAlertDialog.Cancel>
+            <RadixAlertDialog.Action asChild>
+              <Button
+                variant={destructive ? 'danger' : 'primary'}
+                pending={pending}
+                onClick={onConfirm}
+              >
+                {confirmLabel}
+              </Button>
+            </RadixAlertDialog.Action>
+          </div>
+        </RadixAlertDialog.Content>
+      </RadixAlertDialog.Portal>
+    </RadixAlertDialog.Root>
+  )
+}
