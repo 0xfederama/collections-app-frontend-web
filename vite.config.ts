@@ -1,6 +1,17 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig, loadEnv } from 'vite'
+import { rmSync } from 'node:fs'
+import { join } from 'node:path'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
+
+// public/mockServiceWorker.js is only for `VITE_API_MOCKS=1 npm run dev`; keep it out of production builds.
+const dropMockWorker = (): Plugin => ({
+  name: 'drop-mock-service-worker',
+  apply: 'build',
+  closeBundle() {
+    rmSync(join(process.cwd(), 'dist/mockServiceWorker.js'), { force: true })
+  },
+})
 
 // Dev is same-origin like prod (D-033): the app calls relative /api and Vite proxies it to the backend.
 export default defineConfig(({ mode }) => {
@@ -9,11 +20,11 @@ export default defineConfig(({ mode }) => {
   const proxy = { target, changeOrigin: false }
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), dropMockWorker()],
     server: {
       port: 5173,
       strictPort: true,
-      proxy: { '/api': proxy, '/healthz': proxy, '/readyz': proxy },
+      proxy: { '/api': proxy, '/readyz': proxy },
     },
     test: {
       environment: 'jsdom',

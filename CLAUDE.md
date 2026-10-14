@@ -30,24 +30,26 @@ This repo is the `frontend-web/` submodule of the parent repo `0xfederama/collec
 
 No CI (D-031, D-032): the gates run locally. Run `npm run check` before every PR and paste the output in the PR.
 
-| Purpose                                                                                                          | Command                                                                          |
-| ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| All checks (prettier, eslint, tsc, vitest, vite build)                                                           | `npm run check`                                                                  |
-| Dev server (:5173, proxies `/api`, `/healthz`, `/readyz` to `API_PROXY_TARGET`, default `http://localhost:8080`) | `npm run dev`                                                                    |
-| Unit/component tests                                                                                             | `npm test`                                                                       |
-| Lint / typecheck / format check / format                                                                         | `npm run lint` / `npm run typecheck` / `npm run format:check` / `npm run format` |
-| Production build / preview                                                                                       | `npm run build` / `npm run preview`                                              |
-| Dependency vulnerability scan (network)                                                                          | `npm run audit`                                                                  |
-| E2E (needs backend running)                                                                                      | arrives in Q-01                                                                  |
-| Sync API contract / verify generated client                                                                      | arrives in W-02 (`npm run api:sync -- api-v0.N.0`, `api:check` joins `check`)    |
+| Purpose                                                                                                 | Command                                                                                              |
+| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| All checks (prettier, eslint, tsc, vitest, vite build)                                                  | `npm run check`                                                                                      |
+| Dev server (:5173, proxies `/api` and `/readyz` to `API_PROXY_TARGET`, default `http://localhost:8080`) | `npm run dev`                                                                                        |
+| Unit/component tests                                                                                    | `npm test`                                                                                           |
+| Lint / typecheck / format check / format                                                                | `npm run lint` / `npm run typecheck` / `npm run format:check` / `npm run format`                     |
+| Production build / preview                                                                              | `npm run build` / `npm run preview`                                                                  |
+| Dependency vulnerability scan (network)                                                                 | `npm run audit`                                                                                      |
+| E2E (needs backend running)                                                                             | arrives in Q-01                                                                                      |
+| Sync API contract (vendors the spec at a backend tag, regenerates `src/generated/`) / verify offline    | `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]` / `npm run api:check` (part of `check`) |
+| Dev server with no backend (MSW serves the spec examples)                                               | `VITE_API_MOCKS=1 npm run dev`                                                                       |
 
 Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-038–D-042. Backend for dev: `docker compose up --build` in `../backend` (backend only) or in the parent folder (backend plus this dev server in a container).
 
 ## Layout & conventions
 
-- `src/features/<feature>/` holds components, hooks, and `api.ts` (TanStack Query hooks, from W-02). All server I/O goes through `src/lib/api` (from W-02), never raw `fetch`. Until then only `src/lib/backendStatus.ts` uses a plain `fetch`.
+- `src/features/<feature>/` holds components, hooks, and `api.ts` (TanStack Query hooks, from W-02). All server I/O goes through `src/lib/api` (openapi-fetch client; failures throw `ApiError` / `NetworkError`), never raw `fetch`. Writes build `If-Match` with `ifMatch('item', item.version)`.
 - Lean rule (D-034): add a dependency only in the task that first uses it, and justify it in the PR.
-- `src/generated/` is generated, so **never edit** it. Regenerate with `api:sync`.
+- `src/generated/` and `api/openapi.yaml` are generated/vendored, so **never edit** them. Regenerate with `api:sync`; `api:check` fails on any drift.
+- `src/mocks/` holds MSW handlers built from the spec examples (`src/generated/examples.ts`). Tests start the Node server in `test-setup.ts` (unmocked requests fail); override per test with `server.use(...)`. Render with `renderAt` / `renderWithProviders` from `src/test-utils.tsx` (fresh QueryClient per render).
 - `src/components/ui/` is the design-system primitives (barrel `index.ts`, all 18 of UI_SPEC §11). Compose them; use tokens from `src/styles/tokens.css`, with no hard-coded colors, radii, or spacing. Lucide icons are imported only in `src/components/ui/icons.ts`.
 - `/dev/ui` is a dev-only gallery of every primitive and state (`src/dev/DevUiRoute.tsx`, lazy route, absent from the prod bundle). Add new primitives or states there.
 - Editable resources: `If-Match` is built from the resource `version` by `lib/api`. Drafts are never discarded on 412 or network errors (UI_SPEC §9).
@@ -68,6 +70,11 @@ Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-
 - 2026-10-14: Fraunces uses `full.css` (the only Fontsource entry with both `opsz` and `SOFT` axes, ~120 KB latin); Inter uses the default `wght` entry.
 - 2026-10-14: Radix `Dialog.Content` animations use `transform` only (`scale`); Tailwind 4 positions with the `translate` property, so never put translate in the keyframes.
 - 2026-10-13: npm 11 prints an `install-scripts` warning for the optional `fsevents` package. It is harmless.
+
+- 2026-10-14: `openapi-typescript` 7.13 declares `typescript@^5` as a peer, so `package.json` has a scoped `overrides` entry for it (works with TS 6; re-check when it widens its range).
+- 2026-10-14: MSW 3: import `http`/`HttpResponse` from `msw/http`, and use `onUnhandledFrame` (was `onUnhandledRequest`). Handlers and the client use absolute `location.origin` URLs because Node's fetch rejects relative ones.
+- 2026-10-14: `public/mockServiceWorker.js` (from `npx msw init public/`) is dev-only: a build plugin in `vite.config.ts` deletes it from `dist/`, and `main.tsx` imports the mocks only when `VITE_API_MOCKS=1`.
+- 2026-10-14: Under jsdom, abort errors from Node's fetch are not `instanceof DOMException`; match `error.name === 'AbortError'`.
 
 ## Working guidelines
 

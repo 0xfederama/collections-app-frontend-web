@@ -15,8 +15,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && vite build",
-    "audit": "npm audit"
+    "check": "npm run api:check && npm run format:check && npm run lint && npm run typecheck && npm run test && vite build",
+    "audit": "npm audit",
+    "api:sync": "node scripts/api-sync.mjs",
+    "api:check": "node scripts/api-check.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",
@@ -28,7 +30,9 @@
     "@radix-ui/react-select": "^2.4.1",
     "@radix-ui/react-toast": "^1.3.1",
     "@radix-ui/react-tooltip": "^1.4.1",
+    "@tanstack/react-query": "^5.104.2",
     "lucide-react": "^1.56.0",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router": "^8.4.0"
@@ -47,12 +51,25 @@
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
+    "js-yaml": "^4.3.2",
     "jsdom": "^30.1.2",
+    "msw": "^3.0.3",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.4"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
