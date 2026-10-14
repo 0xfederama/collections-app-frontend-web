@@ -66,10 +66,10 @@ describe('AT-14 landmarks per breakpoint', () => {
     mockViewport(1280)
     renderAt(ITEM_PATH)
     const aside = await screen.findByRole('complementary', { name: 'Item details' })
-    expect(await within(aside).findByRole('heading', { name: 'Item' })).toBeInTheDocument()
+    expect(await within(aside).findByRole('heading', { name: 'The Matrix' })).toBeInTheDocument()
     const main = screen.getByRole('main')
     expect(await within(main).findByRole('heading', { name: 'Watchlist' })).toBeInTheDocument()
-    expect(within(main).queryByRole('heading', { name: 'Item' })).not.toBeInTheDocument()
+    expect(within(main).queryByRole('heading', { name: 'The Matrix' })).not.toBeInTheDocument()
   })
 
   it.each([375, 800, 1100, 1279])(
@@ -78,7 +78,7 @@ describe('AT-14 landmarks per breakpoint', () => {
       mockViewport(width)
       renderAt(ITEM_PATH)
       const main = screen.getByRole('main')
-      expect(await within(main).findByRole('heading', { name: 'Item' })).toBeInTheDocument()
+      expect(await within(main).findByRole('heading', { name: 'The Matrix' })).toBeInTheDocument()
       expect(within(main).queryByRole('heading', { name: 'Watchlist' })).not.toBeInTheDocument()
       expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     },
@@ -110,7 +110,7 @@ describe('AT-14 landmarks per breakpoint', () => {
     mockViewport(1100)
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     expect(
-      await within(screen.getByRole('main')).findByRole('heading', { name: 'Item' }),
+      await within(screen.getByRole('main')).findByRole('heading', { name: 'The Matrix' }),
     ).toBeInTheDocument()
 
     mockViewport(1400)
@@ -184,7 +184,7 @@ describe('AT-14 mobile drawer', () => {
     await user.click(within(dialog).getByRole('link', { name: 'Settings' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(
-      within(screen.getByRole('main')).getByRole('heading', { name: 'Settings' }),
+      await within(screen.getByRole('main')).findByRole('heading', { name: 'Settings' }),
     ).toBeInTheDocument()
   })
 

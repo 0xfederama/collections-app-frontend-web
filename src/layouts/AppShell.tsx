@@ -123,7 +123,9 @@ export function AppShell() {
         {crumbs}
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <main className="min-w-0 flex-1 overflow-y-auto p-6">{content}</main>
-          {panelVisible && <DetailPanel listId={itemMatch.params.listId} />}
+          {panelVisible && (
+            <DetailPanel listId={itemMatch.params.listId} search={location.search} />
+          )}
         </div>
       </div>
     </div>
@@ -131,7 +133,7 @@ export function AppShell() {
 }
 
 /** Wide screens: the item beside the list. W-07 changes `ItemRoute`, not this frame. */
-function DetailPanel({ listId }: { listId: string | undefined }) {
+function DetailPanel({ listId, search }: { listId: string | undefined; search: string }) {
   const navigate = useNavigate()
   return (
     <aside
@@ -139,7 +141,10 @@ function DetailPanel({ listId }: { listId: string | undefined }) {
       className="flex w-[40%] max-w-[40rem] min-w-[26.25rem] shrink-0 animate-drawer-in-right flex-col overflow-y-auto border-l border-border bg-surface"
     >
       <div className="flex justify-end px-2 pt-2">
-        <IconButton aria-label="Close details" onClick={() => void navigate(`/lists/${listId}`)}>
+        <IconButton
+          aria-label="Close details"
+          onClick={() => void navigate({ pathname: `/lists/${listId}`, search })}
+        >
           <X aria-hidden />
         </IconButton>
       </div>

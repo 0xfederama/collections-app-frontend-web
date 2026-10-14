@@ -1,0 +1,299 @@
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw/http'
+import { describe, expect, it } from 'vitest'
+import { exampleResponses } from '../../generated/examples'
+import { problemResponse } from '../../mocks/problems'
+import { server } from '../../mocks/server'
+import { mockViewport, renderAt } from '../../test-utils'
+import type { Item } from './api'
+
+const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
+const ITEM = '7c1e5a10-0000-4000-8000-000000000101'
+const PATH = `/lists/${WATCHLIST}/items/${ITEM}`
+const itemUrl = `${location.origin}/api/v1/items/${ITEM}`
+const contentUrl = `${itemUrl}/content`
+const settingsUrl = `${location.origin}/api/v1/settings`
+
+const matrix = exampleResponses.getItem.body as Item
+
+function overrideItem(over: Partial<Item>) {
+  server.use(http.get(itemUrl, () => HttpResponse.json({ ...matrix, ...over })))
+}
+
+async function renderItem(path = PATH) {
+  mockViewport(1100)
+  renderAt(path)
+  return screen.findByRole('heading', { name: 'The Matrix', level: 1 })
+}
+
+/** Renders an overridden item and waits for its title. */
+async function renderOverride(over: Partial<Item>) {
+  overrideItem(over)
+  mockViewport(1100)
+  renderAt(PATH)
+  return screen.findByRole('heading', { level: 1, name: over.title ?? 'The Matrix' })
+}
+
+const links = () => within(screen.getByRole('group', { name: 'External links' }))
+
+describe('AT-13 item view: the example movie', () => {
+  it('shows title, kind badge, status, summary and the three links', async () => {
+    await renderItem()
+    expect(screen.getByText('Movie')).toBeInTheDocument()
+    expect(screen.getByText('Watched')).toBeInTheDocument()
+    expect(screen.getByText('A hacker learns the truth about reality.')).toBeInTheDocument()
+
+    const google = links().getByRole('link', { name: /^Google/ })
+    expect(new URL(google.getAttribute('href') ?? '').searchParams.get('q')).toBe(
+      'The Matrix 1999 film',
+    )
+    expect(google.getAttribute('href')).toContain('1999+film')
+    expect(links().getByRole('link', { name: /^Reddit/ })).toBeInTheDocument()
+    expect(links().getByRole('button', { name: 'No official site' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+  })
+
+  it('shows the kind section with units, the IMDb link and streaming', async () => {
+    await renderItem()
+    const details = (await screen.findByRole('heading', { name: 'Details' })).closest('section')!
+    expect(within(details).getByText('136 min')).toBeInTheDocument()
+    expect(within(details).getByText('1999')).toBeInTheDocument()
+    expect(within(details).getByRole('link', { name: /IMDb page/ })).toHaveAttribute(
+      'href',
+      'https://www.imdb.com/title/tt0133093/',
+    )
+    expect(within(details).getByText(/Streaming in Italy:/)).toBeInTheDocument()
+    expect(within(details).getByText('Netflix, Prime Video')).toBeInTheDocument()
+    expect(within(details).queryByRole('note')).not.toBeInTheDocument()
+  })
+
+  it('warns when the streaming country differs from the settings country', async () => {
+    overrideItem({
+      metadata: { ...matrix.metadata, streaming: { country: 'US', platforms: ['Hulu'] } },
+    })
+    await renderItem()
+    const note = await screen.findByRole('note')
+    expect(note).toHaveTextContent(/Italy/)
+    expect(note).toHaveTextContent(/United States/)
+    expect(screen.getByText(/Streaming in United States:/)).toBeInTheDocument()
+  })
+
+  it('shows no warning while the settings are unknown', async () => {
+    server.use(http.get(settingsUrl, () => problemResponse(500, 'internal_error')))
+    await renderItem()
+    await screen.findByText(/Streaming in Italy:/)
+    expect(screen.queryByRole('note')).not.toBeInTheDocument()
+  })
+
+  it('renders the description as Markdown', async () => {
+    await renderItem()
+    expect(await screen.findByRole('heading', { name: 'Notes', level: 3 })).toBeInTheDocument()
+    expect(screen.getByText(/Great film/)).toBeInTheDocument()
+  })
+
+  it('shows the Edit button disabled', async () => {
+    await renderItem()
+    expect(await screen.findByRole('button', { name: 'Edit' })).toBeDisabled()
+  })
+
+  it('has a Back link to the list on a full page', async () => {
+    await renderItem()
+    expect(screen.getByRole('link', { name: /Back to Watchlist/ })).toHaveAttribute(
+      'href',
+      `/lists/${WATCHLIST}`,
+    )
+  })
+})
+
+describe('item view: kinds', () => {
+  it('tv show: ongoing run reads 2019–present', async () => {
+    await renderOverride({
+      title: 'Severance',
+      kind: 'tv_show',
+      metadata: { first_air_year: 2019, seasons: 2 },
+    })
+    expect(await screen.findByText('2019–present')).toBeInTheDocument()
+    expect(screen.getByText('Years')).toBeInTheDocument()
+    expect(screen.getByText('Seasons').nextElementSibling).toHaveTextContent('2')
+    expect(screen.queryByText('First aired')).not.toBeInTheDocument()
+    const google = links().getByRole('link', { name: /^Google/ })
+    expect(new URL(google.getAttribute('href') ?? '').searchParams.get('q')).toBe(
+      'Severance TV series',
+    )
+  })
+
+  it('tv show: finished run reads 2019–2023', async () => {
+    await renderOverride({
+      title: 'Severance',
+      kind: 'tv_show',
+      metadata: { first_air_year: 2019, end_year: 2023 },
+    })
+    expect(await screen.findByText('2019–2023')).toBeInTheDocument()
+  })
+
+  it('generic item with empty metadata has no Details section', async () => {
+    await renderOverride({ title: 'Notebook', kind: 'generic', metadata: {} })
+    await screen.findByRole('heading', { name: 'Description' })
+    expect(screen.queryByRole('heading', { name: 'Details' })).not.toBeInTheDocument()
+  })
+
+  it('motorcycle shows its units', async () => {
+    await renderOverride({
+      title: 'Ducati Monster',
+      kind: 'motorcycle',
+      metadata: { displacement_cc: 937, power_hp: 111, torque_nm: 93.1, license_class: 'A' },
+    })
+    expect(await screen.findByText('937 cc')).toBeInTheDocument()
+    expect(screen.getByText('111 hp')).toBeInTheDocument()
+    expect(screen.getByText('93.1 Nm')).toBeInTheDocument()
+  })
+
+  it('car shows units and enum labels', async () => {
+    await renderOverride({
+      title: 'Golf',
+      kind: 'car',
+      metadata: { power_hp: 111, fuel_type: 'plugin_hybrid', model_year: 2021 },
+    })
+    expect(await screen.findByText('111 hp')).toBeInTheDocument()
+    expect(screen.getByText('Plug-in hybrid')).toBeInTheDocument()
+    expect(screen.getByText('2021')).toBeInTheDocument()
+  })
+
+  it('camera shows megapixels', async () => {
+    await renderOverride({
+      title: 'Alpha',
+      kind: 'camera',
+      metadata: { megapixels: 24.2, sensor_format: 'full_frame' },
+    })
+    expect(await screen.findByText('24.2 MP')).toBeInTheDocument()
+    expect(screen.getByText('Full frame')).toBeInTheDocument()
+  })
+
+  it('an unusable official site is a disabled control, a good one is a link', async () => {
+    await renderOverride({ official_website_url: 'https://www.thematrix.com/' })
+    expect(links().getByRole('link', { name: /^Official site/ })).toHaveAttribute(
+      'href',
+      'https://www.thematrix.com/',
+    )
+  })
+})
+
+describe('item view: description states', () => {
+  it('shows "No description yet." for an empty body', async () => {
+    server.use(
+      http.get(contentUrl, () =>
+        HttpResponse.json({ item_id: ITEM, version: 0, body: '', updated_at: matrix.created_at }),
+      ),
+    )
+    await renderItem()
+    expect(await screen.findByText('No description yet.')).toBeInTheDocument()
+  })
+
+  it('shows its own Retry when the description fails, without hiding the item', async () => {
+    let calls = 0
+    server.use(
+      http.get(contentUrl, () => {
+        calls++
+        return calls === 1
+          ? problemResponse(500, 'internal_error')
+          : HttpResponse.json({ item_id: ITEM, version: 2, body: 'Back again', updated_at: '' })
+      }),
+    )
+    const user = userEvent.setup()
+    await renderItem()
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('The description could not be loaded.')
+    expect(screen.getByRole('heading', { name: 'The Matrix', level: 1 })).toBeInTheDocument()
+    await user.click(within(alert).getByRole('button', { name: 'Retry' }))
+    expect(await screen.findByText('Back again')).toBeInTheDocument()
+    expect(calls).toBe(2)
+  })
+})
+
+describe('item view: loading and errors', () => {
+  it('shows a skeleton while the item is pending', async () => {
+    server.use(
+      http.get(itemUrl, async () => {
+        await new Promise((r) => setTimeout(r, 100))
+        return HttpResponse.json(matrix)
+      }),
+    )
+    mockViewport(1100)
+    renderAt(PATH)
+    expect(await screen.findByText('Loading item')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'The Matrix', level: 1 })).toBeInTheDocument()
+    expect(screen.queryByText('Loading item')).not.toBeInTheDocument()
+  })
+
+  it('404 shows "Item not found" with a Back link that keeps the search', async () => {
+    server.use(http.get(itemUrl, () => problemResponse(404, 'not_found')))
+    mockViewport(1100)
+    renderAt(`${PATH}?q=x`)
+    expect(await screen.findByRole('heading', { name: 'Item not found' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to Watchlist' })).toHaveAttribute(
+      'href',
+      `/lists/${WATCHLIST}?q=x`,
+    )
+  })
+
+  it('500 shows an alert and Retry refetches', async () => {
+    let calls = 0
+    server.use(
+      http.get(itemUrl, () => {
+        calls++
+        return calls === 1 ? problemResponse(500, 'internal_error') : HttpResponse.json(matrix)
+      }),
+    )
+    const user = userEvent.setup()
+    mockViewport(1100)
+    renderAt(PATH)
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Couldn’t load this item.')
+    await user.click(within(alert).getByRole('button', { name: 'Retry' }))
+    expect(await screen.findByRole('heading', { name: 'The Matrix', level: 1 })).toBeInTheDocument()
+    expect(calls).toBe(2)
+  })
+
+  it('an item that lives in another list redirects to its own URL', async () => {
+    const OTHER = '7c1e5a10-0000-4000-8000-000000000012'
+    overrideItem({ list_id: OTHER })
+    mockViewport(1100)
+    renderAt(PATH)
+    expect(await screen.findByRole('link', { name: /Back to Motorbikes/ })).toBeInTheDocument()
+  })
+})
+
+describe('item view: hero image', () => {
+  const image = { source: 'url', url: 'https://example.org/matrix.jpg' } as Item['image']
+
+  it('opens the full-size image in a dialog', async () => {
+    overrideItem({ image })
+    const user = userEvent.setup()
+    await renderItem()
+    await user.click(
+      await screen.findByRole('button', { name: 'View image of The Matrix full size' }),
+    )
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByRole('img', { name: 'The Matrix' })).toHaveAttribute(
+      'src',
+      'https://example.org/matrix.jpg',
+    )
+  })
+
+  it('falls back to the tile when the image fails to load', async () => {
+    overrideItem({ image })
+    await renderItem()
+    expect(screen.queryByTestId('fallback-tile')).not.toBeInTheDocument()
+    fireEvent.error(await screen.findByRole('img', { name: 'The Matrix' }))
+    await waitFor(() => expect(screen.getByTestId('fallback-tile')).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: /View image/ })).not.toBeInTheDocument()
+  })
+
+  it('shows the tile when the item has no image', async () => {
+    await renderItem()
+    expect(screen.getByTestId('fallback-tile')).toBeInTheDocument()
+  })
+})
