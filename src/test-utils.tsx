@@ -20,6 +20,22 @@ export function renderWithProviders(ui: ReactElement, client = createTestQueryCl
   )
 }
 
+/**
+ * Loads the lazy route modules (routes, item page, Markdown renderer) ahead of the tests.
+ * Without it the first `findBy*` of a file pays for the cold dynamic imports and times out (1 s)
+ * when many workers compete for the CPU. Runs in a `beforeAll`, whose timeout is 10 s.
+ */
+export async function preloadRoutes() {
+  await Promise.all([
+    import('./routes/ListRoute'),
+    import('./routes/SearchRoute'),
+    import('./routes/SettingsRoute'),
+    import('./routes/TrashRoute'),
+    import('./routes/ItemRoute'),
+    import('./features/items/ItemPage'),
+  ])
+}
+
 /** Renders the real routes (app shell included) at a path. */
 export function renderAt(path: string, client = createTestQueryClient()) {
   return renderWithProviders(<RouterProvider router={createTestRouter([path])} />, client)

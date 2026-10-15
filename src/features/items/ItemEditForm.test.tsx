@@ -783,9 +783,12 @@ describe('AT-22 unsaved changes guard', () => {
     await user.type(field('Title'), '!')
     await user.click(saveButton())
     await screen.findByText('Item saved')
-    const event = new Event('beforeunload', { cancelable: true })
-    window.dispatchEvent(event)
-    expect(event.defaultPrevented).toBe(false)
+    // Leaving edit mode is a navigation that finishes after the toast appears.
+    await waitFor(() => {
+      const event = new Event('beforeunload', { cancelable: true })
+      window.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+    })
   })
 })
 

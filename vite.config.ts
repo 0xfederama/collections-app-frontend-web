@@ -31,6 +31,8 @@ export default defineConfig(({ mode }) => {
       globals: true,
       setupFiles: ['./src/test-setup.ts'],
       css: false,
+      // Headroom for a cold first test in a file when every worker is busy (default 5 s).
+      testTimeout: 15_000,
     },
   }
 })
