@@ -316,3 +316,31 @@ describe('AT-03 tree CRUD (web): delete', () => {
     expect(calls).toBe(2)
   })
 })
+
+describe('F006-W3 focus returns to the opener on close', () => {
+  it('Esc on a Dialog opened from a row menu returns focus to the row menu button', async () => {
+    const { user } = await openTree()
+    await pickRowAction(user, 'Vehicles', 'Rename')
+    await dialog()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(
+        within(sidebar()).getByRole('button', { name: 'More actions for Vehicles' }),
+      ).toHaveFocus(),
+    )
+  })
+
+  it('Esc on an AlertDialog opened from a row menu returns focus to the row menu button', async () => {
+    const { user } = await openTree()
+    await pickRowAction(user, 'Media', 'Delete')
+    await screen.findByRole('alertdialog')
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(
+        within(sidebar()).getByRole('button', { name: 'More actions for Media' }),
+      ).toHaveFocus(),
+    )
+  })
+})

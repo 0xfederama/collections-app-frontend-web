@@ -716,3 +716,18 @@ describe('W-06 list actions menu (W-05) in the header', () => {
     expect(backend.patches.at(-1)?.ifMatch).toBe(`"l-${backend.list.version - 1}"`)
   })
 })
+
+describe('F006-W3 Add item dialog focus', () => {
+  it('Esc on the Add item dialog returns focus to the Add item button', async () => {
+    useBackend()
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    const button = screen.getAllByRole('button', { name: 'Add item' })[0]!
+    await user.click(button)
+    await screen.findByRole('dialog')
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(button).toHaveFocus())
+  })
+})
