@@ -39,6 +39,7 @@ import {
   Trash2,
 } from '../components/ui/icons'
 import { arrayMove } from '../components/ui/sortable'
+import { LinkIcon, ServiceIcon } from '../components/ServiceIcon'
 import { useThemePreference, type ThemePreference } from '../lib/theme'
 
 const sections = [
@@ -313,6 +314,21 @@ function Feedback() {
         <Chip tone="success">Owned</Chip>
         <Chip tone="warning">Wishlist</Chip>
         <Chip tone="danger">Sold</Chip>
+      </Row>
+      <Row label="ServiceIcon (free, paid, unknown)">
+        {['Netflix', 'Prime Video', 'Disney+', 'Apple TV+', 'YouTube', 'TIMvision', 'Infinity'].map(
+          (n) => (
+            <ServiceIcon key={n} name={n} />
+          ),
+        )}
+        <ServiceIcon name="Netflix" paid />
+        <ServiceIcon name="Netflix" size={48} />
+        <ServiceIcon name="Hulu" />
+      </Row>
+      <Row label="LinkIcon (monogram for Google and IMDb)">
+        {['Google', 'Letterboxd', 'IMDb', 'Reddit'].map((n) => (
+          <LinkIcon key={n} name={n} />
+        ))}
       </Row>
       <Row label="Skeleton">
         <div className="flex w-64 flex-col gap-2">
