@@ -1,18 +1,18 @@
 import type { ItemKind } from './api'
 
 export interface ExternalLink {
-  id: 'google' | 'reddit' | 'official'
+  id: 'google' | 'reddit' | 'website'
   label: string
-  /** `null` = disabled: the item has no (usable) official site. */
+  /** `null` = disabled: the item has no (usable) website. */
   href: string | null
 }
 
-export const NO_OFFICIAL_SITE = 'No official site'
+export const NO_WEBSITE = 'No website'
 
 interface LinkSource {
   title: string
   kind: ItemKind
-  official_website_url: string | null
+  website: string | null
   metadata?: object
 }
 
@@ -30,7 +30,7 @@ const google = (query: string) =>
   `https://www.google.com/search?${new URLSearchParams({ q: query }).toString()}`
 
 /** Only an `http(s)` URL is a link; anything else (or nothing) disables the control. */
-function safeOfficialUrl(url: string | null): string | null {
+function safeWebsiteUrl(url: string | null): string | null {
   if (!url) return null
   try {
     const { protocol } = new URL(url)
@@ -60,8 +60,8 @@ export function safeImdbUrl(url: unknown): string | null {
 }
 
 /**
- * The three external controls of AT-13, always in this order: Google, Reddit, Official site.
- * The official site is never replaced by a search. `URLSearchParams` does the encoding, so
+ * The three external controls of AT-13, always in this order: Google, Reddit, Website.
+ * The website is never replaced by a search. `URLSearchParams` does the encoding, so
  * `&`, `#`, quotes and non-ASCII titles cannot change the URL's structure.
  */
 export function buildExternalLinks(item: LinkSource): [ExternalLink, ExternalLink, ExternalLink] {
@@ -69,6 +69,6 @@ export function buildExternalLinks(item: LinkSource): [ExternalLink, ExternalLin
   return [
     { id: 'google', label: 'Google', href: google(query) },
     { id: 'reddit', label: 'Reddit', href: google(`${query} site:reddit.com`) },
-    { id: 'official', label: 'Official site', href: safeOfficialUrl(item.official_website_url) },
+    { id: 'website', label: 'Website', href: safeWebsiteUrl(item.website) },
   ]
 }

@@ -63,7 +63,6 @@ describe('W-13 settings: saving', () => {
     await openSettings()
     expect(field('Workspace name')).toHaveValue('Our Collection')
     expect(field('Streaming country')).toHaveValue('Italy (IT)')
-    expect(field('Default currency')).toHaveValue('EUR · Euro')
     expect(field('Description history limit')).toHaveValue('20')
     expect(save()).toBeDisabled()
   })
@@ -72,7 +71,6 @@ describe('W-13 settings: saving', () => {
     const { patches, backend } = mountBackend({
       workspace_name: 'Our Collection',
       streaming_country_code: 'IT',
-      default_currency: 'EUR',
       markdown_history_limit: 20,
       version: 4,
     })
@@ -95,7 +93,6 @@ describe('W-13 settings: saving', () => {
     const { patches } = mountBackend({
       workspace_name: 'A',
       streaming_country_code: 'IT',
-      default_currency: 'EUR',
       markdown_history_limit: 20,
       version: 4,
     })
@@ -118,17 +115,6 @@ describe('W-13 settings: saving', () => {
     await user.click(save())
     await screen.findByText('Settings saved')
     expect(patches[0]!.body).toEqual({ streaming_country_code: 'FR' })
-  })
-
-  it('changing the currency through the picker sends the ISO code', async () => {
-    const { patches } = mountBackend()
-    const user = await openSettings()
-    await user.type(field('Default currency'), 'dollar{ArrowDown}')
-    const usd = await screen.findByRole('option', { name: /USD · US Dollar/ })
-    await user.click(usd)
-    await user.click(save())
-    await screen.findByText('Settings saved')
-    expect(patches[0]!.body).toEqual({ default_currency: 'USD' })
   })
 
   it('reverting an edit disables Save again', async () => {
@@ -190,7 +176,6 @@ describe('W-13 settings: server errors', () => {
   it.each([
     ['workspace_name', 'Workspace name'],
     ['streaming_country_code', 'Streaming country'],
-    ['default_currency', 'Default currency'],
     ['markdown_history_limit', 'Description history limit'],
   ])('422 on %s lands on the input and focuses it', async (apiField, label) => {
     mountBackend()

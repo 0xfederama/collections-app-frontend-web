@@ -60,7 +60,6 @@ describe('formatField', () => {
   it('formats numbers with their unit', () => {
     expect(formatField(field('motorcycle', 'displacement_cc'), 937)).toBe('937 cc')
     expect(formatField(field('motorcycle', 'power_hp'), 111)).toBe('111 hp')
-    expect(formatField(field('motorcycle', 'torque_nm'), 93.1)).toBe('93.1 Nm')
     expect(formatField(field('camera', 'megapixels'), 24.2)).toBe('24.2 MP')
     expect(formatField(field('movie', 'runtime_minutes'), 136)).toBe('136 min')
   })
@@ -76,7 +75,7 @@ describe('formatField', () => {
 
   it('maps enum values to their label, and keeps an unknown value as is', () => {
     expect(formatField(field('car', 'fuel_type'), 'plugin_hybrid')).toBe('Plug-in hybrid')
-    expect(formatField(field('camera', 'camera_type'), 'dslr')).toBe('DSLR')
+    expect(formatField(field('camera', 'sensor_format'), 'aps_c')).toBe('APS-C')
     expect(formatField(field('car', 'fuel_type'), 'warp')).toBe('warp')
   })
 

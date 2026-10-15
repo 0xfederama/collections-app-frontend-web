@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useBlocker } from 'react-router'
 import { AlertDialog, Button, Dialog, TextField, useToast } from '../../components/ui'
-import { CountrySelect, CurrencySelect } from '../../components/ui/IsoSelects'
+import { CountrySelect } from '../../components/ui/IsoSelects'
 import { ApiError, NetworkError } from '../../lib/api'
 import { settingsKeys, useUpdateSettings, type Settings } from './api'
 import {
@@ -238,15 +238,6 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         value={draft.streaming_country_code}
         onValueChange={(value) => set('streaming_country_code', value)}
         error={errors.streaming_country_code}
-      />
-      <CurrencySelect
-        id={inputId('default_currency')}
-        label="Default currency"
-        hint="Used for prices when an item does not set a currency."
-        placeholder="Currency"
-        value={draft.default_currency}
-        onValueChange={(value) => set('default_currency', value)}
-        error={errors.default_currency}
       />
       <TextField
         id={inputId('markdown_history_limit')}

@@ -5,18 +5,16 @@ import {
   draftDump,
   draftFromItem,
   firstInvalid,
-  hasKindDetails,
   isDirty,
   mapServerErrors,
   normalizePrice,
   validate,
-  withKind,
   type Defaults,
   type Draft,
 } from './draft'
 
-const defaults: Defaults = { currency: 'EUR', country: 'IT' }
-const noDefaults: Defaults = { currency: '', country: '' }
+const defaults: Defaults = { country: 'IT' }
+const noDefaults: Defaults = { country: '' }
 
 function makeItem(kind: ItemKind, over: Partial<Item> = {}): Item {
   return {
@@ -24,11 +22,9 @@ function makeItem(kind: ItemKind, over: Partial<Item> = {}): Item {
     list_id: '7c1e5a10-0000-4000-8000-000000000011',
     title: 'Thing',
     kind,
-    summary: null,
-    status: null,
     image: null,
     price: null,
-    official_website_url: null,
+    website: null,
     metadata: {},
     content_version: 0,
     sort_order: 0,
@@ -43,8 +39,6 @@ function makeItem(kind: ItemKind, over: Partial<Item> = {}): Item {
 const movie = () =>
   makeItem('movie', {
     title: 'The Matrix',
-    summary: 'A hacker.',
-    status: 'Watched',
     metadata: {
       release_year: 1999,
       runtime_minutes: 136,
@@ -91,62 +85,77 @@ describe('AT-05 item field rules: validate()', () => {
     expect(ok({ title: 'a'.repeat(301) }).title).toMatch(/at most 300/)
   })
 
-  it('limits summary (1000), status (100) and the official URL (2048)', () => {
-    expect(ok({ summary: 'a'.repeat(1000) }).summary).toBeUndefined()
-    expect(ok({ summary: 'a'.repeat(1001) }).summary).toMatch(/1000/)
-    expect(ok({ status: 'a'.repeat(100) }).status).toBeUndefined()
-    expect(ok({ status: 'a'.repeat(101) }).status).toMatch(/100/)
-    expect(ok({ officialUrl: `https://a.io/${'a'.repeat(2040)}` }).official_website_url).toMatch(
-      /2048/,
-    )
+  it('limits the website to 2048 characters', () => {
+    expect(ok({ website: `https://a.io/${'a'.repeat(2040)}` }).website).toMatch(/2048/)
   })
 
-  describe('price', () => {
+  describe('price (F007-W8)', () => {
+    const single = (text: string, over: Partial<Draft> = {}) =>
+      ok({ hasPrice: true, priceMode: 'single', priceAmount: text, currency: 'EUR', ...over })
+    const range = (min: string, max: string, over: Partial<Draft> = {}) =>
+      ok({
+        hasPrice: true,
+        priceMode: 'range',
+        priceMin: min,
+        priceMax: max,
+        currency: 'EUR',
+        ...over,
+      })
+
     it.each(['12', '12.5', '1299.50', '0', '0.99'])('accepts %s', (text) => {
-      expect(ok({ priceMin: text })['price.min']).toBeUndefined()
-      expect(ok({ priceMax: text })['price.max']).toBeUndefined()
+      expect(single(text)['price.amount']).toBeUndefined()
+      expect(range(text, '')['price.min']).toBeUndefined()
+      expect(range('', text)['price.max']).toBeUndefined()
     })
 
     it.each(['1,5', '12.345', '-1', 'abc', '1.', '.5', '12345678901'])('rejects %s', (text) => {
-      expect(ok({ priceMin: text })['price.min']).toBeDefined()
-      expect(ok({ priceMax: text })['price.max']).toBeDefined()
+      expect(single(text)['price.amount']).toBeDefined()
+      expect(range(text, '')['price.min']).toBeDefined()
+      expect(range('', text)['price.max']).toBeDefined()
     })
 
     it('enforces min <= max with the error on the maximum', () => {
-      expect(ok({ priceMin: '20', priceMax: '10' })['price.max']).toMatch(/lower than the minimum/)
-      expect(ok({ priceMin: '10.01', priceMax: '10.00' })['price.max']).toBeDefined()
-      expect(ok({ priceMin: '10', priceMax: '10' })['price.max']).toBeUndefined()
-      expect(ok({ priceMin: '9.5', priceMax: '10' })['price.max']).toBeUndefined()
+      expect(range('20', '10')['price.max']).toMatch(/lower than the minimum/)
+      expect(range('10.01', '10.00')['price.max']).toBeDefined()
+      expect(range('10', '10')['price.max']).toBeUndefined()
+      expect(range('9.5', '10')['price.max']).toBeUndefined()
     })
 
-    it('accepts a lone minimum or a lone maximum', () => {
-      expect(ok({ priceMin: '5' })).toEqual({})
-      expect(ok({ priceMax: '5' })).toEqual({})
+    it('accepts a lone minimum or a lone maximum in a range', () => {
+      expect(range('5', '')).toEqual({})
+      expect(range('', '5')).toEqual({})
     })
 
-    it('needs a currency when there is a price and no default', () => {
-      expect(ok({ priceMin: '5' }, noDefaults)['price.currency']).toBeDefined()
-      expect(ok({ priceMin: '5', currency: 'USD' }, noDefaults)['price.currency']).toBeUndefined()
-      expect(ok({ priceMin: '5' }, defaults)['price.currency']).toBeUndefined()
+    it('checks only the inputs of the chosen mode', () => {
+      expect(single('5', { priceMin: 'junk', priceMax: 'junk' })).toEqual({})
+      expect(range('5', '6', { priceAmount: 'junk' })).toEqual({})
     })
 
-    it('needs no currency when there is no price', () => {
-      expect(ok({}, noDefaults)).toEqual({})
+    it('a malformed currency is an error on the currency input', () => {
+      expect(single('5', { currency: 'EU' })['price.currency']).toBeDefined()
+    })
+
+    it('without a typed currency the price uses EUR', () => {
+      expect(single('5', { currency: '' })['price.currency']).toBeUndefined()
+    })
+
+    it('a hidden price is not validated', () => {
+      expect(ok({ hasPrice: false, priceAmount: 'junk' })).toEqual({})
     })
   })
 
-  describe('official website', () => {
+  describe('website', () => {
     it.each(['http://example.com', 'https://example.com/a?b=1'])('accepts %s', (url) => {
-      expect(ok({ officialUrl: url }).official_website_url).toBeUndefined()
+      expect(ok({ website: url }).website).toBeUndefined()
     })
     it.each(['javascript:alert(1)', 'ftp://x', 'not a url', 'data:text/html,hi'])(
       'rejects %s',
       (url) => {
-        expect(ok({ officialUrl: url }).official_website_url).toBeDefined()
+        expect(ok({ website: url }).website).toBeDefined()
       },
     )
     it('is optional', () => {
-      expect(ok({ officialUrl: '  ' }).official_website_url).toBeUndefined()
+      expect(ok({ website: '  ' }).website).toBeUndefined()
     })
   })
 
@@ -186,7 +195,6 @@ describe('AT-05 item field rules: validate()', () => {
     it('text fields respect their max length', () => {
       expect(check({ make: 'a'.repeat(100) })['metadata.make']).toBeUndefined()
       expect(check({ make: 'a'.repeat(101) })['metadata.make']).toBeDefined()
-      expect(check({ segment: 'a'.repeat(51) })['metadata.segment']).toBeDefined()
     })
   })
 
@@ -211,20 +219,10 @@ describe('AT-05 item field rules: validate()', () => {
   describe('car', () => {
     const check = (meta: Record<string, string>) => validate(draftOf(car(), {}, meta), defaults)
 
-    it('electric_range_km is rejected with petrol fuel', () => {
-      expect(
-        check({ fuel_type: 'petrol', electric_range_km: '50' })['metadata.electric_range_km'],
-      ).toBeDefined()
-    })
-    it('electric_range_km is fine for electric, plugin_hybrid or no fuel', () => {
-      expect(check({ fuel_type: 'electric', electric_range_km: '400' })).toEqual({})
-      expect(check({ fuel_type: 'plugin_hybrid', electric_range_km: '50' })).toEqual({})
-      expect(check({ fuel_type: '', electric_range_km: '50' })).toEqual({})
-    })
-    it('seats is 1 to 9', () => {
-      expect(check({ seats: '0' })['metadata.seats']).toBeDefined()
-      expect(check({ seats: '9' })['metadata.seats']).toBeUndefined()
-      expect(check({ seats: '10' })['metadata.seats']).toBeDefined()
+    it('fuel_type must be one of the options, power_hp allows one decimal', () => {
+      expect(check({ fuel_type: 'plugin_hybrid' })).toEqual({})
+      expect(check({ fuel_type: 'steam' })['metadata.fuel_type']).toBeDefined()
+      expect(check({ power_hp: '110.55' })['metadata.power_hp']).toBeDefined()
     })
   })
 
@@ -318,12 +316,9 @@ describe('AT-05 item field rules: buildPatch()', () => {
     expect(buildPatch(item, draftOf(item, { title: 'Reloaded' }), defaults)).toEqual({
       title: 'Reloaded',
     })
-    expect(buildPatch(item, draftOf(item, { status: 'Owned' }), defaults)).toEqual({
-      status: 'Owned',
-    })
     expect(
-      buildPatch(item, draftOf(item, { officialUrl: ' https://matrix.example ' }), defaults),
-    ).toEqual({ official_website_url: 'https://matrix.example' })
+      buildPatch(item, draftOf(item, { website: ' https://matrix.example ' }), defaults),
+    ).toEqual({ website: 'https://matrix.example' })
   })
 
   it('padding spaces are not a change; the title is trimmed when it is', () => {
@@ -332,62 +327,122 @@ describe('AT-05 item field rules: buildPatch()', () => {
     expect(buildPatch(item, draftOf(item, { title: '  Neo ' }), defaults)).toEqual({ title: 'Neo' })
   })
 
-  it('"12.5" and "12.50" are the same price; 2019 and "2019" the same year', () => {
-    const priced = makeItem('generic', {
-      price: { min: '12.50', max: null, currency: 'EUR' },
-    } as Partial<Item>)
-    expect(buildPatch(priced, draftOf(priced, { priceMin: '12.5' }), defaults)).toEqual({})
-    expect(buildPatch(priced, draftOf(priced, { priceMin: '12.5' }), noDefaults)).toEqual({})
+  it('2019 and "2019" are the same year', () => {
     const tv = tvShow()
     expect(buildPatch(tv, draftOf(tv, {}, { first_air_year: ' 2019 ' }), defaults)).toEqual({})
   })
 
-  it('clearing a nullable field sends null', () => {
-    const item = makeItem('generic', {
-      summary: 's',
-      status: 'x',
-      official_website_url: 'https://a.io',
-      price: { min: '1.00', max: null, currency: 'EUR' },
-    } as Partial<Item>)
-    const cleared = draftOf(item, {
-      summary: '',
-      status: '  ',
-      officialUrl: '',
-      priceMin: '',
-      priceMax: '',
-    })
-    expect(buildPatch(item, cleared, defaults)).toEqual({
-      summary: null,
-      status: null,
-      official_website_url: null,
-      price: null,
-    })
+  it('clearing the website sends null', () => {
+    const item = makeItem('generic', { website: 'https://a.io' } as Partial<Item>)
+    expect(buildPatch(item, draftOf(item, { website: '' }), defaults)).toEqual({ website: null })
   })
 
-  it('normalizes a new price to two decimals', () => {
-    const item = makeItem('generic')
-    const patch = buildPatch(item, draftOf(item, { priceMin: '12.5', priceMax: '20' }), defaults)
-    expect(patch.price).toEqual({ min: '12.50', max: '20.00', currency: 'EUR' })
-  })
+  describe('price (F007-W8)', () => {
+    const priced = (min: string | null, max: string | null, currency = 'EUR') =>
+      makeItem('generic', { price: { min, max, currency } } as Partial<Item>)
 
-  it('uses the settings currency when the draft has none, and the draft one otherwise', () => {
-    const item = makeItem('generic')
-    expect(buildPatch(item, draftOf(item, { priceMax: '9' }), defaults).price).toEqual({
-      min: null,
-      max: '9.00',
-      currency: 'EUR',
+    it('an item without a price has the price control hidden and sends nothing', () => {
+      const item = makeItem('generic')
+      expect(draftFromItem(item).hasPrice).toBe(false)
+      expect(buildPatch(item, draftFromItem(item), defaults)).toEqual({})
     })
-    expect(
-      buildPatch(item, draftOf(item, { priceMax: '9', currency: 'USD' }), defaults).price,
-    ).toEqual({ min: null, max: '9.00', currency: 'USD' })
-  })
 
-  it('changing only the currency of an existing price is a change', () => {
-    const item = makeItem('generic', {
-      price: { min: '5.00', max: '5.00', currency: 'EUR' },
-    } as Partial<Item>)
-    expect(buildPatch(item, draftOf(item, { currency: 'USD' }), defaults)).toEqual({
-      price: { min: '5.00', max: '5.00', currency: 'USD' },
+    it('min == max loads as a single price, anything else as a range', () => {
+      const single = draftFromItem(priced('1200.00', '1200.00'))
+      expect(single).toMatchObject({ hasPrice: true, priceMode: 'single', priceAmount: '1200.00' })
+      const range = draftFromItem(priced('1000.00', '1400.00'))
+      expect(range).toMatchObject({
+        hasPrice: true,
+        priceMode: 'range',
+        priceMin: '1000.00',
+        priceMax: '1400.00',
+      })
+    })
+
+    it('an open-ended legacy range (one bound) loads as a range', () => {
+      expect(draftFromItem(priced('49.90', null))).toMatchObject({
+        priceMode: 'range',
+        priceMin: '49.90',
+        priceMax: '',
+      })
+      expect(draftFromItem(priced(null, '9.00'))).toMatchObject({
+        priceMode: 'range',
+        priceMin: '',
+        priceMax: '9.00',
+      })
+    })
+
+    it('an unchanged price sends nothing, whatever its shape', () => {
+      for (const item of [
+        priced('12.50', '12.50'),
+        priced('10.00', '20.00'),
+        priced('49.90', null),
+      ]) {
+        expect(buildPatch(item, draftFromItem(item), defaults)).toEqual({})
+      }
+    })
+
+    it('"12.5" and "12.50" are the same price', () => {
+      const item = priced('12.50', '12.50')
+      expect(buildPatch(item, draftOf(item, { priceAmount: '12.5' }), defaults)).toEqual({})
+    })
+
+    it('adding a single price sends { amount, currency } with two decimals', () => {
+      const item = makeItem('generic')
+      const draft = draftOf(item, {
+        hasPrice: true,
+        priceMode: 'single',
+        priceAmount: '1200',
+        currency: 'EUR',
+      })
+      expect(buildPatch(item, draft, defaults)).toEqual({
+        price: { amount: '1200.00', currency: 'EUR' },
+      })
+    })
+
+    it('adding a range sends { min, max, currency }', () => {
+      const item = makeItem('generic')
+      const draft = draftOf(item, {
+        hasPrice: true,
+        priceMode: 'range',
+        priceMin: '12.5',
+        priceMax: '20',
+        currency: 'USD',
+      })
+      expect(buildPatch(item, draft, defaults).price).toEqual({
+        min: '12.50',
+        max: '20.00',
+        currency: 'USD',
+      })
+    })
+
+    it('a draft currency left empty falls back to EUR', () => {
+      const item = makeItem('generic')
+      const draft = draftOf(item, { hasPrice: true, priceAmount: '9', currency: '' })
+      expect(buildPatch(item, draft, noDefaults).price).toEqual({
+        amount: '9.00',
+        currency: 'EUR',
+      })
+    })
+
+    it('Remove price (hasPrice false) sends price: null', () => {
+      const item = priced('5.00', '5.00')
+      expect(buildPatch(item, draftOf(item, { hasPrice: false }), defaults)).toEqual({
+        price: null,
+      })
+    })
+
+    it('adding and then removing a price sends nothing', () => {
+      const item = makeItem('generic')
+      const draft = draftOf(item, { hasPrice: false, priceAmount: '5' })
+      expect(buildPatch(item, draft, defaults)).toEqual({})
+    })
+
+    it('changing only the currency is a change', () => {
+      const item = priced('5.00', '5.00')
+      expect(buildPatch(item, draftOf(item, { currency: 'USD' }), defaults)).toEqual({
+        price: { amount: '5.00', currency: 'USD' },
+      })
     })
   })
 
@@ -427,55 +482,24 @@ describe('AT-05 item field rules: buildPatch()', () => {
     const item = motorcycle()
     const patch = buildPatch(
       item,
-      draftOf(item, {}, { power_hp: '95.5', seat_height_mm: '800' }),
+      draftOf(item, {}, { power_hp: '95.5', model_year: '2020' }),
       defaults,
     )
     expect(patch.metadata).toMatchObject({
       power_hp: 95.5,
-      seat_height_mm: 800,
+      model_year: 2020,
       displacement_cc: 937,
     })
   })
 
-  it('a kind change always sends kind and metadata', () => {
+  it('never sends a kind (F007-W7)', () => {
     const item = movie()
-    const toCar = withKind(draftFromItem(item), item, 'car')
-    expect(buildPatch(item, toCar, defaults)).toEqual({ kind: 'car', metadata: {} })
-  })
-
-  it('a kind change on an item without details still sends metadata: {}', () => {
-    const item = makeItem('generic')
-    const toMovie = withKind(draftFromItem(item), item, 'movie')
-    expect(buildPatch(item, toMovie, defaults)).toEqual({ kind: 'movie', metadata: {} })
-  })
-
-  it('a kind change keeps new values typed for the new kind', () => {
-    const item = movie()
-    const toCar = withKind(draftFromItem(item), item, 'car')
-    const patch = buildPatch(item, { ...toCar, meta: { seats: '5' } }, defaults)
-    expect(patch).toEqual({ kind: 'car', metadata: { seats: 5 } })
-  })
-
-  it('switching kind and back restores the original details and gives {}', () => {
-    const item = movie()
-    const away = withKind(draftFromItem(item), item, 'camera')
-    expect(away.meta).toEqual({})
-    expect(away.streamingPlatforms).toBe('')
-    const back = withKind(away, item, 'movie')
-    expect(back).toEqual(draftFromItem(item))
-    expect(buildPatch(item, back, defaults)).toEqual({})
-  })
-
-  it('withKind keeps the basics typed so far', () => {
-    const item = movie()
-    const typed = draftOf(item, { title: 'Edited' })
-    expect(withKind(typed, item, 'car').title).toBe('Edited')
-    expect(withKind(typed, item, 'movie')).toBe(typed)
-  })
-
-  it('hasKindDetails tells whether a kind change would clear something', () => {
-    expect(hasKindDetails(movie())).toBe(true)
-    expect(hasKindDetails(makeItem('generic'))).toBe(false)
+    const patch = buildPatch(
+      item,
+      draftOf(item, { title: 'x' }, { runtime_minutes: '1' }),
+      defaults,
+    )
+    expect(patch).not.toHaveProperty('kind')
   })
 })
 
@@ -490,33 +514,39 @@ describe('AT-09 draft dump: draftDump()', () => {
     expect(dump).toContain('Title: Reloaded')
     expect(dump).toContain('Movie details:')
     expect(dump).toContain('Runtime: 140 min')
-    expect(dump).not.toContain('Summary')
     expect(dump).not.toContain('Release year')
   })
 
   it('says (cleared) for cleared fields', () => {
     const item = movie()
-    const dump = draftDump(
-      item,
-      draftOf(item, { summary: '', status: '' }, { runtime_minutes: '' }),
-      defaults,
-    )
-    expect(dump).toContain('Summary: (cleared)')
-    expect(dump).toContain('Status: (cleared)')
+    const dump = draftDump(item, draftOf(item, {}, { runtime_minutes: '' }), defaults)
     expect(dump).toContain('Runtime: (cleared)')
   })
 
-  it('describes price, official website and kind changes', () => {
+  it('describes a range, a single price and website changes', () => {
     const item = makeItem('generic')
-    const priced = draftOf(item, {
+    const ranged = draftOf(item, {
+      hasPrice: true,
+      priceMode: 'range',
       priceMin: '5',
       priceMax: '10',
-      officialUrl: 'https://a.io',
+      currency: 'EUR',
+      website: 'https://a.io',
     })
-    const dump = draftDump(item, priced, defaults)
+    const dump = draftDump(item, ranged, defaults)
     expect(dump).toContain('Price: 5.00–10.00 EUR')
-    expect(dump).toContain('Official website: https://a.io')
-    expect(draftDump(item, withKind(priced, item, 'car'), defaults)).toContain('Kind: Car')
+    expect(dump).toContain('Website: https://a.io')
+    const single = draftOf(item, { hasPrice: true, priceAmount: '7', currency: 'EUR' })
+    expect(draftDump(item, single, defaults)).toContain('Price: 7.00 EUR')
+  })
+
+  it('says (cleared) for a removed price', () => {
+    const item = makeItem('generic', {
+      price: { min: '5.00', max: '5.00', currency: 'EUR' },
+    } as Partial<Item>)
+    expect(draftDump(item, draftOf(item, { hasPrice: false }), defaults)).toContain(
+      'Price: (cleared)',
+    )
   })
 
   it('is empty when nothing changed', () => {
@@ -534,8 +564,19 @@ describe('AT-22 server errors: mapServerErrors()', () => {
     expect(other).toEqual([])
   })
 
-  it('aliases "price" to the minimum price input', () => {
-    expect(mapServerErrors([err('price', 'P')], 'generic').fields).toEqual({ 'price.min': 'P' })
+  it('maps price.amount and price.currency onto their inputs', () => {
+    const { fields } = mapServerErrors(
+      [err('price.amount', 'A'), err('price.currency', 'C')],
+      'generic',
+    )
+    expect(fields).toEqual({ 'price.amount': 'A', 'price.currency': 'C' })
+  })
+
+  it('aliases "price" to the amount input, or to the minimum in range mode', () => {
+    expect(mapServerErrors([err('price', 'P')], 'generic').fields).toEqual({ 'price.amount': 'P' })
+    expect(mapServerErrors([err('price', 'P')], 'generic', 'range').fields).toEqual({
+      'price.min': 'P',
+    })
   })
 
   it('metadata keys go to the input when the kind has one, else to other', () => {
@@ -572,9 +613,10 @@ describe('AT-22 server errors: mapServerErrors()', () => {
 
 describe('AT-22 server errors: firstInvalid()', () => {
   it('returns the first invalid input in page order, not in error order', () => {
-    const errors = { 'metadata.runtime_minutes': 'x', 'price.max': 'y', official_website_url: 'z' }
+    const errors = { 'metadata.runtime_minutes': 'x', 'price.max': 'y', website: 'z' }
     expect(firstInvalid(errors, 'movie')).toBe('price.max')
     expect(firstInvalid({ ...errors, title: 'T' }, 'movie')).toBe('title')
+    expect(firstInvalid({ website: 'z', 'price.amount': 'a' }, 'movie')).toBe('price.amount')
   })
   it('is undefined with no errors or only keys of another kind', () => {
     expect(firstInvalid({}, 'movie')).toBeUndefined()

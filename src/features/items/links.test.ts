@@ -32,7 +32,7 @@ type Source = Parameters<typeof buildExternalLinks>[0]
 const make = (over: Partial<Source> = {}): Source => ({
   title: 'The Matrix',
   kind: 'generic',
-  official_website_url: null,
+  website: null,
   ...over,
 })
 
@@ -43,10 +43,10 @@ const queryOf = (href: string | null) => {
 }
 
 describe('AT-13 external links: shape', () => {
-  it('returns exactly three links in the order google, reddit, official', () => {
+  it('returns exactly three links in the order google, reddit, website', () => {
     const links = buildExternalLinks(make())
-    expect(links.map((l) => l.id)).toEqual(['google', 'reddit', 'official'])
-    expect(links.map((l) => l.label)).toEqual(['Google', 'Reddit', 'Official site'])
+    expect(links.map((l) => l.id)).toEqual(['google', 'reddit', 'website'])
+    expect(links.map((l) => l.label)).toEqual(['Google', 'Reddit', 'Website'])
   })
 
   it('Google and Reddit are Google searches', () => {
@@ -132,13 +132,13 @@ describe('AT-13 external links: title encoding', () => {
   })
 })
 
-describe('AT-13 external links: official site', () => {
+describe('AT-13 external links: website', () => {
   it.each([
     ['http', 'http://example.org/'],
     ['https', 'https://www.ducati.com/'],
     ['https with path and query', 'https://example.org/a/b?x=1#y'],
   ])('%s URL is used as is', (_, url) => {
-    expect(buildExternalLinks(make({ official_website_url: url }))[2].href).toBe(url)
+    expect(buildExternalLinks(make({ website: url }))[2].href).toBe(url)
   })
 
   it.each([
@@ -150,19 +150,17 @@ describe('AT-13 external links: official site', () => {
     ['garbage', 'not a url'],
     ['relative', '/foo'],
   ])('%s gives a null href', (_, url) => {
-    expect(buildExternalLinks(make({ official_website_url: url }))[2].href).toBeNull()
+    expect(buildExternalLinks(make({ website: url }))[2].href).toBeNull()
   })
 
   it('never falls back to a search', () => {
-    const links = buildExternalLinks(make({ kind: 'movie', official_website_url: null }))
+    const links = buildExternalLinks(make({ kind: 'movie', website: null }))
     expect(links[2].href).toBeNull()
-    expect(links[2].label).toBe('Official site')
+    expect(links[2].label).toBe('Website')
   })
 
-  it('an invalid official site does not affect Google or Reddit', () => {
-    const [google, reddit] = buildExternalLinks(
-      make({ official_website_url: 'javascript:alert(1)' }),
-    )
+  it('an invalid website does not affect Google or Reddit', () => {
+    const [google, reddit] = buildExternalLinks(make({ website: 'javascript:alert(1)' }))
     expect(google.href).not.toBeNull()
     expect(reddit.href).not.toBeNull()
   })

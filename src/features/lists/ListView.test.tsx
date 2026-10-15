@@ -29,11 +29,9 @@ function makeItem(n: number, over: Partial<ItemSummary> = {}): ItemSummary {
     list_id: LIST,
     title: `Item ${n}`,
     kind: 'movie',
-    summary: null,
-    status: null,
     image: null,
     price: null,
-    official_website_url: null,
+    website: null,
     content_version: 0,
     sort_order: n,
     version: 1,
@@ -150,31 +148,26 @@ describe('W-06 display modes', () => {
   const rich = [
     makeItem(1, {
       title: 'The Matrix',
-      summary: 'A hacker learns the truth.',
-      status: 'Watched',
       kind: 'movie',
       price: { min: '1200', max: '1500', currency: 'EUR' },
     }),
   ]
 
-  it.each([
-    'compact',
-    'thumbnail',
-    'grid',
-  ] as const)('%s renders title link, status, price and kind, no summary (F007-W4)', async (mode) => {
-    useBackend({ list: { display_mode: mode }, items: rich })
-    renderList(at())
-    const ul = await itemsList()
-    const link = within(ul).getByRole('link', { name: 'The Matrix' })
-    expect(link).toHaveAttribute('href', `/lists/${LIST}/items/${rich[0]!.id}`)
-    expect(within(ul).getByText('Watched')).toBeInTheDocument()
-    expect(within(ul).getByText(/1,200.*1,500/)).toBeInTheDocument()
-    expect(within(ul).getByText('Movie')).toBeInTheDocument()
-    expect(within(ul).queryByText('A hacker learns the truth.')).not.toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: radioName[mode] })).toBeChecked()
-  })
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s renders title link and price, no kind label, status or summary (F007-W4, W7)',
+    async (mode) => {
+      useBackend({ list: { display_mode: mode }, items: rich })
+      renderList(at())
+      const ul = await itemsList()
+      const link = within(ul).getByRole('link', { name: 'The Matrix' })
+      expect(link).toHaveAttribute('href', `/lists/${LIST}/items/${rich[0]!.id}`)
+      expect(within(ul).getByText(/1,200.*1,500/)).toBeInTheDocument()
+      expect(within(ul).queryByText('Movie')).not.toBeInTheDocument()
+      expect(screen.getByRole('radio', { name: radioName[mode] })).toBeChecked()
+    },
+  )
 
-  it('omits status and price when the item has none', async () => {
+  it('omits the price when the item has none', async () => {
     useBackend({ items: [makeItem(1)], list: { display_mode: 'compact' } })
     renderList(at())
     const ul = await itemsList()

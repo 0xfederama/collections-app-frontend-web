@@ -1,4 +1,4 @@
-import { Chip, kindIcons, kindLabels } from '../../components/ui'
+import { kindIcons, kindLabels } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import { ItemThumb } from '../lists/ItemThumb'
 import type { SearchResult } from './api'
@@ -47,7 +47,6 @@ export function SearchResultBody({ result, large }: { result: SearchResult; larg
         </span>
         <ResultPath path={path} className="text-xs" />
       </span>
-      {large && item.status && <Chip>{item.status}</Chip>}
       <span className="inline-flex shrink-0 text-text-muted" title={kindLabels[item.kind]}>
         <KindIcon aria-hidden className="size-4" />
         <span className="sr-only">{kindLabels[item.kind]}</span>

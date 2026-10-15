@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useBlocker, useLocation, useNavigate, useSearchParams } from 'react-router'
-import { AlertDialog, Button, Dialog, kindLabels, useToast } from '../../components/ui'
+import { AlertDialog, Button, Dialog, useToast } from '../../components/ui'
 import { ApiError, NetworkError } from '../../lib/api'
 import { useSettings } from '../settings/api'
 import { itemKeys, useUpdateItem, type Item } from './api'
@@ -11,12 +11,10 @@ import {
   draftDump,
   draftFromItem,
   firstInvalid,
-  hasKindDetails,
   inputId,
   isDirty,
   mapServerErrors,
   validate,
-  withKind,
   type Draft,
   type ErrorMap,
 } from './form/draft'
@@ -46,7 +44,6 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
   const update = useUpdateItem()
   const settings = useSettings()
   const defaults = {
-    currency: settings.data?.default_currency ?? '',
     country: settings.data?.streaming_country_code ?? '',
   }
 
@@ -127,18 +124,8 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
       setDraft((current) => ({ ...current, meta: { ...current.meta, [key]: value } }))
       clearError(`metadata.${key}`)
     },
-    setKind: (kind) => {
-      setDraft((current) => withKind(current, base, kind))
-      setErrors((current) =>
-        Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith('metadata.'))),
-      )
-    },
+    clearError,
   }
-
-  const kindWarning =
-    draft.kind !== base.kind && hasKindDetails(base)
-      ? `Switching kind clears the ${kindLabels[base.kind]} details.`
-      : null
 
   const save = async (event?: FormEvent) => {
     event?.preventDefault()
@@ -168,7 +155,7 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
       if (caught.status === 412) return setFailure({ kind: 'conflict' })
       if (caught.status === 404) return setFailure({ kind: 'gone' })
       if (caught.status === 422 && caught.errors?.length) {
-        const mapped = mapServerErrors(caught.errors, draft.kind)
+        const mapped = mapServerErrors(caught.errors, draft.kind, draft.priceMode)
         setErrors(mapped.fields)
         setOtherErrors(mapped.other)
         return focusFirst(mapped.fields, draft.kind)
@@ -305,7 +292,7 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
         )}
       </div>
       <FormSection id="item-form-basics" title="Basics">
-        <BasicsFields form={form} kindWarning={kindWarning} />
+        <BasicsFields form={form} />
       </FormSection>
 
       <FormSection id="item-form-image" title="Image">

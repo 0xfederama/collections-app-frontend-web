@@ -107,14 +107,15 @@ describe('AT-05 edit form: saving', () => {
   it('is prefilled from the item', async () => {
     await openForm()
     expect(field('Title')).toHaveValue('The Matrix')
-    expect(field('Summary')).toHaveValue('A hacker learns the truth about reality.')
-    expect(field('Status')).toHaveValue('Watched')
+    expect(field('Website')).toHaveValue('')
     expect(field('Release year')).toHaveValue('1999')
     expect(field('Runtime')).toHaveValue('136')
     expect(field('IMDb link')).toHaveValue('https://www.imdb.com/title/tt0133093/')
     expect(field('Streaming country')).toHaveValue('Italy (IT)')
     expect(field('Streaming platforms')).toHaveValue('Netflix, Prime Video')
-    expect(screen.getByRole('combobox', { name: 'Kind' })).toHaveTextContent('Movie')
+    expect(screen.queryByRole('combobox', { name: 'Kind' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/^Summary/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/^Status/)).not.toBeInTheDocument()
   })
 
   it('changing only the title sends exactly { title } with the item If-Match', async () => {
@@ -165,13 +166,13 @@ describe('AT-05 edit form: saving', () => {
     expect(calls).toHaveLength(0)
   })
 
-  it('clearing the summary sends summary: null', async () => {
+  it('F007-W8 clearing the website sends website: null', async () => {
     const calls = mockPatch()
-    const { user } = await openForm()
-    await user.clear(field('Summary'))
+    const { user } = await openForm({ item: { website: 'https://www.thematrix.com/' } })
+    await user.clear(field('Website'))
     await user.click(saveButton())
     await screen.findByText('Item saved')
-    expect(calls[0]?.body).toEqual({ summary: null })
+    expect(calls[0]?.body).toEqual({ website: null })
   })
 
   it('editing a kind field sends the full metadata object', async () => {
@@ -193,64 +194,25 @@ describe('AT-05 edit form: saving', () => {
     expect(calls).toHaveLength(0)
   })
 
-  it('an unusable official website is rejected on the input', async () => {
+  it('an unusable website is rejected on the input', async () => {
     const calls = mockPatch()
     const { user } = await openForm()
-    await user.type(field('Official website'), 'javascript:alert(1)')
+    await user.type(field('Website'), 'javascript:alert(1)')
     await user.click(saveButton())
-    expect(field('Official website')).toHaveAttribute('aria-invalid', 'true')
+    expect(field('Website')).toHaveAttribute('aria-invalid', 'true')
     expect(calls).toHaveLength(0)
   })
 })
 
-describe('AT-05 edit form: kind change', () => {
-  it('warns that details are cleared and sends kind plus metadata: {}', async () => {
+describe('F007-W7 edit form: no kind input', () => {
+  it('has no Kind input and never sends a kind', async () => {
     const calls = mockPatch()
     const { user } = await openForm()
-    expect(screen.queryByRole('note')).not.toBeInTheDocument()
-    await chooseOption(user, 'Kind', 'Car')
-    expect(await screen.findByRole('note')).toHaveTextContent(
-      'Switching kind clears the Movie details.',
-    )
-    // The movie fields are gone, the car ones are there.
-    expect(screen.queryByLabelText(labelPattern('Runtime'))).not.toBeInTheDocument()
-    expect(field('Fuel')).toBeInTheDocument()
-
+    expect(screen.queryByRole('combobox', { name: 'Kind' })).not.toBeInTheDocument()
+    await retype(user, 'Runtime', '140')
     await user.click(saveButton())
     await screen.findByText('Item saved')
-    expect(calls[0]?.body).toEqual({ kind: 'car', metadata: {} })
-  })
-
-  it('shows no warning when the item has no details, but still sends metadata: {}', async () => {
-    const calls = mockPatch()
-    const { user } = await openForm({ item: { kind: 'generic', metadata: {} } })
-    await chooseOption(user, 'Kind', 'Movie')
-    expect(field('Release year')).toBeInTheDocument()
-    expect(screen.queryByRole('note')).not.toBeInTheDocument()
-    await user.click(saveButton())
-    await screen.findByText('Item saved')
-    expect(calls[0]?.body).toEqual({ kind: 'movie', metadata: {} })
-  })
-
-  it('switching to another kind and back restores the details and the unchanged state', async () => {
-    const { user } = await openForm()
-    await chooseOption(user, 'Kind', 'Camera')
-    expect(saveButton()).toBeEnabled()
-    await chooseOption(user, 'Kind', 'Movie')
-    expect(screen.queryByRole('note')).not.toBeInTheDocument()
-    expect(field('Runtime')).toHaveValue('136')
-    expect(field('Streaming platforms')).toHaveValue('Netflix, Prime Video')
-    expect(saveButton()).toBeDisabled()
-  })
-
-  it('values typed for the new kind are sent with the kind change', async () => {
-    const calls = mockPatch()
-    const { user } = await openForm()
-    await chooseOption(user, 'Kind', 'Car')
-    await user.type(field('Seats'), '5')
-    await user.click(saveButton())
-    await screen.findByText('Item saved')
-    expect(calls[0]?.body).toEqual({ kind: 'car', metadata: { seats: 5 } })
+    expect(calls[0]?.body).not.toHaveProperty('kind')
   })
 })
 
@@ -269,45 +231,14 @@ describe('AT-05 edit form: kind fields of every kind', () => {
     [
       'motorcycle',
       'Motorcycle',
-      [
-        'Make',
-        'Model',
-        'Model year',
-        'Segment',
-        'Displacement',
-        'Power',
-        'Torque',
-        'Wet weight',
-        'Seat height',
-        'License class',
-      ],
+      ['Make', 'Model', 'Model year', 'Displacement', 'Power', 'License class'],
     ],
-    [
-      'car',
-      'Car',
-      [
-        'Make',
-        'Model',
-        'Trim',
-        'Model year',
-        'Body type',
-        'Fuel',
-        'Transmission',
-        'Power',
-        'Seats',
-        'Electric range',
-      ],
-    ],
-    [
-      'camera',
-      'Camera',
-      ['Make', 'Model', 'Release year', 'Type', 'Sensor', 'Resolution', 'Lens mount', 'Weight'],
-    ],
+    ['car', 'Car', ['Make', 'Model', 'Model year', 'Fuel', 'Power']],
+    ['camera', 'Camera', ['Make', 'Model', 'Release year', 'Sensor', 'Resolution']],
   ] as const
 
   it.each(cases)('%s renders its kind fields', async (kind, label, labels) => {
     await openForm({ item: { kind, metadata: {} } })
-    expect(screen.getByRole('combobox', { name: 'Kind' })).toHaveTextContent(label)
     expect(screen.getByRole('heading', { level: 2, name: `${label} details` })).toBeInTheDocument()
     for (const name of labels) expect(field(name)).toBeInTheDocument()
   })
@@ -327,7 +258,7 @@ describe('AT-05 edit form: kind fields of every kind', () => {
     expect(field('Make')).toHaveValue('Sony')
     expect(field('Resolution')).toHaveValue('24.2')
     expect(field('Sensor')).toHaveTextContent('Full frame')
-    expect(field('Type')).toHaveTextContent('Not set')
+    expect(field('Sensor')).not.toHaveTextContent('Not set')
   })
 
   it('setting an enum sends its value', async () => {
@@ -342,10 +273,66 @@ describe('AT-05 edit form: kind fields of every kind', () => {
   })
 })
 
-describe('AT-05 edit form: price', () => {
+describe('F007-W8 edit form: price', () => {
+  const addPrice = (user: User) => user.click(screen.getByRole('button', { name: /Add price/ }))
+  const rangeToggle = () => screen.getByRole('checkbox', { name: 'Price range' })
+
+  it('the price is hidden until "Add price" is pressed', async () => {
+    const { user } = await openForm()
+    expect(screen.queryByLabelText(/^Price/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: 'Currency' })).not.toBeInTheDocument()
+    await addPrice(user)
+    expect(field('Price')).toBeInTheDocument()
+    expect(rangeToggle()).not.toBeChecked()
+    expect(screen.getByRole('combobox', { name: 'Currency' })).toHaveValue('EUR · Euro')
+    expect(screen.queryByRole('button', { name: /Add price/ })).not.toBeInTheDocument()
+  })
+
+  it('adding the price changes nothing until a number is typed', async () => {
+    const { user } = await openForm()
+    await addPrice(user)
+    expect(saveButton()).toBeDisabled()
+  })
+
+  it('a single price sends { amount, currency } with 2 decimals', async () => {
+    const calls = mockPatch()
+    const { user } = await openForm()
+    await addPrice(user)
+    await user.type(field('Price'), '1200')
+    await user.click(saveButton())
+    await screen.findByText('Item saved')
+    expect(calls[0]?.body).toEqual({ price: { amount: '1200.00', currency: 'EUR' } })
+  })
+
+  it('the Price range toggle switches to Minimum and Maximum and sends { min, max, currency }', async () => {
+    const calls = mockPatch()
+    const { user } = await openForm()
+    await addPrice(user)
+    await user.click(rangeToggle())
+    expect(screen.queryByLabelText(labelPattern('Price'))).not.toBeInTheDocument()
+    await user.type(field('Minimum price'), '12.5')
+    await user.type(field('Maximum price'), '20')
+    await user.click(saveButton())
+    await screen.findByText('Item saved')
+    expect(calls[0]?.body).toEqual({ price: { min: '12.50', max: '20.00', currency: 'EUR' } })
+  })
+
+  it('a chosen currency is sent instead of EUR', async () => {
+    const calls = mockPatch()
+    const { user } = await openForm()
+    await addPrice(user)
+    await user.type(field('Price'), '9')
+    await chooseOption(user, 'Currency', 'USD · US Dollar')
+    await user.click(saveButton())
+    await screen.findByText('Item saved')
+    expect(calls[0]?.body).toEqual({ price: { amount: '9.00', currency: 'USD' } })
+  })
+
   it('min above max shows an error on Maximum price and sends nothing', async () => {
     const calls = mockPatch()
     const { user } = await openForm()
+    await addPrice(user)
+    await user.click(rangeToggle())
     await user.type(field('Minimum price'), '20')
     await user.type(field('Maximum price'), '10')
     await user.click(saveButton())
@@ -359,56 +346,63 @@ describe('AT-05 edit form: price', () => {
   it('a malformed price is rejected on its input', async () => {
     const calls = mockPatch()
     const { user } = await openForm()
-    await user.type(field('Minimum price'), '1,5')
+    await addPrice(user)
+    await user.type(field('Price'), '1,5')
     await user.click(saveButton())
-    expect(field('Minimum price')).toHaveAttribute('aria-invalid', 'true')
+    expect(field('Price')).toHaveAttribute('aria-invalid', 'true')
     expect(calls).toHaveLength(0)
   })
 
-  it('a price without a chosen currency uses the settings currency, with 2 decimals', async () => {
-    const calls = mockPatch()
-    const { user } = await openForm()
-    await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'Currency' })).toHaveValue('EUR · Euro'),
-    )
-    await user.type(field('Minimum price'), '12.5')
-    await user.type(field('Maximum price'), '20')
-    await user.click(saveButton())
-    await screen.findByText('Item saved')
-    expect(calls[0]?.body).toEqual({ price: { min: '12.50', max: '20.00', currency: 'EUR' } })
-  })
-
-  it('a chosen currency is sent instead', async () => {
-    const calls = mockPatch()
-    const { user } = await openForm()
-    await user.type(field('Maximum price'), '9')
-    await chooseOption(user, 'Currency', 'USD · US Dollar')
-    await user.click(saveButton())
-    await screen.findByText('Item saved')
-    expect(calls[0]?.body).toEqual({ price: { min: null, max: '9.00', currency: 'USD' } })
-  })
-
-  it('shows the "up to" hint only when just a maximum is set', async () => {
-    const { user } = await openForm()
-    const hint = /shows as “up to” this amount/
-    expect(screen.queryByText(hint)).not.toBeInTheDocument()
-    await user.type(field('Maximum price'), '9')
-    expect(screen.getByText(hint)).toBeInTheDocument()
-    await user.type(field('Minimum price'), '5')
-    expect(screen.queryByText(hint)).not.toBeInTheDocument()
-  })
-
-  it('clearing the price of an item that had one sends price: null', async () => {
+  it('an existing single price loads as a single price and an unchanged save sends no price', async () => {
     const calls = mockPatch()
     const { user } = await openForm({
-      item: { price: { min: '5.00', max: '10.00', currency: 'EUR' } as Item['price'] },
+      item: { price: { min: '1200.00', max: '1200.00', currency: 'EUR' } as Item['price'] },
     })
-    expect(field('Minimum price')).toHaveValue('5.00')
-    await user.clear(field('Minimum price'))
-    await user.clear(field('Maximum price'))
+    expect(field('Price')).toHaveValue('1200.00')
+    expect(rangeToggle()).not.toBeChecked()
+    await retype(user, 'Title', 'Renamed')
+    await user.click(saveButton())
+    await screen.findByText('Item saved')
+    expect(calls[0]?.body).toEqual({ title: 'Renamed' })
+  })
+
+  it('an existing range loads as a range', async () => {
+    await openForm({
+      item: { price: { min: '1000.00', max: '1400.00', currency: 'EUR' } as Item['price'] },
+    })
+    expect(rangeToggle()).toBeChecked()
+    expect(field('Minimum price')).toHaveValue('1000.00')
+    expect(field('Maximum price')).toHaveValue('1400.00')
+  })
+
+  it('an open-ended legacy range loads as a range', async () => {
+    await openForm({
+      item: { price: { min: '49.90', max: null, currency: 'EUR' } as Item['price'] },
+    })
+    expect(rangeToggle()).toBeChecked()
+    expect(field('Minimum price')).toHaveValue('49.90')
+    expect(field('Maximum price')).toHaveValue('')
+  })
+
+  it('Remove price hides the price again and sends price: null', async () => {
+    const calls = mockPatch()
+    const { user } = await openForm({
+      item: { price: { min: '5.00', max: '5.00', currency: 'EUR' } as Item['price'] },
+    })
+    await user.click(screen.getByRole('button', { name: /Remove price/ }))
+    expect(screen.queryByLabelText(labelPattern('Price'))).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Add price/ })).toBeInTheDocument()
     await user.click(saveButton())
     await screen.findByText('Item saved')
     expect(calls[0]?.body).toEqual({ price: null })
+  })
+
+  it('adding and removing a price on an item without one leaves the form unchanged', async () => {
+    const { user } = await openForm()
+    await addPrice(user)
+    await user.type(field('Price'), '5')
+    await user.click(screen.getByRole('button', { name: /Remove price/ }))
+    expect(saveButton()).toBeDisabled()
   })
 })
 
@@ -418,7 +412,7 @@ describe('AT-05 edit form: 422 mapping', () => {
       problemResponse(422, 'validation_failed', {
         errors: [
           { field: 'metadata.runtime_minutes', message: 'Runtime is out of range.' },
-          { field: 'price.max', message: 'Maximum is not a price.' },
+          { field: 'price.amount', message: 'Price is not a price.' },
           { field: 'bogus.thing', message: 'Strange problem.' },
         ],
       }),
@@ -426,17 +420,18 @@ describe('AT-05 edit form: 422 mapping', () => {
     const { user } = await openForm()
     await retype(user, 'Title', 'Edited title')
     await retype(user, 'Runtime', '140')
-    await user.type(field('Maximum price'), '9')
+    await user.click(screen.getByRole('button', { name: /Add price/ }))
+    await user.type(field('Price'), '9')
     await user.click(saveButton())
 
     expect(await screen.findByText('Runtime is out of range.')).toBeInTheDocument()
-    expect(screen.getByText('Maximum is not a price.')).toBeInTheDocument()
+    expect(screen.getByText('Price is not a price.')).toBeInTheDocument()
     expect(field('Runtime')).toHaveAttribute('aria-invalid', 'true')
-    expect(field('Maximum price')).toHaveAttribute('aria-invalid', 'true')
+    expect(field('Price')).toHaveAttribute('aria-invalid', 'true')
     expect(field('Title')).not.toHaveAttribute('aria-invalid')
 
     // Page order: price comes before the kind fields.
-    await waitFor(() => expect(field('Maximum price')).toHaveFocus())
+    await waitFor(() => expect(field('Price')).toHaveFocus())
 
     const alert = screen.getByRole('alert')
     expect(alert).toHaveTextContent('Strange problem.')
@@ -445,7 +440,7 @@ describe('AT-05 edit form: 422 mapping', () => {
     // Nothing the user typed is lost, and the form is still the form.
     expect(field('Title')).toHaveValue('Edited title')
     expect(field('Runtime')).toHaveValue('140')
-    expect(field('Maximum price')).toHaveValue('9')
+    expect(field('Price')).toHaveValue('9')
     expect(screen.getByRole('heading', { level: 1, name: 'Edit “The Matrix”' })).toBeInTheDocument()
   })
 

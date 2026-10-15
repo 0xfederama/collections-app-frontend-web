@@ -371,7 +371,6 @@ describe('W-04 workspace name', () => {
         HttpResponse.json({
           workspace_name: '',
           streaming_country_code: 'IT',
-          default_currency: 'EUR',
           markdown_history_limit: 20,
           version: 1,
         }),

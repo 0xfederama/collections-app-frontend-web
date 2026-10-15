@@ -2,12 +2,12 @@ import { buttonBase, buttonSizeClasses, buttonVariantClasses } from '../../compo
 import { ExternalLink, Globe, MessagesSquare, Search } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { Item } from './api'
-import { buildExternalLinks, NO_OFFICIAL_SITE } from './links'
+import { buildExternalLinks, NO_WEBSITE } from './links'
 
-const icons = { google: Search, reddit: MessagesSquare, official: Globe }
+const icons = { google: Search, reddit: MessagesSquare, website: Globe }
 const classes = cx(buttonBase, buttonVariantClasses.secondary, buttonSizeClasses.md)
 
-/** The three external controls (AT-13): Google, Reddit, Official site (disabled when absent). */
+/** The three external controls (AT-13): Google, Reddit, Website (disabled when absent). */
 export function ExternalLinks({ item }: { item: Item }) {
   return (
     <div role="group" aria-label="External links" className="flex flex-wrap gap-2">
@@ -17,7 +17,7 @@ export function ExternalLinks({ item }: { item: Item }) {
           return (
             <button key={link.id} type="button" aria-disabled="true" className={classes}>
               <Icon aria-hidden className="size-4" />
-              {NO_OFFICIAL_SITE}
+              {NO_WEBSITE}
             </button>
           )
         }

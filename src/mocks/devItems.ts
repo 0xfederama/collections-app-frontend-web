@@ -28,17 +28,9 @@ const TITLES: Record<ItemKind, string[]> = {
   camera: ['Fujifilm X100VI', 'Ricoh GR III', 'Leica Q3', 'Sony A7C II'],
   generic: ['Standing desk', 'Noise-cancelling headphones', 'Espresso machine', 'Trail shoes'],
 }
-const KINDS = Object.keys(TITLES) as ItemKind[]
-const STATUSES = ['Watched', 'Planned', 'Owned', 'Wishlist', null, 'Saving up']
-const SUMMARIES = [
-  null,
-  'A long and slightly rambling summary, so the two-line clamp in thumbnail rows has something to cut off. It keeps going to make sure it really wraps over several lines on narrow screens.',
-  'Short note.',
-]
-
 function makeItems(list: List, count: number): ItemSummary[] {
   return Array.from({ length: count }, (_, i) => {
-    const kind = KINDS[(i + Number(list.id.slice(-2))) % KINDS.length] as ItemKind
+    const kind = list.kind
     const pool = TITLES[kind]
     const title = `${pool[i % pool.length]}${i >= pool.length ? ` (${Math.floor(i / pool.length) + 1})` : ''}`
     const image =
@@ -53,8 +45,6 @@ function makeItems(list: List, count: number): ItemSummary[] {
       list_id: list.id,
       title,
       kind,
-      summary: SUMMARIES[i % SUMMARIES.length] ?? null,
-      status: STATUSES[i % STATUSES.length] ?? null,
       image,
       price:
         priced === 0
@@ -64,7 +54,7 @@ function makeItems(list: List, count: number): ItemSummary[] {
             : priced === 2
               ? { min: '1200.00', max: '1500.50', currency: 'EUR' }
               : { min: '49.90', max: null, currency: 'EUR' },
-      official_website_url: null,
+      website: null,
       content_version: 0,
       sort_order: i,
       version: 1,
@@ -111,7 +101,11 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
       const q = (query.get('q') ?? '').toLowerCase()
       const limit = Math.min(Number(query.get('limit') ?? 50), 200)
       const offset = Number(query.get('offset') ?? 0)
-      const matching = all.filter((item) => item.title.toLowerCase().includes(q)).sort(bySort(sort))
+      // The kind of an item is its list's (a kind change in the tree fake shows up here).
+      const matching = all
+        .filter((item) => item.title.toLowerCase().includes(q))
+        .map((item) => ({ ...item, kind: list.kind }))
+        .sort(bySort(sort))
       return HttpResponse.json({
         data: matching.slice(offset, offset + limit),
         page: { limit, offset, total: matching.length },

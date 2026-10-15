@@ -10,7 +10,6 @@ const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 const initial = (): Settings => ({
   workspace_name: 'Our Collection',
   streaming_country_code: 'IT',
-  default_currency: 'EUR',
   markdown_history_limit: 20,
   version: 1,
 })
@@ -26,9 +25,6 @@ function validationError(body: UpdateSettingsRequest) {
   }
   if (country !== undefined && !/^[A-Z]{2}$/.test(country)) {
     return invalid('streaming_country_code', 'must be an ISO 3166-1 alpha-2 code')
-  }
-  if (body.default_currency !== undefined && !/^[A-Z]{3}$/.test(body.default_currency)) {
-    return invalid('default_currency', 'must be an ISO 4217 code')
   }
   const limit = body.markdown_history_limit
   if (limit !== undefined && (!Number.isInteger(limit) || limit < 0 || limit > 200)) {

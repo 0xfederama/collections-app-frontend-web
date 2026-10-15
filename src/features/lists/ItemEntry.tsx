@@ -79,9 +79,7 @@ export function ItemEntry({ item, mode, search, onOpen, reorder }: ItemEntryProp
         <ItemThumb item={item} className="aspect-4/3 w-24 shrink-0 rounded-md" />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           {title}
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            {priceText}
-          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-2">{priceText}</div>
         </div>
         {controls?.menu}
       </li>
@@ -99,9 +97,7 @@ export function ItemEntry({ item, mode, search, onOpen, reorder }: ItemEntryProp
       <ItemThumb item={item} className="aspect-4/3 w-full" />
       <div className="flex flex-1 flex-col gap-2 p-3">
         {title}
-        <div className="mt-auto flex flex-wrap items-center gap-2">
-          {priceText}
-        </div>
+        <div className="mt-auto flex flex-wrap items-center gap-2">{priceText}</div>
       </div>
       {controls && (
         <div className="absolute inset-x-1 top-1 flex justify-between">
