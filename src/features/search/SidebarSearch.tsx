@@ -177,7 +177,7 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
               onKeyDown={onKeyDown}
               prefix={<Search aria-hidden className="size-4" />}
               suffix={
-                <kbd aria-hidden className="rounded-sm border border-border px-1.5 text-xs">
+                <kbd aria-hidden className="text-xs opacity-80">
                   /
                 </kbd>
               }
