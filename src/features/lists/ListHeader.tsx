@@ -11,6 +11,8 @@ import {
 import { LayoutGrid, List as ListIcon, Plus, Rows3, Search } from '../../components/ui/icons'
 import type { List as TreeList } from '../tree/api'
 import { ListActionsMenu } from '../tree/ListActionsMenu'
+import type { ItemKind } from '../items/api'
+import { sortKeyLabel } from '../items/kinds'
 import type { DisplayMode, List, SortMode } from './api'
 
 const modeOptions: SegmentedOption[] = [
@@ -19,11 +21,17 @@ const modeOptions: SegmentedOption[] = [
   { value: 'grid', label: 'Grid', icon: <LayoutGrid />, iconOnly: true },
 ]
 
-const sortOptions: SelectOption[] = [
+const baseSortOptions: SelectOption[] = [
   { value: 'manual', label: 'Manual' },
   { value: 'title', label: 'Title' },
   { value: 'updated', label: 'Recently updated' },
 ]
+
+/** Manual, Title, Recently updated, and the kind's sort key when the kind has one (not generic). */
+export function sortOptionsFor(kind: ItemKind): SelectOption[] {
+  const label = sortKeyLabel(kind)
+  return label ? [...baseSortOptions, { value: 'kind_key', label }] : baseSortOptions
+}
 
 const LONG_DESCRIPTION = 140
 
@@ -97,7 +105,7 @@ export function ListHeader(props: ListHeaderProps) {
         <div className="w-44">
           <Select
             label="Sort"
-            options={sortOptions}
+            options={sortOptionsFor(props.treeList.kind)}
             value={props.sort}
             onValueChange={(value) => props.onSort(value as SortMode)}
           />

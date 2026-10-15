@@ -11,7 +11,7 @@ type ItemKind = components['schemas']['ItemKind']
 
 const DISPLAY_MODES: DisplayMode[] = ['compact', 'thumbnail', 'grid']
 const ITEM_KINDS: ItemKind[] = ['generic', 'movie', 'tv_show', 'motorcycle', 'car', 'camera']
-const SORT_MODES: SortMode[] = ['manual', 'title', 'updated']
+const SORT_MODES: SortMode[] = ['manual', 'title', 'updated', 'kind_key']
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 
@@ -234,6 +234,14 @@ export function createTreeBackend(initial: Tree) {
         sort_mode?: unknown
       }
       let changed = false
+      // `kind_key` has no key on a generic list, so the resulting pair must not be (kind_key, generic).
+      const nextKind = ITEM_KINDS.includes(body.kind as ItemKind)
+        ? (body.kind as ItemKind)
+        : list.kind
+      const nextSort = (body.sort_mode as SortMode | undefined) ?? list.sort_mode
+      if (nextSort === 'kind_key' && nextKind === 'generic') {
+        return invalid('sort_mode', 'Sorting by the kind key is not available on a generic list.')
+      }
       if (body.display_mode !== undefined) {
         if (!DISPLAY_MODES.includes(body.display_mode as DisplayMode)) {
           return invalid('display_mode', 'Unknown display mode.')

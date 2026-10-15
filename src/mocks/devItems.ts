@@ -83,12 +83,25 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
     return items.get(id)
   }
 
-  const bySort = (sort: SortMode) => (a: ItemSummary, b: ItemSummary) =>
-    sort === 'title'
-      ? a.title.localeCompare(b.title)
-      : sort === 'updated'
-        ? b.updated_at.localeCompare(a.updated_at)
-        : a.sort_order - b.sort_order
+  /** Stand-in for the kind's sort key (summaries carry no metadata): a stable number, unset for some. */
+  const fakeKey = (item: ItemSummary): number | null => {
+    const sum = [...item.title].reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+    return item.title.length % 5 === 0 ? null : sum % 90
+  }
+  const bySort = (sort: SortMode) => (a: ItemSummary, b: ItemSummary) => {
+    if (sort === 'title') return a.title.localeCompare(b.title)
+    if (sort === 'updated') return b.updated_at.localeCompare(a.updated_at)
+    if (sort === 'kind_key') {
+      const ka = fakeKey(a)
+      const kb = fakeKey(b)
+      // Ascending, empty last, tie-break on id.
+      if (ka === null || kb === null) {
+        if (ka !== kb) return ka === null ? 1 : -1
+      } else if (ka !== kb) return ka - kb
+      return a.id.localeCompare(b.id)
+    }
+    return a.sort_order - b.sort_order
+  }
 
   const handlers = [
     http.get(url('/api/v1/lists/:id/items'), ({ request, params }) => {
@@ -98,6 +111,9 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
       if (!all || !list) return problemResponse(404, 'not_found')
       const query = new URL(request.url).searchParams
       const sort = (query.get('sort') as SortMode | null) ?? list.sort_mode
+      if (sort === 'kind_key' && list.kind === 'generic') {
+        return problemResponse(400, 'invalid_parameter')
+      }
       const q = (query.get('q') ?? '').toLowerCase()
       const limit = Math.min(Number(query.get('limit') ?? 50), 200)
       const offset = Number(query.get('offset') ?? 0)

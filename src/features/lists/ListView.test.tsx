@@ -247,6 +247,34 @@ describe('W-06 URL state: sort and filter', () => {
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
   })
 
+  it('F007-W9 a movie list offers "Release year" and picking it sets ?sort=kind_key', async () => {
+    const backend = useBackend()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(sortSelect())
+    await user.click(await screen.findByRole('option', { name: 'Release year' }))
+    expect(router.state.location.search).toBe('?sort=kind_key')
+    await waitFor(() =>
+      expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('kind_key'),
+    )
+  })
+
+  it('F007-W9 ?sort=kind_key is ignored on a generic list', async () => {
+    const genericTree = {
+      ...(exampleResponses.getTree.body as components['schemas']['Tree']),
+    }
+    genericTree.lists = genericTree.lists.map((l) =>
+      l.id === LIST ? { ...l, kind: 'generic' as const } : l,
+    )
+    server.use(http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json(genericTree)))
+    const backend = useBackend({ list: { kind: 'generic' } })
+    renderList(at('?sort=kind_key'))
+    await itemsList()
+    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
+  })
+
   it('typing in the filter updates ?q= after the debounce and the request carries q', async () => {
     const backend = useBackend()
     const user = userEvent.setup()
