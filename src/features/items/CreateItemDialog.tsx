@@ -1,25 +1,13 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import {
-  Button,
-  Dialog,
-  Select,
-  TextField,
-  kindLabels,
-  type SelectOption,
-} from '../../components/ui'
+import { Button, Dialog, TextField } from '../../components/ui'
 import { ApiError, NetworkError } from '../../lib/api'
-import { useCreateItem, type ItemKind } from './api'
+import { useCreateItem } from './api'
 import { withEdit } from './editMode'
 import { LIMITS } from './form/draft'
 
-const kindOptions: SelectOption[] = (Object.keys(kindLabels) as ItemKind[]).map((kind) => ({
-  value: kind,
-  label: kindLabels[kind],
-}))
-
 /**
- * "Add item" (UI_SPEC §5): a title and a kind. The new item opens in edit mode
+ * "Add item" (UI_SPEC §5): a title. The new item opens in edit mode
  * (`/lists/:listId/items/:id?edit=1`) so the rest of the details are one step away.
  * `search` is the list's own query (`?q=`, `?sort=`), which the item page keeps.
  */
@@ -35,7 +23,6 @@ export function CreateItemDialog({
   const create = useCreateItem(listId)
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
-  const [kind, setKind] = useState<ItemKind>('generic')
   const [titleError, setTitleError] = useState<string>()
   const [formError, setFormError] = useState<string>()
   const titleRef = useRef<HTMLInputElement>(null)
@@ -50,7 +37,7 @@ export function CreateItemDialog({
     }
     setTitleError(undefined)
     try {
-      const created = await create.mutateAsync({ title: trimmed, kind })
+      const created = await create.mutateAsync({ title: trimmed })
       onClose()
       void navigate({
         pathname: `/lists/${listId}/items/${created.id}`,
@@ -111,12 +98,6 @@ export function CreateItemDialog({
             setTitleError(undefined)
           }}
           error={titleError}
-        />
-        <Select
-          label="Kind"
-          options={kindOptions}
-          value={kind}
-          onValueChange={(value) => setKind(value as ItemKind)}
         />
         {formError && (
           <div

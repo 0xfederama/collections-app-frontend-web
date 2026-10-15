@@ -17,6 +17,13 @@ export function classifyItemError(error: unknown): ItemError {
           'Someone else changed this item. The latest version was loaded, please check it and try again.',
       }
     }
+    if (error.code === 'kind_mismatch') {
+      return {
+        kind: 'unavailable',
+        message:
+          'That list holds another kind of item. Items can only move to lists of the same kind.',
+      }
+    }
     if (error.status === 409) {
       return {
         kind: 'unavailable',

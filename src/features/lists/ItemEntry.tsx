@@ -1,6 +1,6 @@
 import type { Ref } from 'react'
 import { Link } from 'react-router'
-import { Badge, Chip, IconButton, Menu, kindIcons, kindLabels } from '../../components/ui'
+import { IconButton, Menu } from '../../components/ui'
 import { ArrowDown, ArrowUp, Ellipsis, GripVertical } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { DisplayMode, ItemSummary } from './api'
@@ -33,7 +33,6 @@ const linkClass =
 /** One item of the list in the given display mode: a row (compact, thumbnail) or a card (grid). */
 export function ItemEntry({ item, mode, search, onOpen, reorder }: ItemEntryProps) {
   const price = formatPrice(item.price)
-  const KindIcon = kindIcons[item.kind]
   const to = { pathname: `/lists/${item.list_id}/items/${item.id}`, search }
 
   const title = (
@@ -45,7 +44,6 @@ export function ItemEntry({ item, mode, search, onOpen, reorder }: ItemEntryProp
       {item.title}
     </Link>
   )
-  const status = item.status ? <Chip>{item.status}</Chip> : null
   const priceText = price ? (
     <span className="text-sm whitespace-nowrap tabular-nums">{price}</span>
   ) : null
@@ -65,12 +63,7 @@ export function ItemEntry({ item, mode, search, onOpen, reorder }: ItemEntryProp
         {controls?.handle}
         <ItemThumb item={item} compact className="size-10 shrink-0 rounded-sm" />
         <div className="min-w-0 flex-1">{title}</div>
-        {status}
         {priceText}
-        <span className="inline-flex shrink-0 text-text-muted" title={kindLabels[item.kind]}>
-          <KindIcon aria-hidden className="size-4" />
-          <span className="sr-only">{kindLabels[item.kind]}</span>
-        </span>
         {controls?.menu}
       </li>
     )
@@ -87,9 +80,7 @@ export function ItemEntry({ item, mode, search, onOpen, reorder }: ItemEntryProp
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           {title}
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            {status}
             {priceText}
-            <Badge kind={item.kind} />
           </div>
         </div>
         {controls?.menu}
@@ -110,9 +101,7 @@ export function ItemEntry({ item, mode, search, onOpen, reorder }: ItemEntryProp
         {title}
         <div className="mt-auto flex flex-wrap items-center gap-2">
           {priceText}
-          {status}
         </div>
-        <Badge kind={item.kind} className="self-start" />
       </div>
       {controls && (
         <div className="absolute inset-x-1 top-1 flex justify-between">

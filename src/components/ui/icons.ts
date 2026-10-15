@@ -53,7 +53,7 @@ export const kindIcons: Record<ItemKind, LucideIcon> = {
 }
 
 export const kindLabels: Record<ItemKind, string> = {
-  generic: 'Generic',
+  generic: 'Item',
   movie: 'Movie',
   tv_show: 'TV show',
   motorcycle: 'Motorcycle',
