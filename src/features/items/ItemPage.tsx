@@ -8,6 +8,9 @@ import { useItem } from './api'
 import { EditGuardProvider } from './inline/guard'
 import { ItemSkeleton } from './ItemSkeleton'
 import { ItemView } from './ItemView'
+import { NEW_ITEM_ID } from './newItem'
+import { NewItemDraft } from './NewItemDraft'
+import type { ItemKind } from './api'
 
 function ItemDetail({
   listId,
@@ -70,6 +73,33 @@ function ItemDetail({
   )
 }
 
+/** `/lists/:listId/items/new` (F008-W9): the draft of a new item, with the same back link as an item. */
+function NewItemPage({
+  listId,
+  listName,
+  kind,
+}: {
+  listId: string
+  listName: string
+  kind: ItemKind
+}) {
+  const { search } = useLocation()
+  const panel = useBreakpoint() === 'wide'
+  return (
+    <div className={cx('flex flex-col gap-4', panel && 'min-h-0 flex-1')}>
+      {!panel && (
+        <Link
+          to={{ pathname: `/lists/${listId}`, search }}
+          className="self-start text-sm text-accent-text underline underline-offset-2"
+        >
+          ← Back to {listName}
+        </Link>
+      )}
+      <NewItemDraft listId={listId} listName={listName} kind={kind} />
+    </div>
+  )
+}
+
 /** `/lists/:listId/items/:itemId` content: the shell puts it in `main` or in the detail panel. */
 export default function ItemPage() {
   const { listId = '', itemId = '' } = useParams()
@@ -78,7 +108,11 @@ export default function ItemPage() {
       {(list) => (
         // Keyed by item and list: a move opens the same item in its new list with a fresh guard.
         <EditGuardProvider key={`${listId}/${itemId}`}>
-          <ItemDetail listId={listId} itemId={itemId} listName={list.name} />
+          {itemId === NEW_ITEM_ID ? (
+            <NewItemPage listId={listId} listName={list.name} kind={list.kind} />
+          ) : (
+            <ItemDetail listId={listId} itemId={itemId} listName={list.name} />
+          )}
         </EditGuardProvider>
       )}
     </ListGate>

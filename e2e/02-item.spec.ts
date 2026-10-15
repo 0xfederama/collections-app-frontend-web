@@ -13,12 +13,10 @@ test.describe('F003-W1 item: kind field, price, website, sort by kind key', () =
 
     await page.goto(`/lists/${list.id}`)
     await page.getByRole('button', { name: 'New item' }).click()
-    await page
-      .getByRole('dialog', { name: 'Quick add' })
-      .getByRole('textbox', { name: 'Title' })
-      .fill(title)
-    await page.getByRole('button', { name: 'Add', exact: true }).click()
+    // F008-W9: "New item" in a list opens a draft in the side page; Enter on the title creates it.
     const panel = itemPanel(page)
+    await panel.getByRole('textbox', { name: 'Title' }).fill(title)
+    await panel.getByRole('textbox', { name: 'Title' }).press('Enter')
     await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
 
     // Each field is edited in place and saved on its own (pen, input, Enter or ✓).

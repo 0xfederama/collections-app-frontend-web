@@ -888,17 +888,122 @@ describe('W-06 list actions menu (W-05) in the header', () => {
   })
 })
 
-describe('F006-W3 New item dialog focus', () => {
-  it('Esc on the New item dialog returns focus to the New item button', async () => {
+describe('F008-W9 New item opens a draft, nothing is sent until the title is committed', () => {
+  const NEW_ID = '7c1e5a10-0000-4000-8000-000000000999'
+  const createUrl = `${location.origin}/api/v1/lists/${LIST}/items`
+
+  function useCreate() {
+    const posts: unknown[] = []
+    server.use(
+      http.post(createUrl, async ({ request }) => {
+        const body = (await request.json()) as { title: string }
+        posts.push(body)
+        const created = {
+          ...(exampleResponses.getItem.body as object),
+          id: NEW_ID,
+          list_id: LIST,
+          title: body.title,
+          metadata: {},
+          version: 1,
+        }
+        server.use(
+          http.get(`${location.origin}/api/v1/items/${NEW_ID}`, () => HttpResponse.json(created)),
+        )
+        return HttpResponse.json(created, { status: 201 })
+      }),
+    )
+    return posts
+  }
+
+  it('inserts a draft row and a focused title in the side page, with no request', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    await waitFor(() => expect(title).toHaveFocus())
+    expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/new`)
+    const rows = within(screen.getByRole('list', { name: 'Items' })).getAllByRole('listitem')
+    expect(rows.at(-1)).toHaveAccessibleName('New item (draft)')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(posts).toHaveLength(0)
+  })
+
+  it('an empty title is not sent; Enter on a title creates the item and opens its page', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    await user.keyboard('{Enter}')
+    expect(await within(panel).findByText('Enter a title.')).toBeInTheDocument()
+    expect(posts).toHaveLength(0)
+
+    await user.type(title, '  Field notebook {Enter}')
+    await waitFor(() => expect(posts).toEqual([{ title: 'Field notebook' }]))
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+    expect(
+      await within(panel).findByRole('heading', { level: 1, name: 'Field notebook' }),
+    ).toBeInTheDocument()
+  })
+
+  it('Esc removes the draft row and the side page without a request or a confirmation', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    await user.type(within(panel).getByRole('textbox', { name: 'Title' }), 'Half typed')
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(screen.queryByRole('listitem', { name: 'New item (draft)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('complementary', { name: 'Item details' })).not.toBeInTheDocument()
+    expect(posts).toHaveLength(0)
+  })
+
+  it('leaving with an empty title removes the draft; the unsaved-changes guard does not trap it', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    fireEvent.blur(title, { relatedTarget: document.body })
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(posts).toHaveLength(0)
+  })
+
+  it('below 1280 px the draft is the full item page with a back link', async () => {
+    mockViewport(1000)
     useBackend()
     const user = userEvent.setup()
-    renderList(at())
+    const router = renderList(at())
     await itemsList()
-    const button = screen.getAllByRole('button', { name: 'New item' })[0]!
-    await user.click(button)
-    await screen.findByRole('dialog')
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    expect(await screen.findByRole('link', { name: /Back to/ })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Title' })).toBeInTheDocument()
     await user.keyboard('{Escape}')
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    await waitFor(() => expect(button).toHaveFocus())
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
   })
 })
