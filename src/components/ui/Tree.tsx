@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
 import { ChevronRight, GripVertical } from './icons'
 import { SortableProvider, useSortableRow, type SortableMove, type SortableSlot } from './sortable'
@@ -181,6 +181,8 @@ interface TreeRowProps<T extends TreeNodeBase> {
   renderRow: TreeProps<T>['renderRow']
 }
 
+const INNER_CONTROLS = 'button, a[href], input, select, textarea, [tabindex]'
+
 function TreeRow<T extends TreeNodeBase>({
   node,
   level,
@@ -196,11 +198,31 @@ function TreeRow<T extends TreeNodeBase>({
   renderRow,
 }: TreeRowProps<T>) {
   const { ref, handleRef, isDragging } = useSortableRow(node.id, slot)
+  const liRef = useRef<HTMLLIElement | null>(null)
+  // The whole tree is one Tab stop: only the roving row's inner controls (menu button, drag handle,
+  // anything the consumer renders) stay in the Tab order. Others are set to -1 and restored later.
+  useLayoutEffect(() => {
+    liRef.current?.querySelectorAll<HTMLElement>(INNER_CONTROLS).forEach((el) => {
+      if (tabbable) {
+        const original = el.dataset.treeTab
+        if (original === undefined) return
+        if (original === '') el.removeAttribute('tabindex')
+        else el.setAttribute('tabindex', original)
+        delete el.dataset.treeTab
+      } else if (el.dataset.treeTab === undefined) {
+        el.dataset.treeTab = el.getAttribute('tabindex') ?? ''
+        el.setAttribute('tabindex', '-1')
+      }
+    })
+  })
   const hasChildren = !!node.children?.length
   const isExpanded = expanded.has(node.id)
   return (
     <li
-      ref={ref}
+      ref={(el) => {
+        liRef.current = el
+        return ref(el)
+      }}
       role="treeitem"
       data-tree-id={node.id}
       aria-level={level}
