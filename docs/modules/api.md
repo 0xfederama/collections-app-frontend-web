@@ -2,19 +2,17 @@
 
 ## Purpose
 
-Vendors the backend OpenAPI contract at a pinned tag (currently `api-v0.3.0`, see `api/openapi.lock.json`), generates its TypeScript types and examples, and provides the only client for server calls (`src/lib/api`), the TanStack Query defaults and the MSW mocks. Contract rules: [API.md](/Users/federico/Developer/collections-app/design-docs/API.md).
+Vendors the backend OpenAPI contract at a pinned tag (currently `api-v0.5.0`, see `api/openapi.lock.json`), generates its TypeScript types and examples, and provides the only client for server calls (`src/lib/api`), the TanStack Query defaults and the MSW mocks. Contract rules: [API.md](/Users/federico/Developer/collections-app/design-docs/API.md).
 
 ## Key files
 
-- `scripts/api-sync.mjs`: vendors the spec at a tag, writes the lock, regenerates `src/generated/`.
-- `scripts/api-check.mjs`: offline check of the lock sha256 and of generated files.
-- `scripts/lib/generate.mjs`: openapi-typescript and example extraction, shared by both scripts.
+- `scripts/api-sync.mjs`, `api-check.mjs`, `lib/generate.mjs`: vendor and regenerate; offline check of lock and generated files.
 - `api/openapi.yaml`, `api/openapi.lock.json`: vendored spec and `{ tag, commit, sha256 }`.
-- `src/generated/schema.d.ts`, `examples.ts`: generated types and first 2xx example per operation.
+- `src/generated/schema.d.ts`, `examples.ts`: generated types (typed `ItemSummary.metadata`, `PinnedFields`) and examples.
 - `src/lib/api/client.ts`, `errors.ts`, `etag.ts`: client, error classes, `If-Match` builder.
 - `src/app/queryClient.ts`: app-wide QueryClient defaults and `shouldRetry`.
 - `src/features/invalidateContent.ts`: the one invalidation for create, trash, restore, purge and move.
-- `src/mocks/`: `handlers.ts`, `server.ts` (Node), `browser.ts` (worker), `devData.ts` (dev-only tree), `devTree.ts` (`createTreeBackend`, stateful folders and lists fake), `problems.ts`.
+- `src/mocks/`: `handlers.ts`, `server.ts` (Node), `browser.ts` (worker), `devData.ts`, `devTree.ts` (`createTreeBackend`), `problems.ts`.
 - `src/test-utils.tsx`: render helpers with a fresh QueryClient.
 - `src/main.tsx`, `vite.config.ts`, `public/mockServiceWorker.js`: dev-only mock worker.
 
@@ -33,6 +31,7 @@ Vendors the backend OpenAPI contract at a pinned tag (currently `api-v0.3.0`, se
 ## Gotchas
 
 - Never edit `api/openapi.yaml` or `src/generated/`; `api:check` fails on any byte change. Restore with `api:sync -- <tag>`.
+- Contract 0.5.0 adds list `pinned_fields` (PATCH; `null` resets), item `paid_platforms`, and kind fields such as `camera_type` and episodes.
 - Non-2xx responses throw `ApiError`; a failed fetch throws `NetworkError`; aborts pass through unwrapped.
 - Retries: one retry only for `NetworkError` or 5xx. 4xx (including 412) is never retried.
 - `ifMatch` has no way to send `*`. The 412 `currentVersion` is exposed on `ApiError` for the conflict UI.

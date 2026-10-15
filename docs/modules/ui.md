@@ -2,48 +2,39 @@
 
 ## Purpose
 
-Design-system primitives in `src/components/ui/` that features compose instead of raw HTML or Radix. Spec: `/Users/federico/Developer/collections-app/design-docs/UI_SPEC.md` §11.
+Design-system primitives in `src/components/ui/` that features compose instead of raw HTML or Radix, plus the shared favicon tiles (`ServiceIcon`, `LinkIcon`). Spec: `design-docs/UI_SPEC.md` §11; Frosted Gallery restyle: `design-docs/features/F-002-ui-refresh.md`.
 
 ## Key files
 
 - `src/components/ui/index.ts`: barrel; import primitives from `components/ui`.
-- `src/components/ui/icons.ts`: the only Lucide import site; named glyphs, `kindIcons` and `kindLabels`.
-- `src/components/ui/fieldStyles.ts`: shared input chrome (`controlBase`, `controlBorder`).
-- `src/components/ui/sortable.tsx`: the only importer of `@dnd-kit` (pinned 0.5.0, D-061); `SortableProvider`, `useSortableRow`, `arrayMove`.
-- `src/components/ui/returnFocus.ts`: focus return for Dialog, AlertDialog, Drawer; `rememberMenuTrigger` (used by Menu).
-- `src/lib/cx.ts`: class-name joiner used by every primitive.
-- `src/dev/DevUiRoute.tsx`: component gallery at `/dev/ui`, dev builds only.
-- `*.test.tsx` beside most primitives.
+- `src/components/ui/icons.ts`: the only Lucide import site; named glyphs, `kindIcons`, `kindLabels`.
+- `src/components/ui/sortable.tsx`: the only `@dnd-kit` importer (pinned 0.5.0, D-061).
+- `src/components/ui/fieldStyles.ts`, `returnFocus.ts`: shared input chrome; focus return.
+- `src/components/ServiceIcon.tsx`: `ServiceIcon` (streaming) and `LinkIcon` (Google, Letterboxd, IMDb, Reddit) tiles.
+- `src/assets/services/*.webp`, `README.md`: local favicons (96 px) with their sources; never fetched at runtime.
+- `src/dev/DevUiRoute.tsx`: `/dev/ui` gallery, dev builds only.
 
 ## Interfaces
 
-- `Button`: `variant` (primary, secondary, ghost, danger), `size` (sm, md), `pending` (spinner, `aria-busy`, blocks activation).
-- `IconButton`: Button variants plus required `aria-label`.
-- `TextField` / `TextArea`: `label`, `hint`, `error` (sets `aria-invalid`, `aria-describedby`); TextField adds `prefix`, `suffix`.
-- `Select`, `Combobox`: `options`, `value`, `onValueChange`; Select wraps Radix Select, Combobox is an ARIA combobox in a Popover.
-- `CountrySelect`, `CurrencySelect` (`IsoSelects.tsx`): Combobox over ISO 3166 countries and ISO 4217 currencies; value is the code, names from `src/lib/iso.ts`. Used by the item form and Settings.
-- `SegmentedControl`: `aria-label`, `options` (`value`, `label`, `icon`, `iconOnly`), `value`, `onValueChange`.
-- `Menu`: `trigger`, `items: MenuItem[]` (`onSelect`, `destructive`, `disabled`, or `{ type: 'separator' }`), `align`.
-- `Dialog`: `title`, `description`, `footer`, `open` / `onOpenChange`, `trigger`, `initialFocus` (ref to focus on open instead of Close).
-- `AlertDialog`: `title`, `description`, `onConfirm`, `destructive`, `pending`, `confirmLabel` / `cancelLabel`, `children` (extra content, e.g. an error), `keepOpen` (caller closes it).
-- `Drawer`: `title`, `side` (left, right), `open` / `onOpenChange`, `trigger`; Radix Dialog.
-- `Tooltip`: `content`, `side`, single child element (asChild); 300 ms delay.
-- `ToastProvider` / `useToast()`: `useToast()` returns `(options: { kind?, title, description?, action? }) => void`; `action: { label, onAction }` renders a Radix `Toast.Action` button.
-- `Tree<T>`: `nodes`, `expanded` / `onExpandedChange`, `selected` / `onSelectedChange`, `renderRow`, `sortable(node)`, `onReorder(move)`, `aria-label`.
-- `Card`: `interactive`. `Chip`: `tone` (neutral, accent, success, warning, danger), `icon`. `Badge`: `kind: ItemKind`.
-- `EmptyState`: `icon`, `title`, `description`, `action`, `headingLevel`. `Skeleton`: `className`.
-- `SortableProvider({ onMove })`, `useSortableRow(id, slot)`: drag reorder; `SortableSlot` = `{ group, index, size, label }`.
+- `Button` (`variant`, `size`, `pending`), `IconButton` (plus required `aria-label`).
+- `TextField` / `TextArea`: `label`, `hint`, `error`; TextField adds `prefix`, `suffix`.
+- `Select`, `Combobox`: `options`, `value`, `onValueChange`. `CountrySelect`, `CurrencySelect` (`IsoSelects.tsx`, not in the barrel).
+- `SegmentedControl`, `Menu` (`trigger`, `items`), `Tooltip`, `Chip` (`tone`, `icon`), `Badge` (`kind`), `Card`, `EmptyState`, `Skeleton`.
+- `Dialog`, `AlertDialog`, `Drawer`: `open` / `onOpenChange`, `initialFocus`; frosted surface.
+- `ToastProvider` / `useToast()`: `(options: { kind?, title, description?, action? })`.
+- `Tree<T>`: `nodes`, `expanded`, `selected`, `renderRow`, `sortable(node)`, `onReorder(move)`.
+- `SortableProvider({ onMove })`, `useSortableRow(id, slot)`, `arrayMove`.
+- `ServiceIcon({ name, paid?, size? })`, `LinkIcon({ name, size? })`.
 
 ## Gotchas
 
-- Import Lucide icons only from `./icons`, never from `lucide-react` directly. Import dnd-kit only through `sortable.tsx`.
-- `Tree` has no expand chevron: a folder's icon shows its state, and selecting the row (click, Enter, Space) is what toggles it, as decided by the parent's `onSelectedChange`.
-- `Tree` is controlled: the parent owns `expanded` and `selected`. Drag reorder is opt-in: only nodes with a `sortable` slot get a `Reorder <label>` handle, and `onReorder` fires once per changed drop.
-- Focus anywhere in a row (its link, menu or handle) makes it the roving stop. Keys pressed inside a row's own buttons are ignored by the tree. The whole `Tree` is one Tab stop: inner controls of other rows get `tabindex=-1` (original value kept in `data-tree-tab`), so the drag handle is reached by Tab only on the roving row.
-- `useToast()` throws outside `ToastProvider`, which `App.tsx` mounts. Error toasts stay 8 s, others 5 s.
-- Toast `action` is a callback, not a `Link`, because the provider sits above the router. Running it dismisses the toast.
-- `Chip` always renders its text, so state is never color alone.
-- `/dev/ui` is lazy-loaded only when `import.meta.env.DEV`; it is absent from production.
-- Use semantic token classes only (see the theme module doc); no raw colors or radii.
-- `Combobox` selects its text on focus, so typing replaces the current label.
-- Dialog, AlertDialog and Drawer return focus to the element focused when they opened, since Radix only does that for its own `trigger`. A dialog opened from a Menu item returns focus to the menu's trigger (Menu hands it over for 500 ms).
+- Import Lucide icons only from `./icons`; import dnd-kit only through `sortable.tsx`.
+- Drag reorder is the whole row: press and drag, or Space then arrows on the keyboard. There is no grip or `Reorder <name>` button.
+- `Tree` is controlled and has no expand chevron: selecting a row (click, Enter, Space) is what toggles a folder.
+- Focus anywhere in a row makes it the roving stop; keys pressed inside a row's own buttons are ignored by the tree.
+- Unknown streaming services render as a text `Chip`; the `$` badge marks paid platforms, and every tile has a text label.
+- Google and IMDb have no favicon file: they render as monogram tiles.
+- Dialog, AlertDialog and Drawer return focus to the element focused when they opened; a Dialog from a Menu item returns it to the menu trigger.
+- `useToast()` throws outside `ToastProvider`. Error toasts stay 8 s, others 5 s. Toast `action` is a callback, not a `Link`.
+- Use semantic token classes only (see [theme](theme.md)); no raw colors or radii.
+- `Combobox` selects its text on focus. `/dev/ui` is lazy-loaded only in dev builds.
