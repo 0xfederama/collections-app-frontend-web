@@ -54,7 +54,34 @@ async function openDelete(path = PATH) {
   return { router, user, dialog }
 }
 
+const CARS = '7c1e5a10-0000-4000-8000-000000000013'
+
+/**
+ * The example tree has one list per kind. The move picker only offers lists of the item's kind
+ * (F007-W7), so Motorbikes is served as a movie list here, next to a Cars list of another kind.
+ */
+function serveMoveTree() {
+  const tree = exampleResponses.getTree.body as {
+    folders: unknown[]
+    lists: Record<string, unknown>[]
+  }
+  const motorbikes = tree.lists.find((list) => list.id === MOTORBIKES)!
+  server.use(
+    http.get(`${location.origin}/api/v1/tree`, () =>
+      HttpResponse.json({
+        ...tree,
+        lists: [
+          ...tree.lists.filter((list) => list.id !== MOTORBIKES),
+          { ...motorbikes, kind: 'movie' },
+          { ...motorbikes, id: CARS, name: 'Cars', kind: 'car', sort_order: 1 },
+        ],
+      }),
+    ),
+  )
+}
+
 async function openMove(path = PATH) {
+  serveMoveTree()
   const router = renderRouter(path)
   const user = userEvent.setup()
   await user.click(await screen.findByRole('button', { name: 'Move' }))
@@ -147,7 +174,7 @@ describe('AT-11 delete item (moves it to Trash)', () => {
 })
 
 describe('move item (UI_SPEC §9 errors)', () => {
-  it('lists every list, with the current one disabled and labelled', async () => {
+  it('F007-W7 offers only lists of the item’s kind, with the current one disabled and labelled', async () => {
     const { user, dialog } = await openMove()
     await user.click(within(dialog).getByRole('combobox', { name: 'Destination list' }))
     const current = await screen.findByRole('option', { name: /\(current list\)/ })
@@ -157,6 +184,7 @@ describe('move item (UI_SPEC §9 errors)', () => {
       'aria-disabled',
       'true',
     )
+    expect(screen.queryByRole('option', { name: /Cars/ })).not.toBeInTheDocument()
   })
 
   it('the Move button is disabled until a list is chosen', async () => {
@@ -213,6 +241,19 @@ describe('move item (UI_SPEC §9 errors)', () => {
 
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
       'no longer exists or is in Trash',
+    )
+    expect(screen.getByRole('dialog', { name: /Move/ })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe(PATH)
+  })
+
+  it('F007-W7 409 kind_mismatch explains that items only move within a kind', async () => {
+    server.use(http.post(moveUrl, () => problemResponse(409, 'kind_mismatch')))
+    const { router, user, dialog } = await openMove()
+    await chooseMotorbikes(user, dialog)
+    await user.click(within(dialog).getByRole('button', { name: 'Move' }))
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'only move to lists of the same kind',
     )
     expect(screen.getByRole('dialog', { name: /Move/ })).toBeInTheDocument()
     expect(router.state.location.pathname).toBe(PATH)
