@@ -69,7 +69,7 @@ export async function createViaSidebar(
   const startButton = page
     .getByRole('main')
     .getByRole('button', { name: what === 'folder' ? 'New folder' : 'New list', exact: true })
-  await expect(sidebarNew.or(startButton)).toBeVisible()
+  await expect(sidebarNew.or(startButton).first()).toBeVisible()
   if (await sidebarNew.isVisible()) {
     await sidebarNew.click()
     await page
