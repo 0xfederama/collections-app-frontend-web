@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { api, ifMatch, unwrap } from '../../../lib/api'
 import { listKeys } from '../../lists/api'
-import { itemKeys, type Item } from '../api'
+import { itemKeys, recordOwnWrite, type Item } from '../api'
 import { putImageFile } from './upload'
 
 /**
@@ -12,6 +12,7 @@ import { putImageFile } from './upload'
 export function useItemImage(item: Item) {
   const client = useQueryClient()
   const commit = (updated: Item) => {
+    recordOwnWrite(client, item.id, item.version, updated.version)
     client.setQueryData<Item>(itemKeys.detail(item.id), updated)
     void client.invalidateQueries({ queryKey: listKeys.items(updated.list_id) })
     void client.invalidateQueries({ queryKey: listKeys.detail(updated.list_id) })

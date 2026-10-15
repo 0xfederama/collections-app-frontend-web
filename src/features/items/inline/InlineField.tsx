@@ -12,7 +12,7 @@ import { IconButton } from '../../../components/ui'
 import { Check, Pencil, X } from '../../../components/ui/icons'
 import { ApiError, NetworkError } from '../../../lib/api'
 import { cx } from '../../../lib/cx'
-import { itemKeys, useUpdateItem, type Item } from '../api'
+import { isOwnWriteChain, itemKeys, useUpdateItem, type Item } from '../api'
 import {
   buildPatch,
   draftDump,
@@ -133,7 +133,7 @@ interface InlineFieldProps {
 /**
  * One field of the item, edited in place (F-002 "No edit mode"). Shows the value, with a pen on
  * hover or keyboard focus; a click on the value, the pen, or Enter on the focused pen opens the
- * editor. Each save is its own PATCH with only this field and the item's current `If-Match`.
+ * editor. Each save is its own PATCH with only this field and the `If-Match` of the version the editor opened on.
  */
 export function InlineField({
   item,
@@ -193,7 +193,7 @@ export function InlineField({
 }
 
 function FieldEditor({
-  item,
+  item: live,
   spec,
   initialDraft,
   focusDelay,
@@ -208,6 +208,13 @@ function FieldEditor({
   onDone: () => void
 }) {
   const client = useQueryClient()
+  // A snapshot of the item taken when the editor opened: `If-Match` comes from it, never from a
+  // refetch, so a change by someone else gives a 412 and keeps the draft ("no silent overwrite").
+  // It moves forward only over versions that our own writes produced (e.g. another field saved
+  // while this one is open).
+  const [item, setItem] = useState(live)
+  if (live.version !== item.version && isOwnWriteChain(client, live.id, item.version, live.version))
+    setItem(live)
   const update = useUpdateItem()
   const guard = useEditGuard()
   const settings = useSettings()
@@ -224,7 +231,7 @@ function FieldEditor({
   const [focusRequest, setFocusRequest] = useState<{ id: string; n: number } | null>(null)
   const box = useRef<HTMLDivElement>(null)
 
-  // The draft of this field on top of the item as it is now (not as it was when the editor opened).
+  // The draft of this field on top of the snapshot (only this field's inputs are copied).
   const merged = (source: Draft) => spec.take(draftFromItem(item), source)
   const dirty = isDirty(item, merged(draft), defaults)
   useEffect(() => {

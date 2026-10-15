@@ -39,9 +39,10 @@ async function renderOverride(over: Partial<Item>) {
 const links = () => within(screen.getByRole('group', { name: 'External links' }))
 
 describe('AT-13 item view: the example movie', () => {
-  it('shows the title and the three links, with no kind label, status or summary (F007-W7, W8)', async () => {
+  it('shows the title and Google, Letterboxd, IMDb for a movie, with a kind label but no status or summary (F007-W7, W8)', async () => {
     await renderItem()
-    expect(screen.queryByText('Movie')).not.toBeInTheDocument()
+    // F-002: a quiet kind label above the title.
+    expect(screen.getByText('Movie')).toBeInTheDocument()
     expect(screen.queryByText('Watched')).not.toBeInTheDocument()
 
     const google = links().getByRole('link', { name: /^Google/ })
@@ -49,27 +50,31 @@ describe('AT-13 item view: the example movie', () => {
       'The Matrix 1999 film',
     )
     expect(google.getAttribute('href')).toContain('1999+film')
-    expect(links().getByRole('link', { name: /^Reddit/ })).toBeInTheDocument()
-    // F-002: no website, no "No website" button.
-    expect(screen.queryByText('No website')).not.toBeInTheDocument()
+    expect(links().getByRole('link', { name: /^Letterboxd/ })).toHaveAttribute(
+      'href',
+      expect.stringContaining('https://letterboxd.com/search/The%20Matrix'),
+    )
+    // The stored IMDb link feeds the button.
+    expect(links().getByRole('link', { name: /^IMDb/ })).toHaveAttribute(
+      'href',
+      'https://www.imdb.com/title/tt0133093/',
+    )
+    expect(links().queryByRole('link', { name: /^Reddit/ })).not.toBeInTheDocument()
     expect(links().queryByRole('link', { name: /^Website/ })).not.toBeInTheDocument()
+    expect(links().queryByRole('button', { name: 'Add website' })).not.toBeInTheDocument()
   })
 
-  it('shows the kind section with units, the IMDb link and streaming', async () => {
+  it('shows the kind section with units and streaming icons, and no IMDb row (F-002)', async () => {
     await renderItem()
     const details = (await screen.findByRole('heading', { name: 'Details' })).closest('section')!
     expect(within(details).getByText('136 min')).toBeInTheDocument()
     expect(within(details).getByText('1999')).toBeInTheDocument()
-    expect(within(details).getByRole('link', { name: /IMDb page/ })).toHaveAttribute(
-      'href',
-      'https://www.imdb.com/title/tt0133093/',
-    )
+    expect(within(details).queryByText('IMDb')).not.toBeInTheDocument()
+    expect(within(details).queryByRole('link', { name: /IMDb/ })).not.toBeInTheDocument()
     expect(within(details).getByText(/Streaming in Italy:/)).toBeInTheDocument()
-    expect(
-      within(details)
-        .getByText(/Streaming in Italy:/)
-        .closest('p'),
-    ).toHaveTextContent('Netflix, Prime Video $ (paid)')
+    const platforms = within(details).getByRole('list', { name: 'Platforms' })
+    expect(within(platforms).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+    expect(within(platforms).getByRole('img', { name: 'Prime Video, paid' })).toBeInTheDocument()
     expect(within(details).queryByRole('note')).not.toBeInTheDocument()
   })
 
@@ -190,8 +195,15 @@ describe('item view: kinds', () => {
     expect(screen.getByText('Full frame')).toBeInTheDocument()
   })
 
-  it('an unusable website is a disabled control, a good one is a link', async () => {
-    await renderOverride({ website: 'https://www.thematrix.com/' })
+  it('a generic item shows Google, Reddit and Website; an empty website offers "Add website", which opens the editor', async () => {
+    await renderOverride({ kind: 'generic', metadata: {}, website: null })
+    expect(links().getByRole('link', { name: /^Reddit/ })).toBeInTheDocument()
+    await userEvent.click(links().getByRole('button', { name: 'Add website' }))
+    expect(await screen.findByRole('textbox', { name: /Website/ })).toBeInTheDocument()
+  })
+
+  it('a good website is a link', async () => {
+    await renderOverride({ kind: 'generic', metadata: {}, website: 'https://www.thematrix.com/' })
     expect(links().getByRole('link', { name: /^Website/ })).toHaveAttribute(
       'href',
       'https://www.thematrix.com/',

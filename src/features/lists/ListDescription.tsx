@@ -112,7 +112,7 @@ function DescriptionView({
   if (!text) {
     return (
       <section
-        aria-label="Description"
+        aria-label="List description"
         className="group/desc flex max-w-prose items-center gap-1 text-sm"
       >
         <button
@@ -134,7 +134,7 @@ function DescriptionView({
     onEdit()
   }
   return (
-    <section aria-label="Description" className="group/desc max-w-prose text-sm">
+    <section aria-label="List description" className="group/desc max-w-prose text-sm">
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -226,7 +226,7 @@ function DescriptionEditor({ initial, onDone }: { initial: TreeList; onDone: () 
   }
 
   return (
-    <section aria-label="Description" className="flex max-w-prose flex-col gap-2 text-sm">
+    <section aria-label="List description" className="flex max-w-prose flex-col gap-2 text-sm">
       <div onKeyDownCapture={onKeyDown} className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <Suspense fallback={<Skeleton className="h-24 w-full" />}>

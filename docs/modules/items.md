@@ -81,4 +81,6 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - The streaming warning compares the item's streaming country with `settings.streaming_country_code`.
 - Streaming country and price currency use the ISO pickers (`CountrySelect`, `CurrencySelect`; see ui).
 - The hero image sends no referrer; if it fails to load, the fallback tile shows.
-- The IMDb link (movie and TV show) renders only when `safeImdbUrl` accepts the stored URL; an invalid one renders nothing.
+- External links (F002-W3b) sit on their own line under the title: movies Google, Letterboxd, IMDb; TV shows Google, IMDb; other kinds Google, Reddit, Website (an empty website shows "Add website", which opens the website editor). IMDb opens the stored `imdb_url` when `safeImdbUrl` accepts it, else an IMDb title search. The movie / TV IMDb code is no longer a Details row; its value is never touched by PATCHes.
+- Streaming shows `ServiceIcon` tiles (`$` badge when paid); unknown services are text chips.
+- Each in-place field editor (`InlineField`) holds a snapshot of the item taken when it opened and sends `If-Match` from it, so a change by someone else gives a 412 and keeps the draft. The snapshot moves forward only along versions this client wrote itself (`recordOwnWrite` / `isOwnWriteChain` in `api.ts`, per `QueryClient`; PATCH, move and image writes record them).

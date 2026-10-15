@@ -96,8 +96,10 @@ function ShellFrame() {
     <div className="flex h-dvh text-text">
       <div
         id={SIDEBAR_ID}
+        role="region"
+        aria-label="Sidebar"
         style={{ width: rail ? RAIL_WIDTH : sidebar.width }}
-        className="flex shrink-0 flex-col border-r border-border material"
+        className="relative flex shrink-0 flex-col border-r border-border material"
       >
         <Sidebar
           rail={rail}
@@ -107,16 +109,15 @@ function ShellFrame() {
           onRevealSearch={revealSearch}
           searchRef={searchRef}
         />
+        {/* Inside the sidebar's region, so the separator is never outside a landmark (axe `region`). */}
+        {resizable && (
+          <SidebarResizer
+            width={sidebar.width}
+            onWidthChange={sidebar.setWidth}
+            controls={SIDEBAR_ID}
+          />
+        )}
       </div>
-      {resizable ? (
-        <SidebarResizer
-          width={sidebar.width}
-          onWidthChange={sidebar.setWidth}
-          controls={SIDEBAR_ID}
-        />
-      ) : (
-        <div aria-hidden className="w-0 shrink-0" />
-      )}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <main className="min-w-0 flex-1 overflow-y-auto p-6">{content}</main>

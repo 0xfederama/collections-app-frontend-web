@@ -46,7 +46,8 @@ test.describe('F003-W1 item: kind field, price, website, sort by kind key', () =
     await expect(item.getByRole('heading', { level: 1, name: title })).toBeVisible()
     await expect(item.getByText('2005', { exact: true })).toBeVisible()
     await expect(item.getByText(/10\D+20/)).toBeVisible()
-    await expect(item.getByRole('link', { name: /^Website/ })).toHaveAttribute('href', website)
+    // A movie has no Website link button (F-002); the saved value reads in the Details row.
+    await expect(item.getByText(website)).toBeVisible()
 
     // Remove the price, reload: it is gone.
     await item.getByRole('button', { name: 'Edit price' }).click()

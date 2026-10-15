@@ -38,7 +38,7 @@ Top-level providers, router, and the responsive frame every route renders into (
 - Below 1280 px the item route replaces `main`'s `Outlet`, so `ListRoute` unmounts while an item is open. At ≥ 1280 the list stays mounted; the panel's close button navigates to `/lists/:listId` and keeps the current `?q=` and `?sort=`.
 - The drawer is open for one `location.key`, so any navigation closes it.
 - Sidebar state persists as `collection:sidebar` (`{ collapsed, width }`); `collapsed` only applies at tablet.
-- Resizer: `role="separator"` labelled "Resize sidebar", `aria-controls="app-sidebar"`; ←/→ move 16 px, Home/End jump to min/max; pointer drag also works.
+- Resizer: `role="separator"` labelled "Resize sidebar", `aria-controls="app-sidebar"`; ←/→ move 16 px, Home/End jump to min/max; pointer drag also works. It sits inside the sidebar's `region` (labelled "Sidebar"), so it is never outside a landmark.
 - `/` focuses the sidebar search. On the tablet rail it expands the sidebar first. On mobile it opens the drawer but does not focus the field.
 - Route owners: `/` Home placeholder (W-13); `/lists/:listId` ListRoute (W-06); `/lists/:listId/items/:itemId` ItemRoute (W-07); `/search` SearchRoute (W-11); `/trash` (W-12); `/settings` (W-13). `*` is NotFoundRoute.
 - Seams: tree writes live in `src/features/tree/*`; W-06 owns `src/routes/ListRoute.tsx` and `src/features/lists/*`; W-07 owns `src/features/items/*`. `router.tsx` already registers every route.

@@ -236,7 +236,7 @@ describe('F007-W10 list description', () => {
     useBackend({ list: { description: 'Some **bold** words' } })
     renderList(at())
     await itemsList()
-    const section = await screen.findByRole('region', { name: 'Description' })
+    const section = await screen.findByRole('region', { name: 'List description' })
     expect(within(section).getByText('bold')).toBeInTheDocument()
     expect(within(section).getByRole('button', { name: toggleName })).toHaveAttribute(
       'aria-expanded',
@@ -270,7 +270,7 @@ describe('F007-W10 list description', () => {
     useBackend({ list: { description: null } })
     renderList(at())
     await itemsList()
-    const section = screen.getByRole('region', { name: 'Description' })
+    const section = screen.getByRole('region', { name: 'List description' })
     expect(within(section).getByRole('button', { name: 'No description yet' })).toBeInTheDocument()
     expect(within(section).queryByRole('button', { name: /^(Collapse|Expand)/ })).toBeNull()
   })

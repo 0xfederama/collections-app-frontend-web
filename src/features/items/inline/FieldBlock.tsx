@@ -1,10 +1,10 @@
 import { useState } from 'react'
+import { ServiceIcon } from '../../../components/ServiceIcon'
 import { Button, Menu, type MenuItem } from '../../../components/ui'
 import { Plus, TriangleAlert } from '../../../components/ui/icons'
 import { useSettings } from '../../settings/api'
 import type { Draft } from '../form/draft'
 import type { Item } from '../api'
-import { safeImdbUrl } from '../links'
 import { InlineField } from './InlineField'
 import { kindSpecs, newPrice, priceSpec, websiteSpec, type FieldSpec } from './fields'
 
@@ -27,24 +27,20 @@ function StreamingValue({ item }: { item: Item }) {
   const paid = new Set((streaming.paid_platforms ?? []).map((name) => name.toLowerCase()))
   return (
     <div className="flex flex-col gap-1.5">
-      <p>
-        <span className="text-text-muted">Streaming in {countryName(streaming.country)}: </span>
-        {streaming.platforms?.length
-          ? streaming.platforms.map((name, index) => (
-              <span key={name}>
-                {index > 0 && ', '}
-                {name}
-                {paid.has(name.toLowerCase()) && (
-                  <>
-                    {' '}
-                    <span aria-hidden>$</span>
-                    <span className="sr-only"> (paid)</span>
-                  </>
-                )}
-              </span>
-            ))
-          : 'no platforms listed'}
-      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-text-muted">Streaming in {countryName(streaming.country)}:</span>
+        {streaming.platforms?.length ? (
+          <ul aria-label="Platforms" className="flex flex-wrap items-center gap-2">
+            {streaming.platforms.map((name) => (
+              <li key={name}>
+                <ServiceIcon name={name} paid={paid.has(name.toLowerCase())} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <span>no platforms listed</span>
+        )}
+      </div>
       {mismatch && (
         <p
           role="note"
@@ -63,23 +59,6 @@ function StreamingValue({ item }: { item: Item }) {
 
 function Value({ item, spec }: { item: Item; spec: FieldSpec }) {
   if (spec.id === 'metadata.streaming') return <StreamingValue item={item} />
-  if (spec.field?.input === 'imdb_url') {
-    const imdb = safeImdbUrl((item.metadata as Record<string, unknown>).imdb_url)
-    return imdb ? (
-      <a
-        href={imdb}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-accent-text underline underline-offset-2"
-      >
-        IMDb page<span className="sr-only"> (opens in a new tab)</span>
-      </a>
-    ) : (
-      <span className="text-text-muted">
-        {String(spec.text?.(item) ?? 'Not a valid IMDb link')}
-      </span>
-    )
-  }
   return <span className="break-words tabular-nums">{spec.text?.(item)}</span>
 }
 
@@ -93,10 +72,23 @@ interface Adding {
  * The detail rows: the kind's fields, then price and website. Set ones show their label and value
  * and are edited in place; unset ones are hidden and offered by "+ Add field".
  */
-export function FieldBlock({ item }: { item: Item }) {
+export function FieldBlock({
+  item,
+  addWebsiteRequest = 0,
+}: {
+  item: Item
+  /** A counter: each increase opens the website editor (the links row's "Add website"). */
+  addWebsiteRequest?: number
+}) {
   const kind = kindSpecs(item.kind)
   const specs = [...kind, priceSpec, websiteSpec]
   const [adding, setAdding] = useState<Adding[]>([])
+  const [handledRequest, setHandledRequest] = useState(addWebsiteRequest)
+  if (addWebsiteRequest !== handledRequest) {
+    setHandledRequest(addWebsiteRequest)
+    if (!websiteSpec.isSet(item) && !adding.some((entry) => entry.id === websiteSpec.id))
+      setAdding([...adding, { id: websiteSpec.id }])
+  }
   const open = (entry: Adding) => setAdding((current) => [...current, entry])
   const closed = (id: string) => setAdding((current) => current.filter((entry) => entry.id !== id))
   const isAdding = (spec: FieldSpec) => adding.some((entry) => entry.id === spec.id)

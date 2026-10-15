@@ -88,6 +88,8 @@ export const newPrice = (range: boolean): Partial<Draft> => ({
 export function kindSpecs(kind: ItemKind): FieldSpec[] {
   const specs: FieldSpec[] = []
   for (const field of kindFields[kind]) {
+    // The IMDb code only feeds the IMDb link button (F-002): no row, and the value is never touched.
+    if (field.input === 'imdb_url') continue
     if (field.input === 'streaming') {
       specs.push({
         id: 'metadata.streaming',

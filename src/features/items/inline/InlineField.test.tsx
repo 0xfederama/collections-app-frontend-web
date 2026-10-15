@@ -251,6 +251,45 @@ describe('AT-05 in-place fields: server errors', () => {
   })
 })
 
+describe('AT-09 If-Match comes from the version the editor opened on', () => {
+  it('another client changes the item after the editor opened: the save sends the old version, gets 412 and keeps the draft', async () => {
+    const calls = mockPatch(() => problemResponse(412, 'version_conflict', { current_version: 7 }))
+    const { user } = await openItem()
+    await user.click(pen('title'))
+    await retype(user, screen.getByRole('textbox', { name: /Title/ }), 'My title')
+    // The other person edits the runtime (version 7); a focus refetch brings it in.
+    server.use(
+      http.get(itemUrl, () =>
+        HttpResponse.json({
+          ...matrix,
+          version: 7,
+          metadata: { ...matrix.metadata, runtime_minutes: 150 },
+        }),
+      ),
+    )
+    window.dispatchEvent(new Event('visibilitychange'))
+    await screen.findByText('150 min')
+    await user.click(save('title'))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Someone else changed this item')
+    expect(calls).toEqual([{ ifMatch: '"i-3"', body: { title: 'My title' } }])
+    expect(screen.getByRole('textbox', { name: /Title/ })).toHaveValue('My title')
+  })
+
+  it('our own save of another field while this editor is open moves its version forward', async () => {
+    const calls = mockPatch()
+    const { user } = await openItem()
+    await user.click(pen('title'))
+    await retype(user, screen.getByRole('textbox', { name: /Title/ }), 'Reloaded')
+    await user.click(pen('runtime'))
+    await retype(user, screen.getByRole('textbox', { name: 'Runtime' }), '140{Enter}')
+    await waitFor(() => expect(calls).toHaveLength(1))
+    await screen.findByText('140 min')
+    await user.click(save('title'))
+    await screen.findByRole('heading', { level: 1, name: 'Reloaded' })
+    expect(calls.map((call) => call.ifMatch)).toEqual(['"i-3"', '"i-4"'])
+  })
+})
+
 describe('AT-09 conflict on one field', () => {
   const original = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
   afterEach(() => {

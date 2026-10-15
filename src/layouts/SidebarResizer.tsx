@@ -58,7 +58,7 @@ export function SidebarResizer({
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       onKeyDown={onKeyDown}
-      className="group -ml-1 flex w-2 shrink-0 cursor-col-resize touch-none justify-center"
+      className="group absolute inset-y-0 -right-1 z-10 flex w-2 cursor-col-resize touch-none justify-center"
     >
       <span
         aria-hidden
