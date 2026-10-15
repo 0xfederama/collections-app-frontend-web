@@ -14,7 +14,7 @@ import {
   type List,
   type SortMode,
 } from './api'
-import { CreateItemDialog } from '../items/CreateItemDialog'
+import { useQuickAdd } from '../quickadd/QuickAddContext'
 import { withoutEdit } from '../items/editMode'
 import { sortKeyLabel } from '../items/kinds'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
@@ -124,8 +124,8 @@ export function ListView({ treeList }: { treeList: List }) {
     )
 
   const clearFilter = () => setFilter('')
-  const [adding, setAdding] = useState(false)
-  const addItem = () => setAdding(true)
+  const quickAdd = useQuickAdd()
+  const addItem = () => quickAdd.open(listId)
 
   if (listQuery.isError) {
     if (listQuery.error instanceof ApiError && listQuery.error.status === 404) {
@@ -201,9 +201,6 @@ export function ListView({ treeList }: { treeList: List }) {
           onClearFilter={clearFilter}
           onAddItem={addItem}
         />
-      )}
-      {adding && (
-        <CreateItemDialog listId={listId} search={search} onClose={() => setAdding(false)} />
       )}
     </div>
   )

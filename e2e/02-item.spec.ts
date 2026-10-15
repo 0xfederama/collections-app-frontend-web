@@ -14,13 +14,15 @@ test.describe('F003-W1 item: kind field, price, website, sort by kind key', () =
     await page.goto(`/lists/${list.id}`)
     await page.getByRole('button', { name: 'Add item' }).click()
     await page
-      .getByRole('dialog', { name: 'Add item' })
+      .getByRole('dialog', { name: 'Quick add' })
       .getByRole('textbox', { name: 'Title' })
       .fill(title)
-    await page.getByRole('button', { name: 'Create item' }).click()
+    await page.getByRole('button', { name: 'Add', exact: true }).click()
+    const panel = itemPanel(page)
+    await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
+    await panel.getByRole('button', { name: 'Edit' }).click()
     await expect(page.getByRole('heading', { level: 1, name: `Edit “${title}”` })).toBeVisible()
 
-    const panel = itemPanel(page)
     await panel.getByRole('textbox', { name: 'Release year' }).fill('2005')
     await panel.getByRole('button', { name: 'Add price' }).click()
     await panel.getByRole('textbox', { name: 'Price', exact: true }).fill('12.00')

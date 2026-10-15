@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useMatch, useNavigate } from 'react-router'
 import { Drawer, IconButton } from '../components/ui'
 import { MenuIcon, X } from '../components/ui/icons'
+import { QuickAddProvider } from '../features/quickadd/QuickAddProvider'
 import { useSearchShortcut } from '../features/search/useSearchShortcut'
 import { useWorkspaceName } from '../features/settings/api'
 import { useBreakpoint } from '../lib/breakpoints'
@@ -19,6 +20,14 @@ const RAIL_WIDTH = 64
  * renders in `main` (full page) below 1280 and in the panel beside the list at ≥ 1280.
  */
 export function AppShell() {
+  return (
+    <QuickAddProvider>
+      <ShellFrame />
+    </QuickAddProvider>
+  )
+}
+
+function ShellFrame() {
   const breakpoint = useBreakpoint()
   const sidebar = useSidebarState()
   const { setCollapsed } = sidebar
