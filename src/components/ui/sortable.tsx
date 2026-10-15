@@ -181,7 +181,9 @@ const intoZone: Detector = ({ dragOperation, droppable }) => {
   return { id: droppable.id, value: 1, type: POINTER_INTERSECTION, priority: INTO_PRIORITY }
 }
 
-const dropIntoOf = (target: unknown): string | undefined => {
+// Only a pointer drag may drop "into" a row: whatever the collision detector said, a keyboard drag reorders.
+const dropIntoOf = (target: unknown, activatorEvent?: Event | null): string | undefined => {
+  if (!activatorEvent?.type.startsWith('pointer')) return undefined
   const into = (target as { data?: { dropInto?: unknown } } | null | undefined)?.data?.dropInto
   return typeof into === 'string' ? into : undefined
 }
@@ -194,6 +196,8 @@ const withoutAccessibility = (defaults: readonly unknown[]) =>
 // that holds links), and axe rejects those (aria-allowed-attr, aria-allowed-role, nested-interactive).
 // The instructions and the live announcements below are the same, without touching the row's role.
 const SortableA11yContext = createContext<string | undefined>(undefined)
+// True while a pointer drag runs: the "drop into" zones exist only then, so a keyboard drag only reorders.
+const PointerDragContext = createContext(false)
 
 export function SortableProvider({
   onMove,
@@ -204,6 +208,7 @@ export function SortableProvider({
 }) {
   const instructionsId = useId()
   const [announcement, setAnnouncement] = useState('')
+  const [pointerDrag, setPointerDrag] = useState(false)
   // dragover also fires once right after the pick-up; only a changed position is news.
   const lastIndex = useRef<number>(-1)
   // dnd-kit can fire its events while React is committing (an insertion effect), where a state
@@ -212,61 +217,65 @@ export function SortableProvider({
     queueMicrotask(() => setAnnouncement(text ?? ''))
   return (
     <SortableA11yContext.Provider value={instructionsId}>
-      <DragDropProvider
-        sensors={sensors}
-        plugins={withoutAccessibility}
-        onDragStart={(event) => {
-          lastIndex.current = indexOf(event.operation.source)
-          announce(announcements.dragstart(event))
-          // Only a pointer drag is followed by a click; a keyboard drag never is.
-          if (event.operation.activatorEvent?.type.startsWith('pointer')) startSwallowingClick()
-        }}
-        onDragOver={(event) => {
-          const into = dropIntoOf(event.operation.target)
-          if (into !== undefined) {
-            const label = (event.operation.target?.data as { label?: string } | undefined)?.label
-            if (label) announce(`Drop into ${label}.`)
-            return
-          }
-          const index = indexOf(event.operation.source)
-          if (index === lastIndex.current) return
-          lastIndex.current = index
-          announce(announcements.dragover(event))
-        }}
-        onDragEnd={(event) => {
-          stopSwallowingClick()
-          announce(announcements.dragend(event))
-          const source = event.operation.source
-          if (event.canceled || !source || !isSortable(source)) return
-          const { initialIndex, index } = source
-          const into = dropIntoOf(event.operation.target)
-          if (into !== undefined) {
+      <PointerDragContext.Provider value={pointerDrag}>
+        <DragDropProvider
+          sensors={sensors}
+          plugins={withoutAccessibility}
+          onDragStart={(event) => {
+            lastIndex.current = indexOf(event.operation.source)
+            announce(announcements.dragstart(event))
+            setPointerDrag(!!event.operation.activatorEvent?.type.startsWith('pointer'))
+            // Only a pointer drag is followed by a click; a keyboard drag never is.
+            if (event.operation.activatorEvent?.type.startsWith('pointer')) startSwallowingClick()
+          }}
+          onDragOver={(event) => {
+            const into = dropIntoOf(event.operation.target, event.operation.activatorEvent)
+            if (into !== undefined) {
+              const label = (event.operation.target?.data as { label?: string } | undefined)?.label
+              if (label) announce(`Drop into ${label}.`)
+              return
+            }
+            const index = indexOf(event.operation.source)
+            if (index === lastIndex.current) return
+            lastIndex.current = index
+            announce(announcements.dragover(event))
+          }}
+          onDragEnd={(event) => {
+            stopSwallowingClick()
+            setPointerDrag(false)
+            announce(announcements.dragend(event))
+            const source = event.operation.source
+            if (event.canceled || !source || !isSortable(source)) return
+            const { initialIndex, index } = source
+            const into = dropIntoOf(event.operation.target, event.operation.activatorEvent)
+            if (into !== undefined) {
+              onMove({
+                id: String(source.id),
+                group: String(source.group),
+                from: initialIndex,
+                to: initialIndex,
+                into,
+              })
+              return
+            }
+            if (initialIndex === index) return
             onMove({
               id: String(source.id),
               group: String(source.group),
               from: initialIndex,
-              to: initialIndex,
-              into,
+              to: index,
             })
-            return
-          }
-          if (initialIndex === index) return
-          onMove({
-            id: String(source.id),
-            group: String(source.group),
-            from: initialIndex,
-            to: index,
-          })
-        }}
-      >
-        {children}
-      </DragDropProvider>
-      <span id={instructionsId} hidden>
-        {INSTRUCTIONS}
-      </span>
-      <div role="status" aria-live="assertive" className="sr-only">
-        {announcement}
-      </div>
+          }}
+        >
+          {children}
+        </DragDropProvider>
+        <span id={instructionsId} hidden>
+          {INSTRUCTIONS}
+        </span>
+        <div role="status" aria-live="assertive" className="sr-only">
+          {announcement}
+        </div>
+      </PointerDragContext.Provider>
     </SortableA11yContext.Provider>
   )
 }
@@ -291,9 +300,10 @@ export function useSortableRow(
   })
   // A second droppable on the same row: "drop into". It is separate from the sortable one because the
   // sortable only accepts its own group, so a list could never reach a folder (the F008-W4 bug).
+  const pointerDrag = useContext(PointerDragContext)
   const into = useDroppable({
     id: `into:${id}`,
-    disabled: !dropInto,
+    disabled: !dropInto || !pointerDrag,
     accept: (source) => !!dropInto && dropInto.accepts(String(source.id)),
     collisionDetector: intoZone,
     collisionPriority: INTO_PRIORITY,

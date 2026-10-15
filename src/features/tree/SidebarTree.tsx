@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useMatch, useNavigate } from 'react-router'
 import { Button, EmptyState, Skeleton, Tree, type TreeRowState } from '../../components/ui'
 import { Folder, FolderOpen, Inbox, List } from '../../components/ui/icons'
@@ -28,11 +28,11 @@ export function SidebarTree() {
   // A folder has no route, so a just-created folder is "picked" here. It only counts while the page
   // is still the one it was picked on: opening a list clears it, and the list highlights instead.
   const [picked, setPicked] = useState<{ id: string; forList: string | null } | null>(null)
-  const [pendingFocus, setPendingFocus] = useState<string | null>(null)
+  const pendingFocus = useRef<string | null>(null)
   const { actions, dialogs } = useTreeDialogs({
     onCreated: (id) => setPicked({ id, forList: activeListId }),
     focusCreated: (id) => {
-      if (!focusRow(id)) setPendingFocus(id)
+      if (!focusRow(id)) pendingFocus.current = id
     },
     // Make sure the folder that just received something is open, so the user sees it.
     onCreatedFolder: (parentId) => {
@@ -41,8 +41,8 @@ export function SidebarTree() {
   })
   // The new row may arrive with the tree refetch, after the dialog has closed.
   useEffect(() => {
-    if (pendingFocus && focusRow(pendingFocus)) setPendingFocus(null)
-  }, [pendingFocus, index])
+    if (pendingFocus.current && focusRow(pendingFocus.current)) pendingFocus.current = null
+  }, [index])
   const selected = picked && picked.forList === activeListId ? picked.id : activeListId
   const sortable = useMemo(() => (index ? buildSortable(index.nodes) : undefined), [index])
 

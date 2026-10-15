@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { ID, openTree, pickRowAction, seedTree, sidebar } from '../tree/treeTestKit'
 
@@ -15,6 +15,12 @@ async function openKindMenu(user: Awaited<ReturnType<typeof openList>>['user'], 
   await user.click(await screen.findByRole('menuitem', { name: current }))
 }
 
+async function pickKind(user: Awaited<ReturnType<typeof openList>>['user'], name: string) {
+  const option = await screen.findByRole('menuitemradio', { name })
+  act(() => option.focus())
+  await user.keyboard('{Enter}')
+}
+
 describe('F008-W5 list kind in the "…" menu', () => {
   it('the title stands alone: no kind chip next to it', async () => {
     await openList(ID.watchlist)
@@ -25,7 +31,7 @@ describe('F008-W5 list kind in the "…" menu', () => {
     const { user, backend } = await openList(ID.watchlist)
 
     await openKindMenu(user, /^Kind: Movie/)
-    await user.click(await screen.findByRole('menuitemradio', { name: 'Car' }))
+    await pickKind(user, 'Car')
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toHaveTextContent('permanently clears')
     expect(dialog).toHaveTextContent('12 items')
@@ -35,7 +41,7 @@ describe('F008-W5 list kind in the "…" menu', () => {
     expect(backend.writes()).toHaveLength(0)
 
     await openKindMenu(user, /^Kind: Movie/)
-    await user.click(await screen.findByRole('menuitemradio', { name: 'Car' }))
+    await pickKind(user, 'Car')
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', {
         name: 'Clear details and change',
@@ -51,7 +57,7 @@ describe('F008-W5 list kind in the "…" menu', () => {
     // An empty list changes kind at once, with no warning.
     await user.click(within(sidebar()).getByRole('treeitem', { name: /^Ideas/ }))
     await openKindMenu(user, /^Kind: Item/)
-    await user.click(await screen.findByRole('menuitemradio', { name: 'Camera' }))
+    await pickKind(user, 'Camera')
     await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(2))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(backend.writes('PATCH')[1]?.body).toEqual({ kind: 'camera' })
