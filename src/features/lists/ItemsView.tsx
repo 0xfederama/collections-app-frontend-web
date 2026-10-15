@@ -12,7 +12,9 @@ import {
   type ItemsParams,
   type SortMode,
 } from './api'
+import type { ItemKind } from '../items/api'
 import { ItemEntry } from './ItemEntry'
+import type { PinnedSlots } from './pinned'
 import {
   SortableProvider,
   arrayMove,
@@ -22,8 +24,8 @@ import {
 
 /** Container classes per mode. Grid: 2 columns on mobile, 3 on tablet, then auto-fill (UI_SPEC §2). */
 const containerClass: Record<DisplayMode, string> = {
-  compact: 'divide-y divide-border overflow-hidden rounded-lg border border-border',
-  thumbnail: 'divide-y divide-border overflow-hidden rounded-lg border border-border',
+  compact: 'flex flex-col gap-1.5',
+  thumbnail: 'flex flex-col gap-2',
   grid: 'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-[repeat(auto-fill,minmax(11.25rem,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(13.75rem,1fr))]',
 }
 
@@ -46,7 +48,11 @@ export function ItemsSkeleton({ mode }: { mode: DisplayMode }) {
             </div>
           </div>
         ) : (
-          <div key={i} aria-hidden className="flex items-center gap-3 p-3">
+          <div
+            key={i}
+            aria-hidden
+            className="flex items-center gap-3 rounded-lg border border-border p-1.5"
+          >
             <Skeleton className={mode === 'compact' ? 'size-10' : 'aspect-4/3 w-24'} />
             <div className="flex flex-1 flex-col gap-2">
               <Skeleton className="h-4 w-1/2" />
@@ -62,6 +68,8 @@ export function ItemsSkeleton({ mode }: { mode: DisplayMode }) {
 export interface ItemsViewProps {
   listId: string
   mode: DisplayMode
+  kind: ItemKind
+  pinned: PinnedSlots
   items: ItemSummary[]
   total: number
   /** The query the items belong to (its cache entry is reordered optimistically). */
@@ -80,7 +88,8 @@ export interface ItemsViewProps {
 
 /** The list body: empty states, the items in the display mode, drag-reorder and "Load more". */
 export function ItemsView(props: ItemsViewProps) {
-  const { listId, mode, items, total, params, effectiveSort, hasNextPage, search } = props
+  const { listId, mode, kind, pinned, items, total, params, effectiveSort, hasNextPage, search } =
+    props
   const toast = useToast()
   const reorder = useReorderItems(listId)
   const [announcement, setAnnouncement] = useState('')
@@ -161,12 +170,22 @@ export function ItemsView(props: ItemsViewProps) {
         index={index}
         size={items.length}
         mode={mode}
+        kind={kind}
+        pinned={pinned}
         search={search}
         onOpen={props.onOpenItem}
         onMoveBy={(delta) => move({ from: index, to: index + delta })}
       />
     ) : (
-      <ItemEntry key={item.id} item={item} mode={mode} search={search} onOpen={props.onOpenItem} />
+      <ItemEntry
+        key={item.id}
+        item={item}
+        mode={mode}
+        kind={kind}
+        pinned={pinned}
+        search={search}
+        onOpen={props.onOpenItem}
+      />
     ),
   )
 
@@ -209,6 +228,8 @@ function SortableEntry({
   index,
   size,
   mode,
+  kind,
+  pinned,
   search,
   onOpen,
   onMoveBy,
@@ -217,6 +238,8 @@ function SortableEntry({
   index: number
   size: number
   mode: DisplayMode
+  kind: ItemKind
+  pinned: PinnedSlots
   search: string
   onOpen: () => void
   onMoveBy: (delta: -1 | 1) => void
@@ -231,6 +254,8 @@ function SortableEntry({
     <ItemEntry
       item={item}
       mode={mode}
+      kind={kind}
+      pinned={pinned}
       search={search}
       onOpen={onOpen}
       reorder={{

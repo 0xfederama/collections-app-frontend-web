@@ -28,6 +28,35 @@ const TITLES: Record<ItemKind, string[]> = {
   camera: ['Fujifilm X100VI', 'Ricoh GR III', 'Leica Q3', 'Sony A7C II'],
   generic: ['Standing desk', 'Noise-cancelling headphones', 'Espresso machine', 'Trail shoes'],
 }
+/** Kind fields for the pinned layout. The contract's summaries carry none yet, so the dev fake adds them. */
+function fakeMetadata(kind: ItemKind, i: number): Record<string, unknown> {
+  switch (kind) {
+    case 'movie':
+      return {
+        runtime_minutes: 90 + ((i * 13) % 80),
+        streaming: {
+          platforms: i % 2 ? ['Netflix', 'Prime Video'] : ['Disney+'],
+          paid_platforms: i % 3 ? [] : ['Disney+'],
+        },
+      }
+    case 'tv_show':
+      return {
+        seasons: 1 + (i % 6),
+        episodes_per_season: 6 + (i % 5),
+        episode_minutes: 30 + ((i * 5) % 30),
+        streaming: { platforms: ['Apple TV+'] },
+      }
+    case 'motorcycle':
+      return { displacement_cc: 650 + i * 50 }
+    case 'car':
+      return { model_year: 2015 + (i % 10) }
+    case 'camera':
+      return { camera_type: (['mirrorless', 'dslr', 'film'] as const)[i % 3] }
+    default:
+      return {}
+  }
+}
+
 function makeItems(list: List, count: number): ItemSummary[] {
   return Array.from({ length: count }, (_, i) => {
     const kind = list.kind
@@ -62,7 +91,8 @@ function makeItems(list: List, count: number): ItemSummary[] {
       updated_at: new Date(
         Date.UTC(2026, 9, 14, 9, 0, 0) - ((i * 7919) % 5000) * 60_000,
       ).toISOString(),
-    } satisfies ItemSummary
+      metadata: fakeMetadata(kind, i),
+    } as ItemSummary
   })
 }
 

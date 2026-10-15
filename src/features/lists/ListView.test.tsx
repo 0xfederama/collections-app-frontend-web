@@ -205,16 +205,14 @@ describe('W-06 fallback tile', () => {
     expect(within(ul).queryByRole('img')).not.toBeInTheDocument()
   })
 
-  it('shows the image with the title as alt when there is one', async () => {
+  it('shows the image as decorative (empty alt, the title is next to it) when there is one', async () => {
     useBackend({
       items: [makeItem(1, { title: 'Alien', image: { url: 'https://example.org/a.jpg' } })],
     })
     renderList(at())
     const ul = await itemsList()
-    expect(within(ul).getByRole('img', { name: 'Alien' })).toHaveAttribute(
-      'src',
-      'https://example.org/a.jpg',
-    )
+    expect(ul.querySelector('img')).toHaveAttribute('alt', '')
+    expect(ul.querySelector('img')).toHaveAttribute('src', 'https://example.org/a.jpg')
     expect(within(ul).queryByTestId('fallback-tile')).not.toBeInTheDocument()
   })
 
@@ -224,7 +222,7 @@ describe('W-06 fallback tile', () => {
     })
     renderList(at())
     const ul = await itemsList()
-    fireEvent.error(within(ul).getByRole('img', { name: 'Alien' }))
+    fireEvent.error(ul.querySelector('img')!)
     expect(within(ul).queryByRole('img')).not.toBeInTheDocument()
     expect(within(ul).getByTestId('fallback-tile')).toHaveTextContent('A')
   })
@@ -393,6 +391,80 @@ describe('W-06 URL state: sort and filter', () => {
     await itemsList()
     expect(sortSelect()).toHaveTextContent('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
+  })
+})
+
+describe('F002-W2 pinned fields', () => {
+  const movie = makeItem(1, {
+    title: 'Alien',
+    price: { min: '1200', max: '1500', currency: 'EUR' },
+    metadata: {
+      runtime_minutes: 117,
+      streaming: { platforms: ['Netflix'], paid_platforms: ['Netflix'] },
+    },
+  } as Partial<ItemSummary>)
+
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s shows the kind default: runtime under the title, streaming icon with the paid badge',
+    async (mode) => {
+      useBackend({
+        list: { display_mode: mode, kind: 'movie', pinned_fields: null },
+        items: [movie],
+      })
+      renderList(at())
+      const ul = await itemsList()
+      expect(within(ul).getByText('117 min')).toBeInTheDocument()
+      expect(within(ul).getByRole('img', { name: 'Netflix, paid' })).toBeInTheDocument()
+      // Price is not pinned on a movie by default.
+      expect(within(ul).queryByText(/€/)).not.toBeInTheDocument()
+    },
+  )
+
+  it('shows the list selection instead of the default, and {} pins nothing', async () => {
+    useBackend({
+      list: { kind: 'movie', pinned_fields: { under: ['price'], right: [] } },
+      items: [movie],
+    })
+    renderList(at())
+    const ul = await itemsList()
+    expect(within(ul).getByText('€1,200–€1,500')).toBeInTheDocument()
+    expect(within(ul).queryByText('117 min')).not.toBeInTheDocument()
+  })
+
+  it('the menu shows the effective selection, ticking a field PATCHes both slots with If-Match', async () => {
+    const backend = useBackend({
+      list: { kind: 'movie', pinned_fields: null, version: 4 },
+      items: [movie],
+    })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await user.click(await screen.findByRole('button', { name: /Pinned fields/ }))
+    const menu = await screen.findByRole('menu')
+    const boxes = within(menu).getAllByRole('menuitemcheckbox', { name: 'Runtime' })
+    expect(boxes[0]).toBeChecked() // under the title
+    expect(boxes[1]).not.toBeChecked() // on the right
+    // Moving it to the right slot takes it out of the first.
+    await user.click(boxes[1]!)
+    await waitFor(() => expect(backend.patches).toHaveLength(1))
+    expect(backend.patches[0]).toEqual({
+      ifMatch: '"l-4"',
+      body: { pinned_fields: { under: [], right: ['streaming', 'runtime_minutes'] } },
+    })
+  })
+
+  it('Reset to default PATCHes pinned_fields null', async () => {
+    const backend = useBackend({
+      list: { kind: 'movie', pinned_fields: { under: [], right: ['price'] }, version: 2 },
+      items: [movie],
+    })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await user.click(await screen.findByRole('button', { name: /Pinned fields/ }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Reset to default' }))
+    await waitFor(() => expect(backend.patches).toHaveLength(1))
+    expect(backend.patches[0]).toEqual({ ifMatch: '"l-2"', body: { pinned_fields: null } })
   })
 })
 

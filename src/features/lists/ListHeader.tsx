@@ -15,7 +15,8 @@ import type { List as TreeList } from '../tree/api'
 import { ListActionsMenu } from '../tree/ListActionsMenu'
 import type { ItemKind } from '../items/api'
 import { sortKeyLabel } from '../items/kinds'
-import type { DisplayMode, List, SortMode } from './api'
+import type { DisplayMode, List, PinnedFields, SortMode } from './api'
+import { PinnedMenu } from './PinnedMenu'
 
 const modeOptions: SegmentedOption[] = [
   { value: 'compact', label: 'Compact rows', icon: <ListIcon />, iconOnly: true },
@@ -87,6 +88,8 @@ export interface ListHeaderProps {
   makeDefaultPending: boolean
   filter: string
   onFilter: (value: string) => void
+  onPinned: (pinned: PinnedFields) => void
+  onResetPinned: () => void
   onAddItem: () => void
 }
 
@@ -134,6 +137,7 @@ export function ListHeader(props: ListHeaderProps) {
             />
           </div>
         </div>
+        {list && <PinnedMenu list={list} onChange={props.onPinned} onReset={props.onResetPinned} />}
         {props.canMakeDefault && (
           <Button
             variant="secondary"

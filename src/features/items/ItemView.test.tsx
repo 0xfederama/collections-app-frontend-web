@@ -191,9 +191,9 @@ describe('item view: kinds', () => {
     expect(await screen.findByText(/^€\s?1,200$/)).toBeInTheDocument()
   })
 
-  it('F007-W8 a range shows both bounds with the currency once', async () => {
+  it('F007-W8 a range shows both bounds, each with the currency', async () => {
     await renderOverride({ price: { min: '1000.00', max: '1400.00', currency: 'EUR' } })
-    expect(await screen.findByText(/^€\s?1,000–1,400$/)).toBeInTheDocument()
+    expect(await screen.findByText(/^€\s?1,000–€\s?1,400$/)).toBeInTheDocument()
   })
 
   it('F007-W8 an item without a price shows no price', async () => {

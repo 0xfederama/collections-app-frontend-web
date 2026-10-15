@@ -14,6 +14,7 @@ export type ItemSummary = components['schemas']['ItemSummary']
 export type ItemPage = components['schemas']['ItemPage']
 export type DisplayMode = components['schemas']['DisplayMode']
 export type SortMode = components['schemas']['SortMode']
+export type PinnedFields = components['schemas']['PinnedFields']
 
 /** Max page size of `GET /lists/{id}/items` (D-018). */
 export const ITEMS_PAGE_SIZE = 200
@@ -77,10 +78,11 @@ export function flattenItems(data: ItemsData | undefined) {
   }
 }
 
-type ListPatch = { display_mode: DisplayMode } | { sort_mode: SortMode }
+type ListPatch =
+  { display_mode: DisplayMode } | { sort_mode: SortMode } | { pinned_fields: PinnedFields }
 
 /**
- * PATCH a list's `display_mode` or `sort_mode`. `If-Match` is built from the version in the cache
+ * PATCH a list's `display_mode`, `sort_mode` or `pinned_fields` (`null` resets to the kind default). `If-Match` is built from the version in the cache
  * at call time, and calls for one list run one after another so quick successive changes do not
  * conflict with each other. A 412 is never retried: the caller refetches and tells the user.
  * The change shows at once and is rolled back on failure.

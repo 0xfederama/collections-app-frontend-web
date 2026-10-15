@@ -15,11 +15,14 @@ export function ItemThumb({
   item,
   className,
   compact,
+  decorative,
 }: {
   item: Pick<ItemSummary, 'title' | 'kind' | 'image'>
   className?: string
   /** Smaller icon and letter, for 40 px thumbs. */
   compact?: boolean
+  /** The title is written right next to the cover: an empty `alt` avoids reading it twice (axe `image-redundant-alt`). */
+  decorative?: boolean
 }) {
   const src = item.image?.thumbnail_url ?? item.image?.url
   // The failed URL is remembered, so a new image URL gets a fresh try.
@@ -31,7 +34,7 @@ export function ItemThumb({
       <div className={cx('overflow-hidden bg-border', className)}>
         <img
           src={src}
-          alt={item.title}
+          alt={decorative ? '' : item.title}
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
@@ -46,7 +49,7 @@ export function ItemThumb({
       aria-hidden
       data-testid="fallback-tile"
       className={cx(
-        'flex flex-col items-center justify-center bg-accent/15 text-accent-text select-none',
+        'flex flex-col items-center justify-center bg-fill text-text-muted select-none',
         className,
       )}
     >

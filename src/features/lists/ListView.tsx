@@ -12,6 +12,7 @@ import {
   listKeys,
   type DisplayMode,
   type List,
+  type PinnedFields,
   type SortMode,
 } from './api'
 import { useQuickAdd } from '../quickadd/QuickAddContext'
@@ -19,6 +20,7 @@ import { withoutEdit } from '../items/editMode'
 import { sortKeyLabel } from '../items/kinds'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
+import { resolvePinned } from './pinned'
 import { useScrollRestore } from './scrollRestore'
 
 const SORTS: readonly SortMode[] = ['manual', 'title', 'updated', 'price', 'kind_key']
@@ -114,6 +116,9 @@ export function ListView({ treeList }: { treeList: List }) {
   }
   const setDisplayMode = (display_mode: DisplayMode) =>
     updateList.mutate({ display_mode }, { onError: onUpdateError })
+  const setPinned = (pinned_fields: PinnedFields) =>
+    updateList.mutate({ pinned_fields }, { onError: onUpdateError })
+  const resetPinned = () => updateList.mutate({ pinned_fields: null }, { onError: onUpdateError })
   const makeDefault = () =>
     updateList.mutate(
       { sort_mode: effectiveSort },
@@ -171,6 +176,8 @@ export function ListView({ treeList }: { treeList: List }) {
         makeDefaultPending={updateList.isPending}
         filter={filter}
         onFilter={setFilter}
+        onPinned={setPinned}
+        onResetPinned={resetPinned}
         onAddItem={addItem}
       />
       {itemsQuery.isError ? (
@@ -189,6 +196,8 @@ export function ListView({ treeList }: { treeList: List }) {
         <ItemsView
           listId={listId}
           mode={mode}
+          kind={list.kind}
+          pinned={resolvePinned(list)}
           items={items}
           total={total}
           params={params}
