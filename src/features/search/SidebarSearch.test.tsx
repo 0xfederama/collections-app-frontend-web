@@ -157,7 +157,9 @@ describe('W-11 sidebar search debounce', () => {
         return HttpResponse.json(page(2))
       }),
     )
-    fakeUser()
+    // A strict fake clock (it does not follow real time): the 150 ms threshold is checked exactly,
+    // however long the machine stalls between two statements.
+    vi.useFakeTimers()
     renderRouter()
 
     setText('slow')
@@ -165,10 +167,11 @@ describe('W-11 sidebar search debounce', () => {
     expect(screen.queryByText('Searching…')).not.toBeInTheDocument()
 
     await tick(100)
-    expect(await screen.findByText('Searching…')).toBeInTheDocument()
+    expect(screen.getByText('Searching…')).toBeInTheDocument()
 
+    // `vi.waitFor` advances the fake clock itself while it polls for the (mocked) answer.
     release()
-    expect(await screen.findAllByRole('option')).toHaveLength(2)
+    await vi.waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2))
     expect(screen.queryByText('Searching…')).not.toBeInTheDocument()
   })
 })

@@ -19,7 +19,7 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
     .ancestorsOf(list.id)
     .map((folder) => ({ label: folder.name }))
   trail.push({ label: list.name, to: `/lists/${list.id}` })
-  // The item's title arrives with W-07; until then the crumb is generic.
+  // The item page shows its own title as the heading, so the crumb stays generic.
   if (onItem) trail.push({ label: 'Item' })
   return trail
 }
