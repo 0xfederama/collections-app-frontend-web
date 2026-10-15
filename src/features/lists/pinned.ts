@@ -15,12 +15,6 @@ export interface PinnedSlots {
 /** Most keys one slot may hold (the contract's limit). */
 export const MAX_PINNED_PER_SLOT = 6
 
-/**
- * An item as the list shows it. The contract's `ItemSummary` carries no `metadata` yet, so kind
- * fields and streaming only render when the row has it (the price always does).
- */
-export type PinnedItem = ItemSummary & { metadata?: Record<string, unknown> }
-
 const DEFAULTS: Record<ItemKind, PinnedSlots> = {
   movie: { under: ['runtime_minutes'], right: ['streaming'] },
   tv_show: { under: ['seasons', 'episodes_per_season', 'episode_minutes'], right: ['streaming'] },
@@ -67,10 +61,10 @@ const num = (value: unknown) => (typeof value === 'number' ? value : null)
  * The plain text of one pinned field, or `null` when the item has no value for it. `streaming` is
  * not text (the row draws icons) and returns `null` here.
  */
-export function formatPinnedValue(key: string, item: PinnedItem, kind: ItemKind): string | null {
+export function formatPinnedValue(key: string, item: ItemSummary, kind: ItemKind): string | null {
   if (key === 'price') return formatPrice(item.price)
   if (key === 'streaming') return null
-  const value = item.metadata?.[key]
+  const value = item.metadata[key]
   if (kind === 'tv_show') {
     if (key === 'seasons') return num(value) === null ? null : `${value} seasons`
     if (key === 'episodes_per_season') {
@@ -83,7 +77,7 @@ export function formatPinnedValue(key: string, item: PinnedItem, kind: ItemKind)
 }
 
 /** The text pieces of a slot, in order, ready to join with ` · `. Streaming is left to the caller. */
-export function pinnedTexts(keys: readonly string[], item: PinnedItem, kind: ItemKind): string[] {
+export function pinnedTexts(keys: readonly string[], item: ItemSummary, kind: ItemKind): string[] {
   const texts: string[] = []
   const meta = item.metadata
   let combined = false
@@ -91,8 +85,8 @@ export function pinnedTexts(keys: readonly string[], item: PinnedItem, kind: Ite
     // Seasons and episodes together read `5×7`, once, where the first of them sits.
     if (kind === 'tv_show' && (key === 'seasons' || key === 'episodes_per_season')) {
       if (keys.includes('seasons') && keys.includes('episodes_per_season')) {
-        const seasons = num(meta?.seasons)
-        const episodes = num(meta?.episodes_per_season)
+        const seasons = num(meta.seasons)
+        const episodes = num(meta.episodes_per_season)
         if (!combined && seasons !== null && episodes !== null) texts.push(`${seasons}×${episodes}`)
         combined = true
         continue
@@ -105,8 +99,8 @@ export function pinnedTexts(keys: readonly string[], item: PinnedItem, kind: Ite
 }
 
 /** The streaming platforms of an item, with whether each is paid. */
-export function streamingOf(item: PinnedItem): { name: string; paid: boolean }[] {
-  const streaming = item.metadata?.streaming as
+export function streamingOf(item: ItemSummary): { name: string; paid: boolean }[] {
+  const streaming = item.metadata.streaming as
     { platforms?: string[]; paid_platforms?: string[] } | null | undefined
   const paid = new Set((streaming?.paid_platforms ?? []).map((name) => name.toLowerCase()))
   return (streaming?.platforms ?? []).map((name) => ({ name, paid: paid.has(name.toLowerCase()) }))

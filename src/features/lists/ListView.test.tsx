@@ -32,6 +32,7 @@ function makeItem(n: number, over: Partial<ItemSummary> = {}): ItemSummary {
     image: null,
     price: null,
     website: null,
+    metadata: {},
     content_version: 0,
     sort_order: n,
     version: 1,
@@ -399,7 +400,7 @@ describe('F002-W2 pinned fields', () => {
       runtime_minutes: 117,
       streaming: { platforms: ['Netflix'], paid_platforms: ['Netflix'] },
     },
-  } as Partial<ItemSummary>)
+  })
 
   it.each(['compact', 'thumbnail', 'grid'] as const)(
     '%s shows the kind default: runtime under the title, streaming icon with the paid badge',
@@ -416,6 +417,15 @@ describe('F002-W2 pinned fields', () => {
       expect(within(ul).queryByText(/€/)).not.toBeInTheDocument()
     },
   )
+
+  it('a movie row from the API shows runtime and a streaming icon with $ for a paid platform', async () => {
+    useBackend({ list: { kind: 'movie', pinned_fields: null }, items: [movie] })
+    renderList(at())
+    const ul = await itemsList()
+    expect(within(ul).getByText('117 min')).toBeInTheDocument()
+    const icon = within(ul).getByRole('img', { name: 'Netflix, paid' })
+    expect(icon).toHaveTextContent('$')
+  })
 
   it('shows the list selection instead of the default, and {} pins nothing', async () => {
     useBackend({

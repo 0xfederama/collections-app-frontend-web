@@ -6,10 +6,10 @@ import {
   pinnedTexts,
   resolvePinned,
   streamingOf,
-  type PinnedItem,
 } from './pinned'
+import type { ItemSummary } from './api'
 
-const item = (kind: PinnedItem['kind'], over: Partial<PinnedItem> = {}): PinnedItem => ({
+const item = (kind: ItemSummary['kind'], over: Partial<ItemSummary> = {}): ItemSummary => ({
   id: 'i1',
   list_id: 'l1',
   title: 'T',
@@ -17,6 +17,7 @@ const item = (kind: PinnedItem['kind'], over: Partial<PinnedItem> = {}): PinnedI
   image: null,
   price: null,
   website: null,
+  metadata: {},
   content_version: 0,
   sort_order: 0,
   version: 1,

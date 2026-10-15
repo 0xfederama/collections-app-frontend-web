@@ -113,7 +113,7 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
     return items.get(id)
   }
 
-  /** Stand-in for the kind's sort key (summaries carry no metadata): a stable number, unset for some. */
+  /** Stand-in for the kind's sort key : a stable number, unset for some. */
   const fakeKey = (item: ItemSummary): number | null => {
     const sum = [...item.title].reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
     return item.title.length % 5 === 0 ? null : sum % 90

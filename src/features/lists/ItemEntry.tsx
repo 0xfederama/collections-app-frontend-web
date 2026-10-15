@@ -5,7 +5,7 @@ import { ArrowDown, ArrowUp, Ellipsis } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { DisplayMode, ItemSummary } from './api'
 import { ItemThumb } from './ItemThumb'
-import { pinnedTexts, streamingOf, type PinnedItem, type PinnedSlots } from './pinned'
+import { pinnedTexts, streamingOf, type PinnedSlots } from './pinned'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import type { ItemKind } from '../items/api'
 
@@ -49,7 +49,7 @@ function PinnedSlot({
   className,
 }: {
   keys: readonly string[]
-  item: PinnedItem
+  item: ItemSummary
   kind: ItemKind
   iconSize: number
   className?: string
@@ -92,7 +92,7 @@ function PinnedSlot({
 /** One item of the list in the given display mode: a row (compact, thumbnail) or a card (grid). */
 export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }: ItemEntryProps) {
   const to = { pathname: `/lists/${item.list_id}/items/${item.id}`, search }
-  const slots = { item: item as PinnedItem, kind }
+  const slots = { item: item, kind }
 
   const title = (
     <Link

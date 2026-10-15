@@ -1022,7 +1022,7 @@ export interface components {
         };
         /** @description An item. `kind` is read-only and derived from the item's list; `metadata` has the shape of that kind (discriminated union). */
         Item: components["schemas"]["GenericItem"] | components["schemas"]["MovieItem"] | components["schemas"]["TvShowItem"] | components["schemas"]["MotorcycleItem"] | components["schemas"]["CarItem"] | components["schemas"]["CameraItem"];
-        /** @description An item row in lists and search: no `metadata`, and the image is reduced. */
+        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item (`{}` when the kind has none), and the image is reduced. */
         ItemSummary: {
             /** Format: uuid */
             id: string;
@@ -1033,6 +1033,10 @@ export interface components {
             image: components["schemas"]["ImageSummary"];
             price: components["schemas"]["Price"];
             website: string | null;
+            /** @description Same object as `metadata` on the full item; its shape depends on `kind` (see the `*Metadata` schemas). */
+            metadata: {
+                [key: string]: unknown;
+            };
             content_version: number;
             sort_order: number;
             version: number;
