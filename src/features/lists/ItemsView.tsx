@@ -70,6 +70,8 @@ export interface ItemsViewProps {
   mode: DisplayMode
   kind: ItemKind
   pinned: PinnedSlots
+  /** e.g. `12 items` or `3 of 12 items`; shown after the items. */
+  countLabel: string
   items: ItemSummary[]
   total: number
   /** The query the items belong to (its cache entry is reordered optimistically). */
@@ -111,7 +113,7 @@ export function ItemsView(props: ItemsViewProps) {
         icon={ListIcon}
         title="No items yet"
         description="Add the first item to this list."
-        action={<Button onClick={props.onAddItem}>Add item</Button>}
+        action={<Button onClick={props.onAddItem}>New item</Button>}
       />
     )
   }
@@ -219,6 +221,7 @@ export function ItemsView(props: ItemsViewProps) {
           </Button>
         </div>
       )}
+      <p className="text-sm text-text-muted">{props.countLabel}</p>
     </div>
   )
 }

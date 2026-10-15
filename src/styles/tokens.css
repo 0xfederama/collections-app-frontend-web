@@ -44,11 +44,15 @@
 /* Theme independent. In an @theme block so Tailwind's rounded-* and ease-* utilities read them. */
 @theme {
   --radius-*: initial;
-  --radius-sm: 8px; /* controls, small rows */
-  --radius-md: 10px; /* buttons' inner parts, menu items' container */
-  --radius-lg: 18px; /* cards */
+  /* Radius scale F008-W6: one radius per level, and a nested shape is concentric with its container
+     (inner = outer minus padding). Menus, popovers and the toolbar are lg with 6 px padding, so
+     their items and controls are md; a segmented control (md, 2 px padding) holds sm-ish segments
+     (md minus 2 px, written calc(var(--radius-md) - 2px)). */
+  --radius-sm: 8px; /* small rows, skeletons, checkboxes */
+  --radius-md: 12px; /* controls: buttons, inputs, selects, menu items, tree rows, tooltips */
+  --radius-lg: 18px; /* containers: cards, menus, popovers, toasts, toolbars */
   --radius-xl: 24px; /* sheets, dialogs, drawer */
-  --radius-full: 9999px; /* pills */
+  --radius-full: 9999px; /* tags only: badges, chips, avatars */
 
   --ease-*: initial;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);

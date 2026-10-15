@@ -1,8 +1,8 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Button } from '../../components/ui'
 import { Check, ChevronDown, SlidersHorizontal } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { PinnedFields } from './api'
+import { toolbarControl } from './toolbarStyles'
 import { MAX_PINNED_PER_SLOT, pinnableFields, resolvePinned, type PinnedSlots } from './pinned'
 import type { List } from './api'
 
@@ -49,14 +49,17 @@ export function PinnedMenu({
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         {/* Narrow toolbars (container below 44rem) show the icon only; the name stays. */}
-        <Button
-          variant="secondary"
-          className="h-9 @max-[44rem]:w-9 @max-[44rem]:px-0 pointer-coarse:@max-[44rem]:w-11"
+        <button
+          type="button"
+          className={cx(
+            toolbarControl,
+            '@max-[44rem]:w-9 @max-[44rem]:px-0 pointer-coarse:@max-[44rem]:w-11',
+          )}
         >
           <SlidersHorizontal aria-hidden className="size-4 @[44rem]:hidden" />
           <span className="@max-[44rem]:sr-only">Pinned fields</span>
           <ChevronDown aria-hidden className="size-4 @max-[44rem]:hidden" />
-        </Button>
+        </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content

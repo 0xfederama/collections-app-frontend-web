@@ -71,7 +71,7 @@ export function Select({
             sideOffset={4}
             className="z-50 max-h-72 min-w-(--radix-select-trigger-width) bg-surface-raised overflow-hidden rounded-lg text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
           >
-            <RadixSelect.Viewport className="p-1">
+            <RadixSelect.Viewport className="p-1.5">
               {options.map((option) => (
                 <RadixSelect.Item
                   key={option.value}

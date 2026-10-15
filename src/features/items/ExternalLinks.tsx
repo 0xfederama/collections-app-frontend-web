@@ -10,7 +10,7 @@ import { buildExternalLinks } from './links'
 const classes = cx(
   buttonBase,
   buttonVariantClasses.secondary,
-  'h-9 gap-2 rounded-full pr-3 pl-1.5 text-sm pointer-coarse:h-11',
+  'h-9 gap-2 rounded-md pr-3 pl-1.5 text-sm pointer-coarse:h-11',
 )
 
 /**

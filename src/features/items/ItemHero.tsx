@@ -78,7 +78,7 @@ export function ItemHero({ item }: { item: Item }) {
       <button
         type="button"
         onClick={() => setChanging(true)}
-        className={`bg-surface-raised absolute top-3 right-3 inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm font-medium text-text opacity-0 shadow-float transition-opacity duration-150 group-focus-within/hero:opacity-100 group-hover/hero:opacity-100 focus-visible:opacity-100 pointer-coarse:h-11 [@media(hover:none)]:opacity-100 ${focusRing}`}
+        className={`bg-surface-raised absolute top-3 right-3 inline-flex h-9 items-center gap-2 rounded-md px-4 text-sm font-medium text-text opacity-0 shadow-float transition-opacity duration-150 group-focus-within/hero:opacity-100 group-hover/hero:opacity-100 focus-visible:opacity-100 pointer-coarse:h-11 [@media(hover:none)]:opacity-100 ${focusRing}`}
       >
         <ImagePlus aria-hidden className="size-4" />
         Change image

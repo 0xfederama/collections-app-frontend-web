@@ -12,7 +12,7 @@ test.describe('F003-W1 item: kind field, price, website, sort by kind key', () =
     await createItem(request, list.id, older, { metadata: { release_year: 2020 } })
 
     await page.goto(`/lists/${list.id}`)
-    await page.getByRole('button', { name: 'Add item' }).click()
+    await page.getByRole('button', { name: 'New item' }).click()
     await page
       .getByRole('dialog', { name: 'Quick add' })
       .getByRole('textbox', { name: 'Title' })

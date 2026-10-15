@@ -266,12 +266,12 @@ describe('F007-W10 list description', () => {
     expect(screen.queryByText('bold')).not.toBeInTheDocument()
   })
 
-  it('without a description the section shows the "No description yet" placeholder', async () => {
+  it('without a description the section shows the "Add a description" placeholder', async () => {
     useBackend({ list: { description: null } })
     renderList(at())
     await itemsList()
     const section = screen.getByRole('region', { name: 'List description' })
-    expect(within(section).getByRole('button', { name: 'No description yet' })).toBeInTheDocument()
+    expect(within(section).getByRole('button', { name: 'Add a description' })).toBeInTheDocument()
     expect(within(section).queryByRole('button', { name: /^(Collapse|Expand)/ })).toBeNull()
   })
 })
@@ -528,12 +528,24 @@ describe('W-06 display mode', () => {
 })
 
 describe('W-06 empty and error states', () => {
-  it('an empty list shows "No items yet" with Add item', async () => {
+  it('an empty list shows "No items yet" with the only New item button', async () => {
     useBackend({ items: [], list: { item_count: 0 } })
     renderList(at())
     expect(await screen.findByText('No items yet')).toBeInTheDocument()
     expect(screen.queryByRole('list', { name: 'Items' })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: 'Add item' }).length).toBeGreaterThan(0)
+    // F008-W7: the centered call to action is the only "New item" while the list is empty.
+    expect(screen.getAllByRole('button', { name: 'New item' })).toHaveLength(1)
+  })
+
+  it('F008-W7 the top-right New item shows once the list has items, with the count at the end', async () => {
+    useBackend()
+    renderList(at())
+    await itemsList()
+    expect(screen.getAllByRole('button', { name: 'New item' })).toHaveLength(1)
+    expect(screen.queryByText('No items yet')).not.toBeInTheDocument()
+    const count = screen.getByText(/^\d+ items?$/)
+    const items = screen.getByRole('list', { name: 'Items' })
+    expect(items.compareDocumentPosition(count) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('an empty filter result shows "No items match" and Clear filter clears ?q=', async () => {
@@ -876,13 +888,13 @@ describe('W-06 list actions menu (W-05) in the header', () => {
   })
 })
 
-describe('F006-W3 Add item dialog focus', () => {
-  it('Esc on the Add item dialog returns focus to the Add item button', async () => {
+describe('F006-W3 New item dialog focus', () => {
+  it('Esc on the New item dialog returns focus to the New item button', async () => {
     useBackend()
     const user = userEvent.setup()
     renderList(at())
     await itemsList()
-    const button = screen.getAllByRole('button', { name: 'Add item' })[0]!
+    const button = screen.getAllByRole('button', { name: 'New item' })[0]!
     await user.click(button)
     await screen.findByRole('dialog')
     await user.keyboard('{Escape}')

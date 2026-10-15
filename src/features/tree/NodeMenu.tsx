@@ -52,11 +52,14 @@ export function NodeMenu({
   actions,
   name,
   className,
+  leading,
 }: {
   node: TreeNode
   actions: TreeActions
   name: string
   className?: string
+  /** Entries before the standard ones, e.g. a list's Kind (list header only). */
+  leading?: MenuItem[]
 }) {
   return (
     <Menu
@@ -65,7 +68,7 @@ export function NodeMenu({
           <Ellipsis aria-hidden />
         </IconButton>
       }
-      items={nodeMenuItems(node, actions)}
+      items={[...(leading ?? []), ...nodeMenuItems(node, actions)]}
     />
   )
 }

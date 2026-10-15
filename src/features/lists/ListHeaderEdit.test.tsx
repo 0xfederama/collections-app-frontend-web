@@ -10,11 +10,21 @@ async function openList(id: string, tree = seedTree()) {
   return view
 }
 
-describe('F002-W2 list kind chip', () => {
+async function openKindMenu(user: Awaited<ReturnType<typeof openList>>['user'], current: RegExp) {
+  await user.click(await within(main()).findByRole('button', { name: /^More actions for/ }))
+  await user.click(await screen.findByRole('menuitem', { name: current }))
+}
+
+describe('F008-W5 list kind in the "…" menu', () => {
+  it('the title stands alone: no kind chip next to it', async () => {
+    await openList(ID.watchlist)
+    expect(within(main()).queryByRole('button', { name: /^Kind:/ })).not.toBeInTheDocument()
+  })
+
   it('asks before clearing the kind fields of a list with items, and not for an empty one', async () => {
     const { user, backend } = await openList(ID.watchlist)
 
-    await user.click(await within(main()).findByRole('button', { name: /^Kind: Movie/ }))
+    await openKindMenu(user, /^Kind: Movie/)
     await user.click(await screen.findByRole('menuitemradio', { name: 'Car' }))
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toHaveTextContent('permanently clears')
@@ -24,7 +34,7 @@ describe('F002-W2 list kind chip', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
     expect(backend.writes()).toHaveLength(0)
 
-    await user.click(within(main()).getByRole('button', { name: /^Kind: Movie/ }))
+    await openKindMenu(user, /^Kind: Movie/)
     await user.click(await screen.findByRole('menuitemradio', { name: 'Car' }))
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', {
@@ -40,7 +50,7 @@ describe('F002-W2 list kind chip', () => {
 
     // An empty list changes kind at once, with no warning.
     await user.click(within(sidebar()).getByRole('treeitem', { name: /^Ideas/ }))
-    await user.click(await within(main()).findByRole('button', { name: /^Kind: Item/ }))
+    await openKindMenu(user, /^Kind: Item/)
     await user.click(await screen.findByRole('menuitemradio', { name: 'Camera' }))
     await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(2))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
@@ -57,7 +67,7 @@ describe('F002-W2 list kind chip', () => {
 })
 
 describe('F002-W2 list description, edited in place', () => {
-  const placeholder = () => within(main()).findByRole('button', { name: 'No description yet' })
+  const placeholder = () => within(main()).findByRole('button', { name: 'Add a description' })
   const editor = () => within(main()).findByRole('textbox', { name: 'Description' })
 
   it('click the placeholder, write, ✓ saves a trimmed text with If-Match', async () => {
@@ -93,7 +103,7 @@ describe('F002-W2 list description, edited in place', () => {
     expect(backend.writes('PATCH')[0]?.body).toEqual({ description: null })
   })
 
-  it('Esc and ✕ cancel without a request, and the pen opens the editor', async () => {
+  it('Esc and ✕ cancel without a request, and the Edit description button opens the editor', async () => {
     const tree = seedTree()
     tree.lists.find((l) => l.id === ID.wishlist)!.description = 'Keep'
     const { user, backend } = await openList(ID.wishlist, tree)

@@ -165,7 +165,7 @@ export function ListView({ treeList }: { treeList: List }) {
       <ListHeader
         treeList={treeList}
         list={list}
-        countLabel={countLabel}
+        showAddItem={!!list && list.item_count > 0}
         displayMode={mode}
         onDisplayMode={setDisplayMode}
         sort={effectiveSort}
@@ -197,6 +197,7 @@ export function ListView({ treeList }: { treeList: List }) {
           mode={mode}
           kind={list.kind}
           pinned={resolvePinned(list)}
+          countLabel={countLabel}
           items={items}
           total={total}
           params={params}
