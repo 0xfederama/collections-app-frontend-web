@@ -67,8 +67,10 @@ describe('W-13 settings: saving', () => {
       version: 4,
     })
     const user = await openSettings()
-    const sidebar = screen.getByRole('navigation', { name: 'Library' })
-    expect(await within(sidebar).findByRole('link', { name: 'Our Collection' })).toBeInTheDocument()
+    const sidebar = screen.getByRole('navigation', { name: 'Library', hidden: true })
+    expect(
+      await within(sidebar).findByRole('link', { name: 'Our Collection', hidden: true }),
+    ).toBeInTheDocument()
 
     await retype(user, 'Workspace name', 'Casa')
     expect(save()).toBeEnabled()
@@ -77,7 +79,9 @@ describe('W-13 settings: saving', () => {
     expect(await screen.findByText('Settings saved')).toBeInTheDocument()
     expect(patches).toEqual([{ ifMatch: '"s-4"', body: { workspace_name: 'Casa' } }])
     expect(backend.settings.version).toBe(5)
-    expect(await within(sidebar).findByRole('link', { name: 'Casa' })).toBeInTheDocument()
+    expect(
+      await within(sidebar).findByRole('link', { name: 'Casa', hidden: true }),
+    ).toBeInTheDocument()
     expect(save()).toBeDisabled()
   })
 
@@ -308,7 +312,10 @@ describe('W-13 settings: pane', () => {
     await screen.findByRole('heading', { level: 1, name: 'Trash' })
     await user.click(screen.getByRole('link', { name: 'Settings' }))
     await screen.findByRole('dialog', { name: 'Settings' })
-    expect(screen.getByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+    // The page behind the modal pane is still mounted, only hidden from the accessibility tree.
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Trash', hidden: true }),
+    ).toBeInTheDocument()
     await user.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(screen.getByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
