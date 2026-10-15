@@ -15,7 +15,6 @@ export function ListActionsMenu({ list }: { list: List }) {
         node={{ kind: 'list', id: list.id, list }}
         actions={actions}
         name={list.name}
-        reorder={false}
       />
       {dialogs}
     </>
