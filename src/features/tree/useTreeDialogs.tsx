@@ -207,13 +207,11 @@ export function useTreeDialogs({
           content = (
             <DescriptionDialog
               key={`description-${node.id}`}
-              initialDescription={node.list.description ?? ''}
+              list={node.list}
               onClose={close}
-              onReload={async () =>
-                (await reload())?.lists.find((l) => l.id === node.id)?.description
-              }
-              onSubmit={async (description) => {
-                await updateList.mutateAsync({ list: node.list, patch: { description } })
+              onReload={async () => (await reload())?.lists.find((l) => l.id === node.id)}
+              onSubmit={async (list, description) => {
+                await updateList.mutateAsync({ list, patch: { description } })
                 toast({ kind: 'success', title: 'Description saved' })
               }}
             />

@@ -270,8 +270,11 @@ export function createTreeBackend(initial: Tree) {
         }
       }
       if (body.description !== undefined) {
-        if (body.description !== null && body.description.length > 2000) {
-          return invalid('description', 'Description must be at most 2000 characters.')
+        if (
+          body.description !== null &&
+          new TextEncoder().encode(body.description).length > 64 * 1024
+        ) {
+          return invalid('description', 'Description must be at most 64 KiB.')
         }
         list.description = body.description
         changed = true

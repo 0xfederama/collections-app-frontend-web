@@ -277,14 +277,26 @@ describe('AT-03 tree CRUD (web): description', () => {
     expect(screen.queryByRole('menuitem', { name: 'Edit description' })).not.toBeInTheDocument()
   })
 
-  it('blocks Save above 2000 characters without a request', async () => {
+  it('F007-W10 blocks Save above 64 KiB (bytes, not characters) without a request', async () => {
     const { user, backend } = await openTree()
     await pickRowAction(user, 'Wishlist', 'Edit description')
     await user.click(within(await dialog()).getByRole('textbox', { name: 'Description' }))
-    await user.paste('x'.repeat(2001))
-    expect(screen.getByText('Use at most 2000 characters.')).toBeInTheDocument()
+    // 2 bytes per character: 33000 characters are 66000 bytes, over 65536.
+    await user.paste('é'.repeat(33_000))
+    expect(screen.getByRole('alert')).toHaveTextContent('the limit is 64.0 KB')
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     expect(backend.requests).toHaveLength(0)
+  })
+
+  it('F007-W10 the Preview tab renders the Markdown', async () => {
+    const { user } = await openTree()
+    await pickRowAction(user, 'Wishlist', 'Edit description')
+    await user.click(within(await dialog()).getByRole('textbox', { name: 'Description' }))
+    await user.paste('**bold** text')
+    await user.click(screen.getByRole('radio', { name: 'Preview' }))
+    expect(
+      within(screen.getByRole('region', { name: 'Description preview' })).getByText('bold'),
+    ).toBeInTheDocument()
   })
 })
 

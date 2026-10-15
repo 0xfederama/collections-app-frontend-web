@@ -59,6 +59,13 @@ export function classifyError(error: unknown, noun: 'folder' | 'list'): TreeErro
         fieldErrors: error.errors ?? [],
       }
     }
+    if (error.status === 413) {
+      return {
+        kind: 'other',
+        message: 'This is too large for the server. Shorten the text and try again.',
+        fieldErrors: [],
+      }
+    }
     if (error.status >= 500) return networkError()
     return { kind: 'other', message: error.detail ?? error.title, fieldErrors: [] }
   }
