@@ -73,6 +73,7 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - CodeMirror leaves Tab to the browser (no trap, WCAG 2.1.2).
 - Delete and move invalidate the item's list (items and detail), and the tree. Move also invalidates the destination list.
 - Move and delete: 412 reloads the item, 404 toasts and returns to the list, 409 asks for another list, network errors keep the dialog open.
+- The delete confirm reads "This moves “X” to Trash: 1 item." (same `countsText` wording as the Trash entry).
 - An item whose `list_id` differs from the URL is redirected (replace) to its real list.
 - `ItemPage` keys its body by `itemId`, so moving between items remounts it.
 - The streaming warning compares the item's streaming country with `settings.streaming_country_code`.

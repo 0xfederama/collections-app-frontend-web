@@ -33,7 +33,7 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `NodeMenu({ node, actions, name, reorder?, className? })`: row "More" menu.
 - `TreeHeaderActions()`, `TreeRowActions({ node })`, `TreeEmptyAction()`: W-05 slots.
 - `classifyError(error, noun)`: `conflict`, `cycle`, `unavailable`, `not_found`, `validation`, `network`, `other`.
-- `buildSortable`, `applyOrder`, `flattenFolders`, `subtreeCounts`: order helpers in `order.ts`.
+- `buildSortable`, `applyOrder`, `flattenFolders`, `subtreeCounts`: order helpers in `order.ts`. `subtreeCounts` includes the deleted node itself.
 - `useExpandedFolders(index, activeListId)`, `ListGate({ listId, children })`, `useBreadcrumbs()`, `useWorkspaceName()`.
 
 ## Gotchas
@@ -44,6 +44,7 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - A Radix Dialog opened from a menu needs `initialFocus` on `Dialog` (see the ui module).
 - The drag handle is a real button labelled `Reorder <name>`, rendered only on sortable rows. Row actions stop click propagation.
 - Delete moves to Trash and navigates to `/` when the open list is the deleted node or lives inside it.
+- The delete confirm states the same counts as the Trash entry (`countsText`, root included, D-065): "This moves “X” to Trash: 4 folders, 4 lists, 72 items."
 - Sub-folders come first in each parent, then lists, each by `(sort_order, id)`. Folders with a missing parent, and anything in a parent cycle, are left out.
 - Expanded ids persist under `collection:tree-expanded`; ids of deleted folders are dropped on the next write. Nothing is written before the tree loads.
 - When the active list changes, its ancestors open once; a manual collapse sticks until then. Mutations invalidate `treeKeys.tree`, not a string literal.
