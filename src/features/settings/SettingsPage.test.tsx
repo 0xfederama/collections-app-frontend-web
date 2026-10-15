@@ -49,14 +49,6 @@ async function retype(user: ReturnType<typeof userEvent.setup>, label: string, t
   if (text) await user.type(input, text)
 }
 
-describe('F007-W6 settings: theme moved to the sidebar', () => {
-  it('has no Appearance section or theme control in the page itself', async () => {
-    await openSettings()
-    expect(screen.queryByRole('heading', { name: 'Appearance' })).not.toBeInTheDocument()
-    expect(within(screen.getByRole('main')).queryByRole('radiogroup', { name: 'Theme' })).toBeNull()
-  })
-})
-
 describe('W-13 settings: saving', () => {
   it('shows the loaded values and keeps Save disabled when nothing changed', async () => {
     mountBackend()

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button, Skeleton } from '../components/ui'
+import { AppearanceSection } from '../features/settings/AppearanceSection'
 import { useSettings } from '../features/settings/api'
 import { ConnectionSection } from '../features/settings/ConnectionSection'
 import { SettingsForm } from '../features/settings/SettingsForm'
@@ -32,7 +33,7 @@ function WorkspaceSkeleton() {
   )
 }
 
-/** `/settings` (UI_SPEC §8): the workspace settings form and the connection info (the theme toggle lives in the sidebar). */
+/** `/settings` (UI_SPEC §8): the workspace settings form and the theme choice and the connection info. */
 export function SettingsRoute() {
   const settings = useSettings()
   return (
@@ -51,6 +52,9 @@ export function SettingsRoute() {
         ) : (
           <SettingsForm settings={settings.data} />
         )}
+      </Section>
+      <Section id="settings-appearance" title="Appearance">
+        <AppearanceSection />
       </Section>
       <Section id="settings-connection" title="Connection">
         <ConnectionSection />
