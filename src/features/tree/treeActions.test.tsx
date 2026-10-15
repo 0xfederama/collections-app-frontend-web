@@ -1,4 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react'
+import { countsText } from '../trash/model'
 import { http } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { problemResponse } from '../../mocks/problems'
@@ -208,7 +209,7 @@ describe('AT-03 tree CRUD (web): delete', () => {
     expect(within(dlg).getByRole('heading', { name: 'Delete “Media”?' })).toBeInTheDocument()
     // Media holds Movies, Festival picks and TV, and lists Watchlist 12, Seen 48, Cannes 9, Currently 3.
     expect(dlg).toHaveTextContent(
-      '“Media” and everything in it (3 subfolders, 4 lists, 72 items) will move to Trash. You can restore it from there.',
+      'This moves “Media” to Trash: 4 folders, 4 lists, 72 items. You can restore it from there.',
     )
   })
 
@@ -216,7 +217,7 @@ describe('AT-03 tree CRUD (web): delete', () => {
     const { user } = await openTree()
     await pickRowAction(user, 'Empty folder', 'Delete')
     expect(await screen.findByRole('alertdialog')).toHaveTextContent(
-      '“Empty folder” will move to Trash. You can restore it from there.',
+      'This moves “Empty folder” to Trash: 1 folder. You can restore it from there.',
     )
   })
 
@@ -224,8 +225,16 @@ describe('AT-03 tree CRUD (web): delete', () => {
     const { user } = await openTree()
     await pickRowAction(user, 'Motorbikes', 'Delete')
     expect(await screen.findByRole('alertdialog')).toHaveTextContent(
-      '“Motorbikes” and everything in it (7 items) will move to Trash.',
+      'This moves “Motorbikes” to Trash: 1 list, 7 items.',
     )
+  })
+
+  it('F006-W4 the folder confirm reads like the Trash entry counts for the same deletion', async () => {
+    const { user } = await openTree()
+    await pickRowAction(user, 'Media', 'Delete')
+    const dlg = await screen.findByRole('alertdialog')
+    // Trash `counts` include the root (D-065), so the same deletion is this exact text in the Trash row.
+    expect(dlg).toHaveTextContent(`Trash: ${countsText({ folders: 4, lists: 4, items: 72 })}.`)
   })
 
   it('confirming sends DELETE with If-Match and removes the row', async () => {

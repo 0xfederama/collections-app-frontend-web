@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { AlertDialog, Button, Combobox, Dialog, useToast } from '../../components/ui'
 import { FolderInput, Pencil, Trash2 } from '../../components/ui/icons'
 import { treeKeys, useTreeIndex, type TreeIndex, type TreeNode } from '../tree/api'
+import { countsText } from '../trash/model'
 import { itemKeys, useDeleteItem, useMoveItem, type Item } from './api'
 import { withEdit, withoutEdit } from './editMode'
 import { classifyItemError, type ItemError } from './errors'
@@ -192,7 +193,7 @@ function DeleteItemDialog({ item, onClose }: { item: Item; onClose: () => void }
       open
       onOpenChange={(open) => !open && onClose()}
       title={`Delete “${item.title}”?`}
-      description="It goes to Trash, where it can be restored."
+      description={`This moves “${item.title}” to Trash: ${countsText({ folders: 0, lists: 0, items: 1 })}. You can restore it from there.`}
       confirmLabel="Delete"
       destructive
       keepOpen

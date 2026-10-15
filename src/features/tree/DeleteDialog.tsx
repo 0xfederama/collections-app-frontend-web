@@ -5,7 +5,7 @@ import { useAction } from './useAction'
 export interface DeleteDialogProps {
   noun: 'folder' | 'list'
   name: string
-  /** What goes to Trash with it, e.g. "3 lists and 12 items". Empty when nothing else does. */
+  /** What goes to Trash, root included, worded like the Trash entry: "1 folder, 3 lists, 12 items". */
   contents: string
   onConfirm: () => Promise<unknown>
   onClose: () => void
@@ -33,11 +33,7 @@ export function DeleteDialog({
       open
       onOpenChange={(open) => !open && onClose()}
       title={`Delete “${name}”?`}
-      description={
-        contents
-          ? `“${name}” and everything in it (${contents}) will move to Trash. You can restore it from there.`
-          : `“${name}” will move to Trash. You can restore it from there.`
-      }
+      description={`This moves “${name}” to Trash: ${contents}. You can restore it from there.`}
       confirmLabel="Move to Trash"
       destructive
       keepOpen

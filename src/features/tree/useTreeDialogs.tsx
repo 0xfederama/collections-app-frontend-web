@@ -19,6 +19,7 @@ import {
 } from './mutations'
 import { MoveDialog } from './MoveDialog'
 import { NameDialog } from './NameDialog'
+import { countsText } from '../trash/model'
 import { buildSortable, subtreeCounts } from './order'
 
 type DialogState =
@@ -42,8 +43,6 @@ export interface TreeActions {
 }
 
 const nameOf = (node: TreeNode) => (node.kind === 'folder' ? node.folder.name : node.list.name)
-
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
 /**
  * All the tree's write flows: create, rename, description, move, delete, move up/down and drag
@@ -233,20 +232,13 @@ export function useTreeDialogs({
           )
         } else if (dialog.type === 'delete') {
           const counts = subtreeCounts(node)
-          const parts =
-            node.kind === 'folder'
-              ? [
-                  counts.folders ? plural(counts.folders, 'subfolder') : '',
-                  counts.lists ? plural(counts.lists, 'list') : '',
-                  counts.items ? plural(counts.items, 'item') : '',
-                ].filter(Boolean)
-              : [counts.items ? plural(counts.items, 'item') : ''].filter(Boolean)
+          const contents = countsText(counts)
           content = (
             <DeleteDialog
               key={`delete-${node.id}`}
               noun={node.kind}
               name={name}
-              contents={parts.join(', ')}
+              contents={contents}
               onClose={close}
               onReload={reload}
               onConfirm={async () => {
