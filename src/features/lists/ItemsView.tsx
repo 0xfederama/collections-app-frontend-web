@@ -244,7 +244,7 @@ function SortableEntry({
   onOpen: () => void
   onMoveBy: (delta: -1 | 1) => void
 }) {
-  const { ref, handleRef, isDragging } = useSortableRow(item.id, {
+  const { ref, isDragging, a11y } = useSortableRow(item.id, {
     group: 'items',
     index,
     size,
@@ -260,7 +260,7 @@ function SortableEntry({
       onOpen={onOpen}
       reorder={{
         rowRef: ref,
-        handleRef,
+        rowProps: a11y,
         isDragging,
         canMoveUp: index > 0,
         canMoveDown: index < size - 1,

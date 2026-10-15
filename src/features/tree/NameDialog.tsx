@@ -9,8 +9,8 @@ export interface NameDialogProps {
   submitLabel: string
   noun: 'folder' | 'list'
   initialName?: string
-  /** Lists only: shows the kind picker. `itemCount` > 0 makes a kind change show the clearing warning. */
-  kind?: { initial: ItemKind; itemCount?: number }
+  /** Create list only: shows the kind picker, starting at `initial`. Renaming never changes the kind. */
+  kind?: { initial: ItemKind }
   onSubmit: (name: string, kind: ItemKind) => Promise<unknown>
   onClose: () => void
   /** Refetches the tree and returns the latest name (`undefined` if the item is gone). Rename only. */
@@ -106,16 +106,6 @@ export function NameDialog({
             onValueChange={(value) => setChosenKind(value as ItemKind)}
           />
         )}
-        {kind && kind.itemCount && chosenKind !== kind.initial ? (
-          <div
-            role="alert"
-            className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
-          >
-            Changing the kind to {kindLabels[chosenKind]} clears the kind fields (such as year or
-            make) of the {kind.itemCount} {kind.itemCount === 1 ? 'item' : 'items'} in this list.
-            Titles, images, prices, websites and descriptions are kept. This cannot be undone.
-          </div>
-        ) : null}
         {error && !serverField && (
           <FormError
             error={error}

@@ -125,7 +125,7 @@ describe('AT-03 tree row focus (web): keys inside a row control are not tree key
     expect(onSelect).toHaveBeenCalledWith('a')
   })
 
-  it('arrow keys on the reorder handle do not move the tree focus', async () => {
+  it('arrow keys on a button inside a sortable row do not move the tree focus', async () => {
     const user = userEvent.setup()
     render(
       <Harness
@@ -137,11 +137,11 @@ describe('AT-03 tree row focus (web): keys inside a row control are not tree key
         })}
       />,
     )
-    const handle = screen.getByRole('button', { name: 'Reorder Beta' })
-    act(() => handle.focus())
+    const menuButton = screen.getByRole('button', { name: 'Actions for Beta' })
+    act(() => menuButton.focus())
     expect(tabbable()).toEqual(['b'])
     await user.keyboard('{ArrowDown}{Home}')
-    expect(handle).toHaveFocus()
+    expect(menuButton).toHaveFocus()
     expect(tabbable()).toEqual(['b'])
   })
 })
@@ -185,12 +185,10 @@ describe('F006-W2 tree is reachable by Tab and navigated by arrows', () => {
     await user.tab()
     expect(screen.getByRole('button', { name: 'Actions for Alpha' })).toHaveFocus()
     await user.tab()
-    expect(screen.getByRole('button', { name: 'Reorder Alpha' })).toHaveFocus()
-    await user.tab()
     expect(screen.getByRole('button', { name: 'After' })).toHaveFocus()
     // Shift+Tab walks back through the same row, not another one.
     await user.tab({ shift: true })
-    expect(screen.getByRole('button', { name: 'Reorder Alpha' })).toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Actions for Alpha' })).toHaveFocus()
     // The row link keeps its own -1.
     expect(within(item('Alpha')).getByRole('link')).toHaveAttribute('tabindex', '-1')
   })

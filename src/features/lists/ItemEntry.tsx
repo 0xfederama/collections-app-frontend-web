@@ -1,7 +1,7 @@
 import type { ReactNode, Ref } from 'react'
 import { Link } from 'react-router'
 import { IconButton, Menu } from '../../components/ui'
-import { ArrowDown, ArrowUp, Ellipsis, GripVertical } from '../../components/ui/icons'
+import { ArrowDown, ArrowUp, Ellipsis } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { DisplayMode, ItemSummary } from './api'
 import { ItemThumb } from './ItemThumb'
@@ -12,7 +12,8 @@ import type { ItemKind } from '../items/api'
 /** What an entry needs to be reorderable. Absent when reordering is not available. */
 export interface EntryReorder {
   rowRef: Ref<HTMLLIElement>
-  handleRef: Ref<HTMLButtonElement>
+  /** Extra attributes for the row element (the keyboard instructions). */
+  rowProps: { 'aria-describedby'?: string }
   isDragging: boolean
   canMoveUp: boolean
   canMoveDown: boolean
@@ -105,7 +106,7 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
   const controls = reorder && entryControls(item.title, reorder)
 
   const shell = cx(
-    'relative list-none',
+    'relative list-none [-webkit-touch-callout:none]',
     surface,
     reorder?.isDragging && 'z-20 shadow-lg ring-2 ring-focus-ring',
   )
@@ -114,9 +115,9 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
     return (
       <li
         ref={reorder?.rowRef}
+        {...reorder?.rowProps}
         className={cx(shell, 'flex items-center gap-3 rounded-md py-1.5 pr-3 pl-1.5')}
       >
-        {controls?.handle}
         <ItemThumb item={item} compact decorative className="size-9 shrink-0 rounded-sm" />
         <div className="flex min-w-0 flex-1 items-baseline gap-3">
           <span className="min-w-0 shrink-0 truncate sm:max-w-[60%]">{title}</span>
@@ -137,9 +138,9 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
     return (
       <li
         ref={reorder?.rowRef}
+        {...reorder?.rowProps}
         className={cx(shell, 'flex items-center gap-3.5 rounded-lg p-1.5 pr-4')}
       >
-        {controls?.handle}
         <ItemThumb
           item={item}
           decorative
@@ -161,7 +162,11 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
   }
 
   return (
-    <li ref={reorder?.rowRef} className={cx(shell, 'flex flex-col rounded-lg p-1.5 pb-3')}>
+    <li
+      ref={reorder?.rowRef}
+      {...reorder?.rowProps}
+      className={cx(shell, 'flex flex-col rounded-lg p-1.5 pb-3')}
+    >
       <ItemThumb item={item} decorative className="aspect-4/3 w-full rounded-[13px]" />
       <div className="flex flex-1 flex-col gap-1 px-2 pt-2.5">
         {title}
@@ -173,12 +178,7 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
         />
         <PinnedSlot keys={pinned.right} {...slots} iconSize={20} className="text-sm" />
       </div>
-      {controls && (
-        <div className="absolute inset-x-2.5 top-2.5 flex justify-between">
-          {controls.handle}
-          {controls.menu}
-        </div>
-      )}
+      {controls && <div className="absolute top-2.5 right-2.5">{controls.menu}</div>}
     </li>
   )
 }
@@ -188,16 +188,6 @@ const controlButton =
 
 function entryControls(title: string, reorder: EntryReorder) {
   return {
-    handle: (
-      <button
-        ref={reorder.handleRef}
-        type="button"
-        aria-label={`Reorder ${title}`}
-        className={cx(controlButton, 'cursor-grab touch-none bg-surface/80 active:cursor-grabbing')}
-      >
-        <GripVertical aria-hidden />
-      </button>
-    ),
     menu: (
       <Menu
         trigger={

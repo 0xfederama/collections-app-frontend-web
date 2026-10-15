@@ -6,7 +6,7 @@ import { mockViewport } from '../../test-utils'
 import { Tree, type TreeNodeBase } from './Tree'
 
 /*
- * Keyboard drag (focus the "Reorder <name>" handle, Space, ArrowDown, Space) in jsdom. dnd-kit
+ * Keyboard drag (focus the row, Space, ArrowDown, Space) in jsdom. dnd-kit
  * measures layout and uses browser APIs jsdom lacks, so these tests stub them: every treeitem gets
  * a 36px-tall rect stacked in DOM order, and the missing observers/animation APIs are no-ops.
  */
@@ -37,6 +37,13 @@ function stubLayout() {
       removeEventListener() {},
     }) as unknown as Animation
   ;(document as unknown as { getAnimations: () => [] }).getAnimations = () => []
+  const elementAt = (_x: number, y: number) =>
+    document.querySelectorAll('[role="treeitem"]')[Math.floor(y / ROW_HEIGHT)] ?? document.body
+  ;(document as unknown as { elementFromPoint: unknown }).elementFromPoint = elementAt
+  ;(document as unknown as { elementsFromPoint: unknown }).elementsFromPoint = (
+    x: number,
+    y: number,
+  ) => [elementAt(x, y)]
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
     const isRow = this.getAttribute('role') === 'treeitem'
     // Rows are stacked in DOM order; everything else (html, body, the list) is a big viewport.
@@ -98,7 +105,8 @@ function Harness({
   )
 }
 
-const handleOf = (name: string) => screen.getByRole('button', { name: `Reorder ${name}` })
+// The whole row is the drag handle (no grip), so the "handle" is the focused treeitem itself.
+const handleOf = (name: string) => screen.getByRole('treeitem', { name })
 
 /** Row ids in DOM order (dnd-kit moves the real elements while dragging; a drag clone repeats one id). */
 const domOrder = () => [
@@ -117,7 +125,7 @@ async function pickUp(user: ReturnType<typeof userEvent.setup>, name: string) {
   const handle = handleOf(name)
   act(() => handle.focus())
   await user.keyboard(' ')
-  await waitFor(() => expect(handle).toHaveAttribute('aria-pressed', 'true'))
+  await screen.findByText(/^Picked up /)
   return handle
 }
 
@@ -131,9 +139,9 @@ async function step(
   await waitFor(() => expect(domOrder()).toEqual(expectedOrder))
 }
 
-async function drop(user: ReturnType<typeof userEvent.setup>, handle: HTMLElement, key = ' ') {
+async function drop(user: ReturnType<typeof userEvent.setup>, _row: HTMLElement, key = ' ') {
   await user.keyboard(key)
-  await waitFor(() => expect(handle).toHaveAttribute('aria-pressed', 'false'))
+  await screen.findByText(/^(Dropped|Move cancelled)/)
 }
 
 describe('AT-21 keyboard drag reorder (web)', () => {
@@ -200,10 +208,10 @@ describe('AT-21 keyboard drag reorder (web)', () => {
     expect(await screen.findByText(/^Dropped Alpha at position 2 of 3\./)).toBeInTheDocument()
   })
 
-  it('describes the keyboard instructions for the handle', async () => {
+  it('describes the keyboard instructions for the row', async () => {
     render(<Harness onReorder={() => {}} />)
     await waitFor(() =>
-      expect(handleOf('Alpha')).toHaveAccessibleDescription(/Press Space or Enter/),
+      expect(handleOf('Alpha')).toHaveAccessibleDescription(/Press Space to pick the row up/),
     )
   })
 
@@ -224,7 +232,7 @@ describe('AT-21 keyboard drag reorder (web)', () => {
     expect(onReorder).not.toHaveBeenCalled()
   })
 
-  it('Enter on the handle starts a drag and does not select the row', async () => {
+  it('Space picks a row up and does not select it; Enter still selects', async () => {
     const onSelect = vi.fn()
     const user = userEvent.setup()
     render(
@@ -242,9 +250,13 @@ describe('AT-21 keyboard drag reorder (web)', () => {
     const handle = await pickUp(user, 'Beta')
     await drop(user, handle, '{Enter}')
     expect(onSelect).not.toHaveBeenCalled()
+    await user.keyboard('{Enter}')
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('b')
   })
 
-  it('rows without a slot have no handle', () => {
+  it('rows without a slot cannot be picked up: Space selects them', async () => {
+    const onSelect = vi.fn()
+    const user = userEvent.setup()
     render(
       <Tree
         aria-label="Plain"
@@ -252,11 +264,49 @@ describe('AT-21 keyboard drag reorder (web)', () => {
         expanded={new Set()}
         onExpandedChange={() => {}}
         selected={null}
-        onSelectedChange={() => {}}
+        onSelectedChange={onSelect}
         renderRow={(n) => <span>{n.name}</span>}
       />,
     )
-    expect(screen.queryByRole('button', { name: /^Reorder/ })).not.toBeInTheDocument()
+    act(() => screen.getByRole('treeitem', { name: 'Alpha' }).focus())
+    await user.keyboard(' ')
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('a')
+  })
+})
+
+describe('F002-W2 pointer drag from anywhere on the row (web)', () => {
+  beforeEach(stubLayout)
+
+  it('a plain click selects the row; moving past the threshold drags and does not select it', async () => {
+    const onSelect = vi.fn()
+    const user = userEvent.setup({ pointerEventsCheck: 0 })
+    render(
+      <Tree
+        aria-label="Rows"
+        nodes={nodes}
+        expanded={new Set()}
+        onExpandedChange={() => {}}
+        selected={null}
+        onSelectedChange={onSelect}
+        sortable={(n) => ({ group: 'g', index: nodes.indexOf(n), size: 3, label: n.name })}
+        renderRow={(n) => <span>{n.name}</span>}
+      />,
+    )
+    const row = screen.getByRole('treeitem', { name: 'Alpha' })
+    await user.click(row)
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('a')
+    onSelect.mockClear()
+
+    await user.pointer([
+      { keys: '[MouseLeft>]', target: row, coords: { clientX: 20, clientY: 10 } },
+      { coords: { clientX: 20, clientY: 40 } },
+      { coords: { clientX: 20, clientY: 50 } },
+    ])
+    // Past the distance threshold the row is lifted (announced).
+    await screen.findByText(/^Picked up Alpha/)
+    await user.pointer({ keys: '[/MouseLeft]' })
+    await screen.findByText(/^Dropped Alpha/)
+    expect(onSelect).not.toHaveBeenCalled()
   })
 })
 

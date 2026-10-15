@@ -265,16 +265,13 @@ describe('F007-W10 list description', () => {
     expect(screen.queryByText('bold')).not.toBeInTheDocument()
   })
 
-  it('hides the section when the list has no description, and the menu still offers Edit description', async () => {
+  it('without a description the section shows the "No description yet" placeholder', async () => {
     useBackend({ list: { description: null } })
-    const user = userEvent.setup()
     renderList(at())
     await itemsList()
-    expect(screen.queryByRole('region', { name: 'Description' })).not.toBeInTheDocument()
-    await user.click(
-      within(screen.getByRole('main')).getByRole('button', { name: /More actions for/ }),
-    )
-    expect(await screen.findByRole('menuitem', { name: 'Edit description' })).toBeInTheDocument()
+    const section = screen.getByRole('region', { name: 'Description' })
+    expect(within(section).getByRole('button', { name: 'No description yet' })).toBeInTheDocument()
+    expect(within(section).queryByRole('button', { name: /^(Collapse|Expand)/ })).toBeNull()
   })
 })
 
@@ -587,13 +584,13 @@ describe('W-06 reorder', () => {
     await user.click(screen.getByRole('button', { name: `Actions for ${title}` }))
   }
 
-  it('manual sort shows a handle and an actions menu per row, with edge moves disabled', async () => {
+  it('manual sort shows an actions menu per row (the rows are draggable), with edge moves disabled', async () => {
     useBackend()
     const user = userEvent.setup()
     renderList(at())
     await itemsList()
     for (const t of ['Item 1', 'Item 2', 'Item 3']) {
-      expect(screen.getByRole('button', { name: `Reorder ${t}` })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: `Actions for ${t}` })).toBeInTheDocument()
     }
     await openMenu(user, 'Item 1')
     expect(await screen.findByRole('menuitem', { name: 'Move up' })).toHaveAttribute(
@@ -681,24 +678,24 @@ describe('W-06 reorder', () => {
   // layout (all rects are 0), so the sortable never changes index and the drop is a no-op. This
   // cannot be exercised faithfully here; the keyboard path is covered by the "Move up/down" menu
   // tests above and should be checked in a real browser (Playwright, Q-01).
-  it.skip('keyboard drag on the handle (Space, ArrowDown, Space) reorders (needs real layout)', async () => {
+  it.skip('keyboard drag from the focused title link (Space, ArrowDown, Space) reorders (needs real layout)', async () => {
     const backend = useBackend()
     const user = userEvent.setup()
     renderList(at())
     await itemsList()
-    screen.getByRole('button', { name: 'Reorder Item 1' }).focus()
+    screen.getByRole('link', { name: 'Item 1' }).focus()
     await user.keyboard(' ')
     await user.keyboard('{ArrowDown}')
     await user.keyboard(' ')
     await waitFor(() => expect(backend.puts).toHaveLength(1))
   })
 
-  describe('handles are not offered', () => {
-    // The sidebar tree has its own reorder handles, so look inside the items list only.
+  describe('reordering is not offered', () => {
+    // Without reordering the rows have no actions menu (Move up / Move down) and no drag.
     const noHandles = () =>
       expect(
         within(screen.getByRole('list', { name: 'Items' })).queryByRole('button', {
-          name: /^Reorder /,
+          name: /^Actions for /,
         }),
       ).toBeNull()
 
@@ -741,8 +738,10 @@ describe('W-06 reorder', () => {
           expect(backend.itemRequests.at(-1)!.searchParams.get('offset')).toBe('200'),
         )
         await waitFor(() => expect(titles()).toHaveLength(205))
-        // Everything is loaded now: handles appear and the hint goes away.
-        expect(await screen.findByRole('button', { name: 'Reorder Item 1' })).toBeInTheDocument()
+        // Everything is loaded now: reordering is back and the hint goes away.
+        expect(
+          await screen.findByRole('button', { name: 'Actions for Item 1' }),
+        ).toBeInTheDocument()
         expect(screen.queryByText('Load all items to reorder them.')).toBeNull()
         expect(screen.queryByRole('button', { name: /^Load more/ })).toBeNull()
       },
@@ -829,7 +828,7 @@ describe('W-06 list actions menu (W-05) in the header', () => {
     const main = screen.getByRole('main')
     await user.click(within(main).getByRole('button', { name: /More actions for/ }))
     expect(await screen.findByRole('menuitem', { name: 'Rename' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'Edit description' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Edit description' })).not.toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: /^Move/ })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument()
   })

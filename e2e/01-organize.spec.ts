@@ -4,12 +4,14 @@ import { createList, createViaSidebar, drag, sidebarTree, uniqueName } from './h
 const row = (page: Page, name: string) =>
   sidebarTree(page).getByRole('treeitem').filter({ hasText: name })
 
-/** The given list names, in the order the sidebar shows them (read from the drag handles). */
+/** The given list names, in the order the sidebar shows them (read from the rows). */
 async function orderOf(page: Page, names: string[]) {
-  const labels = await sidebarTree(page)
-    .getByRole('button', { name: /^Reorder / })
-    .evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''))
-  return labels.map((label) => label.replace('Reorder ', '')).filter((n) => names.includes(n))
+  const texts = await sidebarTree(page)
+    .getByRole('treeitem')
+    .evaluateAll((els) => els.map((el) => el.textContent ?? ''))
+  return texts
+    .map((text) => names.find((n) => text.includes(n)))
+    .filter((n): n is string => n !== undefined)
 }
 
 test.describe('AT-03 organize folders and lists', () => {
@@ -59,13 +61,13 @@ test.describe('AT-03 organize folders and lists', () => {
     await expect.poll(() => orderOf(page, [a, b, c])).toEqual([a, b, c])
 
     // Drag: Charlie onto Alpha.
-    await drag(page, page.getByRole('button', { name: `Reorder ${c}` }), row(page, a))
+    await drag(page, row(page, c), row(page, a))
     await expect.poll(() => orderOf(page, [a, b, c])).toEqual([c, a, b])
     await page.reload()
     await expect.poll(() => orderOf(page, [a, b, c])).toEqual([c, a, b])
 
-    // Keyboard: focus Alpha's handle, pick up with Space, ArrowDown, drop with Space.
-    await page.getByRole('button', { name: `Reorder ${a}` }).focus()
+    // Keyboard: focus Alpha's row, pick up with Space, ArrowDown, drop with Space.
+    await row(page, a).focus()
     await page.keyboard.press('Space')
     const live = page.locator('[aria-live]').filter({ hasText: a })
     await expect(live).toContainText(a)
