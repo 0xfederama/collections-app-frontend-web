@@ -46,9 +46,6 @@ export function SearchResultBody({ result, large }: { result: SearchResult; larg
           {item.title}
         </span>
         <ResultPath path={path} className="text-xs" />
-        {large && item.summary && (
-          <span className="mt-0.5 line-clamp-1 block text-sm text-text-muted">{item.summary}</span>
-        )}
       </span>
       {large && item.status && <Chip>{item.status}</Chip>}
       <span className="inline-flex shrink-0 text-text-muted" title={kindLabels[item.kind]}>

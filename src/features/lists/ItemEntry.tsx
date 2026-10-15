@@ -86,7 +86,6 @@ export function ItemEntry({ item, mode, search, onOpen, reorder }: ItemEntryProp
         <ItemThumb item={item} className="aspect-4/3 w-24 shrink-0 rounded-md" />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           {title}
-          {item.summary && <p className="line-clamp-2 text-sm text-text-muted">{item.summary}</p>}
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {status}
             {priceText}

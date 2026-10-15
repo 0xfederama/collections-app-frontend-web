@@ -158,10 +158,10 @@ describe('W-06 display modes', () => {
   ]
 
   it.each([
-    ['compact', true, false],
-    ['thumbnail', true, true],
-    ['grid', true, false],
-  ] as const)('%s renders title link, status, price and kind', async (mode, _l, hasSummary) => {
+    'compact',
+    'thumbnail',
+    'grid',
+  ] as const)('%s renders title link, status, price and kind, no summary (F007-W4)', async (mode) => {
     useBackend({ list: { display_mode: mode }, items: rich })
     renderList(at())
     const ul = await itemsList()
@@ -170,11 +170,7 @@ describe('W-06 display modes', () => {
     expect(within(ul).getByText('Watched')).toBeInTheDocument()
     expect(within(ul).getByText(/1,200.*1,500/)).toBeInTheDocument()
     expect(within(ul).getByText('Movie')).toBeInTheDocument()
-    if (hasSummary) {
-      expect(within(ul).getByText('A hacker learns the truth.')).toBeInTheDocument()
-    } else {
-      expect(within(ul).queryByText('A hacker learns the truth.')).not.toBeInTheDocument()
-    }
+    expect(within(ul).queryByText('A hacker learns the truth.')).not.toBeInTheDocument()
     expect(screen.getByRole('radio', { name: radioName[mode] })).toBeChecked()
   })
 
