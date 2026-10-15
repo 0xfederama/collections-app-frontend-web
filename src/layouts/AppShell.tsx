@@ -76,8 +76,7 @@ function ShellFrame() {
   const resizable = breakpoint === 'desktop' || breakpoint === 'wide'
 
   return (
-    <div className="flex h-dvh flex-col text-text">
-      <TopBar searchRef={searchRef} />
+    <div className="flex h-dvh text-text">
       <div className="flex min-h-0 flex-1">
         <div
           id={SIDEBAR_ID}
@@ -102,6 +101,7 @@ function ShellFrame() {
           )}
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
+          <TopBar searchRef={searchRef} />
           <div className="flex min-h-0 flex-1 overflow-hidden">
             <main className="min-w-0 flex-1 overflow-y-auto p-6">{content}</main>
             {panelVisible && (
