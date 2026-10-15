@@ -59,10 +59,12 @@ export function PenButton({
       title={label}
       onClick={onClick}
       className={cx(
-        'absolute top-0 right-0 size-8 text-text-muted opacity-0 transition-opacity duration-150 focus-visible:opacity-100 pointer-coarse:size-11',
+        'absolute right-0 size-8 text-text-muted opacity-0 transition-opacity duration-150 focus-visible:opacity-100 pointer-coarse:size-11',
+        // A field is one line at least as tall as the pen, so the pen is centered in it; the
+        // description is long, so its pen stays at the top.
         group === 'field'
-          ? 'group-focus-within/field:opacity-100 group-hover/field:opacity-100'
-          : 'group-focus-within/desc:opacity-100 group-hover/desc:opacity-100',
+          ? 'top-1/2 -translate-y-1/2 group-focus-within/field:opacity-100 group-hover/field:opacity-100'
+          : 'top-0 group-focus-within/desc:opacity-100 group-hover/desc:opacity-100',
       )}
     >
       <Pencil aria-hidden />
@@ -178,7 +180,7 @@ export function InlineField({
     <div className={cx('group/field relative', className)}>
       <div
         onClick={onClick}
-        className="cursor-text rounded-sm pr-9 transition-colors hover:bg-fill/60 pointer-coarse:pr-12"
+        className="grid min-h-8 cursor-text content-center rounded-sm pr-9 transition-colors hover:bg-fill/60 pointer-coarse:min-h-11 pointer-coarse:pr-12"
       >
         {children}
       </div>

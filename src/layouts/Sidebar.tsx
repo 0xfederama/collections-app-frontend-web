@@ -1,28 +1,55 @@
-import { Link, NavLink } from 'react-router'
-import { IconButton, Tooltip } from '../components/ui'
+import type { Ref } from 'react'
+import { Link, NavLink, useLocation } from 'react-router'
+import { Button, IconButton, Tooltip } from '../components/ui'
 import {
   PanelLeftClose,
   PanelLeftOpen,
+  Plus,
+  Search,
   Settings,
   Trash2,
   type LucideIcon,
 } from '../components/ui/icons'
+import { useQuickAdd } from '../features/quickadd/QuickAddContext'
+import { SidebarSearch } from '../features/search/SidebarSearch'
 import { useWorkspaceName } from '../features/settings/api'
+import { RailTree } from '../features/tree/RailTree'
 import { SidebarTree } from '../features/tree/SidebarTree'
 import { cx } from '../lib/cx'
 
 export interface SidebarProps {
-  /** Tablet icon rail: icons only, no tree. */
+  /** Collapsed icon rail: only the top-level entries, as icons. */
   rail?: boolean
   /** The drawer shows the workspace name as its own title. */
   showHeader?: boolean
-  /** Tablet only: collapse / expand toggle. */
+  /** Collapse / expand toggle (top right of the header). Absent in the drawer. */
   onToggleRail?: () => void
+  /** Ref of the search input (the `/` shortcut focuses it). */
+  searchRef?: Ref<HTMLInputElement>
+  /** Rail only: the search icon expands the sidebar and focuses the field. */
+  onSearch?: () => void
+  /** Called before Quick add opens (the drawer closes itself). */
+  onQuickAdd?: () => void
 }
 
-/** Sidebar content (landmark `nav`): workspace, tree, then Trash and Settings. */
-export function Sidebar({ rail = false, showHeader = true, onToggleRail }: SidebarProps) {
+/**
+ * Sidebar content (landmark `nav`): workspace name, search, Quick add, the tree, then Trash and
+ * Settings. Collapsed, it is a rail with the top-level entries only.
+ */
+export function Sidebar({
+  rail = false,
+  showHeader = true,
+  onToggleRail,
+  searchRef,
+  onSearch,
+  onQuickAdd,
+}: SidebarProps) {
   const workspaceName = useWorkspaceName()
+  const quickAdd = useQuickAdd()
+  const openQuickAdd = () => {
+    onQuickAdd?.()
+    quickAdd.open()
+  }
 
   return (
     <nav
@@ -30,30 +57,77 @@ export function Sidebar({ rail = false, showHeader = true, onToggleRail }: Sideb
       className={cx('flex min-h-0 flex-1 flex-col gap-3', rail ? 'items-center p-2' : 'p-3 pt-4')}
     >
       {/* Same element in both modes, so the toggle keeps keyboard focus when it flips. */}
-      <div className={cx('flex items-center gap-2', rail ? 'flex-col' : 'justify-between pl-1')}>
-        {showHeader && !rail && (
-          <Link to="/" className="min-w-0 truncate text-[15px] font-semibold tracking-tight">
-            {workspaceName}
-          </Link>
-        )}
-        {onToggleRail && (
-          <IconButton
-            aria-label={rail ? 'Expand sidebar' : 'Collapse sidebar'}
-            aria-expanded={!rail}
-            onClick={onToggleRail}
-          >
-            {rail ? <PanelLeftOpen aria-hidden /> : <PanelLeftClose aria-hidden />}
-          </IconButton>
-        )}
-      </div>
+      {(showHeader || onToggleRail) && (
+        <div
+          className={cx(
+            'flex items-center gap-2',
+            rail ? 'flex-col' : 'justify-between pl-1',
+            !rail && 'w-full',
+          )}
+        >
+          {showHeader && !rail && (
+            <Link to="/" className="min-w-0 truncate text-xl font-semibold tracking-tight">
+              {workspaceName}
+            </Link>
+          )}
+          {onToggleRail && (
+            <IconButton
+              aria-label={rail ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-expanded={!rail}
+              onClick={onToggleRail}
+              className="size-8 pointer-coarse:size-11 [&_svg]:size-4"
+            >
+              {rail ? <PanelLeftOpen aria-hidden /> : <PanelLeftClose aria-hidden />}
+            </IconButton>
+          )}
+        </div>
+      )}
 
-      {rail ? <div className="flex-1" /> : <SidebarTree />}
+      {rail ? (
+        <>
+          <RailAction label="Search" icon={Search} onClick={onSearch} />
+          <RailAction label="Quick add" icon={Plus} onClick={openQuickAdd} />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <RailTree onOpenFolder={() => onToggleRail?.()} />
+          </div>
+        </>
+      ) : (
+        <>
+          <SidebarSearch inputRef={searchRef} />
+          <Button size="sm" aria-label="Quick add" onClick={openQuickAdd} className="w-full">
+            <Plus aria-hidden className="size-4 shrink-0" />
+            Quick add
+            <kbd aria-hidden className="ml-auto text-xs opacity-80">
+              N
+            </kbd>
+          </Button>
+          <SidebarTree />
+        </>
+      )}
 
       <div className={cx('flex gap-1', rail ? 'flex-col' : 'flex-col border-t border-border pt-2')}>
         <FooterLink to="/trash" label="Trash" icon={Trash2} rail={rail} />
         <FooterLink to="/settings" label="Settings" icon={Settings} rail={rail} />
       </div>
     </nav>
+  )
+}
+
+function RailAction({
+  label,
+  icon: Icon,
+  onClick,
+}: {
+  label: string
+  icon: LucideIcon
+  onClick?: () => void
+}) {
+  return (
+    <Tooltip content={label} side="right">
+      <IconButton aria-label={label} onClick={onClick}>
+        <Icon aria-hidden />
+      </IconButton>
+    </Tooltip>
   )
 }
 
@@ -68,9 +142,12 @@ function FooterLink({
   icon: LucideIcon
   rail: boolean
 }) {
+  // Settings is a pane over the current page, which it needs to know to render and to return to.
+  const here = useLocation()
   const link = (
     <NavLink
       to={to}
+      state={to === '/settings' && here.pathname !== to ? { background: here } : undefined}
       aria-label={rail ? label : undefined}
       className={cx(
         'flex min-h-9 items-center gap-2 rounded-md text-sm text-text hover:bg-fill-hover aria-[current=page]:bg-accent/10 aria-[current=page]:font-medium pointer-coarse:min-h-11',

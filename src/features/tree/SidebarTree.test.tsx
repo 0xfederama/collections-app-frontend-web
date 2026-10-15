@@ -291,8 +291,8 @@ describe('F006-W2 sidebar tree keyboard reach', () => {
     const user = userEvent.setup()
     renderAt('/')
     await within(sidebar()).findByRole('tree')
-    // The element right before the tree in tab order is the workspace link of the sidebar.
-    within(sidebar()).getAllByRole('link')[0]!.focus()
+    // The element right before the tree in tab order is the Quick add button of the sidebar.
+    within(sidebar()).getByRole('button', { name: 'Quick add' }).focus()
     await user.tab()
     const first = document.activeElement as HTMLElement
     expect(first).toHaveAttribute('role', 'treeitem')

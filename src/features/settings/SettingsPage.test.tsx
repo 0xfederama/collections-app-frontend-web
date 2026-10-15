@@ -16,7 +16,7 @@ async function openSettings() {
   mockViewport(1280)
   const user = userEvent.setup()
   renderAt('/settings')
-  await screen.findByRole('heading', { level: 1, name: 'Settings' })
+  await screen.findByRole('dialog', { name: 'Settings' })
   await screen.findByRole('button', { name: 'Save settings' })
   return user
 }
@@ -49,14 +49,6 @@ async function retype(user: ReturnType<typeof userEvent.setup>, label: string, t
   if (text) await user.type(input, text)
 }
 
-describe('F007-W6 settings: theme moved to the sidebar', () => {
-  it('has no Appearance section or theme control in the page itself', async () => {
-    await openSettings()
-    expect(screen.queryByRole('heading', { name: 'Appearance' })).not.toBeInTheDocument()
-    expect(within(screen.getByRole('main')).queryByRole('radiogroup', { name: 'Theme' })).toBeNull()
-  })
-})
-
 describe('W-13 settings: saving', () => {
   it('shows the loaded values and keeps Save disabled when nothing changed', async () => {
     mountBackend()
@@ -75,8 +67,10 @@ describe('W-13 settings: saving', () => {
       version: 4,
     })
     const user = await openSettings()
-    const sidebar = screen.getByRole('navigation', { name: 'Library' })
-    expect(await within(sidebar).findByRole('link', { name: 'Our Collection' })).toBeInTheDocument()
+    const sidebar = screen.getByRole('navigation', { name: 'Library', hidden: true })
+    expect(
+      await within(sidebar).findByRole('link', { name: 'Our Collection', hidden: true }),
+    ).toBeInTheDocument()
 
     await retype(user, 'Workspace name', 'Casa')
     expect(save()).toBeEnabled()
@@ -85,7 +79,9 @@ describe('W-13 settings: saving', () => {
     expect(await screen.findByText('Settings saved')).toBeInTheDocument()
     expect(patches).toEqual([{ ifMatch: '"s-4"', body: { workspace_name: 'Casa' } }])
     expect(backend.settings.version).toBe(5)
-    expect(await within(sidebar).findByRole('link', { name: 'Casa' })).toBeInTheDocument()
+    expect(
+      await within(sidebar).findByRole('link', { name: 'Casa', hidden: true }),
+    ).toBeInTheDocument()
     expect(save()).toBeDisabled()
   })
 
@@ -307,33 +303,59 @@ describe('W-13 settings: load failure', () => {
   })
 })
 
+describe('W-13 settings: pane', () => {
+  it('opens as a dialog over the page it came from; Escape and Close go back to it', async () => {
+    mountBackend()
+    mockViewport(1280)
+    const user = userEvent.setup()
+    renderAt('/trash')
+    await screen.findByRole('heading', { level: 1, name: 'Trash' })
+    await user.click(screen.getByRole('link', { name: 'Settings' }))
+    await screen.findByRole('dialog', { name: 'Settings' })
+    // The page behind the modal pane is still mounted, only hidden from the accessibility tree.
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Trash', hidden: true }),
+    ).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+  })
+
+  it('a deep link has nothing behind it, and closing goes Home', async () => {
+    mountBackend()
+    const user = await openSettings()
+    await user.keyboard('{Escape}')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
+  })
+})
+
 describe('W-13 settings: unsaved changes guard', () => {
   it('asks before leaving with a dirty form; Keep editing stays', async () => {
     mountBackend()
     const user = await openSettings()
     await retype(user, 'Workspace name', 'Dirty')
-    await user.click(screen.getByRole('link', { name: 'Trash' }))
+    await user.click(screen.getByRole('button', { name: 'Close' }))
     const dialog = await screen.findByRole('alertdialog', { name: 'Discard changes?' })
     await user.click(within(dialog).getByRole('button', { name: 'Keep editing' }))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(field('Workspace name')).toHaveValue('Dirty')
   })
 
-  it('Discard changes proceeds to the next page', async () => {
+  it('Discard changes closes the pane and goes Home', async () => {
     mountBackend()
     const user = await openSettings()
     await retype(user, 'Workspace name', 'Dirty')
-    await user.click(screen.getByRole('link', { name: 'Trash' }))
+    await user.click(screen.getByRole('button', { name: 'Close' }))
     const dialog = await screen.findByRole('alertdialog', { name: 'Discard changes?' })
     await user.click(within(dialog).getByRole('button', { name: 'Discard changes' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
   })
 
   it('does not ask when nothing changed', async () => {
     mountBackend()
     const user = await openSettings()
-    await user.click(screen.getByRole('link', { name: 'Trash' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 
@@ -343,7 +365,7 @@ describe('W-13 settings: unsaved changes guard', () => {
     await retype(user, 'Workspace name', 'Saved')
     await user.click(save())
     await screen.findByText('Settings saved')
-    await user.click(screen.getByRole('link', { name: 'Trash' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
   })
 })

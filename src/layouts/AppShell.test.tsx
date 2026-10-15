@@ -35,10 +35,11 @@ function renderRouter(path: string) {
 }
 
 describe('AT-14 landmarks per breakpoint', () => {
-  it('mobile (375): top bar banner and main; the navigation lives in the drawer', async () => {
+  it('mobile (375): no top bar, a menu button and main; the navigation lives in the drawer', async () => {
     mockViewport(375)
     renderAt('/')
-    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(nav()).not.toBeInTheDocument()
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
@@ -51,12 +52,12 @@ describe('AT-14 landmarks per breakpoint', () => {
     ['desktop', 1024],
     ['desktop (upper edge)', 1279],
     ['wide', 1440],
-  ])('%s (%ipx): top bar, navigation and main, no aside on the home page', async (_, width) => {
+  ])('%s (%ipx): navigation and main, no top bar, no aside on the home page', async (_, width) => {
     mockViewport(width)
     renderAt('/')
     expect(nav()).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
-    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
 
@@ -136,6 +137,9 @@ describe('AT-14 mobile drawer', () => {
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByRole('navigation', { name: 'Library' })).toBeInTheDocument()
     expect(await within(dialog).findByRole('treeitem', { name: /Media/ })).toBeInTheDocument()
+    expect(within(dialog).getByRole('combobox', { name: 'Search' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Quick add' })).toBeInTheDocument()
+    expect(within(dialog).queryByRole('button', { name: /sidebar$/ })).not.toBeInTheDocument()
     expect(within(dialog).getByRole('link', { name: 'Trash' })).toHaveAttribute('href', '/trash')
     expect(within(dialog).getByRole('link', { name: 'Settings' })).toHaveAttribute(
       'href',
@@ -179,10 +183,8 @@ describe('AT-14 mobile drawer', () => {
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
     const dialog = await screen.findByRole('dialog')
     await user.click(within(dialog).getByRole('link', { name: 'Settings' }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(
-      await within(screen.getByRole('main')).findByRole('heading', { name: 'Settings' }),
-    ).toBeInTheDocument()
+    // The drawer is gone; the dialog left is the Settings pane.
+    expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
   })
 
   it('stays closed after navigating and can be opened again', async () => {
@@ -197,40 +199,87 @@ describe('AT-14 mobile drawer', () => {
   })
 })
 
-describe('AT-14 tablet rail', () => {
-  it('starts as the full sidebar with the tree and a "Collapse sidebar" toggle', async () => {
-    mockViewport(800)
+describe('AT-14 sidebar content order', () => {
+  it('has the workspace name, then search, then Quick add, then the tree', async () => {
+    mockViewport(1100)
     renderAt('/')
-    const toggle = screen.getByRole('button', { name: 'Collapse sidebar' })
-    expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    expect(await within(nav()!).findByRole('tree')).toBeInTheDocument()
-    expect(separator()).not.toBeInTheDocument()
+    const tree = await within(nav()!).findByRole('tree')
+    const name = await within(nav()!).findByRole('link', { name: 'Our Collection' })
+    const search = within(nav()!).getByRole('combobox', { name: 'Search' })
+    const add = within(nav()!).getByRole('button', { name: 'Quick add' })
+    const before = (a: Element, b: Element) =>
+      !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(before(name, search)).toBe(true)
+    expect(before(search, add)).toBe(true)
+    expect(before(add, tree)).toBe(true)
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
   })
 
-  it('collapses to an icon rail and expands again, persisting the state', async () => {
-    mockViewport(800)
+  it('the workspace name is larger than 15px type', async () => {
+    mockViewport(1100)
+    renderAt('/')
+    expect(await within(nav()!).findByRole('link', { name: 'Our Collection' })).toHaveClass(
+      'text-xl',
+      'font-semibold',
+      'truncate',
+    )
+  })
+
+  it('Quick add in the sidebar opens the dialog', async () => {
+    mockViewport(1100)
     const user = userEvent.setup()
     renderAt('/')
-    await within(nav()!).findByRole('tree')
-
-    await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
-    const expand = screen.getByRole('button', { name: 'Expand sidebar' })
-    expect(expand).toHaveAttribute('aria-expanded', 'false')
-    expect(within(nav()!).queryByRole('tree')).not.toBeInTheDocument()
-    expect(within(nav()!).queryByRole('combobox')).not.toBeInTheDocument()
-    expect(within(nav()!).queryByRole('button', { name: 'Quick add' })).not.toBeInTheDocument()
-    expect(within(nav()!).getByRole('link', { name: 'Trash' })).toHaveAttribute('href', '/trash')
-    expect(within(nav()!).getByRole('link', { name: 'Settings' })).toHaveAttribute(
-      'href',
-      '/settings',
-    )
-    await waitFor(() => expect(storedSidebar().collapsed).toBe(true))
-
-    await user.click(expand)
-    expect(await within(nav()!).findByRole('tree')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
-    await waitFor(() => expect(storedSidebar().collapsed).toBe(false))
+    await user.click(within(nav()!).getByRole('button', { name: 'Quick add' }))
+    expect(await screen.findByRole('dialog', { name: 'Quick add' })).toBeInTheDocument()
   })
+})
+
+describe('AT-14 collapsible sidebar (icon rail)', () => {
+  it.each([800, 1100, 1440])(
+    'at %ipx starts expanded with a "Collapse sidebar" toggle and the tree',
+    async (width) => {
+      mockViewport(width)
+      renderAt('/')
+      const toggle = screen.getByRole('button', { name: 'Collapse sidebar' })
+      expect(toggle).toHaveAttribute('aria-expanded', 'true')
+      expect(await within(nav()!).findByRole('tree')).toBeInTheDocument()
+    },
+  )
+
+  it.each([800, 1100, 1440])(
+    'at %ipx collapses to a rail with the top-level entries only, and expands again',
+    async (width) => {
+      mockViewport(width)
+      const user = userEvent.setup()
+      renderAt('/')
+      await within(nav()!).findByRole('tree')
+
+      await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+      const expand = screen.getByRole('button', { name: 'Expand sidebar' })
+      expect(expand).toHaveAttribute('aria-expanded', 'false')
+      expect(within(nav()!).queryByRole('tree')).not.toBeInTheDocument()
+      expect(within(nav()!).queryByRole('combobox')).not.toBeInTheDocument()
+      expect(separator()).not.toBeInTheDocument()
+      expect(await within(nav()!).findByRole('button', { name: 'Media' })).toBeInTheDocument()
+      expect(within(nav()!).getByRole('button', { name: 'Vehicles' })).toBeInTheDocument()
+      // Sub-folders and lists inside folders are not in the rail.
+      expect(within(nav()!).queryByRole('button', { name: 'Movies' })).not.toBeInTheDocument()
+      expect(within(nav()!).queryByRole('link', { name: 'Watchlist' })).not.toBeInTheDocument()
+      expect(within(nav()!).getByRole('button', { name: 'Search' })).toBeInTheDocument()
+      expect(within(nav()!).getByRole('button', { name: 'Quick add' })).toBeInTheDocument()
+      expect(within(nav()!).getByRole('link', { name: 'Trash' })).toHaveAttribute('href', '/trash')
+      expect(within(nav()!).getByRole('link', { name: 'Settings' })).toHaveAttribute(
+        'href',
+        '/settings',
+      )
+      await waitFor(() => expect(storedSidebar().collapsed).toBe(true))
+
+      await user.click(expand)
+      expect(await within(nav()!).findByRole('tree')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
+      await waitFor(() => expect(storedSidebar().collapsed).toBe(false))
+    },
+  )
 
   it('keeps keyboard focus on the toggle when it flips', async () => {
     mockViewport(800)
@@ -240,20 +289,53 @@ describe('AT-14 tablet rail', () => {
     expect(screen.getByRole('button', { name: 'Expand sidebar' })).toHaveFocus()
   })
 
-  it('restores the collapsed rail from storage on the next render', async () => {
-    mockViewport(800)
+  it('restores the collapsed rail from storage on desktop too', async () => {
+    mockViewport(1100)
     localStorage.setItem(SIDEBAR_KEY, JSON.stringify({ collapsed: true, width: 280 }))
     renderAt('/')
     expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument()
     expect(within(nav()!).queryByRole('tree')).not.toBeInTheDocument()
+    expect(separator()).not.toBeInTheDocument()
   })
 
-  it('does not apply the collapsed flag to the desktop layout', async () => {
+  it('highlights the root folder that contains the open list', async () => {
+    mockViewport(1100)
+    localStorage.setItem(SIDEBAR_KEY, JSON.stringify({ collapsed: true, width: 280 }))
+    renderAt(`/lists/${WATCHLIST}`)
+    const media = await within(nav()!).findByRole('button', { name: 'Media' })
+    expect(media).toHaveAttribute('aria-current', 'true')
+    expect(within(nav()!).getByRole('button', { name: 'Vehicles' })).not.toHaveAttribute(
+      'aria-current',
+    )
+  })
+
+  it('highlights nothing on Home', async () => {
     mockViewport(1100)
     localStorage.setItem(SIDEBAR_KEY, JSON.stringify({ collapsed: true, width: 280 }))
     renderAt('/')
+    expect(await within(nav()!).findByRole('button', { name: 'Media' })).not.toHaveAttribute(
+      'aria-current',
+    )
+  })
+
+  it('a root folder expands the sidebar with that folder open', async () => {
+    mockViewport(1100)
+    localStorage.setItem(SIDEBAR_KEY, JSON.stringify({ collapsed: true, width: 280 }))
+    const user = userEvent.setup()
+    renderAt('/')
+    await user.click(await within(nav()!).findByRole('button', { name: 'Vehicles' }))
     expect(await within(nav()!).findByRole('tree')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /sidebar$/ })).not.toBeInTheDocument()
+    expect(await within(nav()!).findByRole('treeitem', { name: /Motorbikes/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
+  })
+
+  it('Quick add in the rail opens the dialog', async () => {
+    mockViewport(1100)
+    localStorage.setItem(SIDEBAR_KEY, JSON.stringify({ collapsed: true, width: 280 }))
+    const user = userEvent.setup()
+    renderAt('/')
+    await user.click(within(nav()!).getByRole('button', { name: 'Quick add' }))
+    expect(await screen.findByRole('dialog', { name: 'Quick add' })).toBeInTheDocument()
   })
 })
 
@@ -384,7 +466,7 @@ describe('W-04 workspace name', () => {
     mockViewport(375)
     const user = userEvent.setup()
     renderAt('/')
-    await user.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Open menu' }))
+    await user.click(screen.getByRole('button', { name: 'Open menu' }))
     expect(await screen.findByRole('dialog', { name: 'Our Collection' })).toBeInTheDocument()
   })
 })
