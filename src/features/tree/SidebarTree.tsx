@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useMatch, useNavigate } from 'react-router'
 import { Button, EmptyState, Skeleton, Tree, type TreeRowState } from '../../components/ui'
 import { Folder, FolderOpen, Inbox, List } from '../../components/ui/icons'
@@ -9,6 +9,13 @@ import { TreeActionsContext } from './TreeActionsContext'
 import { useTreeDialogs } from './useTreeDialogs'
 import { useExpandedFolders } from './useExpandedFolders'
 
+/** Moves focus to a tree row; false while the row is not rendered (yet). */
+function focusRow(id: string) {
+  const row = document.querySelector<HTMLElement>(`[data-tree-id="${CSS.escape(id)}"]`)
+  row?.focus()
+  return !!row
+}
+
 const listPath = (listId: string) => `/lists/${listId}`
 
 /** The folder/list tree of the sidebar: data, expand state, navigation and its four UI states. */
@@ -18,12 +25,25 @@ export function SidebarTree() {
   const activeListId = useMatch({ path: '/lists/:listId', end: false })?.params.listId ?? null
   const [expanded, setExpanded] = useExpandedFolders(index, activeListId)
   const navigate = useNavigate()
+  // A folder has no route, so a just-created folder is "picked" here. It only counts while the page
+  // is still the one it was picked on: opening a list clears it, and the list highlights instead.
+  const [picked, setPicked] = useState<{ id: string; forList: string | null } | null>(null)
+  const [pendingFocus, setPendingFocus] = useState<string | null>(null)
   const { actions, dialogs } = useTreeDialogs({
+    onCreated: (id) => setPicked({ id, forList: activeListId }),
+    focusCreated: (id) => {
+      if (!focusRow(id)) setPendingFocus(id)
+    },
     // Make sure the folder that just received something is open, so the user sees it.
     onCreatedFolder: (parentId) => {
       if (parentId) setExpanded(new Set(expanded).add(parentId))
     },
   })
+  // The new row may arrive with the tree refetch, after the dialog has closed.
+  useEffect(() => {
+    if (pendingFocus && focusRow(pendingFocus)) setPendingFocus(null)
+  }, [pendingFocus, index])
+  const selected = picked && picked.forList === activeListId ? picked.id : activeListId
   const sortable = useMemo(() => (index ? buildSortable(index.nodes) : undefined), [index])
 
   return (
@@ -52,7 +72,7 @@ export function SidebarTree() {
               nodes={index.nodes}
               expanded={expanded}
               onExpandedChange={setExpanded}
-              selected={activeListId}
+              selected={selected}
               onSelectedChange={(id) => {
                 if (index.lists.has(id)) {
                   void navigate(listPath(id))
@@ -64,6 +84,7 @@ export function SidebarTree() {
               }}
               sortable={(node) => sortable?.slots.get(node.id)}
               onReorder={actions.applyMove}
+              acceptsDrop={(target, sourceId) => actions.canDropInto(sourceId, target.id)}
               renderRow={(node, state) => <Row node={node} state={state} />}
             />
           )}

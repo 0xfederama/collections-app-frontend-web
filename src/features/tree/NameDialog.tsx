@@ -15,6 +15,8 @@ export interface NameDialogProps {
   onClose: () => void
   /** Refetches the tree and returns the latest name (`undefined` if the item is gone). Rename only. */
   onReload?: () => Promise<string | undefined>
+  /** Where focus goes when the dialog closes; `preventDefault()` replaces the return to the opener. */
+  onCloseAutoFocus?: (event: Event) => void
 }
 
 const MAX_LENGTH = 200
@@ -35,6 +37,7 @@ export function NameDialog({
   onSubmit,
   onClose,
   onReload,
+  onCloseAutoFocus,
 }: NameDialogProps) {
   const [name, setName] = useState(initialName)
   const [chosenKind, setChosenKind] = useState<ItemKind>(kind?.initial ?? 'generic')
@@ -76,6 +79,7 @@ export function NameDialog({
       title={title}
       description={description}
       initialFocus={inputRef}
+      onCloseAutoFocus={onCloseAutoFocus}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>

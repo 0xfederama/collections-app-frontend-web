@@ -1,6 +1,12 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
-import { SortableProvider, useSortableRow, type SortableMove, type SortableSlot } from './sortable'
+import {
+  SortableProvider,
+  useSortableRow,
+  type SortableDropInto,
+  type SortableMove,
+  type SortableSlot,
+} from './sortable'
 
 export interface TreeNodeBase {
   id: string
@@ -32,6 +38,11 @@ export interface TreeProps<T extends TreeNodeBase> {
   sortable?: (node: T) => SortableSlot | undefined
   /** Called once when a drag ends with a changed position. Not called on cancel. */
   onReorder?: (move: SortableMove) => void
+  /**
+   * Opt-in "drop into": whether the container `target` (a node with `children`) accepts the dragged
+   * node `sourceId`. Rows that refuse show nothing; accepting rows highlight only while hovered.
+   */
+  acceptsDrop?: (target: T, sourceId: string) => boolean
   className?: string
 }
 
@@ -58,6 +69,7 @@ export function Tree<T extends TreeNodeBase>({
   renderRow,
   sortable,
   onReorder,
+  acceptsDrop,
   className,
   ...rest
 }: TreeProps<T>) {
@@ -156,6 +168,14 @@ export function Tree<T extends TreeNodeBase>({
             expanded={expanded}
             selected={node.id === selected}
             slot={sortable?.(node)}
+            dropInto={
+              acceptsDrop && node.children
+                ? {
+                    accepts: (sourceId) => acceptsDrop(node, sourceId),
+                    label: sortable?.(node)?.label ?? '',
+                  }
+                : undefined
+            }
             onFocusRow={setFocusedId}
             onSelect={onSelectedChange}
             renderRow={renderRow}
@@ -175,6 +195,7 @@ interface TreeRowProps<T extends TreeNodeBase> {
   expanded: ReadonlySet<string>
   selected: boolean
   slot: SortableSlot | undefined
+  dropInto: SortableDropInto | undefined
   onFocusRow: (id: string) => void
   onSelect: (id: string) => void
   renderRow: TreeProps<T>['renderRow']
@@ -191,11 +212,12 @@ function TreeRow<T extends TreeNodeBase>({
   expanded,
   selected,
   slot,
+  dropInto,
   onFocusRow,
   onSelect,
   renderRow,
 }: TreeRowProps<T>) {
-  const { ref, isDragging, a11y } = useSortableRow(node.id, slot)
+  const { ref, isDragging, isDropTarget, a11y } = useSortableRow(node.id, slot, dropInto)
   const liRef = useRef<HTMLLIElement | null>(null)
   // The whole tree is one Tab stop: only the roving row's inner controls (menu button,
   // anything the consumer renders) stay in the Tab order. Others are set to -1 and restored later.
@@ -240,8 +262,9 @@ function TreeRow<T extends TreeNodeBase>({
       }}
       style={{ paddingInlineStart: `${(level - 1) * 16 + 8}px` }}
       className={cx(
-        'group/row flex min-h-9 cursor-pointer select-none items-center [-webkit-touch-callout:none] gap-1 rounded-md pr-2 text-sm text-text hover:bg-fill-hover aria-selected:bg-accent/10 aria-selected:font-medium aria-selected:text-accent-text pointer-coarse:min-h-11',
+        'group/row flex min-h-9 cursor-pointer select-none items-center [-webkit-touch-callout:none] gap-1 rounded-md pr-2 text-sm text-text hover:bg-fill-hover focus-visible:bg-fill-hover focus-visible:outline-none aria-selected:bg-accent/10 aria-selected:focus-visible:bg-accent/20 aria-selected:font-medium aria-selected:text-accent-text pointer-coarse:min-h-11',
         isDragging && 'bg-surface-raised opacity-80 shadow-md',
+        isDropTarget && 'bg-accent/20 text-accent-text',
       )}
     >
       {renderRow(node, { level, expanded: isExpanded, selected, hasChildren })}

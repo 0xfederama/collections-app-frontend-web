@@ -5,7 +5,7 @@ import {
   PointerSensor,
   type Draggable,
 } from '@dnd-kit/dom'
-import { DragDropProvider } from '@dnd-kit/react'
+import { DragDropProvider, useDroppable } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { createContext, useContext, useId, useRef, useState, type ReactNode } from 'react'
 
@@ -33,6 +33,14 @@ export interface SortableMove {
   group: string
   from: number
   to: number
+  /** Set when the row was dropped onto a container row (a folder) instead of between rows: that row's id. */
+  into?: string
+}
+
+/** Makes a row a drop target for "move into": whether it accepts the dragged row, and its name for announcements. */
+export interface SortableDropInto {
+  accepts: (sourceId: string) => boolean
+  label: string
 }
 
 export const arrayMove = <T,>(items: readonly T[], from: number, to: number): T[] => {
@@ -151,6 +159,33 @@ const stopSwallowingClick = () => {
   setTimeout(stop, 100)
 }
 
+type DroppableInput = Parameters<typeof useDroppable>[0]
+type Detector = NonNullable<DroppableInput['collisionDetector']>
+
+// Dropping "into" a container row only counts while the mouse (or finger) is over the middle of the
+// row; the top and bottom quarter stay for reordering between rows. Priorities and types are dnd-kit's
+// CollisionPriority.Highest (4) and CollisionType.PointerIntersection (2), written as numbers because
+// the enums live in a package this app does not depend on directly. A keyboard drag never "drops into":
+// its path is the arrow reorder (and the Move dialog).
+const INTO_PRIORITY = 4
+const POINTER_INTERSECTION = 2
+const intoZone: Detector = ({ dragOperation, droppable }) => {
+  const pointer = dragOperation.position.current
+  const shape = droppable.shape
+  if (!pointer || !shape) return null
+  if (!dragOperation.activatorEvent?.type.startsWith('pointer')) return null
+  const { top, height } = shape.boundingRectangle
+  if (!shape.containsPoint(pointer)) return null
+  const offset = (pointer.y - top) / height
+  if (offset < 0.25 || offset > 0.75) return null
+  return { id: droppable.id, value: 1, type: POINTER_INTERSECTION, priority: INTO_PRIORITY }
+}
+
+const dropIntoOf = (target: unknown): string | undefined => {
+  const into = (target as { data?: { dropInto?: unknown } } | null | undefined)?.data?.dropInto
+  return typeof into === 'string' ? into : undefined
+}
+
 const withoutAccessibility = (defaults: readonly unknown[]) =>
   defaults.filter((plugin) => plugin !== Accessibility) as never
 
@@ -187,6 +222,12 @@ export function SortableProvider({
           if (event.operation.activatorEvent?.type.startsWith('pointer')) startSwallowingClick()
         }}
         onDragOver={(event) => {
+          const into = dropIntoOf(event.operation.target)
+          if (into !== undefined) {
+            const label = (event.operation.target?.data as { label?: string } | undefined)?.label
+            if (label) announce(`Drop into ${label}.`)
+            return
+          }
           const index = indexOf(event.operation.source)
           if (index === lastIndex.current) return
           lastIndex.current = index
@@ -198,6 +239,17 @@ export function SortableProvider({
           const source = event.operation.source
           if (event.canceled || !source || !isSortable(source)) return
           const { initialIndex, index } = source
+          const into = dropIntoOf(event.operation.target)
+          if (into !== undefined) {
+            onMove({
+              id: String(source.id),
+              group: String(source.group),
+              from: initialIndex,
+              to: initialIndex,
+              into,
+            })
+            return
+          }
           if (initialIndex === index) return
           onMove({
             id: String(source.id),
@@ -223,7 +275,11 @@ export function SortableProvider({
  * Makes a row sortable. Without a `slot` the row is inert. `ref` goes on the row: the whole row is
  * the drag handle (no grip), and the keyboard sensor listens on the row itself.
  */
-export function useSortableRow(id: string, slot: SortableSlot | undefined) {
+export function useSortableRow(
+  id: string,
+  slot: SortableSlot | undefined,
+  dropInto?: SortableDropInto,
+) {
   const { ref, isDragging } = useSortable({
     id,
     index: slot?.index ?? 0,
@@ -233,10 +289,25 @@ export function useSortableRow(id: string, slot: SortableSlot | undefined) {
     disabled: !slot,
     data: { label: slot?.label ?? '', size: slot?.size ?? 0 } satisfies RowData,
   })
+  // A second droppable on the same row: "drop into". It is separate from the sortable one because the
+  // sortable only accepts its own group, so a list could never reach a folder (the F008-W4 bug).
+  const into = useDroppable({
+    id: `into:${id}`,
+    disabled: !dropInto,
+    accept: (source) => !!dropInto && dropInto.accepts(String(source.id)),
+    collisionDetector: intoZone,
+    collisionPriority: INTO_PRIORITY,
+    data: { dropInto: id, label: dropInto?.label ?? '' },
+  })
   const instructionsId = useContext(SortableA11yContext)
   return {
-    ref,
+    ref: (element: Element | null) => {
+      ref(element)
+      into.ref(element)
+    },
     isDragging,
+    /** True only while a row that this one accepts is hovering its middle. */
+    isDropTarget: !!dropInto && into.isDropTarget,
     /** Props for the row element: the keyboard instructions, read as its description. */
     a11y: slot ? { 'aria-describedby': instructionsId } : {},
   }

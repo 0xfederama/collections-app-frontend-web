@@ -5,6 +5,7 @@ import { createTreeIndex, type TreeNode } from './api'
 import {
   applyOrder,
   buildSortable,
+  canDropInto,
   flattenFolders,
   groupKey,
   parentIdOf,
@@ -175,5 +176,24 @@ describe('AT-21 arrayMove', () => {
 
   it('leaves the array unchanged for an out-of-range source', () => {
     expect(arrayMove(['a', 'b'], 5, 0)).toEqual(['a', 'b'])
+  })
+})
+
+describe('F008-W4 canDropInto', () => {
+  it('accepts a list or folder dropped on another folder', () => {
+    expect(canDropInto(index, id(18), id(5))).toBe(true) // root list -> folder
+    expect(canDropInto(index, id(11), id(5))).toBe(true) // list in a folder -> other folder
+    expect(canDropInto(index, id(5), id(1))).toBe(true) // root folder -> folder
+  })
+
+  it('refuses a folder onto itself and into its own descendants', () => {
+    expect(canDropInto(index, id(1), id(1))).toBe(false)
+    expect(canDropInto(index, id(1), id(2))).toBe(false) // child
+    expect(canDropInto(index, id(2), id(1))).toBe(false) // already inside it
+  })
+
+  it('refuses a drop on the folder the node is already in, and unknown ids', () => {
+    expect(canDropInto(index, id(11), id(2))).toBe(false)
+    expect(canDropInto(index, 'nope', id(2))).toBe(false)
   })
 })
