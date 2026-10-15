@@ -33,6 +33,9 @@ export async function preloadRoutes() {
     import('./routes/TrashRoute'),
     import('./routes/ItemRoute'),
     import('./features/items/ItemPage'),
+    // The description editor's lazy chunk (a textarea stand-in in tests, see test-setup.ts): the
+    // edit form's first render waits on it.
+    import('./features/items/content/MarkdownEditor'),
   ])
 }
 
