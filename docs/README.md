@@ -6,7 +6,7 @@
 - [lists](modules/lists.md): List view at `/lists/:listId`: title, in-place description, "…" menu (Kind), display modes, pinned fields, sort, title filter, drag reorder, inline new item.
 - [quickadd](modules/quickadd.md): Quick add dialog (`N` shortcut, top-bar button): create an item with optional website, description and image.
 - [search](modules/search.md): Global search: sidebar combobox dropdown (top 8), `/search?q=` results page, search queries and dev fake.
-- [shell](modules/shell.md): Providers, router, top bar (search, Quick add, theme), responsive frame (drawer, rail, frosted sidebar, detail sheet) and lazy route loading.
+- [shell](modules/shell.md): Providers, router, responsive frame (drawer, rail, frosted sidebar, detail sheet) and lazy route loading.
 - [theme](modules/theme.md): Light, dark and system theme (sidebar footer toggle), Frosted Gallery tokens, materials and system fonts.
 - [trash](modules/trash.md): Trash page at `/trash`: restore in place or to a destination, delete permanently, trash query and mutations.
 - [tree](modules/tree.md): Sidebar folder and list tree, its query and index, expanded state, folder and list writes (dialogs, menus, reorder).

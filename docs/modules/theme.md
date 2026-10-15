@@ -10,7 +10,7 @@ Light, dark and system colour theme, the Frosted Gallery design tokens (palette,
 - `src/styles/global.css`: Tailwind `@theme inline` mapping, `--font-sans` (system stack), and the `material`, `material-strong`, `shadow-float`, `shadow-sheet` utilities.
 - `src/lib/theme.ts`: preference read/write and React hook.
 - `index.html`: inline bootstrap script that sets `data-theme` before first paint.
-- `src/layouts/ThemeToggle.tsx`: theme menu at the far right of the top bar.
+- `src/features/settings/AppearanceSection.tsx`: theme radio group in Settings > Appearance.
 - `src/components/ui/`: radius scale in `tokens.css` (`--radius-sm` 8 to `--radius-xl` 24 px).
 - `public/favicon.svg`: app icon.
 
@@ -21,7 +21,7 @@ Light, dark and system colour theme, the Frosted Gallery design tokens (palette,
 - `getThemePreference()`, `resolveTheme(pref?)`, `applyTheme(pref?)`: read, resolve and apply; invalid values give `'system'`.
 - `setThemePreference(pref)`: persists (`system` removes the key), applies, notifies subscribers.
 - `useThemePreference(): { preference, resolved, setPreference }`: follows system and `storage` events.
-- `ThemeToggle()`: the top-bar theme menu.
+- `AppearanceSection()`: System default / Light / Dark.
 - Utilities: `material`, `material-strong` (frosted surface), `shadow-float`, `shadow-sheet`, `bg-fill`, `hover:bg-fill-hover`.
 
 ## Gotchas
