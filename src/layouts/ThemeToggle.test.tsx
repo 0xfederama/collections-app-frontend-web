@@ -60,9 +60,7 @@ describe('F007-W6 theme toggle in the sidebar', () => {
     localStorage.setItem('collection:sidebar', JSON.stringify({ collapsed: true, width: 280 }))
     const user = userEvent.setup()
     renderAt('/')
-    await user.click(
-      within(nav()).getByRole('button', { name: 'Theme: System. Switch to Light' }),
-    )
+    await user.click(within(nav()).getByRole('button', { name: 'Theme: System. Switch to Light' }))
     expect(document.documentElement.dataset.theme).toBe('light')
     await user.click(within(nav()).getByRole('button', { name: 'Theme: Light. Switch to Dark' }))
     expect(localStorage.getItem('collection:theme')).toBe('dark')

@@ -137,7 +137,6 @@ describe('W-04 list route when the tree fails', () => {
     expect(await heading('Watchlist')).toBeInTheDocument()
     expect(within(main()).queryByText('Couldn’t load this list.')).not.toBeInTheDocument()
   })
-
 })
 
 describe('F007-W5 no breadcrumbs', () => {

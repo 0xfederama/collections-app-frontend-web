@@ -11,11 +11,7 @@ export function ListActionsMenu({ list }: { list: List }) {
   const { actions, dialogs } = useTreeDialogs()
   return (
     <>
-      <NodeMenu
-        node={{ kind: 'list', id: list.id, list }}
-        actions={actions}
-        name={list.name}
-      />
+      <NodeMenu node={{ kind: 'list', id: list.id, list }} actions={actions} name={list.name} />
       {dialogs}
     </>
   )

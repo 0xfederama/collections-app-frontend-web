@@ -14,7 +14,8 @@ export function TreeHeaderActions(): ReactNode {
         <IconButton
           aria-label="New folder or list"
           title="New folder or list"
-          className="size-8 pointer-coarse:size-11">
+          className="size-8 pointer-coarse:size-11"
+        >
           <Plus aria-hidden />
         </IconButton>
       }
