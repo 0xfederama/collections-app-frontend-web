@@ -43,7 +43,6 @@ describe('AT-14 landmarks per breakpoint', () => {
     expect(nav()).not.toBeInTheDocument()
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     expect(separator()).not.toBeInTheDocument()
-    await screen.findByText('Backend: ready')
   })
 
   it.each([
@@ -59,7 +58,6 @@ describe('AT-14 landmarks per breakpoint', () => {
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(screen.queryByRole('banner')).not.toBeInTheDocument()
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
-    await screen.findByText('Backend: ready')
   })
 
   it('wide: the item route adds an aside "Item details" beside the list in main', async () => {
@@ -124,7 +122,6 @@ describe('AT-14 landmarks per breakpoint', () => {
     mockViewport(700)
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(nav()).not.toBeInTheDocument()
-    await screen.findByText('Backend: ready')
   })
 })
 
@@ -249,7 +246,6 @@ describe('AT-14 tablet rail', () => {
     renderAt('/')
     expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument()
     expect(within(nav()!).queryByRole('tree')).not.toBeInTheDocument()
-    await screen.findByText('Backend: ready')
   })
 
   it('does not apply the collapsed flag to the desktop layout', async () => {
@@ -270,7 +266,6 @@ describe('AT-14 desktop sidebar resize', () => {
     expect(sep).toHaveAttribute('aria-valuemin', '220')
     expect(sep).toHaveAttribute('aria-valuemax', '400')
     expect(nav()!.parentElement).toHaveStyle({ width: '280px' })
-    await screen.findByText('Backend: ready')
   })
 
   it('resizes by keyboard, clamps to 220/400 and persists the width', async () => {
@@ -302,7 +297,6 @@ describe('AT-14 desktop sidebar resize', () => {
     localStorage.setItem(SIDEBAR_KEY, JSON.stringify({ collapsed: false, width: 350 }))
     renderAt('/')
     expect(separator()).toHaveAttribute('aria-valuenow', '350')
-    await screen.findByText('Backend: ready')
   })
 
   it('restores the width on the wide layout too', async () => {
@@ -310,7 +304,6 @@ describe('AT-14 desktop sidebar resize', () => {
     localStorage.setItem(SIDEBAR_KEY, JSON.stringify({ collapsed: false, width: 240 }))
     renderAt('/')
     expect(separator()).toHaveAttribute('aria-valuenow', '240')
-    await screen.findByText('Backend: ready')
   })
 
   it.each([
@@ -325,7 +318,6 @@ describe('AT-14 desktop sidebar resize', () => {
     localStorage.setItem(SIDEBAR_KEY, raw)
     renderAt('/')
     expect(separator()).toHaveAttribute('aria-valuenow', '280')
-    await screen.findByText('Backend: ready')
   })
 
   it.each([
@@ -336,7 +328,6 @@ describe('AT-14 desktop sidebar resize', () => {
     localStorage.setItem(SIDEBAR_KEY, JSON.stringify({ collapsed: false, width: stored }))
     renderAt('/')
     expect(separator()).toHaveAttribute('aria-valuenow', String(expected))
-    await screen.findByText('Backend: ready')
   })
 
   it('keeps the width when the viewport crosses to tablet and back', async () => {
@@ -367,7 +358,6 @@ describe('W-04 workspace name', () => {
     server.use(http.get(settingsUrl, () => problemResponse(500, 'internal_error')))
     renderAt('/')
     expect(within(nav()!).getByRole('link', { name: 'Collection' })).toBeInTheDocument()
-    await screen.findByText('Backend: ready')
     await waitFor(() =>
       expect(within(nav()!).getByRole('link', { name: 'Collection' })).toBeVisible(),
     )
@@ -388,7 +378,6 @@ describe('W-04 workspace name', () => {
       ),
     )
     renderAt('/')
-    await screen.findByText('Backend: ready')
     expect(within(nav()!).getByRole('link', { name: 'Collection' })).toBeInTheDocument()
   })
 
@@ -426,6 +415,5 @@ describe('W-04 shell footer links', () => {
     expect(within(nav()!).getByRole('link', { name: 'Settings' })).not.toHaveAttribute(
       'aria-current',
     )
-    await screen.findByText('Backend: ready')
   })
 })

@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { rmSync } from 'node:fs'
+import { readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 
@@ -13,6 +13,10 @@ const dropMockWorker = (): Plugin => ({
   },
 })
 
+// Build-time constants for Settings > Connection: the API contract tag the client was generated from, and the app version.
+const readJson = (file: string) =>
+  JSON.parse(readFileSync(join(process.cwd(), file), 'utf8')) as Record<string, string>
+
 // Dev is same-origin like prod (D-033): the app calls relative /api and Vite proxies it to the backend.
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -20,6 +24,10 @@ export default defineConfig(({ mode }) => {
   const proxy = { target, changeOrigin: false }
 
   return {
+    define: {
+      __API_CONTRACT_TAG__: JSON.stringify(readJson('api/openapi.lock.json').tag),
+      __APP_VERSION__: JSON.stringify(readJson('package.json').version),
+    },
     plugins: [react(), tailwindcss(), dropMockWorker()],
     server: {
       port: 5173,
