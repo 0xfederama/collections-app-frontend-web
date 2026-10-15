@@ -1,0 +1,73 @@
+# Production web server (Q-03w, D-069). Same origin for the SPA and the API (D-033), no CORS.
+# The Dockerfile replaces __CSP_SCRIPT_HASH__ with the sha256 of the inline theme script in the built index.html.
+
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+:8080 {
+	root * /srv
+	encode zstd gzip
+
+	# Security headers (ARCHITECTURE §5). The "?" prefix sets a header only when the response doesn't already have it,
+	# so the API's stricter headers on served files (CSP default-src 'none') win over ours.
+	# No HSTS: this is served over plain HTTP on a LAN or Tailscale.
+	# style-src-elem allows inline <style> ELEMENTS only: Radix modals/Select (react-remove-scroll) and dnd-kit inject them and
+	# a static server can't issue nonces. Inline style ATTRIBUTES stay blocked (style-src 'self'); React/Radix set styles through
+	# the CSSOM, which CSP allows. Scripts stay hash-only. Decision recorded in DECISIONS.md.
+	header {
+		-Server
+		?Content-Security-Policy "default-src 'self'; script-src 'self' __CSP_SCRIPT_HASH__; style-src 'self'; style-src-elem 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+		?X-Content-Type-Options nosniff
+		?Referrer-Policy strict-origin-when-cross-origin
+		?Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		?Cross-Origin-Opener-Policy same-origin
+	}
+
+	# Errors Caddy generates itself (404 for a missing asset) skip the header block above, so repeat what matters.
+	handle_errors {
+		header {
+			-Server
+			X-Content-Type-Options nosniff
+			Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+		}
+		respond "{err.status_code} {err.status_text}"
+	}
+
+	# Health check for Docker: answered by Caddy itself, never proxied to the API.
+	handle /healthz {
+		header Cache-Control no-store
+		respond "ok" 200
+	}
+
+	# API and readiness go to the backend. Request headers (X-Request-Id, If-Match) and response headers (ETag) pass through.
+	@api path /api /api/* /readyz
+	handle @api {
+		reverse_proxy {$API_UPSTREAM:api:8080}
+	}
+
+	# Hashed build output. No SPA fallback here, so a missing asset is a real 404.
+	handle /assets/* {
+		@hit file
+		header @hit Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# Everything else: real files (favicon) are served as they are; paths without a file extension
+	# (/lists/…, /trash) fall back to index.html. A missing file with an extension is a 404.
+	handle {
+		@spa not path_regexp \.[A-Za-z0-9]+$
+		@index path /index.html
+		@file {
+			file
+			not path /index.html
+		}
+		rewrite @spa /index.html
+		header @spa Cache-Control no-cache
+		header @index Cache-Control no-cache
+		header @file Cache-Control "public, max-age=86400"
+		file_server
+	}
+}

@@ -28,19 +28,20 @@ This repo is the `frontend-web/` submodule of the parent repo `0xfederama/collec
 
 ## Commands
 
-No CI (D-031, D-032): the gates run locally. Run `npm run check` before every PR and paste the output in the PR.
+No CI (D-031, D-032): the gates run locally. Run `npm run check` before every PR and paste the output in the PR. **`check` ends with the production image build, so Docker must be running** (it fails with a clear message otherwise).
 
-| Purpose                                                                                                 | Command                                                                                              |
-| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| All checks (prettier, eslint, tsc, vitest, vite build)                                                  | `npm run check`                                                                                      |
-| Dev server (:5173, proxies `/api` and `/readyz` to `API_PROXY_TARGET`, default `http://localhost:8080`) | `npm run dev`                                                                                        |
-| Unit/component tests                                                                                    | `npm test`                                                                                           |
-| Lint / typecheck / format check / format                                                                | `npm run lint` / `npm run typecheck` / `npm run format:check` / `npm run format`                     |
-| Production build / preview                                                                              | `npm run build` / `npm run preview`                                                                  |
-| Dependency vulnerability scan (network)                                                                 | `npm run audit`                                                                                      |
-| E2E (needs backend running)                                                                             | arrives in Q-01                                                                                      |
-| Sync API contract (vendors the spec at a backend tag, regenerates `src/generated/`) / verify offline    | `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]` / `npm run api:check` (part of `check`) |
-| Dev server with no backend (MSW serves the spec examples)                                               | `VITE_API_MOCKS=1 npm run dev`                                                                       |
+| Purpose                                                                                                    | Command                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| All checks (prettier, eslint, tsc, vitest, vite build)                                                     | `npm run check`                                                                                                   |
+| Dev server (:5173, proxies `/api` and `/readyz` to `API_PROXY_TARGET`, default `http://localhost:8080`)    | `npm run dev`                                                                                                     |
+| Unit/component tests                                                                                       | `npm test`                                                                                                        |
+| Lint / typecheck / format check / format                                                                   | `npm run lint` / `npm run typecheck` / `npm run format:check` / `npm run format`                                  |
+| Production build / preview                                                                                 | `npm run build` / `npm run preview`                                                                               |
+| Production image (Node build → Caddy; `check` runs it last, needs Docker) / run it against the dev backend | `npm run docker:build` / `docker run --rm --network backend_default -p 127.0.0.1:8081:8080 collections-web:check` |
+| Dependency vulnerability scan (network)                                                                    | `npm run audit`                                                                                                   |
+| E2E (needs backend running)                                                                                | arrives in Q-01                                                                                                   |
+| Sync API contract (vendors the spec at a backend tag, regenerates `src/generated/`) / verify offline       | `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]` / `npm run api:check` (part of `check`)              |
+| Dev server with no backend (MSW serves the spec examples)                                                  | `VITE_API_MOCKS=1 npm run dev`                                                                                    |
 
 Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-038–D-042. Backend for dev: `docker compose up --build` in `../backend` (backend only) or in the parent folder (backend plus this dev server in a container).
 
@@ -82,13 +83,14 @@ Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-
 - 2026-10-13: Tailwind 4 is CSS-first (`@import 'tailwindcss'` in `src/styles/global.css`, `@tailwindcss/vite` plugin). There is no `tailwind.config.js`.
 - 2026-10-13: Vitest config lives in `vite.config.ts` (jsdom, globals, `src/test-setup.ts`). Tests render with `createTestRouter` from `src/app/router.tsx`.
 - 2026-10-14: Tokens: Tailwind's default palette, radii, shadows and type scale are dropped (`--color-*: initial`, etc. in `global.css`), so `bg-stone-100` or `rounded-2xl` do nothing. Use semantic classes (`bg-surface`, `text-text-muted`, `border-border`, `bg-accent`, `rounded-md`, `shadow-md`). Colors are mapped with `@theme inline`; radii and easing live in an `@theme` block inside `tokens.css`, because mapping `--radius-sm: var(--radius-sm)` creates a self-referencing cycle. Shadows differ per theme, so `shadow-*` are `@utility` rules in `global.css`.
-- 2026-10-14: Theme: preference is stored in `localStorage['collection:theme']` (`system` removes the key). The inline script in `index.html` and `src/lib/theme.ts` must agree on that key. **Q-03:** the inline script needs a CSP `script-src` hash in the Caddyfile (recompute whenever the script changes).
+- 2026-10-14: Theme: preference is stored in `localStorage['collection:theme']` (`system` removes the key). The inline script in `index.html` and `src/lib/theme.ts` must agree on that key. The image build computes the CSP `script-src` hash of that inline script from the built `index.html` (`scripts/csp-hash.mjs`, substituted into the `Caddyfile`), so it cannot drift; a second inline script fails the build until the script is taught about it.
 - 2026-10-14: jsdom lacks `ResizeObserver`, pointer-capture methods and `scrollIntoView`; `src/test-setup.ts` stubs them for Radix Select/Menu/Popover. Radix exit animations do not run in jsdom, so closed overlays unmount immediately.
 - 2026-10-14: Fraunces uses `full.css` (the only Fontsource entry with both `opsz` and `SOFT` axes, ~120 KB latin); Inter uses the default `wght` entry.
 - 2026-10-14: Radix `Dialog.Content` animations use `transform` only (`scale`); Tailwind 4 positions with the `translate` property, so never put translate in the keyframes.
 - 2026-10-14: The Claude desktop browser pane refuses service workers, so `VITE_API_MOCKS=1` cannot start MSW there. To check the UI in that pane, serve the API from a throwaway Node server and point `API_PROXY_TARGET` at it (it is not part of the repo). A normal browser works with `VITE_API_MOCKS=1`.
 - 2026-10-14: Params of a child route are visible to the parent layout and to components it renders (`useParams` merges the whole match). That is how `AppShell` renders `ItemRoute` itself. Keep `lists/:listId` and its `items/:itemId` child in `router.tsx` so the list stays mounted when the panel opens.
 - 2026-10-14: Radix `Drawer` content renders in a portal, so the mobile `nav` lives inside the `dialog`. Anything that must close the drawer on navigation relies on `location.key` (see `AppShell`), not on click handlers.
+- 2026-10-14: Production image (Q-03w, `Dockerfile` + `Caddyfile`, details in `docs/modules/deploy.md`): CSP uses `style-src-elem 'unsafe-inline'` because Radix modals/Select (react-remove-scroll) and dnd-kit inject `<style>` elements and static Caddy can't issue nonces; style attributes stay blocked. Any new library that injects scripts or inline style attributes breaks under that CSP: test it in the image, not only in `npm run dev`. The image runs non-root with `read_only` + tmpfs `/tmp` and `cap_drop: ALL`; that is why the Dockerfile strips Caddy's file capability.
 - 2026-10-13: npm 11 prints an `install-scripts` warning for the optional `fsevents` package. It is harmless.
 
 - 2026-10-14: `openapi-typescript` 7.13 declares `typescript@^5` as a peer, so `package.json` has a scoped `overrides` entry for it (works with TS 6; re-check when it widens its range).
