@@ -50,6 +50,7 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - `draftFromItem`, `withKind`, `toFields`, `buildPatch`, `isDirty`, `validate`, `mapServerErrors`, `firstInvalid`, `inputId`, `draftDump`: `form/draft.ts`.
 - `classifyItemError(error)`: `conflict` (412), `unavailable` (409), `not_found` (404), `network`, `other`.
 - `buildExternalLinks(item)`, `kindRows`, `formatField`: unchanged from view mode.
+- `IMDB_URL`, `safeImdbUrl(url)`: `links.ts`; the contract pattern for `imdb_url`, shared with the form's validation.
 - `devItemDetailHandlers`, `devImageHandlers`, `devContentHandlers`: loaded by the dev worker only.
 
 ## Gotchas
@@ -77,3 +78,4 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - The streaming warning compares the item's streaming country with `settings.streaming_country_code`.
 - Streaming country and price currency use the ISO pickers (`CountrySelect`, `CurrencySelect`; see ui).
 - The hero image sends no referrer; if it fails to load, the fallback tile shows.
+- The IMDb link (movie and TV show) renders only when `safeImdbUrl` accepts the stored URL; an invalid one renders nothing.
