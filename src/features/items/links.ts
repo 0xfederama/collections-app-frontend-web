@@ -40,6 +40,25 @@ function safeOfficialUrl(url: string | null): string | null {
   }
 }
 
+/** Same pattern as the contract: `imdb_url` in api/openapi.yaml (movie / TV show metadata). */
+const IMDB_URL = /^https:\/\/(www\.|m\.)?imdb\.com\/title\/tt\d{7,10}\/?$/
+
+/**
+ * The IMDb URL only if it matches the contract pattern and parses as `https` on an IMDb host;
+ * otherwise `null`, so bad data that slipped into the database is never rendered as a link.
+ */
+export function safeImdbUrl(url: unknown): string | null {
+  if (typeof url !== 'string' || !IMDB_URL.test(url)) return null
+  try {
+    const { protocol, hostname } = new URL(url)
+    const ok =
+      protocol === 'https:' && ['imdb.com', 'www.imdb.com', 'm.imdb.com'].includes(hostname)
+    return ok ? url : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * The three external controls of AT-13, always in this order: Google, Reddit, Official site.
  * The official site is never replaced by a search. `URLSearchParams` does the encoding, so

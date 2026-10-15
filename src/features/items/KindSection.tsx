@@ -2,6 +2,7 @@ import { TriangleAlert } from '../../components/ui/icons'
 import { useSettings } from '../settings/api'
 import type { Item } from './api'
 import { kindRows } from './kinds'
+import { safeImdbUrl } from './links'
 
 type Streaming = { country: string; platforms?: string[] }
 
@@ -22,7 +23,7 @@ export function KindSection({ item }: { item: Item }) {
   const metadata = item.metadata as Record<string, unknown>
   const rows = kindRows(item.kind, metadata)
   const mediaKind = item.kind === 'movie' || item.kind === 'tv_show'
-  const imdb = mediaKind && typeof metadata.imdb_url === 'string' ? metadata.imdb_url : null
+  const imdb = mediaKind ? safeImdbUrl(metadata.imdb_url) : null
   const streaming = mediaKind ? (metadata.streaming as Streaming | undefined) : undefined
   if (rows.length === 0 && !imdb && !streaming) return null
 

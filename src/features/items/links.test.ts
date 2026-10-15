@@ -1,6 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import type { ItemKind } from './api'
-import { buildExternalLinks } from './links'
+import { buildExternalLinks, safeImdbUrl } from './links'
+
+describe('F006-W5 safeImdbUrl', () => {
+  it.each([
+    'https://www.imdb.com/title/tt0133093/',
+    'https://m.imdb.com/title/tt0133093',
+    'https://imdb.com/title/tt0133093/',
+  ])('F006-W5 returns %s', (url) => {
+    expect(safeImdbUrl(url)).toBe(url)
+  })
+
+  it.each([
+    'http://www.imdb.com/title/tt0133093/',
+    'https://example.com/title/tt0133093/',
+    'https://imdb.com.evil.tld/title/tt0133093/',
+    'https://www.imdb.com@evil.tld/title/tt0133093/',
+    'javascript:alert(1)',
+    'https://www.imdb.com/name/nm0000206/',
+    'https://www.imdb.com/title/tt12/',
+    '',
+    null,
+    42,
+  ])('F006-W5 rejects %s', (url) => {
+    expect(safeImdbUrl(url)).toBeNull()
+  })
+})
 
 type Source = Parameters<typeof buildExternalLinks>[0]
 
