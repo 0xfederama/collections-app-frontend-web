@@ -29,6 +29,7 @@ function makePage(total: number, offset: number, limit: number): SearchPage {
         image: null,
         price: null,
         website: null,
+        metadata: {},
         content_version: 1,
         sort_order: offset + i,
         version: 1,

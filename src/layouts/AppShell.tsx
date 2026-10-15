@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useMatch, useNavigate } from 'react-router'
 import { Drawer, IconButton } from '../components/ui'
 import { MenuIcon, X } from '../components/ui/icons'
+import { QuickAddProvider } from '../features/quickadd/QuickAddProvider'
 import { useSearchShortcut } from '../features/search/useSearchShortcut'
 import { useWorkspaceName } from '../features/settings/api'
 import { useBreakpoint } from '../lib/breakpoints'
@@ -19,6 +20,14 @@ const RAIL_WIDTH = 64
  * renders in `main` (full page) below 1280 and in the panel beside the list at ≥ 1280.
  */
 export function AppShell() {
+  return (
+    <QuickAddProvider>
+      <ShellFrame />
+    </QuickAddProvider>
+  )
+}
+
+function ShellFrame() {
   const breakpoint = useBreakpoint()
   const sidebar = useSidebarState()
   const { setCollapsed } = sidebar
@@ -56,8 +65,8 @@ export function AppShell() {
 
   if (breakpoint === 'mobile') {
     return (
-      <div className="flex h-dvh flex-col bg-bg text-text">
-        <header className="flex items-center gap-1 border-b border-border bg-surface px-2 py-1">
+      <div className="flex h-dvh flex-col text-text">
+        <header className="flex items-center gap-1 border-b border-border material px-2 py-1">
           <Drawer
             side="left"
             open={drawerOpen}
@@ -71,7 +80,7 @@ export function AppShell() {
           >
             <Sidebar showHeader={false} />
           </Drawer>
-          <Link to="/" className="min-w-0 flex-1 truncate font-display text-lg font-semibold">
+          <Link to="/" className="min-w-0 flex-1 truncate text-lg font-semibold">
             {workspaceName}
           </Link>
         </header>
@@ -84,11 +93,13 @@ export function AppShell() {
   const resizable = breakpoint === 'desktop' || breakpoint === 'wide'
 
   return (
-    <div className="flex h-dvh bg-bg text-text">
+    <div className="flex h-dvh text-text">
       <div
         id={SIDEBAR_ID}
+        role="region"
+        aria-label="Sidebar"
         style={{ width: rail ? RAIL_WIDTH : sidebar.width }}
-        className="flex shrink-0 flex-col bg-surface"
+        className="relative flex shrink-0 flex-col border-r border-border material"
       >
         <Sidebar
           rail={rail}
@@ -98,16 +109,15 @@ export function AppShell() {
           onRevealSearch={revealSearch}
           searchRef={searchRef}
         />
+        {/* Inside the sidebar's region, so the separator is never outside a landmark (axe `region`). */}
+        {resizable && (
+          <SidebarResizer
+            width={sidebar.width}
+            onWidthChange={sidebar.setWidth}
+            controls={SIDEBAR_ID}
+          />
+        )}
       </div>
-      {resizable ? (
-        <SidebarResizer
-          width={sidebar.width}
-          onWidthChange={sidebar.setWidth}
-          controls={SIDEBAR_ID}
-        />
-      ) : (
-        <div aria-hidden className="w-px shrink-0 bg-border" />
-      )}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <main className="min-w-0 flex-1 overflow-y-auto p-6">{content}</main>
@@ -126,9 +136,9 @@ function DetailPanel({ listId, search }: { listId: string | undefined; search: s
   return (
     <aside
       aria-label="Item details"
-      className="flex w-[40%] max-w-[40rem] min-w-[26.25rem] shrink-0 animate-drawer-in-right flex-col overflow-y-auto border-l border-border bg-surface"
+      className="m-3.5 ml-0 flex w-[420px] shrink-0 animate-drawer-in-right flex-col overflow-hidden rounded-xl material-strong shadow-sheet"
     >
-      <div className="flex justify-end px-2 pt-2">
+      <div className="flex shrink-0 justify-end px-2 pt-2">
         <IconButton
           aria-label="Close details"
           onClick={() => void navigate({ pathname: `/lists/${listId}`, search })}
@@ -136,7 +146,7 @@ function DetailPanel({ listId, search }: { listId: string | undefined; search: s
           <X aria-hidden />
         </IconButton>
       </div>
-      <div className="px-6 pb-6">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6">
         <ItemRoute />
       </div>
     </aside>

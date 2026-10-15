@@ -48,8 +48,7 @@ export async function trashFolder(request: APIRequestContext, folder: Created) {
   expect(response.status(), 'DELETE folder').toBe(204)
 }
 
-export const itemUrl = (listId: string, itemId: string, edit = false) =>
-  `/lists/${listId}/items/${itemId}${edit ? '?edit=1' : ''}`
+export const itemUrl = (listId: string, itemId: string) => `/lists/${listId}/items/${itemId}`
 
 /** The sidebar tree. */
 export const sidebarTree = (page: Page) => page.getByRole('tree', { name: 'Folders and lists' })
@@ -57,15 +56,17 @@ export const sidebarTree = (page: Page) => page.getByRole('tree', { name: 'Folde
 /** The item panel / page (the shell renders it in `aside` at >= 1280). */
 export const itemPanel = (page: Page) => page.getByRole('complementary', { name: 'Item details' })
 
-/** Dialog "New folder" or "New list" from the sidebar "+" menu. */
+/** Dialog "New folder" or "New list" from the sidebar "＋ New" menu (Folder / List). */
 export async function createViaSidebar(
   page: Page,
   what: 'folder' | 'list',
   name: string,
   kind?: string,
 ) {
-  await page.getByRole('button', { name: 'New folder or list' }).click()
-  await page.getByRole('menuitem', { name: what === 'folder' ? 'New folder' : 'New list' }).click()
+  await page.getByRole('button', { name: 'New', exact: true }).click()
+  await page
+    .getByRole('menuitem', { name: what === 'folder' ? 'Folder' : 'List', exact: true })
+    .click()
   const dialog = page.getByRole('dialog', { name: what === 'folder' ? 'New folder' : 'New list' })
   await dialog.getByRole('textbox', { name: 'Name' }).fill(name)
   if (kind) {

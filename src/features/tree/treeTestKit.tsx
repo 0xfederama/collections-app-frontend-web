@@ -125,9 +125,9 @@ export async function pickRowAction(
   await user.click(await screen.findByRole('menuitem', { name: entry }))
 }
 
-/** Opens the header "+" menu and picks an entry. */
+/** Opens the sidebar "New" menu (after the last list) and picks "Folder" or "List". */
 export async function pickHeaderAction(user: ReturnType<typeof userEvent.setup>, entry: string) {
-  await user.click(within(sidebar()).getByRole('button', { name: 'New folder or list' }))
+  await user.click(within(sidebar()).getByRole('button', { name: 'New' }))
   await user.click(await screen.findByRole('menuitem', { name: entry }))
 }
 

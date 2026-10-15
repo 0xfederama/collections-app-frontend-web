@@ -71,13 +71,12 @@ describe('W-04 sidebar tree states', () => {
     expect(calls).toBe(2)
   })
 
-  it('shows the empty state with the first-list and first-folder actions', async () => {
+  it('shows the empty state, with the New button below it', async () => {
     server.use(http.get(treeUrl, () => HttpResponse.json({ folders: [], lists: [] })))
     renderAt('/')
     expect(await screen.findByText('No lists yet')).toBeInTheDocument()
     expect(within(sidebar()).queryByRole('tree')).not.toBeInTheDocument()
-    expect(within(sidebar()).getByRole('button', { name: 'New list' })).toBeInTheDocument()
-    expect(within(sidebar()).getByRole('button', { name: 'New folder' })).toBeInTheDocument()
+    expect(within(sidebar()).getByRole('button', { name: 'New' })).toBeInTheDocument()
   })
 })
 
@@ -286,8 +285,8 @@ describe('F006-W2 sidebar tree keyboard reach', () => {
     const user = userEvent.setup()
     renderAt('/')
     await within(sidebar()).findByRole('tree')
-    // The element right before the tree in tab order is the sidebar's "New" button.
-    screen.getByRole('button', { name: 'New folder or list' }).focus()
+    // The element right before the tree in tab order is the sidebar's search field.
+    screen.getByRole('combobox', { name: 'Search' }).focus()
     await user.tab()
     const first = document.activeElement as HTMLElement
     expect(first).toHaveAttribute('role', 'treeitem')

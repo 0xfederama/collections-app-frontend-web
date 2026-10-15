@@ -9,10 +9,12 @@ test.describe('AT-06 item image', () => {
     const list = await createList(request, uniqueName('Pics'), 'generic')
     const title = uniqueName('Photo')
     const item = await createItem(request, list.id, title)
-    await page.goto(itemUrl(list.id, item.id, true))
+    await page.goto(itemUrl(list.id, item.id))
     const panel = itemPanel(page)
-    const chooser = panel.getByLabel('Choose an image file')
-    const alert = panel.getByRole('alert').filter({ hasText: /SVG|JPEG|rejected/ })
+    await panel.getByRole('button', { name: 'Add image' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Add image' })
+    const chooser = dialog.getByLabel('Choose an image file')
+    const alert = dialog.getByRole('alert').filter({ hasText: /SVG|JPEG|rejected/ })
 
     // Refused by the client (SVG).
     await chooser.setInputFiles({
@@ -51,10 +53,10 @@ test.describe('AT-06 item image', () => {
     })
     const thumbnail = panel.getByRole('img', { name: title })
     await expect(thumbnail).toBeVisible()
-    await expect(alert).toHaveCount(0)
+    await expect(dialog).toBeHidden()
     await expect
       .poll(() => thumbnail.evaluate((img: HTMLImageElement) => img.naturalWidth))
       .toBeGreaterThan(0)
-    await expect(panel.getByText('Uploaded file: pic.jpg')).toBeVisible()
+    await expect(panel.getByRole('button', { name: 'Change image' })).toBeVisible()
   })
 })

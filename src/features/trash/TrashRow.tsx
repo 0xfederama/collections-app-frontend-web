@@ -64,9 +64,9 @@ export function TrashRow({ entry, entries, onRestoreTo, onPurge, onRestored }: T
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-sm md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-x-6 md:gap-y-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
+    <li className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-md md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-x-6 md:gap-y-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
       <div className="flex min-w-0 items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-border text-text-muted">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-fill text-text-muted">
           <Icon aria-hidden className="size-5" />
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">

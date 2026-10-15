@@ -8,7 +8,7 @@ function RecentSkeleton() {
   return (
     <div
       role="status"
-      className="divide-y divide-border overflow-hidden rounded-lg border border-border"
+      className="divide-y divide-border overflow-hidden rounded-lg bg-surface shadow-md"
     >
       <span className="sr-only">Loading recent items</span>
       {Array.from({ length: 4 }, (_, i) => (
@@ -50,13 +50,13 @@ export function RecentItems() {
       ) : (
         <ul
           aria-label="Recently updated items"
-          className="divide-y divide-border overflow-hidden rounded-lg border border-border"
+          className="divide-y divide-border overflow-hidden rounded-lg bg-surface shadow-md"
         >
           {recent.data.data.map((result) => (
             <li key={result.item.id} className="bg-surface">
               <Link
                 to={resultHref(result)}
-                className="flex items-center gap-3 p-3 hover:bg-border/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
+                className="flex items-center gap-3 p-3 hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
               >
                 <SearchResultBody result={result} large />
               </Link>

@@ -32,22 +32,19 @@ test.describe('AT-12 search and AT-13 external links', () => {
     await expect(itemPanel(page).getByRole('heading', { level: 1, name: second })).toBeVisible()
   })
 
-  test('three external links: order, encoding, disabled Website', async ({ page, request }) => {
+  test('external links per kind: order, encoding, Add website', async ({ page, request }) => {
     const token = uniqueId()
-    const list = await createList(request, uniqueName('Links'), 'movie')
+    const movies = await createList(request, uniqueName('Links'), 'movie')
     const title = `Tom & Jerry #${token} "Cut"`
-    const website = `https://example.com/${token}`
-    const withSite = await createItem(request, list.id, title, {
-      website,
+    const movie = await createItem(request, movies.id, title, {
       metadata: { release_year: 1999 },
     })
-    const without = await createItem(request, list.id, uniqueName('No site'))
 
-    await page.goto(`/lists/${list.id}/items/${withSite.id}`)
-    let group = itemPanel(page).getByRole('group', { name: 'External links' })
+    await page.goto(`/lists/${movies.id}/items/${movie.id}`)
+    const group = itemPanel(page).getByRole('group', { name: 'External links' })
     const controls = group.locator('a, button')
     await expect(controls).toHaveCount(3)
-    await expect(controls).toHaveText([/^Google/, /^Reddit/, /^Website/])
+    await expect(controls).toHaveText([/Google/, /Letterboxd/, /IMDb/])
     const query = `Tom+%26+Jerry+%23${token}+%22Cut%22+1999+film`
     await expect(controls.nth(0)).toHaveAttribute(
       'href',
@@ -55,19 +52,35 @@ test.describe('AT-12 search and AT-13 external links', () => {
     )
     await expect(controls.nth(1)).toHaveAttribute(
       'href',
-      `https://www.google.com/search?q=${query}+site%3Areddit.com`,
+      `https://letterboxd.com/search/${encodeURIComponent(title)}/`,
     )
-    await expect(controls.nth(2)).toHaveAttribute('href', website)
+    await expect(controls.nth(2)).toHaveAttribute('href', /^https:\/\/www\.imdb\.com\/find\/\?q=/)
     for (const index of [0, 1, 2]) {
       await expect(controls.nth(index)).toHaveAttribute('target', '_blank')
       await expect(controls.nth(index)).toHaveAttribute('rel', 'noopener noreferrer')
     }
 
-    await page.goto(`/lists/${list.id}/items/${without.id}`)
-    group = itemPanel(page).getByRole('group', { name: 'External links' })
-    await expect(group.locator('a, button')).toHaveText([/^Google/, /^Reddit/, /^No website/])
-    const disabled = group.getByRole('button', { name: 'No website' })
-    await expect(disabled).toHaveAttribute('aria-disabled', 'true')
-    await expect(group.getByRole('link')).toHaveCount(2)
+    // Any other kind: Google, Reddit, Website; an empty website offers "Add website".
+    const generic = await createList(request, uniqueName('Things'), 'generic')
+    const website = `https://example.com/${token}`
+    const withSite = await createItem(request, generic.id, uniqueName('Site'), { website })
+    const without = await createItem(request, generic.id, uniqueName('No site'))
+
+    await page.goto(`/lists/${generic.id}/items/${withSite.id}`)
+    const full = itemPanel(page).getByRole('group', { name: 'External links' }).locator('a, button')
+    await expect(full).toHaveText([/Google/, /Reddit/, /Website/])
+    await expect(full.nth(1)).toHaveAttribute(
+      'href',
+      /^https:\/\/www\.google\.com\/search\?q=.*\+site%3Areddit\.com$/,
+    )
+    await expect(full.nth(2)).toHaveAttribute('href', website)
+
+    await page.goto(`/lists/${generic.id}/items/${without.id}`)
+    const panel = itemPanel(page)
+    await expect(
+      panel.getByRole('group', { name: 'External links' }).locator('a, button'),
+    ).toHaveText([/Google/, /Reddit/, /Add website/])
+    await panel.getByRole('button', { name: 'Add website' }).click()
+    await expect(panel.getByRole('textbox', { name: 'Website' })).toBeFocused()
   })
 })

@@ -27,6 +27,7 @@ const metadataFor = (summary: Pick<ItemSummary, 'id' | 'kind'>): Record<string, 
         streaming: {
           country: n % 2 ? 'IT' : 'US',
           platforms: ['Netflix', 'Prime Video'],
+          paid_platforms: ['Prime Video'],
         },
       }
     case 'tv_show':
@@ -34,12 +35,12 @@ const metadataFor = (summary: Pick<ItemSummary, 'id' | 'kind'>): Record<string, 
         first_air_year: 2015 + (n % 8),
         ...(n % 2 ? { end_year: 2024 } : {}),
         seasons: 1 + (n % 6),
+        episodes_per_season: 8 + (n % 5),
+        episode_minutes: 45,
         streaming: { country: 'IT', platforms: ['Disney+'] },
       }
     case 'motorcycle':
       return {
-        make: 'Ducati',
-        model: 'Monster',
         model_year: 2021,
         displacement_cc: 937,
         power_hp: 111,
@@ -47,16 +48,13 @@ const metadataFor = (summary: Pick<ItemSummary, 'id' | 'kind'>): Record<string, 
       }
     case 'car':
       return {
-        make: 'Mazda',
-        model: 'MX-5',
         model_year: 2022,
         fuel_type: 'petrol',
         power_hp: 184,
       }
     case 'camera':
       return {
-        make: 'Fujifilm',
-        model: 'X100VI',
+        camera_type: 'mirrorless',
         release_year: 2024,
         sensor_format: 'aps_c',
         megapixels: 40.2,

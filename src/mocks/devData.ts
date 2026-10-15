@@ -33,6 +33,7 @@ const list = (
   description: null,
   display_mode: 'grid',
   sort_mode: 'manual',
+  pinned_fields: null,
   sort_order: sortOrder,
   item_count: itemCount,
   version: 1,

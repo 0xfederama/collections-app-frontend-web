@@ -2,8 +2,6 @@ import type { components } from '../../../generated/schema'
 import { defineFields } from './types'
 
 export const motorcycleFields = defineFields<components['schemas']['MotorcycleMetadata']>()([
-  { key: 'make', label: 'Make', input: 'text', maxLength: 100 },
-  { key: 'model', label: 'Model', input: 'text', maxLength: 100 },
   { key: 'model_year', label: 'Model year', input: 'year', min: 1885, max: 2100 },
   {
     key: 'displacement_cc',

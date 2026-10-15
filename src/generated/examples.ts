@@ -94,6 +94,14 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "description": "Films to watch",
           "display_mode": "thumbnail",
           "sort_mode": "manual",
+          "pinned_fields": {
+            "under": [
+              "release_year"
+            ],
+            "right": [
+              "price"
+            ]
+          },
           "sort_order": 0,
           "item_count": 2,
           "version": 1,
@@ -108,6 +116,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "description": null,
           "display_mode": "grid",
           "sort_mode": "title",
+          "pinned_fields": null,
           "sort_order": 0,
           "item_count": 1,
           "version": 2,
@@ -202,6 +211,14 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
+      "pinned_fields": {
+        "under": [
+          "release_year"
+        ],
+        "right": [
+          "price"
+        ]
+      },
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -228,6 +245,14 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
+      "pinned_fields": {
+        "under": [
+          "release_year"
+        ],
+        "right": [
+          "price"
+        ]
+      },
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -260,6 +285,14 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
+      "pinned_fields": {
+        "under": [
+          "release_year"
+        ],
+        "right": [
+          "price"
+        ]
+      },
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -286,6 +319,14 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
+      "pinned_fields": {
+        "under": [
+          "release_year"
+        ],
+        "right": [
+          "price"
+        ]
+      },
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -311,6 +352,20 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           },
           "price": null,
           "website": null,
+          "metadata": {
+            "release_year": 1999,
+            "runtime_minutes": 136,
+            "streaming": {
+              "country": "IT",
+              "platforms": [
+                "Netflix",
+                "Prime Video"
+              ],
+              "paid_platforms": [
+                "Prime Video"
+              ]
+            }
+          },
           "content_version": 2,
           "sort_order": 0,
           "version": 3,
@@ -327,6 +382,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           },
           "price": null,
           "website": null,
+          "metadata": {},
           "content_version": 0,
           "sort_order": 1,
           "version": 1,
@@ -371,6 +427,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "platforms": [
             "Netflix",
             "Prime Video"
+          ],
+          "paid_platforms": [
+            "Prime Video"
           ]
         }
       },
@@ -408,6 +467,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "country": "IT",
           "platforms": [
             "Netflix",
+            "Prime Video"
+          ],
+          "paid_platforms": [
             "Prime Video"
           ]
         }
@@ -457,8 +519,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       },
       "website": "https://www.ducati.com/",
       "metadata": {
-        "make": "Ducati",
-        "model": "Monster",
         "model_year": 2024,
         "displacement_cc": 937,
         "power_hp": 111,
@@ -498,8 +558,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       },
       "website": "https://www.ducati.com/",
       "metadata": {
-        "make": "Ducati",
-        "model": "Monster",
         "model_year": 2024,
         "displacement_cc": 937,
         "power_hp": 111,
@@ -542,6 +600,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "platforms": [
             "Netflix",
             "Prime Video"
+          ],
+          "paid_platforms": [
+            "Prime Video"
           ]
         }
       },
@@ -573,8 +634,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       },
       "website": "https://www.ducati.com/",
       "metadata": {
-        "make": "Ducati",
-        "model": "Monster",
         "model_year": 2024,
         "displacement_cc": 937,
         "power_hp": 111,
@@ -683,6 +742,20 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "image": null,
             "price": null,
             "website": null,
+            "metadata": {
+              "release_year": 1999,
+              "runtime_minutes": 136,
+              "streaming": {
+                "country": "IT",
+                "platforms": [
+                  "Netflix",
+                  "Prime Video"
+                ],
+                "paid_platforms": [
+                  "Prime Video"
+                ]
+              }
+            },
             "content_version": 2,
             "sort_order": 0,
             "version": 3,
@@ -731,6 +804,20 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "image": null,
             "price": null,
             "website": null,
+            "metadata": {
+              "release_year": 1999,
+              "runtime_minutes": 136,
+              "streaming": {
+                "country": "IT",
+                "platforms": [
+                  "Netflix",
+                  "Prime Video"
+                ],
+                "paid_platforms": [
+                  "Prime Video"
+                ]
+              }
+            },
             "content_version": 2,
             "sort_order": 0,
             "version": 3,

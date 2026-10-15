@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T00:00:00Z",
+  "title": "Design System: Collections (web 2.0.0)",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Gallery Indigo",
+        "canonical": "#4f46e5",
+        "tonalRamp": [
+          "#0f0e2e",
+          "#312e81",
+          "#4338ca",
+          "#4f46e5",
+          "#6366f1",
+          "#818cf8",
+          "#a5b4fc",
+          "#e0e7ff"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Cool Gallery Grey",
+        "canonical": "#edeef1",
+        "tonalRamp": [
+          "#1d1d1f",
+          "#5c5d66",
+          "#7f8292",
+          "#a3a3ae",
+          "#c9cad2",
+          "#dcdde2",
+          "#edeef1",
+          "#ffffff"
+        ]
+      },
+      "graphite-ground": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#121215",
+        "tonalRamp": [
+          "#121215",
+          "#1a1a1f",
+          "#232329",
+          "#5c5d66",
+          "#7d7e8c",
+          "#a3a3ae",
+          "#d4d4da",
+          "#f2f2f5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "title-page": { "displayName": "Page title", "purpose": "List heading." },
+      "body": { "displayName": "Body", "purpose": "Running text, system stack." },
+      "control": { "displayName": "Control", "purpose": "Buttons, fields, menus." },
+      "caption": { "displayName": "Caption", "purpose": "Chips, counts, key hints." }
+    },
+    "shadows": [
+      {
+        "name": "sm",
+        "value": "0 0 0 1px var(--material-hairline), 0 1px 2px rgb(30 30 70 / 0.14)",
+        "purpose": "Cards, secondary buttons."
+      },
+      {
+        "name": "lg",
+        "value": "0 0 0 1px var(--material-hairline), 0 4px 10px -4px rgb(30 30 70 / 0.14), 0 22px 44px -14px rgb(30 30 70 / 0.18)",
+        "purpose": "Interactive card hover."
+      },
+      {
+        "name": "float",
+        "value": "var(--shadow-lg), inset 0 1px 0 rgb(255 255 255 / 0.8)",
+        "purpose": "Toolbar, menus."
+      },
+      {
+        "name": "sheet",
+        "value": "0 0 0 1px var(--material-hairline), 0 40px 80px -20px rgb(20 20 40 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.8)",
+        "purpose": "Detail sheet, dialogs."
+      },
+      {
+        "name": "accent",
+        "value": "inset 0 1px 0 rgb(255 255 255 / 0.35), 0 6px 14px -4px rgb(79 70 229 / 0.45)",
+        "purpose": "Primary buttons."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Default for all transitions, 150ms fast and 200ms base."
+      },
+      {
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "purpose": "Button press only."
+      }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "768px" },
+      { "name": "desktop", "value": "1024px" },
+      { "name": "wide", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action; pill with accent glow.",
+      "html": "<button class=\"ds-btn-primary\">Save</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border:0;border-radius:9999px;background:#4f46e5;color:#fff;font:500 14px/1.5 -apple-system,system-ui,sans-serif;box-shadow:inset 0 1px 0 rgb(255 255 255/.35),0 6px 14px -4px rgb(79 70 229/.45);transition:background-color 150ms cubic-bezier(.22,1,.36,1),transform 150ms;cursor:pointer}.ds-btn-primary:hover{background:#4338ca}.ds-btn-primary:active{transform:scale(.97)}.ds-btn-primary:focus-visible{outline:2px solid #4f46e5;outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet pill on white with hairline shadow.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border:0;border-radius:9999px;background:#fff;color:#1d1d1f;font:500 14px/1.5 -apple-system,system-ui,sans-serif;box-shadow:0 0 0 1px rgb(60 60 90/.1),0 1px 2px rgb(30 30 70/.14);cursor:pointer;transition:box-shadow 150ms,transform 150ms}.ds-btn-secondary:hover{box-shadow:0 0 0 1px rgb(60 60 90/.1),0 1px 2px rgb(30 30 70/.14),0 10px 24px -16px rgb(30 30 70/.14)}.ds-btn-secondary:active{transform:scale(.97)}.ds-btn-secondary:focus-visible{outline:2px solid #4f46e5;outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Fill background, strong edge, surface on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Title\">",
+      "css": ".ds-input{width:100%;box-sizing:border-box;height:40px;padding:0 12px;border:1px solid #7f8292;border-radius:10px;background:rgb(60 60 90/.055);color:#1d1d1f;font:14px/1.5 -apple-system,system-ui,sans-serif;transition:background-color 150ms}.ds-input::placeholder{color:#5c5d66}.ds-input:hover{border-color:#5c5d66}.ds-input:focus{background:#fff}.ds-input:focus-visible{outline:2px solid #4f46e5;outline-offset:2px}"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Kind and status pill; accent tone shown.",
+      "html": "<span class=\"ds-chip\">Movies</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border:1px solid rgb(79 70 229/.3);border-radius:9999px;background:rgb(79 70 229/.1);color:#4f46e5;font:500 12px/1.5 -apple-system,system-ui,sans-serif;white-space:nowrap}"
+    },
+    {
+      "name": "Item Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "White card, 6px image inset, fallback tile.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-tile\">M</div><p class=\"ds-card-title\">Heat</p></div>",
+      "css": ".ds-card{width:220px;padding:6px 6px 12px;border-radius:18px;background:#fff;box-shadow:0 0 0 1px rgb(60 60 90/.1),0 1px 2px rgb(30 30 70/.14);transition:transform 150ms,box-shadow 150ms;font-family:-apple-system,system-ui,sans-serif}.ds-card:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgb(60 60 90/.1),0 4px 10px -4px rgb(30 30 70/.14),0 22px 44px -14px rgb(30 30 70/.18)}.ds-tile{aspect-ratio:4/3;border-radius:13px;background:rgb(60 60 90/.055);color:#5c5d66;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600}.ds-card-title{margin:10px 8px 0;font-size:14px;font-weight:600;color:#1d1d1f}"
+    },
+    {
+      "name": "Floating Toolbar",
+      "kind": "nav",
+      "refersTo": "sidebar",
+      "description": "Frosted pill over scrolling content.",
+      "html": "<div class=\"ds-toolbar\"><span>Grid</span><span>Sort</span><span>Filter</span></div>",
+      "css": ".ds-toolbar{display:inline-flex;gap:16px;padding:6px 16px;border:1px solid rgb(60 60 90/.14);border-radius:9999px;background:rgb(255 255 255/.78);-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);box-shadow:0 0 0 1px rgb(60 60 90/.1),0 4px 10px -4px rgb(30 30 70/.14),0 22px 44px -14px rgb(30 30 70/.18),inset 0 1px 0 rgb(255 255 255/.8);font:14px/1.5 -apple-system,system-ui,sans-serif;color:#1d1d1f}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Frosted Gallery",
+    "overview": "A calm, personal collection browser for two people. Images lead; chrome is frosted material floating over the content and recedes. Colour comes only from the single indigo accent and from real images. Apple-inspired depth (hairline, inner highlight, layered soft shadow, blur) without Liquid Glass theatrics. Operate register: standard controls, scannable rows, a clean grid. Light and graphite dark share the same materials.",
+    "keyCharacteristics": [
+      "Frosted sidebar, floating pill toolbar, floating detail sheet and dialogs are the only blurred surfaces.",
+      "White cards with a 6px inner inset around the image; neutral fallback tiles where images are missing.",
+      "One accent, used only where something can be acted on.",
+      "System font stack, no web font.",
+      "150-200ms ease-out; springs only on button press."
+    ],
+    "rules": [
+      {
+        "name": "The Acting-Accent Rule",
+        "body": "Indigo marks what can be acted on or focused. It never decorates.",
+        "section": "colors"
+      },
+      {
+        "name": "The Image-Colour Rule",
+        "body": "Apart from the accent, hue comes from real images; missing images get neutral fill tiles (kind icon plus initial), never a colour per list.",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic-Only Rule",
+        "body": "Components use semantic tokens; no raw hex or Tailwind palette in components.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular-Numbers Rule",
+        "body": "Prices and counts use tabular figures.",
+        "section": "typography"
+      },
+      {
+        "name": "The Blur-Budget Rule",
+        "body": "Backdrop blur only on sidebar, toolbar, detail sheet, dialogs and drawer. Never on cards, menus or content.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Hairline-First Rule",
+        "body": "Depth always includes the 1px hairline ring so a surface reads on any image behind it.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do take colour, radius, shadow and spacing from the tokens in src/styles/tokens.css.",
+      "Do keep new floating chrome on material or material-strong with a shadow from the vocabulary.",
+      "Do inset images in cards by 6px with a nested radius.",
+      "Do pair every state colour with text or an icon.",
+      "Do keep motion at 150-200ms ease-out and honour reduced motion.",
+      "Do fall back to a neutral fill tile when an image is missing."
+    ],
+    "donts": [
+      "Don't add a second accent, per-list colours or decorative gradients on content.",
+      "Don't blur cards, menus or list content.",
+      "Don't use a web font or hard offset shadows.",
+      "Don't hard-code hex or Tailwind palette classes in components.",
+      "Don't add raster assets without a README row giving source URL and date."
+    ]
+  }
+}

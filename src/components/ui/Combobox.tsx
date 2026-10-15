@@ -156,7 +156,7 @@ export function Combobox({
             onInteractOutside={(e) => {
               if ((e.target as HTMLElement | null)?.id === id) e.preventDefault()
             }}
-            className="z-50 max-h-72 w-(--radix-popover-trigger-width) overflow-y-auto rounded-md border border-border bg-surface-raised p-1 text-text shadow-lg data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+            className="z-50 max-h-72 w-(--radix-popover-trigger-width) bg-surface-raised overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
           >
             <ul id={listId} role="listbox" aria-label={label}>
               {filtered.map((option, index) => (
@@ -170,8 +170,8 @@ export function Combobox({
                   onMouseMove={() => setActive(index)}
                   onClick={() => choose(option)}
                   className={cx(
-                    'relative flex h-9 cursor-pointer items-center rounded-sm pr-3 pl-8 text-sm aria-disabled:cursor-not-allowed aria-disabled:opacity-50 pointer-coarse:min-h-11',
-                    index === activeIndex && 'bg-border',
+                    'relative flex h-9 cursor-pointer items-center rounded-md pr-3 pl-8 text-sm aria-disabled:cursor-not-allowed aria-disabled:opacity-50 pointer-coarse:min-h-11',
+                    index === activeIndex && 'bg-accent/10',
                   )}
                 >
                   {option.value === value && (

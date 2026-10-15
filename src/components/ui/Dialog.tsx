@@ -18,6 +18,8 @@ export interface DialogProps {
   className?: string
   /** Element to focus when the dialog opens, instead of the first focusable one (the Close button). */
   initialFocus?: RefObject<HTMLElement | null>
+  /** Keeps the title and description for assistive tech only (a quiet dialog whose content speaks for itself). */
+  hideTitle?: boolean
 }
 
 export const overlayClasses =
@@ -33,6 +35,7 @@ export function Dialog({
   footer,
   className,
   initialFocus,
+  hideTitle = false,
 }: DialogProps) {
   const returnFocus = useReturnFocus()
   return (
@@ -49,13 +52,18 @@ export function Dialog({
           }}
           onCloseAutoFocus={returnFocus.restore}
           className={cx(
-            'fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-xl border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in',
+            'fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto material-strong rounded-xl p-6 text-text shadow-sheet data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in',
             className,
           )}
         >
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <RadixDialog.Title className="font-display text-xl font-semibold">
+          <div
+            className={cx(
+              'flex items-start justify-between gap-4',
+              hideTitle && 'absolute top-3 right-3',
+            )}
+          >
+            <div className={cx('flex flex-col gap-1', hideTitle && 'sr-only')}>
+              <RadixDialog.Title className="text-xl tracking-tight font-semibold">
                 {title}
               </RadixDialog.Title>
               {description ? (
@@ -65,7 +73,7 @@ export function Dialog({
               ) : null}
             </div>
             <RadixDialog.Close asChild>
-              <IconButton aria-label="Close" className="-mt-2 -mr-2">
+              <IconButton aria-label="Close" className={hideTitle ? undefined : '-mt-2 -mr-2'}>
                 <X aria-hidden />
               </IconButton>
             </RadixDialog.Close>

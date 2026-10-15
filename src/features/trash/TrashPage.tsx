@@ -16,7 +16,7 @@ function TrashSkeleton() {
       {Array.from({ length: 4 }, (_, i) => (
         <div
           key={i}
-          className="flex flex-col gap-3 rounded-lg border border-border p-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]"
+          className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-md md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]"
         >
           <div className="flex items-center gap-3">
             <Skeleton className="size-9 shrink-0" />
@@ -128,7 +128,7 @@ export function TrashPage() {
         <h1
           ref={headingRef}
           tabIndex={-1}
-          className="font-display text-2xl font-semibold outline-none"
+          className="text-3xl font-bold tracking-tight outline-none"
         >
           Trash
         </h1>

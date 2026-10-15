@@ -21,7 +21,7 @@ function ResultsSkeleton() {
     <div
       role="status"
       data-testid="search-skeleton"
-      className="divide-y divide-border overflow-hidden rounded-lg border border-border"
+      className="divide-y divide-border overflow-hidden rounded-lg bg-surface shadow-md"
     >
       <span className="sr-only">Loading results</span>
       {Array.from({ length: 5 }, (_, i) => (
@@ -99,13 +99,13 @@ export function SearchRoute() {
       <div className="flex flex-col gap-3">
         <ul
           aria-label="Search results"
-          className="divide-y divide-border overflow-hidden rounded-lg border border-border"
+          className="divide-y divide-border overflow-hidden rounded-lg bg-surface shadow-md"
         >
           {rows.map((result) => (
             <li key={result.item.id} className="bg-surface">
               <Link
                 to={resultHref(result)}
-                className="flex items-center gap-3 p-3 hover:bg-border/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
+                className="flex items-center gap-3 p-3 hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
               >
                 <SearchResultBody result={result} large />
               </Link>
@@ -131,9 +131,10 @@ export function SearchRoute() {
 
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="font-display text-2xl font-semibold">Search</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Search</h1>
       <form
         role="search"
+        aria-label="Search all items"
         className="max-w-xl [&_label]:sr-only"
         onSubmit={(event) => {
           event.preventDefault()

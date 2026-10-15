@@ -2,8 +2,16 @@ import type { components } from '../../../generated/schema'
 import { defineFields } from './types'
 
 export const cameraFields = defineFields<components['schemas']['CameraMetadata']>()([
-  { key: 'make', label: 'Make', input: 'text', maxLength: 100 },
-  { key: 'model', label: 'Model', input: 'text', maxLength: 100 },
+  {
+    key: 'camera_type',
+    label: 'Type',
+    input: 'enum',
+    options: [
+      { value: 'mirrorless', label: 'Mirrorless' },
+      { value: 'dslr', label: 'DSLR' },
+      { value: 'film', label: 'Film' },
+    ],
+  },
   { key: 'release_year', label: 'Release year', input: 'year', min: 1900, max: 2100 },
   {
     key: 'sensor_format',

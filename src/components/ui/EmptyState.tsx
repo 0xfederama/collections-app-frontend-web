@@ -19,10 +19,10 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
-      <span className="flex size-14 items-center justify-center rounded-full bg-border text-accent-text">
+      <span className="flex size-14 items-center justify-center rounded-full bg-accent/10 text-accent-text">
         <Icon aria-hidden className="size-7" />
       </span>
-      <Heading className="font-display text-xl font-semibold">{title}</Heading>
+      <Heading className="text-xl font-semibold">{title}</Heading>
       <p className="max-w-sm text-sm text-text-muted">{description}</p>
       {action && <div className="mt-1">{action}</div>}
     </div>

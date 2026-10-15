@@ -21,12 +21,12 @@ describe('W-06 price formatting', () => {
     expect(text).toContain('500')
   })
 
-  it('shows a range with the currency written once', () => {
+  it('shows a range with the currency on both amounts', () => {
     const text = formatPrice(price('1200', '1500')) ?? ''
     expect(text).toContain('1,200')
     expect(text).toContain('–')
     expect(text).toContain('1,500')
-    expect(text.split('€')).toHaveLength(2)
+    expect(text).toBe('€1,200–€1,500')
   })
 
   it('writes "from" for a min-only price', () => {
@@ -42,9 +42,9 @@ describe('W-06 price formatting', () => {
     expect(text).toContain('1,500')
   })
 
-  it('shows cents for every amount when some amount has cents', () => {
-    expect(formatPrice(price('12.50', '15.00'))).toMatch(/12\.50.*15\.00/)
-    expect(formatPrice(price('12.00', '15.00'))).not.toContain('.00')
+  it('F002 never shows cents: amounts are rounded to whole units', () => {
+    expect(formatPrice(price('12.50', '15.00'))).toBe('€13–€15')
+    expect(formatPrice(price('1299.40', '1299.40'))).toBe('€1,299')
   })
 
   it('returns null for no price or no amounts', () => {

@@ -19,6 +19,36 @@ export const itemKeys = {
   content: (itemId: string) => ['items', itemId, 'content'] as const,
 }
 
+/**
+ * The item versions this browser's own successful writes produced, per client: `produced -> from`
+ * (the `If-Match` version it replaced). An open field editor holds a snapshot of the item and may
+ * move it forward only along such a chain, so a change by someone else still ends in a 412.
+ */
+const ownWrites = new WeakMap<QueryClient, Map<string, number>>()
+
+export function recordOwnWrite(
+  client: QueryClient,
+  itemId: string,
+  from: number,
+  produced: number,
+) {
+  let writes = ownWrites.get(client)
+  if (!writes) ownWrites.set(client, (writes = new Map()))
+  writes.set(`${itemId}:${produced}`, from)
+}
+
+/** True when every step from version `from` to version `to` was written by this client. */
+export function isOwnWriteChain(client: QueryClient, itemId: string, from: number, to: number) {
+  const writes = ownWrites.get(client)
+  let at = to
+  while (writes && at > from) {
+    const before = writes.get(`${itemId}:${at}`)
+    if (before === undefined) return false
+    at = before
+  }
+  return at === from
+}
+
 /** `GET /items/{id}`: the full item, with `metadata` shaped by `kind` and the `path` of its list. */
 export function useItem(itemId: string) {
   return useQuery({
@@ -77,6 +107,7 @@ export function useMoveItem() {
         body: { list_id: listId },
       }),
     )
+    recordOwnWrite(client, item.id, item.version, moved.version)
     client.setQueryData<Item>(itemKeys.detail(item.id), moved)
     return moved
   })
@@ -96,6 +127,7 @@ export function useUpdateItem() {
           body: patch,
         }),
       )
+      recordOwnWrite(client, item.id, item.version, updated.version)
       client.setQueryData<Item>(itemKeys.detail(item.id), updated)
       return updated
     },

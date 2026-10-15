@@ -4,7 +4,7 @@ import { Button, EmptyState, Skeleton, Tree, type TreeRowState } from '../../com
 import { Folder, FolderOpen, Inbox, List } from '../../components/ui/icons'
 import { useTreeIndex, type TreeNode } from './api'
 import { buildSortable } from './order'
-import { TreeEmptyAction, TreeHeaderActions, TreeRowActions } from './slots'
+import { TreeNewButton, TreeRowActions } from './slots'
 import { TreeActionsContext } from './TreeActionsContext'
 import { useTreeDialogs } from './useTreeDialogs'
 import { useExpandedFolders } from './useExpandedFolders'
@@ -32,15 +32,12 @@ export function SidebarTree() {
         aria-labelledby="sidebar-tree-heading"
         className="flex min-h-0 flex-1 flex-col gap-1"
       >
-        <div className="flex items-center justify-between gap-2 px-2">
-          <h2
-            id="sidebar-tree-heading"
-            className="text-xs font-semibold tracking-wide text-text-muted uppercase"
-          >
-            Library
-          </h2>
-          <TreeHeaderActions />
-        </div>
+        <h2
+          id="sidebar-tree-heading"
+          className="px-2 text-xs font-semibold tracking-wide text-text-muted uppercase"
+        >
+          Library
+        </h2>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {result.status === 'pending' && <TreeSkeleton />}
@@ -57,7 +54,6 @@ export function SidebarTree() {
               icon={Inbox}
               title="No lists yet"
               description="Create a folder to group lists, or a list to start collecting items."
-              action={<TreeEmptyAction />}
             />
           )}
           {index && index.nodes.length > 0 && (
@@ -81,6 +77,7 @@ export function SidebarTree() {
               renderRow={(node, state) => <Row node={node} state={state} />}
             />
           )}
+          {index && <TreeNewButton />}
         </div>
       </section>
       {dialogs}
@@ -110,7 +107,12 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
         onClick={(event) => event.stopPropagation()}
         className="flex min-w-0 flex-1 items-center gap-2"
       >
-        <List aria-hidden className="size-4 shrink-0 text-text-muted" />
+        <span
+          aria-hidden
+          className="grid size-[22px] shrink-0 place-items-center rounded-[6px] bg-fill shadow-[inset_0_0_0_1px_var(--material-hairline)]"
+        >
+          <List className="size-3.5 text-text-muted" />
+        </span>
         <span className="min-w-0 flex-1 truncate">{list.name}</span>
         <span className="text-xs text-text-muted tabular-nums">
           {list.item_count}

@@ -39,6 +39,7 @@ import {
   Trash2,
 } from '../components/ui/icons'
 import { arrayMove } from '../components/ui/sortable'
+import { LinkIcon, ServiceIcon } from '../components/ServiceIcon'
 import { useThemePreference, type ThemePreference } from '../lib/theme'
 
 const sections = [
@@ -48,13 +49,14 @@ const sections = [
   'overlays',
   'feedback',
   'display',
+  'materials',
   'navigation',
 ] as const
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-title`} className="flex scroll-mt-20 flex-col gap-4">
-      <h2 id={`${id}-title`} className="font-display text-2xl font-semibold">
+      <h2 id={`${id}-title`} className="text-2xl font-semibold">
         {title}
       </h2>
       {children}
@@ -313,6 +315,21 @@ function Feedback() {
         <Chip tone="warning">Wishlist</Chip>
         <Chip tone="danger">Sold</Chip>
       </Row>
+      <Row label="ServiceIcon (free, paid, unknown)">
+        {['Netflix', 'Prime Video', 'Disney+', 'Apple TV+', 'YouTube', 'TIMvision', 'Infinity'].map(
+          (n) => (
+            <ServiceIcon key={n} name={n} />
+          ),
+        )}
+        <ServiceIcon name="Netflix" paid />
+        <ServiceIcon name="Netflix" size={48} />
+        <ServiceIcon name="Hulu" />
+      </Row>
+      <Row label="LinkIcon (monogram for Google and IMDb)">
+        {['Google', 'Letterboxd', 'IMDb', 'Reddit'].map((n) => (
+          <LinkIcon key={n} name={n} />
+        ))}
+      </Row>
       <Row label="Skeleton">
         <div className="flex w-64 flex-col gap-2">
           <Skeleton className="aspect-[4/3] w-full" />
@@ -356,12 +373,47 @@ function Display() {
   )
 }
 
+/** Frosted materials over strips of strong color (stand-ins for the lightest and darkest images). */
+function Materials() {
+  return (
+    <Section id="materials" title="Materials and shadows">
+      <div
+        className="flex h-48 items-end gap-3 overflow-hidden rounded-xl p-4"
+        style={{
+          backgroundImage:
+            'linear-gradient(90deg, #ffffff 0 25%, #f4c542 25% 50%, #1d3557 50% 75%, #000000 75% 100%)',
+        }}
+      >
+        <div className="material flex-1 rounded-full px-4 py-2 text-sm shadow-float">
+          Toolbar (material)
+        </div>
+        <div className="material-strong flex-1 rounded-xl p-4 text-sm shadow-sheet">
+          Sheet (material-strong)
+          <p className="text-text-muted">Muted text on glass</p>
+        </div>
+      </div>
+      <Row label="Shadow scale">
+        {(['shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-float', 'shadow-sheet'] as const).map(
+          (shadow) => (
+            <div key={shadow} className={`rounded-lg bg-surface p-4 text-sm ${shadow}`}>
+              {shadow}
+            </div>
+          ),
+        )}
+      </Row>
+      <p className="text-sm text-text-muted">
+        Under prefers-reduced-transparency or without backdrop-filter, the glass above turns solid.
+      </p>
+    </Section>
+  )
+}
+
 function Navigation() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['bikes']))
   const [selected, setSelected] = useState<string | null>('adventure')
   return (
     <Section id="navigation" title="Tree">
-      <div className="max-w-xs rounded-lg border border-border bg-surface p-2">
+      <div className="max-w-xs rounded-lg bg-surface p-2 shadow-sm">
         <Tree
           aria-label="Collections"
           nodes={treeData}
@@ -387,7 +439,7 @@ function Navigation() {
 function SortableTreeDemo() {
   const [names, setNames] = useState(['Alpha', 'Beta', 'Gamma', 'Delta'])
   return (
-    <div className="max-w-xs rounded-lg border border-border bg-surface p-2">
+    <div className="max-w-xs rounded-lg bg-surface p-2 shadow-sm">
       <p className="px-2 pb-1 text-xs text-text-muted">Reorderable (drag handle, keyboard)</p>
       <Tree
         aria-label="Reorderable lists"
@@ -420,9 +472,9 @@ export function DevUiRoute() {
   return (
     <ToastProvider>
       <div className="mx-auto flex max-w-4xl flex-col gap-10 px-4 py-6 sm:px-6">
-        <header className="sticky top-0 z-30 -mx-4 flex flex-col gap-3 border-b border-border bg-bg px-4 py-3 sm:-mx-6 sm:px-6">
+        <header className="sticky top-0 z-30 -mx-4 flex flex-col gap-3 material-strong px-4 py-3 shadow-sm sm:-mx-6 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="font-display text-3xl font-semibold">UI gallery</h1>
+            <h1 className="text-3xl font-semibold">UI gallery</h1>
             <SegmentedControl
               aria-label="Theme"
               value={preference}
@@ -454,6 +506,7 @@ export function DevUiRoute() {
         <Overlays />
         <Feedback />
         <Display />
+        <Materials />
         <Navigation />
       </div>
     </ToastProvider>

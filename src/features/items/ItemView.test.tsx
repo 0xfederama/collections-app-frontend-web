@@ -39,9 +39,10 @@ async function renderOverride(over: Partial<Item>) {
 const links = () => within(screen.getByRole('group', { name: 'External links' }))
 
 describe('AT-13 item view: the example movie', () => {
-  it('shows the title and the three links, with no kind label, status or summary (F007-W7, W8)', async () => {
+  it('shows the title and Google, Letterboxd, IMDb for a movie, with a kind label but no status or summary (F007-W7, W8)', async () => {
     await renderItem()
-    expect(screen.queryByText('Movie')).not.toBeInTheDocument()
+    // F-002: a quiet kind label above the title.
+    expect(screen.getByText('Movie')).toBeInTheDocument()
     expect(screen.queryByText('Watched')).not.toBeInTheDocument()
 
     const google = links().getByRole('link', { name: /^Google/ })
@@ -49,25 +50,35 @@ describe('AT-13 item view: the example movie', () => {
       'The Matrix 1999 film',
     )
     expect(google.getAttribute('href')).toContain('1999+film')
-    expect(links().getByRole('link', { name: /^Reddit/ })).toBeInTheDocument()
-    expect(links().getByRole('button', { name: 'No website' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
+    expect(links().getByRole('link', { name: /^Letterboxd/ })).toHaveAttribute(
+      'href',
+      expect.stringContaining('https://letterboxd.com/search/The%20Matrix'),
     )
+    // The stored IMDb link feeds the button.
+    expect(links().getByRole('link', { name: /^IMDb/ })).toHaveAttribute(
+      'href',
+      'https://www.imdb.com/title/tt0133093/',
+    )
+    expect(links().queryByRole('link', { name: /^Reddit/ })).not.toBeInTheDocument()
+    expect(links().queryByRole('link', { name: /^Website/ })).not.toBeInTheDocument()
+    expect(links().queryByRole('button', { name: 'Add website' })).not.toBeInTheDocument()
   })
 
-  it('shows the kind section with units, the IMDb link and streaming', async () => {
+  it('shows the kind section with units and streaming icons, and no IMDb row (F-002)', async () => {
     await renderItem()
     const details = (await screen.findByRole('heading', { name: 'Details' })).closest('section')!
     expect(within(details).getByText('136 min')).toBeInTheDocument()
     expect(within(details).getByText('1999')).toBeInTheDocument()
-    expect(within(details).getByRole('link', { name: /IMDb page/ })).toHaveAttribute(
-      'href',
-      'https://www.imdb.com/title/tt0133093/',
-    )
-    expect(within(details).getByText(/Streaming in Italy:/)).toBeInTheDocument()
-    expect(within(details).getByText('Netflix, Prime Video')).toBeInTheDocument()
-    expect(within(details).queryByRole('note')).not.toBeInTheDocument()
+    expect(within(details).queryByText('IMDb')).not.toBeInTheDocument()
+    expect(within(details).queryByRole('link', { name: /IMDb/ })).not.toBeInTheDocument()
+    // Streaming is its own section; its heading carries the country (F-002 finish review).
+    const streaming = screen.getByRole('heading', { name: 'Streaming · Italy' }).closest('section')!
+    expect(within(details).queryByRole('list', { name: 'Platforms' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Streaming in /)).not.toBeInTheDocument()
+    const platforms = within(streaming).getByRole('list', { name: 'Platforms' })
+    expect(within(platforms).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+    expect(within(platforms).getByRole('img', { name: 'Prime Video, paid' })).toBeInTheDocument()
+    expect(within(streaming).queryByRole('note')).not.toBeInTheDocument()
   })
 
   it('warns when the streaming country differs from the settings country', async () => {
@@ -78,13 +89,13 @@ describe('AT-13 item view: the example movie', () => {
     const note = await screen.findByRole('note')
     expect(note).toHaveTextContent(/Italy/)
     expect(note).toHaveTextContent(/United States/)
-    expect(screen.getByText(/Streaming in United States:/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Streaming · United States' })).toBeInTheDocument()
   })
 
   it('shows no warning while the settings are unknown', async () => {
     server.use(http.get(settingsUrl, () => problemResponse(500, 'internal_error')))
     await renderItem()
-    await screen.findByText(/Streaming in Italy:/)
+    await screen.findByRole('heading', { name: 'Streaming · Italy' })
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
   })
 
@@ -94,16 +105,24 @@ describe('AT-13 item view: the example movie', () => {
     expect(screen.getByText(/Great film/)).toBeInTheDocument()
   })
 
-  it('the Edit button is enabled and opens the form (?edit=1)', async () => {
+  it('F-002 has no Edit button or edit mode: pens appear per field and the footer keeps Move and Delete', async () => {
+    await renderItem()
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit title' })).toBeInTheDocument()
+    const footer = screen.getByRole('contentinfo')
+    expect(within(footer).getByRole('button', { name: 'Move' })).toBeInTheDocument()
+    expect(within(footer).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    expect(within(footer).getByText(/^Updated/)).toBeInTheDocument()
+  })
+
+  it('F-002 the "…" menu has Move and Delete too', async () => {
     await renderItem()
     const user = userEvent.setup()
-    const edit = await screen.findByRole('button', { name: 'Edit' })
-    expect(edit).toBeEnabled()
-    await user.click(edit)
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Edit “The Matrix”' }),
-    ).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Item actions' }))
+    const menu = await screen.findByRole('menu')
+    expect(within(menu).getByRole('menuitem', { name: 'Move' })).toBeInTheDocument()
+    await user.click(within(menu).getByRole('menuitem', { name: 'Delete' }))
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('Delete “The Matrix”?')
   })
 
   it('has a Back link to the list on a full page', async () => {
@@ -141,10 +160,11 @@ describe('item view: kinds', () => {
     expect(await screen.findByText('2019–2023')).toBeInTheDocument()
   })
 
-  it('generic item with empty metadata has no Details section', async () => {
+  it('generic item with nothing set shows no rows, only "Add field"', async () => {
     await renderOverride({ title: 'Notebook', kind: 'generic', metadata: {} })
     await screen.findByRole('heading', { name: 'Description' })
-    expect(screen.queryByRole('heading', { name: 'Details' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('term')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add field' })).toBeInTheDocument()
   })
 
   it('motorcycle shows its units', async () => {
@@ -178,8 +198,15 @@ describe('item view: kinds', () => {
     expect(screen.getByText('Full frame')).toBeInTheDocument()
   })
 
-  it('an unusable website is a disabled control, a good one is a link', async () => {
-    await renderOverride({ website: 'https://www.thematrix.com/' })
+  it('a generic item shows Google, Reddit and Website; an empty website offers "Add website", which opens the editor', async () => {
+    await renderOverride({ kind: 'generic', metadata: {}, website: null })
+    expect(links().getByRole('link', { name: /^Reddit/ })).toBeInTheDocument()
+    await userEvent.click(links().getByRole('button', { name: 'Add website' }))
+    expect(await screen.findByRole('textbox', { name: /Website/ })).toBeInTheDocument()
+  })
+
+  it('a good website is a link', async () => {
+    await renderOverride({ kind: 'generic', metadata: {}, website: 'https://www.thematrix.com/' })
     expect(links().getByRole('link', { name: /^Website/ })).toHaveAttribute(
       'href',
       'https://www.thematrix.com/',
@@ -191,9 +218,9 @@ describe('item view: kinds', () => {
     expect(await screen.findByText(/^€\s?1,200$/)).toBeInTheDocument()
   })
 
-  it('F007-W8 a range shows both bounds with the currency once', async () => {
+  it('F007-W8 a range shows both bounds, each with the currency', async () => {
     await renderOverride({ price: { min: '1000.00', max: '1400.00', currency: 'EUR' } })
-    expect(await screen.findByText(/^€\s?1,000–1,400$/)).toBeInTheDocument()
+    expect(await screen.findByText(/^€\s?1,000–€\s?1,400$/)).toBeInTheDocument()
   })
 
   it('F007-W8 an item without a price shows no price', async () => {
@@ -204,14 +231,14 @@ describe('item view: kinds', () => {
 })
 
 describe('item view: description states', () => {
-  it('shows "No description yet." for an empty body', async () => {
+  it('shows the "Click to start writing" placeholder for an empty body', async () => {
     server.use(
       http.get(contentUrl, () =>
         HttpResponse.json({ item_id: ITEM, version: 0, body: '', updated_at: matrix.created_at }),
       ),
     )
     await renderItem()
-    expect(await screen.findByText('No description yet.')).toBeInTheDocument()
+    expect(await screen.findByText('Click to start writing')).toBeInTheDocument()
   })
 
   it('shows its own Retry when the description fails, without hiding the item', async () => {
@@ -314,9 +341,19 @@ describe('item view: hero image', () => {
     expect(screen.queryByRole('button', { name: /View image/ })).not.toBeInTheDocument()
   })
 
-  it('shows the tile when the item has no image', async () => {
+  it('F-002 an item without an image has only a slim "Add image" row, no tile', async () => {
     await renderItem()
-    expect(screen.getByTestId('fallback-tile')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add image' })).toBeInTheDocument()
+    expect(screen.queryByTestId('fallback-tile')).not.toBeInTheDocument()
+  })
+
+  it('F-002 "Change image" sits over the picture and opens the image dialog', async () => {
+    overrideItem({ image })
+    const user = userEvent.setup()
+    await renderItem()
+    await user.click(await screen.findByRole('button', { name: 'Change image' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Change image' })
+    expect(within(dialog).getByRole('button', { name: 'Remove image' })).toBeInTheDocument()
   })
 })
 

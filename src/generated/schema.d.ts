@@ -248,7 +248,9 @@ export interface paths {
          *
          *     Changing `kind` on a list that has items **clears the `metadata` of all its items** (trashed ones too; their `version` is bumped),
          *     because the kind fields differ per kind. Clients should warn first. If the list is left on `sort_mode: kind_key` and the new
-         *     kind is `generic`, the request is rejected with `422 validation_failed`.
+         *     kind is `generic`, the request is rejected with `422 validation_failed`. A kind change also resets `pinned_fields` to `null` (unless
+         *     the same request sets it, which is then validated against the new kind). Send `pinned_fields: null` to reset it to the kind default;
+         *     absent leaves it unchanged.
          */
         patch: operations["updateList"];
         trace?: never;
@@ -292,6 +294,7 @@ export interface paths {
          * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title. `sort=kind_key` sorts by the kind's
          *     sort key ascending, empty values last (movie: `release_year`, tv_show: `first_air_year`, motorcycle: `displacement_cc`,
          *     car: `power_hp`, camera: `megapixels`); on a `generic` list it returns `400 invalid_parameter`.
+         *     `sort=price` sorts by `price.min` ascending, items without a price last, ties by title then `id` (no currency conversion).
          */
         get: operations["listItems"];
         put?: never;
@@ -840,11 +843,32 @@ export interface components {
         DisplayMode: "compact" | "thumbnail" | "grid";
         /**
          * @description `kind_key` sorts by the kind's sort key (movie: `release_year`, tv_show: `first_air_year`, motorcycle: `displacement_cc`,
-         *     car: `power_hp`, camera: `megapixels`), ascending, empty values last. It is not valid on `generic` lists. The manual order is kept
-         *     when the mode changes.
+         *     car: `power_hp`, camera: `megapixels`), ascending, empty values last. It is not valid on `generic` lists.
+         *     `price` sorts by the lowest price (`price.min`) ascending, items without a price last, ties by title and then id. Currencies are not
+         *     converted, so mixed currencies compare by amount only. The manual order is kept when the mode changes.
          * @enum {string}
          */
-        SortMode: "manual" | "title" | "updated" | "kind_key";
+        SortMode: "manual" | "title" | "updated" | "kind_key" | "price";
+        /**
+         * @description The fields a list shows in its rows, by field key: `under` (under the title) and `right` (on the right), in order. `null` means the
+         *     kind default (the web app owns the defaults). `{}` or two empty slots pin nothing, which is different from `null`. Allowed keys: the
+         *     keys of the kind's `metadata` fields plus `price` (`streaming` is a movie and tv_show field). Each slot holds at most 6 unique
+         *     keys and a key is in at most one slot, else `422 validation_failed` on `pinned_fields.under[i]` / `pinned_fields.right[i]`.
+         *     Responses always carry both slots. Changing the list's `kind` resets it to `null`.
+         * @example {
+         *       "under": [
+         *         "release_year",
+         *         "runtime_minutes"
+         *       ],
+         *       "right": [
+         *         "price"
+         *       ]
+         *     }
+         */
+        PinnedFields: {
+            under?: string[];
+            right?: string[];
+        } | null;
         List: {
             /** Format: uuid */
             id: string;
@@ -856,6 +880,7 @@ export interface components {
             description: string | null;
             display_mode: components["schemas"]["DisplayMode"];
             sort_mode: components["schemas"]["SortMode"];
+            pinned_fields: components["schemas"]["PinnedFields"];
             sort_order: number;
             /** @description Number of active items. */
             item_count: number;
@@ -876,6 +901,7 @@ export interface components {
             description?: string | null;
             display_mode?: components["schemas"]["DisplayMode"];
             sort_mode?: components["schemas"]["SortMode"];
+            pinned_fields?: components["schemas"]["PinnedFields"];
         };
         UpdateListRequest: {
             name?: string;
@@ -884,6 +910,7 @@ export interface components {
             description?: string | null;
             display_mode?: components["schemas"]["DisplayMode"];
             sort_mode?: components["schemas"]["SortMode"];
+            pinned_fields?: components["schemas"]["PinnedFields"];
         };
         MoveListRequest: {
             /**
@@ -995,7 +1022,7 @@ export interface components {
         };
         /** @description An item. `kind` is read-only and derived from the item's list; `metadata` has the shape of that kind (discriminated union). */
         Item: components["schemas"]["GenericItem"] | components["schemas"]["MovieItem"] | components["schemas"]["TvShowItem"] | components["schemas"]["MotorcycleItem"] | components["schemas"]["CarItem"] | components["schemas"]["CameraItem"];
-        /** @description An item row in lists and search: no `metadata`, and the image is reduced. */
+        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item (`{}` when the kind has none), and the image is reduced. */
         ItemSummary: {
             /** Format: uuid */
             id: string;
@@ -1006,6 +1033,10 @@ export interface components {
             image: components["schemas"]["ImageSummary"];
             price: components["schemas"]["Price"];
             website: string | null;
+            /** @description Same object as `metadata` on the full item; its shape depends on `kind` (see the `*Metadata` schemas). */
+            metadata: {
+                [key: string]: unknown;
+            };
             content_version: number;
             sort_order: number;
             version: number;
@@ -1059,6 +1090,8 @@ export interface components {
             country: string;
             /** @description Unique case-insensitively. */
             platforms?: string[];
+            /** @description Platforms offered only for payment. Each entry must match (case-insensitively) an entry of `platforms` and is stored with that entry's casing. Unique case-insensitively. Omitted, null or empty means none paid. */
+            paid_platforms?: string[];
         };
         /** @description Must be `{}`. */
         GenericMetadata: Record<string, never>;
@@ -1073,12 +1106,13 @@ export interface components {
             /** @description At least `first_air_year`. Absent = ongoing. */
             end_year?: number;
             seasons?: number;
+            episodes_per_season?: number;
+            /** @description Average episode duration in minutes. */
+            episode_minutes?: number;
             imdb_url?: string;
             streaming?: components["schemas"]["Streaming"];
         };
         MotorcycleMetadata: {
-            make?: string;
-            model?: string;
             model_year?: number;
             displacement_cc?: number;
             /** @description One decimal. */
@@ -1096,8 +1130,8 @@ export interface components {
             power_hp?: number;
         };
         CameraMetadata: {
-            make?: string;
-            model?: string;
+            /** @enum {string} */
+            camera_type?: "mirrorless" | "dslr" | "film";
             release_year?: number;
             /** @enum {string} */
             sensor_format?: "full_frame" | "aps_c" | "micro_four_thirds" | "one_inch" | "medium_format" | "film_35mm" | "other";

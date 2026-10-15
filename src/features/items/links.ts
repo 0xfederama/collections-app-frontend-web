@@ -1,13 +1,11 @@
 import type { ItemKind } from './api'
 
 export interface ExternalLink {
-  id: 'google' | 'reddit' | 'website'
+  id: 'google' | 'letterboxd' | 'imdb' | 'reddit' | 'website'
   label: string
-  /** `null` = disabled: the item has no (usable) website. */
+  /** `null` (website only): the item has no (usable) website, so no link is shown. */
   href: string | null
 }
-
-export const NO_WEBSITE = 'No website'
 
 interface LinkSource {
   title: string
@@ -60,14 +58,33 @@ export function safeImdbUrl(url: unknown): string | null {
 }
 
 /**
- * The three external controls of AT-13, always in this order: Google, Reddit, Website.
- * The website is never replaced by a search. `URLSearchParams` does the encoding, so
- * `&`, `#`, quotes and non-ASCII titles cannot change the URL's structure.
+ * The external controls of AT-13 and F-002, in this order: movies Google, Letterboxd, IMDb; TV
+ * shows Google, IMDb; every other kind Google, Reddit, Website. The website is never replaced by a
+ * search; IMDb opens the stored `imdb_url` when valid, else a title search on IMDb. `URLSearchParams`
+ * and `encodeURIComponent` do the encoding, so `&`, `#`, quotes and non-ASCII titles cannot change
+ * the URL's structure.
  */
-export function buildExternalLinks(item: LinkSource): [ExternalLink, ExternalLink, ExternalLink] {
+export function buildExternalLinks(item: LinkSource): ExternalLink[] {
   const query = searchQuery(item)
+  const googleLink: ExternalLink = { id: 'google', label: 'Google', href: google(query) }
+  const imdb: ExternalLink = {
+    id: 'imdb',
+    label: 'IMDb',
+    href:
+      safeImdbUrl((item.metadata as { imdb_url?: unknown } | undefined)?.imdb_url) ??
+      `https://www.imdb.com/find/?${new URLSearchParams({ q: item.title, s: 'tt' }).toString()}`,
+  }
+  if (item.kind === 'movie') {
+    const letterboxd: ExternalLink = {
+      id: 'letterboxd',
+      label: 'Letterboxd',
+      href: `https://letterboxd.com/search/${encodeURIComponent(item.title)}/`,
+    }
+    return [googleLink, letterboxd, imdb]
+  }
+  if (item.kind === 'tv_show') return [googleLink, imdb]
   return [
-    { id: 'google', label: 'Google', href: google(query) },
+    googleLink,
     { id: 'reddit', label: 'Reddit', href: google(`${query} site:reddit.com`) },
     { id: 'website', label: 'Website', href: safeWebsiteUrl(item.website) },
   ]

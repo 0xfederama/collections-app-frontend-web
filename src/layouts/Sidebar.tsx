@@ -4,11 +4,13 @@ import { IconButton, Tooltip } from '../components/ui'
 import {
   PanelLeftClose,
   PanelLeftOpen,
+  Plus,
   Search,
   Settings,
   Trash2,
   type LucideIcon,
 } from '../components/ui/icons'
+import { useQuickAdd } from '../features/quickadd/QuickAddContext'
 import { SidebarSearch } from '../features/search/SidebarSearch'
 import { useWorkspaceName } from '../features/settings/api'
 import { SidebarTree } from '../features/tree/SidebarTree'
@@ -36,16 +38,17 @@ export function Sidebar({
   searchRef,
 }: SidebarProps) {
   const workspaceName = useWorkspaceName()
+  const quickAdd = useQuickAdd()
 
   return (
     <nav
       aria-label="Library"
-      className={cx('flex min-h-0 flex-1 flex-col gap-3', rail ? 'items-center p-2' : 'p-3')}
+      className={cx('flex min-h-0 flex-1 flex-col gap-3', rail ? 'items-center p-2' : 'p-3 pt-4')}
     >
       {/* Same element in both modes, so the toggle keeps keyboard focus when it flips. */}
       <div className={cx('flex items-center gap-2', rail ? 'flex-col' : 'justify-between pl-1')}>
         {showHeader && !rail && (
-          <Link to="/" className="min-w-0 truncate font-display text-lg font-semibold">
+          <Link to="/" className="min-w-0 truncate text-[15px] font-semibold tracking-tight">
             {workspaceName}
           </Link>
         )}
@@ -59,6 +62,24 @@ export function Sidebar({
           </IconButton>
         )}
       </div>
+
+      {rail ? (
+        <Tooltip content="Quick add (N)" side="right">
+          <IconButton aria-label="Quick add" onClick={() => quickAdd.open()}>
+            <Plus aria-hidden />
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <button
+          type="button"
+          onClick={() => quickAdd.open()}
+          className="flex min-h-9 items-center gap-2 rounded-md bg-accent px-3 text-sm font-medium text-accent-fg shadow-accent hover:bg-accent-hover pointer-coarse:min-h-11"
+        >
+          <Plus aria-hidden className="size-4 shrink-0" />
+          Quick add
+          <kbd className="ml-auto text-xs opacity-80">N</kbd>
+        </button>
+      )}
 
       {rail ? (
         <Tooltip content="Search" side="right">
@@ -99,7 +120,7 @@ function FooterLink({
       to={to}
       aria-label={rail ? label : undefined}
       className={cx(
-        'flex min-h-9 items-center gap-2 rounded-md text-sm text-text hover:bg-border aria-[current=page]:bg-border aria-[current=page]:font-medium pointer-coarse:min-h-11',
+        'flex min-h-9 items-center gap-2 rounded-md text-sm text-text hover:bg-fill-hover aria-[current=page]:bg-accent/10 aria-[current=page]:font-medium pointer-coarse:min-h-11',
         rail ? 'size-11 justify-center' : 'px-2',
       )}
     >

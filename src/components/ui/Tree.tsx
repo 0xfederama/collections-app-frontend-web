@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
-import { GripVertical } from './icons'
 import { SortableProvider, useSortableRow, type SortableMove, type SortableSlot } from './sortable'
 
 export interface TreeNodeBase {
@@ -47,8 +46,8 @@ interface FlatRow<T> {
 /**
  * ARIA tree (flat treeitems with aria-level): roving tabindex, arrows, Home/End, Enter/Space.
  * Presentational: no data fetching. Drag reorder is opt-in through `sortable` + `onReorder`: each
- * sortable row gets a drag handle (a real button, so the keyboard sensor works) and the library
- * itself stays behind `./sortable`.
+ * sortable row is its own drag handle (press and drag; Space then arrows on the keyboard) and the
+ * library itself stays behind `./sortable`.
  */
 export function Tree<T extends TreeNodeBase>({
   nodes,
@@ -92,7 +91,9 @@ export function Tree<T extends TreeNodeBase>({
 
   const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
     const row = rows[focusIndex]
-    // Keys pressed inside a row's own buttons or links (menu, drag handle) are theirs, not the tree's.
+    // A keyboard drag in progress owns Space and the arrows (the sortable layer already handled them).
+    if (event.defaultPrevented) return
+    // Keys pressed inside a row's own buttons or links (the menu) are theirs, not the tree's.
     if (!row || (event.target as HTMLElement).getAttribute('role') !== 'treeitem') return
     const container = event.currentTarget
     const hasChildren = !!row.node.children?.length
@@ -194,9 +195,9 @@ function TreeRow<T extends TreeNodeBase>({
   onSelect,
   renderRow,
 }: TreeRowProps<T>) {
-  const { ref, handleRef, isDragging } = useSortableRow(node.id, slot)
+  const { ref, isDragging, a11y } = useSortableRow(node.id, slot)
   const liRef = useRef<HTMLLIElement | null>(null)
-  // The whole tree is one Tab stop: only the roving row's inner controls (menu button, drag handle,
+  // The whole tree is one Tab stop: only the roving row's inner controls (menu button,
   // anything the consumer renders) stay in the Tab order. Others are set to -1 and restored later.
   useLayoutEffect(() => {
     liRef.current?.querySelectorAll<HTMLElement>(INNER_CONTROLS).forEach((el) => {
@@ -221,6 +222,7 @@ function TreeRow<T extends TreeNodeBase>({
         return ref(el)
       }}
       role="treeitem"
+      {...a11y}
       data-tree-id={node.id}
       aria-level={level}
       aria-setsize={setSize}
@@ -228,30 +230,21 @@ function TreeRow<T extends TreeNodeBase>({
       aria-expanded={hasChildren ? isExpanded : undefined}
       aria-selected={selected}
       tabIndex={tabbable ? 0 : -1}
-      // Focus anywhere inside the row (its link, menu button or drag handle) makes it the roving stop.
+      // Focus anywhere inside the row (its link or menu button) makes it the roving stop.
       onFocus={() => onFocusRow(node.id)}
-      onClick={() => {
+      onClick={(event) => {
+        // A drag that ended on this row is not a click (dnd-kit cancels it).
+        if (event.defaultPrevented) return
         onFocusRow(node.id)
         onSelect(node.id)
       }}
       style={{ paddingInlineStart: `${(level - 1) * 16 + 8}px` }}
       className={cx(
-        'group/row flex min-h-9 cursor-pointer items-center gap-1 rounded-sm pr-2 text-sm text-text hover:bg-border aria-selected:bg-border aria-selected:font-medium aria-selected:shadow-[inset_3px_0_0_var(--accent)] pointer-coarse:min-h-11',
+        'group/row flex min-h-9 cursor-pointer select-none items-center [-webkit-touch-callout:none] gap-1 rounded-md pr-2 text-sm text-text hover:bg-fill-hover aria-selected:bg-accent/10 aria-selected:font-medium aria-selected:text-accent-text pointer-coarse:min-h-11',
         isDragging && 'bg-surface-raised opacity-80 shadow-md',
       )}
     >
       {renderRow(node, { level, expanded: isExpanded, selected, hasChildren })}
-      {slot && (
-        <button
-          ref={handleRef}
-          type="button"
-          aria-label={`Reorder ${slot.label}`}
-          onClick={(e) => e.stopPropagation()}
-          className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-sm text-text-muted opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 [&_svg]:size-4"
-        >
-          <GripVertical aria-hidden />
-        </button>
-      )}
     </li>
   )
 }

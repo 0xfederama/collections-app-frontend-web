@@ -5,7 +5,6 @@ import { useToast } from '../../components/ui'
 import { arrayMove, type SortableMove } from '../../components/ui/sortable'
 import { treeKeys, useTreeIndex, type TreeData, type TreeNode } from './api'
 import { DeleteDialog } from './DeleteDialog'
-import { DescriptionDialog } from './DescriptionDialog'
 import {
   useCreateFolder,
   useCreateList,
@@ -24,14 +23,13 @@ import { buildSortable, subtreeCounts } from './order'
 
 type DialogState =
   | { type: 'create'; kind: 'folder' | 'list'; parentId: string | null }
-  | { type: 'rename' | 'description' | 'move' | 'delete'; id: string }
+  | { type: 'rename' | 'move' | 'delete'; id: string }
 
 /** What the menus can ask for. Every method takes ids, so a menu never holds a stale object. */
 export interface TreeActions {
   createFolder: (parentId: string | null) => void
   createList: (parentId: string | null) => void
   rename: (id: string) => void
-  editDescription: (id: string) => void
   move: (id: string) => void
   remove: (id: string) => void
   /** Moves a node one place among its siblings of the same kind (-1 up, +1 down). */
@@ -45,7 +43,7 @@ export interface TreeActions {
 const nameOf = (node: TreeNode) => (node.kind === 'folder' ? node.folder.name : node.list.name)
 
 /**
- * All the tree's write flows: create, rename, description, move, delete, move up/down and drag
+ * All the tree's write flows: create, rename, move, delete, move up/down and drag
  * reorder. Returns the `actions` to hang on menus and the `dialogs` element to render once.
  * `onCreatedFolder` lets the sidebar expand the parent so the new folder is visible.
  */
@@ -96,7 +94,6 @@ export function useTreeDialogs({
     createFolder: (parentId) => setDialog({ type: 'create', kind: 'folder', parentId }),
     createList: (parentId) => setDialog({ type: 'create', kind: 'list', parentId }),
     rename: (id) => setDialog({ type: 'rename', id }),
-    editDescription: (id) => setDialog({ type: 'description', id }),
     move: (id) => setDialog({ type: 'move', id }),
     remove: (id) => setDialog({ type: 'delete', id }),
     position: (id) => {
@@ -172,15 +169,9 @@ export function useTreeDialogs({
             <NameDialog
               key={`rename-${node.id}`}
               title={node.kind === 'folder' ? 'Rename folder' : 'Rename list'}
-              description={node.kind === 'list' ? 'Rename the list or change its kind.' : undefined}
               submitLabel="Save"
               noun={node.kind}
               initialName={name}
-              kind={
-                node.kind === 'list'
-                  ? { initial: node.list.kind, itemCount: node.list.item_count }
-                  : undefined
-              }
               onClose={close}
               onReload={async () => {
                 const data = await reload()
@@ -188,31 +179,11 @@ export function useTreeDialogs({
                   ? data?.folders.find((f) => f.id === node.id)?.name
                   : data?.lists.find((l) => l.id === node.id)?.name
               }}
-              onSubmit={async (next, nextKind) => {
+              onSubmit={async (next) => {
                 if (node.kind === 'folder')
                   await renameFolder.mutateAsync({ folder: node.folder, name: next })
-                else
-                  await updateList.mutateAsync({
-                    list: node.list,
-                    patch: {
-                      name: next,
-                      ...(nextKind !== node.list.kind && { kind: nextKind }),
-                    },
-                  })
+                else await updateList.mutateAsync({ list: node.list, patch: { name: next } })
                 toast({ kind: 'success', title: `Renamed to “${next}”` })
-              }}
-            />
-          )
-        } else if (dialog.type === 'description' && node.kind === 'list') {
-          content = (
-            <DescriptionDialog
-              key={`description-${node.id}`}
-              list={node.list}
-              onClose={close}
-              onReload={async () => (await reload())?.lists.find((l) => l.id === node.id)}
-              onSubmit={async (list, description) => {
-                await updateList.mutateAsync({ list, patch: { description } })
-                toast({ kind: 'success', title: 'Description saved' })
               }}
             />
           )

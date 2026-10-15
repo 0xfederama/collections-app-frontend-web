@@ -56,7 +56,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               duration={kind === 'error' ? 8000 : 5000}
               onOpenChange={(open) => !open && remove(t.id)}
               className={cx(
-                'flex items-start gap-3 rounded-lg border p-3 shadow-lg data-[state=closed]:animate-fade-out data-[state=open]:animate-slide-in-toast',
+                'flex items-start gap-3 rounded-lg border p-3 shadow-md data-[state=closed]:animate-fade-out data-[state=open]:animate-slide-in-toast',
                 box,
               )}
             >

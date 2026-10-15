@@ -32,6 +32,7 @@ function makeItem(n: number, over: Partial<ItemSummary> = {}): ItemSummary {
     image: null,
     price: null,
     website: null,
+    metadata: {},
     content_version: 0,
     sort_order: n,
     version: 1,
@@ -205,16 +206,14 @@ describe('W-06 fallback tile', () => {
     expect(within(ul).queryByRole('img')).not.toBeInTheDocument()
   })
 
-  it('shows the image with the title as alt when there is one', async () => {
+  it('shows the image as decorative (empty alt, the title is next to it) when there is one', async () => {
     useBackend({
       items: [makeItem(1, { title: 'Alien', image: { url: 'https://example.org/a.jpg' } })],
     })
     renderList(at())
     const ul = await itemsList()
-    expect(within(ul).getByRole('img', { name: 'Alien' })).toHaveAttribute(
-      'src',
-      'https://example.org/a.jpg',
-    )
+    expect(ul.querySelector('img')).toHaveAttribute('alt', '')
+    expect(ul.querySelector('img')).toHaveAttribute('src', 'https://example.org/a.jpg')
     expect(within(ul).queryByTestId('fallback-tile')).not.toBeInTheDocument()
   })
 
@@ -224,7 +223,7 @@ describe('W-06 fallback tile', () => {
     })
     renderList(at())
     const ul = await itemsList()
-    fireEvent.error(within(ul).getByRole('img', { name: 'Alien' }))
+    fireEvent.error(ul.querySelector('img')!)
     expect(within(ul).queryByRole('img')).not.toBeInTheDocument()
     expect(within(ul).getByTestId('fallback-tile')).toHaveTextContent('A')
   })
@@ -237,7 +236,7 @@ describe('F007-W10 list description', () => {
     useBackend({ list: { description: 'Some **bold** words' } })
     renderList(at())
     await itemsList()
-    const section = await screen.findByRole('region', { name: 'Description' })
+    const section = await screen.findByRole('region', { name: 'List description' })
     expect(within(section).getByText('bold')).toBeInTheDocument()
     expect(within(section).getByRole('button', { name: toggleName })).toHaveAttribute(
       'aria-expanded',
@@ -267,16 +266,13 @@ describe('F007-W10 list description', () => {
     expect(screen.queryByText('bold')).not.toBeInTheDocument()
   })
 
-  it('hides the section when the list has no description, and the menu still offers Edit description', async () => {
+  it('without a description the section shows the "No description yet" placeholder', async () => {
     useBackend({ list: { description: null } })
-    const user = userEvent.setup()
     renderList(at())
     await itemsList()
-    expect(screen.queryByRole('region', { name: 'Description' })).not.toBeInTheDocument()
-    await user.click(
-      within(screen.getByRole('main')).getByRole('button', { name: /More actions for/ }),
-    )
-    expect(await screen.findByRole('menuitem', { name: 'Edit description' })).toBeInTheDocument()
+    const section = screen.getByRole('region', { name: 'List description' })
+    expect(within(section).getByRole('button', { name: 'No description yet' })).toBeInTheDocument()
+    expect(within(section).queryByRole('button', { name: /^(Collapse|Expand)/ })).toBeNull()
   })
 })
 
@@ -308,6 +304,17 @@ describe('W-06 URL state: sort and filter', () => {
     await waitFor(() =>
       expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('kind_key'),
     )
+  })
+
+  it('F002 the sort menu offers "Price" and picking it sets ?sort=price', async () => {
+    const backend = useBackend()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(sortSelect())
+    await user.click(await screen.findByRole('option', { name: 'Price' }))
+    expect(router.state.location.search).toBe('?sort=price')
+    await waitFor(() => expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('price'))
   })
 
   it('F007-W9 ?sort=kind_key is ignored on a generic list', async () => {
@@ -382,6 +389,89 @@ describe('W-06 URL state: sort and filter', () => {
     await itemsList()
     expect(sortSelect()).toHaveTextContent('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
+  })
+})
+
+describe('F002-W2 pinned fields', () => {
+  const movie = makeItem(1, {
+    title: 'Alien',
+    price: { min: '1200', max: '1500', currency: 'EUR' },
+    metadata: {
+      runtime_minutes: 117,
+      streaming: { platforms: ['Netflix'], paid_platforms: ['Netflix'] },
+    },
+  })
+
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s shows the kind default: runtime under the title, streaming icon with the paid badge',
+    async (mode) => {
+      useBackend({
+        list: { display_mode: mode, kind: 'movie', pinned_fields: null },
+        items: [movie],
+      })
+      renderList(at())
+      const ul = await itemsList()
+      expect(within(ul).getByText('117 min')).toBeInTheDocument()
+      expect(within(ul).getByRole('img', { name: 'Netflix, paid' })).toBeInTheDocument()
+      // Price is not pinned on a movie by default.
+      expect(within(ul).queryByText(/€/)).not.toBeInTheDocument()
+    },
+  )
+
+  it('a movie row from the API shows runtime and a streaming icon with $ for a paid platform', async () => {
+    useBackend({ list: { kind: 'movie', pinned_fields: null }, items: [movie] })
+    renderList(at())
+    const ul = await itemsList()
+    expect(within(ul).getByText('117 min')).toBeInTheDocument()
+    const icon = within(ul).getByRole('img', { name: 'Netflix, paid' })
+    expect(icon).toHaveTextContent('$')
+  })
+
+  it('shows the list selection instead of the default, and {} pins nothing', async () => {
+    useBackend({
+      list: { kind: 'movie', pinned_fields: { under: ['price'], right: [] } },
+      items: [movie],
+    })
+    renderList(at())
+    const ul = await itemsList()
+    expect(within(ul).getByText('€1,200–€1,500')).toBeInTheDocument()
+    expect(within(ul).queryByText('117 min')).not.toBeInTheDocument()
+  })
+
+  it('the menu shows the effective selection, ticking a field PATCHes both slots with If-Match', async () => {
+    const backend = useBackend({
+      list: { kind: 'movie', pinned_fields: null, version: 4 },
+      items: [movie],
+    })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await user.click(await screen.findByRole('button', { name: /Pinned fields/ }))
+    const menu = await screen.findByRole('menu')
+    const boxes = within(menu).getAllByRole('menuitemcheckbox', { name: 'Runtime' })
+    expect(boxes[0]).toBeChecked() // under the title
+    expect(boxes[1]).not.toBeChecked() // on the right
+    // Moving it to the right slot takes it out of the first.
+    await user.click(boxes[1]!)
+    await waitFor(() => expect(backend.patches).toHaveLength(1))
+    expect(backend.patches[0]).toEqual({
+      ifMatch: '"l-4"',
+      body: { pinned_fields: { under: [], right: ['streaming', 'runtime_minutes'] } },
+    })
+  })
+
+  it('Reset to default PATCHes pinned_fields null', async () => {
+    const backend = useBackend({
+      list: { kind: 'movie', pinned_fields: { under: [], right: ['price'] }, version: 2 },
+      items: [movie],
+    })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await user.click(await screen.findByRole('button', { name: /Pinned fields/ }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Reset to default' }))
+    await waitFor(() => expect(backend.patches).toHaveLength(1))
+    expect(backend.patches[0]).toEqual({ ifMatch: '"l-2"', body: { pinned_fields: null } })
   })
 })
 
@@ -504,13 +594,13 @@ describe('W-06 reorder', () => {
     await user.click(screen.getByRole('button', { name: `Actions for ${title}` }))
   }
 
-  it('manual sort shows a handle and an actions menu per row, with edge moves disabled', async () => {
+  it('manual sort shows an actions menu per row (the rows are draggable), with edge moves disabled', async () => {
     useBackend()
     const user = userEvent.setup()
     renderList(at())
     await itemsList()
     for (const t of ['Item 1', 'Item 2', 'Item 3']) {
-      expect(screen.getByRole('button', { name: `Reorder ${t}` })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: `Actions for ${t}` })).toBeInTheDocument()
     }
     await openMenu(user, 'Item 1')
     expect(await screen.findByRole('menuitem', { name: 'Move up' })).toHaveAttribute(
@@ -598,24 +688,24 @@ describe('W-06 reorder', () => {
   // layout (all rects are 0), so the sortable never changes index and the drop is a no-op. This
   // cannot be exercised faithfully here; the keyboard path is covered by the "Move up/down" menu
   // tests above and should be checked in a real browser (Playwright, Q-01).
-  it.skip('keyboard drag on the handle (Space, ArrowDown, Space) reorders (needs real layout)', async () => {
+  it.skip('keyboard drag from the focused title link (Space, ArrowDown, Space) reorders (needs real layout)', async () => {
     const backend = useBackend()
     const user = userEvent.setup()
     renderList(at())
     await itemsList()
-    screen.getByRole('button', { name: 'Reorder Item 1' }).focus()
+    screen.getByRole('link', { name: 'Item 1' }).focus()
     await user.keyboard(' ')
     await user.keyboard('{ArrowDown}')
     await user.keyboard(' ')
     await waitFor(() => expect(backend.puts).toHaveLength(1))
   })
 
-  describe('handles are not offered', () => {
-    // The sidebar tree has its own reorder handles, so look inside the items list only.
+  describe('reordering is not offered', () => {
+    // Without reordering the rows have no actions menu (Move up / Move down) and no drag.
     const noHandles = () =>
       expect(
         within(screen.getByRole('list', { name: 'Items' })).queryByRole('button', {
-          name: /^Reorder /,
+          name: /^Actions for /,
         }),
       ).toBeNull()
 
@@ -658,8 +748,10 @@ describe('W-06 reorder', () => {
           expect(backend.itemRequests.at(-1)!.searchParams.get('offset')).toBe('200'),
         )
         await waitFor(() => expect(titles()).toHaveLength(205))
-        // Everything is loaded now: handles appear and the hint goes away.
-        expect(await screen.findByRole('button', { name: 'Reorder Item 1' })).toBeInTheDocument()
+        // Everything is loaded now: reordering is back and the hint goes away.
+        expect(
+          await screen.findByRole('button', { name: 'Actions for Item 1' }),
+        ).toBeInTheDocument()
         expect(screen.queryByText('Load all items to reorder them.')).toBeNull()
         expect(screen.queryByRole('button', { name: /^Load more/ })).toBeNull()
       },
@@ -746,7 +838,7 @@ describe('W-06 list actions menu (W-05) in the header', () => {
     const main = screen.getByRole('main')
     await user.click(within(main).getByRole('button', { name: /More actions for/ }))
     expect(await screen.findByRole('menuitem', { name: 'Rename' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'Edit description' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Edit description' })).not.toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: /^Move/ })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument()
   })

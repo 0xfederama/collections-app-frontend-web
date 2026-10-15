@@ -155,11 +155,9 @@ describe('kindRows', () => {
     const rows = kindRows('motorcycle', {
       license_class: 'A',
       displacement_cc: 937,
-      make: 'Ducati',
       power_hp: 111,
     })
     expect(rows.map((r) => [r.label, r.text])).toEqual([
-      ['Make', 'Ducati'],
       ['Displacement', '937 cc'],
       ['Power', '111 hp'],
       ['License class', 'A'],

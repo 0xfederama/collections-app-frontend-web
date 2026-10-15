@@ -76,25 +76,6 @@ describe('AT-03 tree write errors (web): 412 conflict', () => {
     expect(backend.writes('PATCH')[1]?.ifMatch).toBe('"f-4"')
   })
 
-  it('a 412 on a list description keeps the text and offers Reload latest', async () => {
-    const { user, backend } = await openTree()
-    await pickRowAction(user, 'Wishlist', 'Edit description')
-    const field = await screen.findByRole('textbox', { name: 'Description' })
-    await user.type(field, 'Mine')
-    const list = backend.state.lists.find((l) => l.id === ID.wishlist)!
-    list.description = 'Theirs'
-    list.version = 6
-
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-    const alert = await within(screen.getByRole('dialog')).findByRole('alert')
-    expect(alert).toHaveTextContent('Someone else changed this list')
-    expect(field).toHaveValue('Mine')
-
-    await user.click(within(alert).getByRole('button', { name: 'Reload latest' }))
-    await waitFor(() => expect(field).toHaveValue('Theirs'))
-    expect(backend.writes('PATCH')).toHaveLength(1)
-  })
-
   it('a 412 on delete keeps the dialog; Reload latest then lets the next confirm use the new version', async () => {
     const { user, backend } = await openTree()
     await pickRowAction(user, 'Vehicles', 'Delete')
@@ -202,7 +183,7 @@ describe('AT-03 tree write errors (web): other failures', () => {
         return calls === 1 ? HttpResponse.error() : undefined
       }),
     )
-    await pickHeaderAction(user, 'New folder')
+    await pickHeaderAction(user, 'Folder')
     const field = await nameField()
     await user.type(field, 'Offline folder')
     await user.click(screen.getByRole('button', { name: 'Create' }))
@@ -221,7 +202,7 @@ describe('AT-03 tree write errors (web): other failures', () => {
   it('a 500 is treated like a network failure (Retry, input kept)', async () => {
     const { user } = await openTree()
     server.use(http.post(apiUrl('/api/v1/lists'), () => problemResponse(500, 'internal_error')))
-    await pickHeaderAction(user, 'New list')
+    await pickHeaderAction(user, 'List')
     const field = await nameField()
     await user.type(field, 'Keep me')
     await user.click(screen.getByRole('button', { name: 'Create' }))
@@ -232,7 +213,7 @@ describe('AT-03 tree write errors (web): other failures', () => {
 
   it('an empty or blank name shows "Enter a name." and sends nothing', async () => {
     const { user, backend } = await openTree()
-    await pickHeaderAction(user, 'New folder')
+    await pickHeaderAction(user, 'Folder')
     const field = await nameField()
     await user.click(screen.getByRole('button', { name: 'Create' }))
     expect(screen.getByText('Enter a name.')).toBeInTheDocument()
@@ -256,7 +237,7 @@ describe('AT-03 tree write errors (web): other failures', () => {
 
   it('limits the name to 200 characters', async () => {
     const { user, backend } = await openTree()
-    await pickHeaderAction(user, 'New folder')
+    await pickHeaderAction(user, 'Folder')
     const field = await nameField()
     expect(field).toHaveAttribute('maxlength', '200')
     await user.click(field)

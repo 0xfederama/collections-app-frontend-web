@@ -24,6 +24,7 @@ function makeResult(n: number, title = `Result ${n}`) {
       image: null,
       price: null,
       website: null,
+      metadata: {},
       content_version: 1,
       sort_order: n,
       version: 1,

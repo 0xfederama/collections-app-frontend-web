@@ -18,6 +18,8 @@
   --color-surface-raised: var(--surface-raised);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-fill: var(--fill);
+  --color-fill-hover: var(--fill-hover);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-accent: var(--accent);
@@ -41,8 +43,9 @@
 
   --shadow-*: initial;
 
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
 
   --text-*: initial;
   --text-xs: 0.75rem;
@@ -132,6 +135,27 @@
 @utility shadow-lg {
   box-shadow: var(--shadow-lg);
 }
+@utility shadow-float {
+  box-shadow: var(--shadow-float);
+}
+@utility shadow-sheet {
+  box-shadow: var(--shadow-sheet);
+}
+@utility shadow-accent {
+  box-shadow: var(--shadow-accent);
+}
+
+/* Frosted surface: sidebar, toolbar, detail sheet, menus, dialogs, drawer. Solid under the fallbacks in tokens.css. */
+@utility material {
+  background-color: var(--material-bg);
+  -webkit-backdrop-filter: var(--material-filter);
+  backdrop-filter: var(--material-filter);
+}
+@utility material-strong {
+  background-color: var(--material-bg-strong);
+  -webkit-backdrop-filter: var(--material-filter);
+  backdrop-filter: var(--material-filter);
+}
 
 @layer base {
   html {
@@ -144,25 +168,19 @@
   body {
     margin: 0;
     background-color: var(--bg);
+    background-image: var(--bg-ambient);
+    background-attachment: fixed;
     color: var(--text);
     font-family: var(--font-sans);
     font-size: 1rem;
     line-height: 1.5;
-    font-feature-settings:
-      'cv11' 1,
-      'ss01' 1;
+    letter-spacing: -0.006em;
     -webkit-font-smoothing: antialiased;
   }
 
   /* Prices and counts. */
   .tabular {
     font-variant-numeric: tabular-nums;
-  }
-
-  /* Display type: list titles, item titles, empty-state headings. Used sparingly. */
-  .font-display {
-    font-variation-settings: 'SOFT' 50;
-    line-height: 1.2;
   }
 
   :focus-visible {

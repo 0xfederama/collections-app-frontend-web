@@ -36,23 +36,75 @@ const make = (over: Partial<Source> = {}): Source => ({
   ...over,
 })
 
+/** The links of an item by id; a missing id throws, so a test never reads `undefined`. */
+const byId = (item: Source) => {
+  const all = buildExternalLinks(item)
+  return (id: string) => {
+    const found = all.find((link) => link.id === id)
+    if (!found) throw new Error(`no ${id} link`)
+    return found
+  }
+}
+
 const queryOf = (href: string | null) => {
   const url = new URL(href ?? '')
   expect(url.origin + url.pathname).toBe('https://www.google.com/search')
   return url.searchParams.get('q')
 }
 
-describe('AT-13 external links: shape', () => {
-  it('returns exactly three links in the order google, reddit, website', () => {
-    const links = buildExternalLinks(make())
-    expect(links.map((l) => l.id)).toEqual(['google', 'reddit', 'website'])
-    expect(links.map((l) => l.label)).toEqual(['Google', 'Reddit', 'Website'])
+describe('AT-13 external links: shape per kind (F-002)', () => {
+  it.each<[ItemKind, string[]]>([
+    ['movie', ['google', 'letterboxd', 'imdb']],
+    ['tv_show', ['google', 'imdb']],
+    ['generic', ['google', 'reddit', 'website']],
+    ['motorcycle', ['google', 'reddit', 'website']],
+    ['car', ['google', 'reddit', 'website']],
+    ['camera', ['google', 'reddit', 'website']],
+  ])('%s: %j', (kind, ids) => {
+    expect(buildExternalLinks(make({ kind })).map((l) => l.id)).toEqual(ids)
+  })
+
+  it('labels are Google, Reddit, Website, Letterboxd, IMDb', () => {
+    expect(buildExternalLinks(make()).map((l) => l.label)).toEqual(['Google', 'Reddit', 'Website'])
+    expect(buildExternalLinks(make({ kind: 'movie' })).map((l) => l.label)).toEqual([
+      'Google',
+      'Letterboxd',
+      'IMDb',
+    ])
   })
 
   it('Google and Reddit are Google searches', () => {
-    const [google, reddit] = buildExternalLinks(make({ title: 'Ducati' }))
-    expect(google.href).toMatch(/^https:\/\/www\.google\.com\/search\?q=/)
-    expect(reddit.href).toMatch(/^https:\/\/www\.google\.com\/search\?q=/)
+    const link = byId(make({ title: 'Ducati' }))
+    expect(link('google').href).toMatch(/^https:\/\/www\.google\.com\/search\?q=/)
+    expect(link('reddit').href).toMatch(/^https:\/\/www\.google\.com\/search\?q=/)
+  })
+})
+
+describe('F-002 Letterboxd and IMDb', () => {
+  it('Letterboxd is a title search with the title encoded as a path segment', () => {
+    const href = byId(make({ kind: 'movie', title: 'Tom & Jerry/2 #1' }))('letterboxd').href
+    expect(href).toBe('https://letterboxd.com/search/Tom%20%26%20Jerry%2F2%20%231/')
+  })
+
+  it('IMDb opens the stored imdb_url when it is valid', () => {
+    const url = 'https://www.imdb.com/title/tt0133093/'
+    for (const kind of ['movie', 'tv_show'] as const) {
+      expect(byId(make({ kind, metadata: { imdb_url: url } }))('imdb').href).toBe(url)
+    }
+  })
+
+  it.each([
+    ['missing', {}],
+    ['empty', { imdb_url: '' }],
+    ['not IMDb', { imdb_url: 'https://evil.example/title/tt0133093/' }],
+    ['javascript:', { imdb_url: 'javascript:alert(1)' }],
+  ])('IMDb falls back to a title search when imdb_url is %s', (_, metadata) => {
+    const href = byId(make({ kind: 'movie', title: 'A&B #1', metadata }))('imdb').href ?? ''
+    const url = new URL(href)
+    expect(url.origin + url.pathname).toBe('https://www.imdb.com/find/')
+    expect(url.searchParams.get('q')).toBe('A&B #1')
+    expect(url.searchParams.get('s')).toBe('tt')
+    expect(url.hash).toBe('')
   })
 })
 
@@ -80,16 +132,10 @@ describe('AT-13 external links: search text per kind', () => {
     ['camera', make({ kind: 'camera' }), 'The Matrix'],
     ['generic', make({ kind: 'generic' }), 'The Matrix'],
   ])('%s', (_, item, expected) => {
-    const [google, reddit] = buildExternalLinks(item)
-    expect(queryOf(google.href)).toBe(expected)
-    expect(queryOf(reddit.href)).toBe(`${expected} site:reddit.com`)
-  })
-
-  it('covers every kind of the spec with a title-only or suffixed query', () => {
-    const kinds: ItemKind[] = ['generic', 'movie', 'tv_show', 'motorcycle', 'car', 'camera']
-    for (const kind of kinds) {
-      const [google] = buildExternalLinks(make({ kind, title: 'X' }))
-      expect(queryOf(google.href)?.startsWith('X')).toBe(true)
+    const link = byId(item)
+    expect(queryOf(link('google').href)).toBe(expected)
+    if (item.kind !== 'movie' && item.kind !== 'tv_show') {
+      expect(queryOf(link('reddit').href)).toBe(`${expected} site:reddit.com`)
     }
   })
 })
@@ -108,15 +154,16 @@ describe('AT-13 external links: title encoding', () => {
   ])('%s survives a round trip through the URL', (_, title) => {
     for (const kind of ['generic', 'movie', 'tv_show'] as const) {
       const suffix = { generic: '', movie: ' film', tv_show: ' TV series' }[kind]
-      const [google, reddit] = buildExternalLinks(make({ title, kind }))
-      expect(queryOf(google.href)).toBe(`${title}${suffix}`)
-      expect(queryOf(reddit.href)).toBe(`${title}${suffix} site:reddit.com`)
+      const link = byId(make({ title, kind }))
+      expect(queryOf(link('google').href)).toBe(`${title}${suffix}`)
+      if (kind === 'generic') {
+        expect(queryOf(link('reddit').href)).toBe(`${title}${suffix} site:reddit.com`)
+      }
     }
   })
 
   it('leaves no unencoded & or # from the title in the raw href', () => {
-    const [google] = buildExternalLinks(make({ title: 'A&B#C' }))
-    const raw = google.href ?? ''
+    const raw = byId(make({ title: 'A&B#C' }))('google').href ?? ''
     const query = raw.slice(raw.indexOf('?') + 1)
     expect(query.startsWith('q=')).toBe(true)
     expect(query).not.toMatch(/[&#]/)
@@ -125,10 +172,8 @@ describe('AT-13 external links: title encoding', () => {
   })
 
   it('movie year goes between the title and "film"', () => {
-    const [google] = buildExternalLinks(
-      make({ title: 'Amélie', kind: 'movie', metadata: { release_year: 2001 } }),
-    )
-    expect(queryOf(google.href)).toBe('Amélie 2001 film')
+    const link = byId(make({ title: 'Amélie', kind: 'movie', metadata: { release_year: 2001 } }))
+    expect(queryOf(link('google').href)).toBe('Amélie 2001 film')
   })
 })
 
@@ -138,7 +183,7 @@ describe('AT-13 external links: website', () => {
     ['https', 'https://www.ducati.com/'],
     ['https with path and query', 'https://example.org/a/b?x=1#y'],
   ])('%s URL is used as is', (_, url) => {
-    expect(buildExternalLinks(make({ website: url }))[2].href).toBe(url)
+    expect(byId(make({ website: url }))('website').href).toBe(url)
   })
 
   it.each([
@@ -150,18 +195,21 @@ describe('AT-13 external links: website', () => {
     ['garbage', 'not a url'],
     ['relative', '/foo'],
   ])('%s gives a null href', (_, url) => {
-    expect(buildExternalLinks(make({ website: url }))[2].href).toBeNull()
+    expect(byId(make({ website: url }))('website').href).toBeNull()
   })
 
-  it('never falls back to a search', () => {
-    const links = buildExternalLinks(make({ kind: 'movie', website: null }))
-    expect(links[2].href).toBeNull()
-    expect(links[2].label).toBe('Website')
+  it('movies and TV shows have no website link', () => {
+    for (const kind of ['movie', 'tv_show'] as const) {
+      const ids = buildExternalLinks(make({ kind, website: 'https://example.org/' })).map(
+        (l) => l.id,
+      )
+      expect(ids).not.toContain('website')
+    }
   })
 
   it('an invalid website does not affect Google or Reddit', () => {
-    const [google, reddit] = buildExternalLinks(make({ website: 'javascript:alert(1)' }))
-    expect(google.href).not.toBeNull()
-    expect(reddit.href).not.toBeNull()
+    const link = byId(make({ website: 'javascript:alert(1)' }))
+    expect(link('google').href).not.toBeNull()
+    expect(link('reddit').href).not.toBeNull()
   })
 })

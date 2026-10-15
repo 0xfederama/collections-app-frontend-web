@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { IconButton, Menu, type MenuItem } from '../../components/ui'
 import {
   Ellipsis,
-  FileText,
   FolderInput,
   FolderPlus,
   ListPlus,
@@ -34,13 +33,6 @@ export function nodeMenuItems(node: TreeNode, actions: TreeActions): MenuItem[] 
     )
   }
   items.push({ label: 'Rename', icon: icon(<Pencil />), onSelect: () => actions.rename(id) })
-  if (node.kind === 'list') {
-    items.push({
-      label: 'Edit description',
-      icon: icon(<FileText />),
-      onSelect: () => actions.editDescription(id),
-    })
-  }
   items.push({ label: 'Move…', icon: icon(<FolderInput />), onSelect: () => actions.move(id) })
   items.push(
     { type: 'separator' },

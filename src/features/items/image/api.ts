@@ -1,17 +1,18 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { api, ifMatch, unwrap } from '../../../lib/api'
 import { listKeys } from '../../lists/api'
-import { itemKeys, type Item } from '../api'
+import { itemKeys, recordOwnWrite, type Item } from '../api'
 import { putImageFile } from './upload'
 
 /**
  * The three image writes of an item (API §4). Each is its own request with `If-Match` from the
- * version of the item the user is editing, is never retried on 412, and returns the updated item.
+ * version of the item as it is now, is never retried on 412, and returns the updated item.
  * On success the detail cache gets the answer and the list (which shows thumbnails) is refetched.
  */
 export function useItemImage(item: Item) {
   const client = useQueryClient()
   const commit = (updated: Item) => {
+    recordOwnWrite(client, item.id, item.version, updated.version)
     client.setQueryData<Item>(itemKeys.detail(item.id), updated)
     void client.invalidateQueries({ queryKey: listKeys.items(updated.list_id) })
     void client.invalidateQueries({ queryKey: listKeys.detail(updated.list_id) })

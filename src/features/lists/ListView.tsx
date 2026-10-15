@@ -12,16 +12,17 @@ import {
   listKeys,
   type DisplayMode,
   type List,
+  type PinnedFields,
   type SortMode,
 } from './api'
-import { CreateItemDialog } from '../items/CreateItemDialog'
-import { withoutEdit } from '../items/editMode'
+import { useQuickAdd } from '../quickadd/QuickAddContext'
 import { sortKeyLabel } from '../items/kinds'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
+import { resolvePinned } from './pinned'
 import { useScrollRestore } from './scrollRestore'
 
-const SORTS: readonly SortMode[] = ['manual', 'title', 'updated', 'kind_key']
+const SORTS: readonly SortMode[] = ['manual', 'title', 'updated', 'price', 'kind_key']
 const FILTER_DEBOUNCE_MS = 250
 
 function parseSort(value: string | null): SortMode | null {
@@ -39,8 +40,8 @@ export function ListView({ treeList }: { treeList: List }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const parsedSort = parseSort(searchParams.get('sort'))
   const q = (searchParams.get('q') ?? '').trim()
-  // `?edit=1` belongs to the open item's page; links to other items must not carry it.
-  const search = withoutEdit(searchParams)
+  // Links to items keep the list's `?q=` and `?sort=`.
+  const search = searchParams.size > 0 ? `?${searchParams.toString()}` : ''
 
   const listQuery = useList(listId)
   const list = listQuery.data
@@ -114,6 +115,9 @@ export function ListView({ treeList }: { treeList: List }) {
   }
   const setDisplayMode = (display_mode: DisplayMode) =>
     updateList.mutate({ display_mode }, { onError: onUpdateError })
+  const setPinned = (pinned_fields: PinnedFields) =>
+    updateList.mutate({ pinned_fields }, { onError: onUpdateError })
+  const resetPinned = () => updateList.mutate({ pinned_fields: null }, { onError: onUpdateError })
   const makeDefault = () =>
     updateList.mutate(
       { sort_mode: effectiveSort },
@@ -124,8 +128,8 @@ export function ListView({ treeList }: { treeList: List }) {
     )
 
   const clearFilter = () => setFilter('')
-  const [adding, setAdding] = useState(false)
-  const addItem = () => setAdding(true)
+  const quickAdd = useQuickAdd()
+  const addItem = () => quickAdd.open(listId)
 
   if (listQuery.isError) {
     if (listQuery.error instanceof ApiError && listQuery.error.status === 404) {
@@ -171,6 +175,8 @@ export function ListView({ treeList }: { treeList: List }) {
         makeDefaultPending={updateList.isPending}
         filter={filter}
         onFilter={setFilter}
+        onPinned={setPinned}
+        onResetPinned={resetPinned}
         onAddItem={addItem}
       />
       {itemsQuery.isError ? (
@@ -189,6 +195,8 @@ export function ListView({ treeList }: { treeList: List }) {
         <ItemsView
           listId={listId}
           mode={mode}
+          kind={list.kind}
+          pinned={resolvePinned(list)}
           items={items}
           total={total}
           params={params}
@@ -201,9 +209,6 @@ export function ListView({ treeList }: { treeList: List }) {
           onClearFilter={clearFilter}
           onAddItem={addItem}
         />
-      )}
-      {adding && (
-        <CreateItemDialog listId={listId} search={search} onClose={() => setAdding(false)} />
       )}
     </div>
   )

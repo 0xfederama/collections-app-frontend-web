@@ -11,7 +11,6 @@ import {
   pickHeaderAction,
   pickRowAction,
   rowNames,
-  seedTree,
   sidebar,
 } from './treeTestKit'
 
@@ -21,7 +20,7 @@ const treeRow = (name: RegExp) => within(sidebar()).findByRole('treeitem', { nam
 describe('AT-03 tree CRUD (web): create', () => {
   it('creates a root folder from the header "+" menu and shows it in the tree', async () => {
     const { user, backend } = await openTree()
-    await pickHeaderAction(user, 'New folder')
+    await pickHeaderAction(user, 'Folder')
 
     const dlg = await dialog()
     expect(within(dlg).getByText('It will be created at the top level.')).toBeInTheDocument()
@@ -39,7 +38,7 @@ describe('AT-03 tree CRUD (web): create', () => {
 
   it('creates a root list from the header menu with folder_id null and opens it', async () => {
     const { user, backend, router } = await openTree()
-    await pickHeaderAction(user, 'New list')
+    await pickHeaderAction(user, 'List')
     await user.type(await screen.findByRole('textbox', { name: 'Name' }), 'Games')
     await user.click(screen.getByRole('button', { name: 'Create' }))
 
@@ -55,7 +54,7 @@ describe('AT-03 tree CRUD (web): create', () => {
 
   it('F007-W7 a new list asks for its kind (Item by default) and sends the chosen one', async () => {
     const { user, backend } = await openTree()
-    await pickHeaderAction(user, 'New list')
+    await pickHeaderAction(user, 'List')
     const dlg = await dialog()
     const kind = within(dlg).getByRole('combobox', { name: 'Kind' })
     expect(kind).toHaveTextContent('Item')
@@ -76,7 +75,7 @@ describe('AT-03 tree CRUD (web): create', () => {
 
   it('a new folder has no kind picker', async () => {
     const { user } = await openTree()
-    await pickHeaderAction(user, 'New folder')
+    await pickHeaderAction(user, 'Folder')
     const dlg = await dialog()
     expect(within(dlg).queryByRole('combobox', { name: 'Kind' })).not.toBeInTheDocument()
   })
@@ -116,7 +115,7 @@ describe('AT-03 tree CRUD (web): create', () => {
 
   it('trims the name before sending it', async () => {
     const { user, backend } = await openTree()
-    await pickHeaderAction(user, 'New folder')
+    await pickHeaderAction(user, 'Folder')
     await user.type(await screen.findByRole('textbox', { name: 'Name' }), '  Music  ')
     await user.click(screen.getByRole('button', { name: 'Create' }))
     await waitFor(() => expect(backend.writes('POST', '/api/v1/folders')).toHaveLength(1))
@@ -125,7 +124,7 @@ describe('AT-03 tree CRUD (web): create', () => {
 
   it('Cancel closes the dialog without a request', async () => {
     const { user, backend } = await openTree()
-    await pickHeaderAction(user, 'New folder')
+    await pickHeaderAction(user, 'Folder')
     await user.click(await screen.findByRole('button', { name: 'Cancel' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(backend.requests).toHaveLength(0)
@@ -133,7 +132,7 @@ describe('AT-03 tree CRUD (web): create', () => {
 
   it('a new root folder is appended after the existing root folders', async () => {
     const { user } = await openTree()
-    await pickHeaderAction(user, 'New folder')
+    await pickHeaderAction(user, 'Folder')
     await user.type(await screen.findByRole('textbox', { name: 'Name' }), 'Last')
     await user.click(screen.getByRole('button', { name: 'Create' }))
     await treeRow(/^Last/)
@@ -175,128 +174,6 @@ describe('AT-03 tree CRUD (web): rename', () => {
     const [patch] = backend.writes('PATCH', `/api/v1/lists/${ID.watchlist}`)
     expect(patch?.ifMatch).toBe('"l-2"')
     expect(patch?.body).toEqual({ name: 'To watch' })
-  })
-})
-
-describe('F007-W7 list kind in the list settings', () => {
-  const pickKind = async (user: Awaited<ReturnType<typeof openTree>>['user'], name: string) => {
-    await user.click(within(await dialog()).getByRole('combobox', { name: 'Kind' }))
-    await user.click(await screen.findByRole('option', { name }))
-  }
-
-  it('the rename dialog of a list shows its kind; a folder has none', async () => {
-    const { user } = await openTree()
-    await pickRowAction(user, 'Watchlist', 'Rename')
-    expect(within(await dialog()).getByRole('combobox', { name: 'Kind' })).toHaveTextContent(
-      'Movie',
-    )
-  })
-
-  it('changing the kind of a list with items warns that kind fields are cleared, then sends kind', async () => {
-    const { user, backend } = await openTree()
-    await pickRowAction(user, 'Watchlist', 'Rename')
-    const dlg = await dialog()
-    expect(within(dlg).queryByRole('alert')).not.toBeInTheDocument()
-    await pickKind(user, 'TV show')
-    expect(within(dlg).getByRole('alert')).toHaveTextContent(/clears the kind fields/)
-    expect(within(dlg).getByRole('alert')).toHaveTextContent(/12 items/)
-    await user.click(within(dlg).getByRole('button', { name: 'Save' }))
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    const [patch] = backend.writes('PATCH', `/api/v1/lists/${ID.watchlist}`)
-    expect(patch?.ifMatch).toBe('"l-2"')
-    expect(patch?.body).toEqual({ name: 'Watchlist', kind: 'tv_show' })
-    expect(backend.state.lists.find((l) => l.id === ID.watchlist)?.kind).toBe('tv_show')
-  })
-
-  it('picking the original kind again hides the warning', async () => {
-    const { user } = await openTree()
-    await pickRowAction(user, 'Watchlist', 'Rename')
-    const dlg = await dialog()
-    await pickKind(user, 'Car')
-    expect(within(dlg).getByRole('alert')).toBeInTheDocument()
-    await pickKind(user, 'Movie')
-    expect(within(dlg).queryByRole('alert')).not.toBeInTheDocument()
-  })
-
-  it('an empty list changes kind without a warning', async () => {
-    const { user, backend } = await openTree()
-    await pickRowAction(user, 'Ideas', 'Rename')
-    const dlg = await dialog()
-    await pickKind(user, 'Car')
-    expect(within(dlg).queryByRole('alert')).not.toBeInTheDocument()
-    await user.click(within(dlg).getByRole('button', { name: 'Save' }))
-    await waitFor(() =>
-      expect(backend.writes('PATCH', `/api/v1/lists/${ID.ideas}`)[0]?.body).toEqual({
-        name: 'Ideas',
-        kind: 'car',
-      }),
-    )
-  })
-})
-
-describe('AT-03 tree CRUD (web): description', () => {
-  it('saves a trimmed description with If-Match', async () => {
-    const { user, backend } = await openTree()
-    await pickRowAction(user, 'Wishlist', 'Edit description')
-    const field = await within(await dialog()).findByRole('textbox', { name: 'Description' })
-    expect(field).toHaveValue('')
-    await user.type(field, '  Things I want  ')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    const [patch] = backend.writes('PATCH', `/api/v1/lists/${ID.wishlist}`)
-    expect(patch?.ifMatch).toBe('"l-5"')
-    expect(patch?.body).toEqual({ description: 'Things I want' })
-    expect(await screen.findByText('Description saved')).toBeInTheDocument()
-  })
-
-  it('sends description null when the text is cleared', async () => {
-    const tree = seedTree()
-    tree.lists.find((l) => l.id === ID.wishlist)!.description = 'Old text'
-    const { user, backend } = await openTree('/', tree)
-    await pickRowAction(user, 'Wishlist', 'Edit description')
-    const field = await within(await dialog()).findByRole('textbox', { name: 'Description' })
-    expect(field).toHaveValue('Old text')
-    await user.clear(field)
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-
-    await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(1))
-    const body = backend.writes('PATCH')[0]?.body as Record<string, unknown>
-    expect(body).toHaveProperty('description', null)
-    expect(body).not.toHaveProperty('name')
-    await waitFor(() =>
-      expect(backend.state.lists.find((l) => l.id === ID.wishlist)?.description).toBeNull(),
-    )
-  })
-
-  it('has no "Edit description" entry on folders', async () => {
-    const { user } = await openTree()
-    await user.click(within(sidebar()).getByRole('button', { name: 'More actions for Media' }))
-    await screen.findByRole('menuitem', { name: 'Rename' })
-    expect(screen.queryByRole('menuitem', { name: 'Edit description' })).not.toBeInTheDocument()
-  })
-
-  it('F007-W10 blocks Save above 64 KiB (bytes, not characters) without a request', async () => {
-    const { user, backend } = await openTree()
-    await pickRowAction(user, 'Wishlist', 'Edit description')
-    await user.click(await within(await dialog()).findByRole('textbox', { name: 'Description' }))
-    // 2 bytes per character: 33000 characters are 66000 bytes, over 65536.
-    await user.paste('é'.repeat(33_000))
-    expect(screen.getByRole('alert')).toHaveTextContent('the limit is 64.0 KB')
-    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
-    expect(backend.requests).toHaveLength(0)
-  })
-
-  it('F007-W10 the Preview tab renders the Markdown', async () => {
-    const { user } = await openTree()
-    await pickRowAction(user, 'Wishlist', 'Edit description')
-    await user.click(await within(await dialog()).findByRole('textbox', { name: 'Description' }))
-    await user.paste('**bold** text')
-    await user.click(screen.getByRole('radio', { name: 'Preview' }))
-    expect(
-      within(screen.getByRole('region', { name: 'Description preview' })).getByText('bold'),
-    ).toBeInTheDocument()
   })
 })
 
