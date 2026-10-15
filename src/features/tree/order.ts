@@ -68,7 +68,7 @@ export function flattenFolders(index: TreeIndex) {
   return out
 }
 
-/** Counts of everything below a folder: nested lists and the items in them. */
+/** Counts of a deletion, the root included like the server's Trash `counts` (D-065): folders, lists, items. */
 export function subtreeCounts(node: TreeNode): { lists: number; folders: number; items: number } {
   const total = { lists: 0, folders: 0, items: 0 }
   const visit = (n: TreeNode) => {
@@ -80,7 +80,6 @@ export function subtreeCounts(node: TreeNode): { lists: number; folders: number;
       n.children.forEach(visit)
     }
   }
-  if (node.kind === 'folder') node.children.forEach(visit)
-  else visit(node)
+  visit(node)
   return total
 }

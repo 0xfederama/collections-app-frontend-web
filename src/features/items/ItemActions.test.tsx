@@ -74,6 +74,11 @@ describe('AT-11 delete item (moves it to Trash)', () => {
     expect(dialog).toHaveTextContent(/Trash/)
   })
 
+  it('F006-W4 the confirm states the same counts as the item Trash entry ("1 item")', async () => {
+    const { dialog } = await openDelete()
+    expect(dialog).toHaveTextContent('This moves “The Matrix” to Trash: 1 item.')
+  })
+
   it('Cancel closes the dialog and sends nothing', async () => {
     let deletes = 0
     server.use(http.delete(itemUrl, () => (deletes++, new HttpResponse(null, { status: 204 }))))

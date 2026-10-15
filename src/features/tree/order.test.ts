@@ -111,13 +111,13 @@ describe('AT-03 order helpers: applyOrder', () => {
 })
 
 describe('AT-03 order helpers: subtreeCounts', () => {
-  it('counts nested folders, lists and items below a folder', () => {
-    expect(subtreeCounts(node(1))).toEqual({ folders: 3, lists: 4, items: 72 })
-    expect(subtreeCounts(node(2))).toEqual({ folders: 1, lists: 3, items: 69 })
+  it('counts the folder itself plus nested folders, lists and items', () => {
+    expect(subtreeCounts(node(1))).toEqual({ folders: 4, lists: 4, items: 72 })
+    expect(subtreeCounts(node(2))).toEqual({ folders: 2, lists: 3, items: 69 })
   })
 
-  it('is zero for an empty folder', () => {
-    expect(subtreeCounts(node(7))).toEqual({ folders: 0, lists: 0, items: 0 })
+  it('is just the folder itself for an empty folder', () => {
+    expect(subtreeCounts(node(7))).toEqual({ folders: 1, lists: 0, items: 0 })
   })
 
   it('counts a list as itself plus its items', () => {
