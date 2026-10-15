@@ -3,7 +3,6 @@ import { Button, Skeleton } from '../components/ui'
 import { useSettings } from '../features/settings/api'
 import { ConnectionSection } from '../features/settings/ConnectionSection'
 import { SettingsForm } from '../features/settings/SettingsForm'
-import { ThemeSection } from '../features/settings/ThemeSection'
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
@@ -30,15 +29,12 @@ function WorkspaceSkeleton() {
   )
 }
 
-/** `/settings` (UI_SPEC §8): the per-device theme, then the workspace settings form. */
+/** `/settings` (UI_SPEC §8): the workspace settings form and the connection info (the theme toggle lives in the sidebar). */
 export function SettingsRoute() {
   const settings = useSettings()
   return (
     <div className="flex max-w-xl flex-col gap-8">
       <h1 className="font-display text-2xl font-semibold">Settings</h1>
-      <Section id="settings-appearance" title="Appearance">
-        <ThemeSection />
-      </Section>
       <Section id="settings-workspace" title="Workspace">
         {settings.isPending ? (
           <WorkspaceSkeleton />

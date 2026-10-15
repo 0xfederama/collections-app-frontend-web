@@ -49,45 +49,11 @@ async function retype(user: ReturnType<typeof userEvent.setup>, label: string, t
   if (text) await user.type(input, text)
 }
 
-describe('AT-14 settings: theme', () => {
-  it.each([
-    ['Dark', 'dark', 'dark'],
-    ['Light', 'light', 'light'],
-  ])('choosing %s sets data-theme and persists it', async (label, theme, stored) => {
-    const user = await openSettings()
-    await user.click(screen.getByRole('radio', { name: label }))
-    expect(document.documentElement.dataset.theme).toBe(theme)
-    expect(localStorage.getItem('collection:theme')).toBe(stored)
-  })
-
-  it('choosing System removes the stored key', async () => {
-    const user = await openSettings()
-    await user.click(screen.getByRole('radio', { name: 'Dark' }))
-    expect(localStorage.getItem('collection:theme')).toBe('dark')
-    await user.click(screen.getByRole('radio', { name: 'System' }))
-    expect(localStorage.getItem('collection:theme')).toBeNull()
-    expect(document.documentElement.dataset.theme).toBe('light')
-  })
-
-  it('makes no network request when the theme changes', async () => {
-    const user = await openSettings()
-    const requests: string[] = []
-    const listener = ({ request }: { request: Request }) => requests.push(request.method)
-    server.events.on('request:start', listener)
-    try {
-      await user.click(screen.getByRole('radio', { name: 'Dark' }))
-      await user.click(screen.getByRole('radio', { name: 'Light' }))
-      await user.click(screen.getByRole('radio', { name: 'System' }))
-    } finally {
-      server.events.removeListener('request:start', listener)
-    }
-    expect(requests).toEqual([])
-  })
-
-  it('does not touch the settings version or enable Save', async () => {
-    const user = await openSettings()
-    await user.click(screen.getByRole('radio', { name: 'Dark' }))
-    expect(save()).toBeDisabled()
+describe('F007-W6 settings: theme moved to the sidebar', () => {
+  it('has no Appearance section or theme control in the page itself', async () => {
+    await openSettings()
+    expect(screen.queryByRole('heading', { name: 'Appearance' })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('main')).queryByRole('radiogroup', { name: 'Theme' })).toBeNull()
   })
 })
 

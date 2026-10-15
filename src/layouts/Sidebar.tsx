@@ -13,6 +13,7 @@ import { SidebarSearch } from '../features/search/SidebarSearch'
 import { useWorkspaceName } from '../features/settings/api'
 import { SidebarTree } from '../features/tree/SidebarTree'
 import { cx } from '../lib/cx'
+import { ThemeToggle } from './ThemeToggle'
 
 export interface SidebarProps {
   /** Tablet icon rail: icons only, no tree. */
@@ -26,7 +27,7 @@ export interface SidebarProps {
   searchRef?: Ref<HTMLInputElement>
 }
 
-/** Sidebar content (landmark `nav`): workspace, search, tree, then Trash and Settings. */
+/** Sidebar content (landmark `nav`): workspace, search, tree, then Trash, Settings and the theme toggle. */
 export function Sidebar({
   rail = false,
   showHeader = true,
@@ -74,6 +75,9 @@ export function Sidebar({
       <div className={cx('flex gap-1', rail ? 'flex-col' : 'flex-col border-t border-border pt-2')}>
         <FooterLink to="/trash" label="Trash" icon={Trash2} rail={rail} />
         <FooterLink to="/settings" label="Settings" icon={Settings} rail={rail} />
+        <div className={cx(!rail && 'px-2 pt-1')}>
+          <ThemeToggle rail={rail} />
+        </div>
       </div>
     </nav>
   )
