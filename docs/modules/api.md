@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Vendors the backend OpenAPI contract at a pinned tag, generates its TypeScript types and examples, and provides the only client for server calls (`src/lib/api`), the TanStack Query defaults and the MSW mocks. Contract rules: [API.md](/Users/federico/Developer/collections-app/design-docs/API.md).
+Vendors the backend OpenAPI contract at a pinned tag (currently `api-v0.3.0`, see `api/openapi.lock.json`), generates its TypeScript types and examples, and provides the only client for server calls (`src/lib/api`), the TanStack Query defaults and the MSW mocks. Contract rules: [API.md](/Users/federico/Developer/collections-app/design-docs/API.md).
 
 ## Key files
 

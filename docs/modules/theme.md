@@ -10,6 +10,7 @@ Light, dark and system colour theme plus the design tokens (palette, semantic co
 - `src/styles/global.css`: Tailwind `@theme inline` mapping, dark variant, base styles, keyframes, reduced motion.
 - `src/lib/theme.ts`: preference read/write and React hook.
 - `index.html`: inline bootstrap script that sets `data-theme` before first paint.
+- `src/layouts/ThemeToggle.tsx`: sidebar footer control (three options; one cycling button on the icon rail).
 - `src/main.tsx`: imports Inter and Fraunces variable fonts.
 - `public/favicon.svg`: app icon.
 
@@ -22,6 +23,7 @@ Light, dark and system colour theme plus the design tokens (palette, semantic co
 - `applyTheme(pref?): ResolvedTheme`: sets `document.documentElement.dataset.theme`.
 - `setThemePreference(pref)`: persists (`system` removes the key), applies, notifies subscribers.
 - `useThemePreference(): { preference, resolved, setPreference }`: follows system and `storage` events.
+- `ThemeToggle({ rail? })`: the sidebar footer control; the rail cycles System, Light, Dark.
 
 ## Gotchas
 

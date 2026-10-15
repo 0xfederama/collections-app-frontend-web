@@ -10,16 +10,16 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - `src/features/items/editMode.ts`: `?edit=1` helpers (`isEditing`, `withEdit`, `withoutEdit`).
 - `src/features/items/ItemEditForm.tsx`: edit form on a snapshot of the item (`base`); save, banners, unsaved guard, Image, Description and Organization sections.
 - `src/features/items/form/draft.ts`: pure draft logic (`Draft`, `buildPatch`, `validate`, `mapServerErrors`, `draftDump`, `LIMITS`).
-- `src/features/items/form/FormFields.tsx`: `BasicsFields`, `KindFieldsSection` (rendered from `kinds/*.ts`).
+- `src/features/items/form/FormFields.tsx`: `BasicsFields` (title, optional price, website), `KindFieldsSection` (rendered from `kinds/*.ts`).
 - `src/features/items/image/ImageSection.tsx`: drop zone, browse, URL field, Remove, progress and Cancel.
 - `src/features/items/image/api.ts`: `useItemImage` (upload, set URL, remove).
 - `src/features/items/image/upload.ts`: XHR multipart `PUT` with upload progress.
 - `src/features/items/image/checks.ts`, `messages.ts`: client-side file and URL checks; error sentences.
-- `src/features/items/CreateItemDialog.tsx`: "Add item" (title and kind), then opens the new item with `?edit=1`.
+- `src/features/items/CreateItemDialog.tsx`: "Add item" (title only; the kind is the list's), then opens the new item with `?edit=1`.
 - `src/features/items/ItemView.tsx`, `ItemHero.tsx`, `KindSection.tsx`, `ExternalLinks.tsx`, `links.ts`: view-mode pieces; `ItemView` has the Description History button.
 - `src/features/items/ItemActions.tsx`: Edit button, Move and Delete dialogs; `errors.ts` classifies errors.
 - `src/features/items/api.ts`: `itemKeys`, item and content queries, create, update, delete and move mutations.
-- `src/features/items/kinds/`: per-kind field configs, shared by view and form.
+- `src/features/items/kinds/`: per-kind field configs (contract 0.3.0), shared by view and form; `sortKeyLabel` for the list sort.
 - `src/mocks/devItemDetail.ts`: dev-worker fake of item, content, create, PATCH, delete and move endpoints.
 - `src/features/items/content/ContentEditor.tsx`: `ContentSection` (description load) and the editor: Save, conflict and network banners.
 - `src/features/items/content/MarkdownEditor.tsx`: CodeMirror 6 source editor (lazy chunk).
@@ -47,8 +47,8 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - `HistoryDrawer({ open, onOpenChange, itemId, listId, currentVersion, onRestored })`.
 - `MarkdownEditor({ value, onChange, label, placeholderText?, id? })`: default export, `lazy()`-loaded.
 - `MAX_CONTENT_BYTES`, `byteLength`, `isTooLarge`, `formatBytes`, `relativeTime`: `content/limits.ts`.
-- `draftFromItem`, `withKind`, `toFields`, `buildPatch`, `isDirty`, `validate`, `mapServerErrors`, `firstInvalid`, `inputId`, `draftDump`: `form/draft.ts`.
-- `classifyItemError(error)`: `conflict` (412), `unavailable` (409), `not_found` (404), `network`, `other`.
+- `draftFromItem`, `toFields`, `buildPatch`, `isDirty`, `validate`, `mapServerErrors`, `firstInvalid`, `inputId`, `draftDump`: `form/draft.ts`.
+- `classifyItemError(error)`: `conflict` (412), `unavailable` (409; `kind_mismatch` has its own text), `not_found` (404), `network`, `other`.
 - `buildExternalLinks(item)`, `kindRows`, `formatField`: unchanged from view mode.
 - `IMDB_URL`, `safeImdbUrl(url)`: `links.ts`; the contract pattern for `imdb_url`, shared with the form's validation.
 - `devItemDetailHandlers`, `devImageHandlers`, `devContentHandlers`: loaded by the dev worker only.
@@ -57,7 +57,8 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 
 - Edit is entered and left with `replace`. Links to other items and the back link drop `edit` (`withoutEdit`); the list's `?q=` and `?sort=` survive.
 - A failed background refetch keeps the cached item, so an open draft is never dropped.
-- Save sends only changed fields. Metadata is replaced as a whole object (D-062), and a kind change always sends `metadata`.
+- Save sends only changed fields. Metadata is replaced as a whole object (D-062) when any kind field changes. The kind is never sent: it belongs to the list.
+- Price is optional: "Add price" gives a single amount or a min / max range, one currency. Removing it sends `null`. The website is `website` (it was `official_url`).
 - 412 offers Copy my draft (clipboard, else a fallback dialog) and Reload latest (confirm; the draft is dropped only after the reload succeeds). 404 keeps the draft for copying. 5xx and network errors show Retry. 422 maps to inputs; the first invalid one gets focus, unmatched messages go in a summary. `unknown_field` (400) is a bug on our side and is reported as such.
 - Unsaved changes block navigation (`useBlocker`, "Discard changes?") and the browser unload prompt. Staying on the item in edit mode (for example a list filter change) is allowed.
 - Dirty Basics or description both block navigation and disable Move.
@@ -73,7 +74,7 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - CodeMirror leaves Tab to the browser (no trap, WCAG 2.1.2).
 - Delete removes the item's detail and content caches first, then calls `invalidateContent`. Move also sets the detail cache to the moved item.
 - Item PATCH invalidates only the list items, list detail and tree of its list; it does not refresh search or Recently updated.
-- Move and delete: 412 reloads the item, 404 toasts and returns to the list, 409 asks for another list, network errors keep the dialog open.
+- Move: the picker offers only lists of the item's kind; a `kind_mismatch` 409 explains that. Move and delete: 412 reloads the item, 404 toasts and returns to the list, network errors keep the dialog open.
 - The delete confirm reads "This moves “X” to Trash: 1 item." (same `countsText` wording as the Trash entry).
 - An item whose `list_id` differs from the URL is redirected (replace) to its real list.
 - `ItemPage` keys its body by `itemId`, so moving between items remounts it.

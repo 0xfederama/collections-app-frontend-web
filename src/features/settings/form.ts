@@ -9,7 +9,6 @@ export const NAME_MAX = 200
 export interface SettingsDraft {
   workspace_name: string
   streaming_country_code: string
-  default_currency: string
   markdown_history_limit: string
 }
 
@@ -20,7 +19,6 @@ export type ErrorMap = Partial<Record<SettingsField, string>>
 export const FIELD_ORDER: SettingsField[] = [
   'workspace_name',
   'streaming_country_code',
-  'default_currency',
   'markdown_history_limit',
 ]
 
@@ -29,7 +27,6 @@ export const inputId = (field: SettingsField) => `settings-${field.replaceAll('_
 export const FIELD_LABELS: Record<SettingsField, string> = {
   workspace_name: 'Workspace name',
   streaming_country_code: 'Streaming country',
-  default_currency: 'Default currency',
   markdown_history_limit: 'Description history limit',
 }
 
@@ -37,7 +34,6 @@ export function draftFromSettings(settings: Settings): SettingsDraft {
   return {
     workspace_name: settings.workspace_name,
     streaming_country_code: settings.streaming_country_code,
-    default_currency: settings.default_currency,
     markdown_history_limit: String(settings.markdown_history_limit),
   }
 }
@@ -53,7 +49,6 @@ function normalized(draft: SettingsDraft) {
   return {
     workspace_name: draft.workspace_name.trim(),
     streaming_country_code: draft.streaming_country_code,
-    default_currency: draft.default_currency,
     markdown_history_limit: parseLimit(draft.markdown_history_limit),
   }
 }
@@ -68,9 +63,6 @@ export function validate(draft: SettingsDraft): ErrorMap {
   if (!/^[A-Z]{2}$/.test(value.streaming_country_code)) {
     errors.streaming_country_code = 'Choose a country.'
   }
-  if (!/^[A-Z]{3}$/.test(value.default_currency)) {
-    errors.default_currency = 'Choose a currency.'
-  }
   if (value.markdown_history_limit === null || value.markdown_history_limit > HISTORY_LIMIT_MAX) {
     errors.markdown_history_limit = `Enter a whole number from 0 to ${HISTORY_LIMIT_MAX}.`
   }
@@ -84,9 +76,6 @@ export function buildPatch(base: Settings, draft: SettingsDraft): UpdateSettings
   if (value.workspace_name !== base.workspace_name) patch.workspace_name = value.workspace_name
   if (value.streaming_country_code !== base.streaming_country_code) {
     patch.streaming_country_code = value.streaming_country_code
-  }
-  if (value.default_currency !== base.default_currency) {
-    patch.default_currency = value.default_currency
   }
   if (
     value.markdown_history_limit !== null &&
@@ -103,7 +92,6 @@ export function isDirty(base: Settings, draft: SettingsDraft): boolean {
   return (
     value.workspace_name !== base.workspace_name ||
     value.streaming_country_code !== base.streaming_country_code ||
-    value.default_currency !== base.default_currency ||
     value.markdown_history_limit !== base.markdown_history_limit
   )
 }
@@ -138,9 +126,6 @@ export function draftDump(base: Settings, draft: SettingsDraft): string {
   }
   if (value.streaming_country_code !== base.streaming_country_code) {
     lines.push(`${FIELD_LABELS.streaming_country_code}: ${value.streaming_country_code}`)
-  }
-  if (value.default_currency !== base.default_currency) {
-    lines.push(`${FIELD_LABELS.default_currency}: ${value.default_currency}`)
   }
   if (draft.markdown_history_limit.trim() !== String(base.markdown_history_limit)) {
     lines.push(`${FIELD_LABELS.markdown_history_limit}: ${draft.markdown_history_limit.trim()}`)

@@ -185,7 +185,9 @@ export interface paths {
         put?: never;
         /**
          * Create a list
-         * @description Appended to the end of its siblings. `folder_id` absent or `null` creates it at the root. A missing or trashed folder returns `409 destination_unavailable`.
+         * @description Appended to the end of its siblings. `folder_id` absent or `null` creates it at the root. A missing or trashed folder returns
+         *     `409 destination_unavailable`. `kind` is required: every item of the list has that kind. `description` is Markdown (up to 64 KiB).
+         *     `sort_mode: kind_key` is rejected (`422 validation_failed`) on a `generic` list.
          */
         post: operations["createList"];
         delete?: never;
@@ -241,7 +243,12 @@ export interface paths {
         head?: never;
         /**
          * Update a list
-         * @description Requires `If-Match` (`"l-N"`). Send `description: null` to clear it.
+         * @description Requires `If-Match` (`"l-N"`). Send `description: null` to clear it. `description` is Markdown (up to 64 KiB) and has no version
+         *     history: it is edited with the list's `version`. `sort_mode: kind_key` is rejected (`422 validation_failed`) on a `generic` list.
+         *
+         *     Changing `kind` on a list that has items **clears the `metadata` of all its items** (trashed ones too; their `version` is bumped),
+         *     because the kind fields differ per kind. Clients should warn first. If the list is left on `sort_mode: kind_key` and the new
+         *     kind is `generic`, the request is rejected with `422 validation_failed`.
          */
         patch: operations["updateList"];
         trace?: never;
@@ -282,14 +289,17 @@ export interface paths {
         };
         /**
          * List the items of a list
-         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title.
+         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title. `sort=kind_key` sorts by the kind's
+         *     sort key ascending, empty values last (movie: `release_year`, tv_show: `first_air_year`, motorcycle: `displacement_cc`,
+         *     car: `power_hp`, camera: `megapixels`); on a `generic` list it returns `400 invalid_parameter`.
          */
         get: operations["listItems"];
         put?: never;
         /**
          * Create an item
-         * @description Appended to the end of the list. `kind` defaults to `generic`. Image and Markdown content are set through their own endpoints
-         *     after creation. `metadata` is validated per kind (see the `*Metadata` schemas).
+         * @description Appended to the end of the list. The item's `kind` is the list's kind (read-only, not accepted in the body). Image and Markdown
+         *     content are set through their own endpoints after creation. `metadata` is validated against the list's kind (see the `*Metadata` schemas).
+         *     `price` is either `{amount, currency}` (single price) or `{min, max, currency}` (range).
          */
         post: operations["createItem"];
         delete?: never;
@@ -348,8 +358,9 @@ export interface paths {
         head?: never;
         /**
          * Update an item
-         * @description Requires `If-Match` (`"i-N"`). Any of `title, kind, summary, status, price, official_website_url, metadata`; send `null` to clear
-         *     a nullable field. If `kind` changes and `metadata` is absent, metadata resets to `{}`. Image changes go through the image endpoints.
+         * @description Requires `If-Match` (`"i-N"`). Any of `title, price, website, metadata`; send `null` to clear a nullable field. `metadata` is
+         *     validated against the list's kind and replaces the stored one. The kind cannot be changed here (it belongs to the list).
+         *     Image changes go through the image endpoints.
          */
         patch: operations["updateItem"];
         trace?: never;
@@ -368,7 +379,8 @@ export interface paths {
         put?: never;
         /**
          * Move an item to another list
-         * @description Requires `If-Match` (`"i-N"`). Appended to the end of the destination list. A missing or trashed list returns `409 destination_unavailable`.
+         * @description Requires `If-Match` (`"i-N"`). Appended to the end of the destination list. A missing or trashed list returns
+         *     `409 destination_unavailable`. A destination list of another kind returns `409 kind_mismatch`.
          */
         post: operations["moveItem"];
         delete?: never;
@@ -676,7 +688,7 @@ export interface components {
              * @description Stable machine-readable code.
              * @enum {string}
              */
-            code: "malformed_request" | "unknown_field" | "invalid_parameter" | "not_found" | "cycle_detected" | "parent_in_trash" | "destination_unavailable" | "order_stale" | "version_conflict" | "payload_too_large" | "unsupported_media_type" | "validation_failed" | "precondition_required" | "internal";
+            code: "malformed_request" | "unknown_field" | "invalid_parameter" | "not_found" | "cycle_detected" | "parent_in_trash" | "destination_unavailable" | "kind_mismatch" | "order_stale" | "version_conflict" | "payload_too_large" | "unsupported_media_type" | "validation_failed" | "precondition_required" | "internal";
             /** @description Only on `internal` problems. Matches the `X-Request-Id` header. */
             request_id?: string;
         };
@@ -710,12 +722,33 @@ export interface components {
             id: string;
             name: string;
         };
-        /** @description At least one of `min` and `max` is set when a price exists. `min` must not exceed `max`. */
+        /**
+         * @description A price in responses: always `min`, `max` and `currency`. A single price has `min` equal to `max`. Money is a decimal string
+         *     (D-062). An open range (only one bound) can exist for prices created before 0.3.0.
+         */
         Price: {
             /** @example 12.00 */
             min: string | null;
             /** @example 15.00 */
             max: string | null;
+            /** @example EUR */
+            currency: string;
+        } | null;
+        /**
+         * @description A price in requests, either a single price `{amount, currency}` or a range `{min, max, currency}`. `amount` and `min`/`max`
+         *     are mutually exclusive (`422 validation_failed` when mixed); `min` must not exceed `max`; a range needs at least one bound.
+         *     `null` clears the price. Money is a decimal string (D-062).
+         */
+        PriceInput: {
+            /**
+             * @description Single price. Stored as `min` = `max`.
+             * @example 12.00
+             */
+            amount?: string;
+            /** @example 12.00 */
+            min?: string | null;
+            /** @example 15.00 */
+            max?: string | null;
             /** @example EUR */
             currency: string;
         } | null;
@@ -755,14 +788,12 @@ export interface components {
         Settings: {
             workspace_name: string;
             streaming_country_code: string;
-            default_currency: string;
             markdown_history_limit: number;
             version: number;
         };
         UpdateSettingsRequest: {
             workspace_name?: string;
             streaming_country_code?: string;
-            default_currency?: string;
             markdown_history_limit?: number;
         };
         Tree: {
@@ -807,14 +838,21 @@ export interface components {
         };
         /** @enum {string} */
         DisplayMode: "compact" | "thumbnail" | "grid";
-        /** @enum {string} */
-        SortMode: "manual" | "title" | "updated";
+        /**
+         * @description `kind_key` sorts by the kind's sort key (movie: `release_year`, tv_show: `first_air_year`, motorcycle: `displacement_cc`,
+         *     car: `power_hp`, camera: `megapixels`), ascending, empty values last. It is not valid on `generic` lists. The manual order is kept
+         *     when the mode changes.
+         * @enum {string}
+         */
+        SortMode: "manual" | "title" | "updated" | "kind_key";
         List: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             folder_id: string | null;
             name: string;
+            kind: components["schemas"]["ItemKind"];
+            /** @description Markdown, up to 64 KiB (UTF-8 bytes). */
             description: string | null;
             display_mode: components["schemas"]["DisplayMode"];
             sort_mode: components["schemas"]["SortMode"];
@@ -831,14 +869,18 @@ export interface components {
         };
         CreateListRequest: {
             name: string;
+            kind: components["schemas"]["ItemKind"];
             /** Format: uuid */
             folder_id?: string | null;
+            /** @description Markdown, up to 64 KiB (UTF-8 bytes). */
             description?: string | null;
             display_mode?: components["schemas"]["DisplayMode"];
             sort_mode?: components["schemas"]["SortMode"];
         };
         UpdateListRequest: {
             name?: string;
+            kind?: components["schemas"]["ItemKind"];
+            /** @description Markdown, up to 64 KiB (UTF-8 bytes). */
             description?: string | null;
             display_mode?: components["schemas"]["DisplayMode"];
             sort_mode?: components["schemas"]["SortMode"];
@@ -858,20 +900,22 @@ export interface components {
             folder_id: string | null;
             ids: string[];
         };
-        /** @enum {string} */
+        /**
+         * @description The kind of a list. Items have no kind of their own: theirs is read-only and derived from their list. Changing the kind of a
+         *     list that has items clears the `metadata` of all its items.
+         * @enum {string}
+         */
         ItemKind: "generic" | "movie" | "tv_show" | "motorcycle" | "car" | "camera";
-        /** @description Fields shared by every item kind. `kind` and `metadata` are added by the per-kind schemas. */
+        /** @description Fields shared by every item kind. `kind` (read-only, derived from the list) and `metadata` are added by the per-kind schemas. */
         ItemBase: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             list_id: string;
             title: string;
-            summary: string | null;
-            status: string | null;
             image: components["schemas"]["Image"];
             price: components["schemas"]["Price"];
-            official_website_url: string | null;
+            website: string | null;
             /** @description Current Markdown version (0 = empty). For display only; use the content endpoints to edit. */
             content_version: number;
             sort_order: number;
@@ -885,7 +929,7 @@ export interface components {
         };
         GenericItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            kind: "generic";
+            readonly kind: "generic";
             metadata: components["schemas"]["GenericMetadata"];
         } & {
             /**
@@ -896,7 +940,7 @@ export interface components {
         };
         MovieItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            kind: "movie";
+            readonly kind: "movie";
             metadata: components["schemas"]["MovieMetadata"];
         } & {
             /**
@@ -907,7 +951,7 @@ export interface components {
         };
         TvShowItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            kind: "tv_show";
+            readonly kind: "tv_show";
             metadata: components["schemas"]["TvShowMetadata"];
         } & {
             /**
@@ -918,7 +962,7 @@ export interface components {
         };
         MotorcycleItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            kind: "motorcycle";
+            readonly kind: "motorcycle";
             metadata: components["schemas"]["MotorcycleMetadata"];
         } & {
             /**
@@ -929,7 +973,7 @@ export interface components {
         };
         CarItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            kind: "car";
+            readonly kind: "car";
             metadata: components["schemas"]["CarMetadata"];
         } & {
             /**
@@ -940,7 +984,7 @@ export interface components {
         };
         CameraItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            kind: "camera";
+            readonly kind: "camera";
             metadata: components["schemas"]["CameraMetadata"];
         } & {
             /**
@@ -949,7 +993,7 @@ export interface components {
              */
             kind: "camera";
         };
-        /** @description An item. `metadata` has the shape of its `kind` (discriminated union). */
+        /** @description An item. `kind` is read-only and derived from the item's list; `metadata` has the shape of that kind (discriminated union). */
         Item: components["schemas"]["GenericItem"] | components["schemas"]["MovieItem"] | components["schemas"]["TvShowItem"] | components["schemas"]["MotorcycleItem"] | components["schemas"]["CarItem"] | components["schemas"]["CameraItem"];
         /** @description An item row in lists and search: no `metadata`, and the image is reduced. */
         ItemSummary: {
@@ -959,11 +1003,9 @@ export interface components {
             list_id: string;
             title: string;
             kind: components["schemas"]["ItemKind"];
-            summary: string | null;
-            status: string | null;
             image: components["schemas"]["ImageSummary"];
             price: components["schemas"]["Price"];
-            official_website_url: string | null;
+            website: string | null;
             content_version: number;
             sort_order: number;
             version: number;
@@ -989,28 +1031,18 @@ export interface components {
         };
         CreateItemRequest: {
             title: string;
-            /**
-             * @description One of the `ItemKind` values; validated in Go.
-             * @default generic
-             */
-            kind: string;
-            summary?: string | null;
-            status?: string | null;
-            price?: components["schemas"]["Price"];
-            official_website_url?: string | null;
-            /** @description Free-form here because `kind` may be absent. Validated per kind: see the `*Metadata` schemas. */
+            price?: components["schemas"]["PriceInput"];
+            website?: string | null;
+            /** @description Free-form here because its shape depends on the list's kind. Validated against that kind: see the `*Metadata` schemas. */
             metadata?: {
                 [key: string]: unknown;
             };
         };
         UpdateItemRequest: {
             title?: string;
-            kind?: string;
-            summary?: string | null;
-            status?: string | null;
-            price?: components["schemas"]["Price"];
-            official_website_url?: string | null;
-            /** @description Free-form here because `kind` may be absent. Validated per kind: see the `*Metadata` schemas. */
+            price?: components["schemas"]["PriceInput"];
+            website?: string | null;
+            /** @description Free-form here because its shape depends on the list's kind. Validated against that kind: see the `*Metadata` schemas. */
             metadata?: {
                 [key: string]: unknown;
             };
@@ -1048,48 +1080,29 @@ export interface components {
             make?: string;
             model?: string;
             model_year?: number;
-            /** @description E.g. naked, adventure, sport-touring. */
-            segment?: string;
             displacement_cc?: number;
             /** @description One decimal. */
             power_hp?: number;
-            /** @description One decimal. */
-            torque_nm?: number;
-            wet_weight_kg?: number;
-            seat_height_mm?: number;
             /** @enum {string} */
             license_class?: "AM" | "A1" | "A2" | "A";
         };
         CarMetadata: {
             make?: string;
             model?: string;
-            trim?: string;
             model_year?: number;
-            /** @description E.g. hatchback, SUV, estate. */
-            body_type?: string;
             /** @enum {string} */
             fuel_type?: "petrol" | "diesel" | "hybrid" | "plugin_hybrid" | "electric" | "lpg" | "cng" | "hydrogen" | "other";
-            /** @enum {string} */
-            transmission?: "manual" | "automatic";
             /** @description One decimal. */
             power_hp?: number;
-            seats?: number;
-            /** @description Only allowed when `fuel_type` is `electric` or `plugin_hybrid` (or absent). */
-            electric_range_km?: number;
         };
         CameraMetadata: {
             make?: string;
             model?: string;
             release_year?: number;
             /** @enum {string} */
-            camera_type?: "mirrorless" | "dslr" | "compact" | "rangefinder" | "medium_format" | "film" | "action" | "other";
-            /** @enum {string} */
             sensor_format?: "full_frame" | "aps_c" | "micro_four_thirds" | "one_inch" | "medium_format" | "film_35mm" | "other";
             /** @description One decimal. */
             megapixels?: number;
-            /** @description E.g. Sony E, Fujifilm X. */
-            lens_mount?: string;
-            weight_g?: number;
         };
         UploadImageRequest: {
             /**
@@ -1203,6 +1216,15 @@ export interface components {
         };
         /** @description The destination folder or list is missing or trashed */
         DestinationUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description The destination list is missing or trashed, or has another kind than the item's list */
+        ItemMoveConflict: {
             headers: {
                 [name: string]: unknown;
             };
@@ -1865,7 +1887,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Defaults to the list's `sort_mode`. */
-                sort?: "manual" | "title" | "updated";
+                sort?: components["schemas"]["SortMode"];
                 /** @description Case-insensitive title filter. */
                 q?: string;
                 /** @description Page size. */
@@ -2098,7 +2120,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
-            409: components["responses"]["DestinationUnavailable"];
+            409: components["responses"]["ItemMoveConflict"];
             412: components["responses"]["VersionConflict"];
             413: components["responses"]["PayloadTooLarge"];
             422: components["responses"]["ValidationFailed"];

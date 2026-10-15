@@ -1,9 +1,16 @@
 import type { ReactNode } from 'react'
-import { Select, TextArea, TextField, kindLabels, type SelectOption } from '../../../components/ui'
+import { Button, Select, TextField, kindLabels } from '../../../components/ui'
+import { Plus, X } from '../../../components/ui/icons'
 import { CountrySelect, CurrencySelect } from '../../../components/ui/IsoSelects'
-import type { ItemKind } from '../api'
 import { kindFields, type Field } from '../kinds'
-import { inputId, simpleFields, type Defaults, type Draft, type ErrorMap } from './draft'
+import {
+  INITIAL_CURRENCY,
+  inputId,
+  simpleFields,
+  type Defaults,
+  type Draft,
+  type ErrorMap,
+} from './draft'
 
 /** What the sections need from the form: values, errors and setters. */
 export interface FormState {
@@ -13,7 +20,7 @@ export interface FormState {
   /** Sets a top-level draft field (and clears that input's error). */
   set: <K extends keyof Draft>(key: K, value: Draft[K], errorKey: string) => void
   setMeta: (key: string, value: string) => void
-  setKind: (kind: ItemKind) => void
+  clearError: (key: string) => void
 }
 
 export function FormSection({
@@ -37,22 +44,16 @@ export function FormSection({
 
 const NONE = '__none__'
 
-const kindOptions: SelectOption[] = (Object.keys(kindLabels) as ItemKind[]).map((kind) => ({
-  value: kind,
-  label: kindLabels[kind],
-}))
-
-/** Title, kind, summary, status, price and official website (UI_SPEC §4 "Basics"). */
-export function BasicsFields({
-  form,
-  kindWarning,
-}: {
-  form: FormState
-  kindWarning: string | null
-}) {
-  const { draft, errors, defaults, set } = form
-  const currency = draft.currency || defaults.currency
-  const onlyMax = draft.priceMax.trim() !== '' && draft.priceMin.trim() === ''
+/** Title, price (only once added) and website (UI_SPEC §4 "Basics"). */
+export function BasicsFields({ form }: { form: FormState }) {
+  const { draft, errors, set } = form
+  const currency = draft.currency || INITIAL_CURRENCY
+  const range = draft.priceMode === 'range'
+  const clearPriceErrors = () => {
+    for (const key of ['price.amount', 'price.min', 'price.max', 'price.currency']) {
+      form.clearError(key)
+    }
+  }
   return (
     <div className="flex flex-col gap-4">
       <TextField
@@ -64,85 +65,105 @@ export function BasicsFields({
         onChange={(event) => set('title', event.target.value, 'title')}
         error={errors.title}
       />
-      <div className="flex flex-col gap-2">
-        <Select
-          id={inputId('kind')}
-          label="Kind"
-          options={kindOptions}
-          value={draft.kind}
-          onValueChange={(value) => form.setKind(value as ItemKind)}
-          error={errors.kind}
-        />
-        {kindWarning && (
-          <p role="note" className="text-sm text-warning-text">
-            {kindWarning}
-          </p>
-        )}
-      </div>
-      <TextArea
-        id={inputId('summary')}
-        label="Summary"
-        rows={3}
-        value={draft.summary}
-        onChange={(event) => set('summary', event.target.value, 'summary')}
-        error={errors.summary}
-      />
-      <TextField
-        id={inputId('status')}
-        label="Status"
-        hint="For example Owned, Wishlist or Watched."
-        autoComplete="off"
-        value={draft.status}
-        onChange={(event) => set('status', event.target.value, 'status')}
-        error={errors.status}
-      />
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1.5 text-sm font-medium text-text">Price</legend>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <TextField
-            id={inputId('price.min')}
-            label="Minimum price"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0.00"
-            value={draft.priceMin}
-            onChange={(event) => set('priceMin', event.target.value, 'price.min')}
-            error={errors['price.min']}
-          />
-          <TextField
-            id={inputId('price.max')}
-            label="Maximum price"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0.00"
-            hint={onlyMax ? 'With no minimum, the price shows as “up to” this amount.' : undefined}
-            value={draft.priceMax}
-            onChange={(event) => set('priceMax', event.target.value, 'price.max')}
-            error={errors['price.max']}
-          />
-          <CurrencySelect
-            id={inputId('price.currency')}
-            label="Currency"
-            value={currency}
-            onValueChange={(value) => set('currency', value, 'price.currency')}
-            placeholder="Currency"
-            error={errors['price.currency']}
-          />
+      {draft.hasPrice ? (
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-1.5 text-sm font-medium text-text">Price</legend>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {range ? (
+              <>
+                <TextField
+                  id={inputId('price.min')}
+                  label="Minimum price"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="0.00"
+                  value={draft.priceMin}
+                  onChange={(event) => set('priceMin', event.target.value, 'price.min')}
+                  error={errors['price.min']}
+                />
+                <TextField
+                  id={inputId('price.max')}
+                  label="Maximum price"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="0.00"
+                  value={draft.priceMax}
+                  onChange={(event) => set('priceMax', event.target.value, 'price.max')}
+                  error={errors['price.max']}
+                />
+              </>
+            ) : (
+              <TextField
+                id={inputId('price.amount')}
+                label="Price"
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="0.00"
+                value={draft.priceAmount}
+                onChange={(event) => set('priceAmount', event.target.value, 'price.amount')}
+                error={errors['price.amount']}
+              />
+            )}
+            <CurrencySelect
+              id={inputId('price.currency')}
+              label="Currency"
+              value={currency}
+              onValueChange={(value) => set('currency', value, 'price.currency')}
+              placeholder="Currency"
+              error={errors['price.currency']}
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="inline-flex min-h-9 items-center gap-2 text-sm pointer-coarse:min-h-11">
+              <input
+                type="checkbox"
+                className="size-4 accent-[var(--accent)]"
+                checked={range}
+                onChange={(event) => {
+                  clearPriceErrors()
+                  set('priceMode', event.target.checked ? 'range' : 'single', 'price.amount')
+                }}
+              />
+              Price range
+            </label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                clearPriceErrors()
+                set('hasPrice', false, 'price.amount')
+              }}
+            >
+              <X aria-hidden className="size-4" />
+              Remove price
+            </Button>
+          </div>
+        </fieldset>
+      ) : (
+        <div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              set('currency', draft.currency || INITIAL_CURRENCY, 'price.currency')
+              set('hasPrice', true, 'price.amount')
+            }}
+          >
+            <Plus aria-hidden className="size-4" />
+            Add price
+          </Button>
         </div>
-        <p className="text-xs text-text-muted">
-          Enter one price in both fields, a range, or only a maximum. Leave both empty for no price.
-        </p>
-      </fieldset>
+      )}
       <TextField
-        id={inputId('official_website_url')}
-        label="Official website"
+        id={inputId('website')}
+        label="Website"
         type="url"
         inputMode="url"
         autoComplete="off"
         placeholder="https://"
-        value={draft.officialUrl}
-        onChange={(event) => set('officialUrl', event.target.value, 'official_website_url')}
-        error={errors.official_website_url}
+        value={draft.website}
+        onChange={(event) => set('website', event.target.value, 'website')}
+        error={errors.website}
       />
     </div>
   )

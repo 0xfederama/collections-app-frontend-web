@@ -1,5 +1,5 @@
 import { MarkdownView } from '../../components/markdown'
-import { Badge, Button, Chip } from '../../components/ui'
+import { Button } from '../../components/ui'
 import { formatPrice } from '../lists/price'
 import { useState } from 'react'
 import { useItemContent, type Item } from './api'
@@ -71,14 +71,9 @@ export function ItemView({ item }: { item: Item }) {
         <h1 className="font-display text-2xl leading-tight font-semibold break-words">
           {item.title}
         </h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge kind={item.kind} />
-          {item.status && <Chip>{item.status}</Chip>}
-          {price && <span className="text-sm font-medium tabular-nums">{price}</span>}
-        </div>
+        {price && <p className="text-sm font-medium tabular-nums">{price}</p>}
       </header>
       <ExternalLinks item={item} />
-      {item.summary && <p className="text-text-muted">{item.summary}</p>}
       <KindSection item={item} />
       <Description itemId={item.id} listId={item.list_id} />
       <footer className="flex flex-col gap-3 border-t border-border pt-4">

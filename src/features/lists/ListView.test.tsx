@@ -29,11 +29,9 @@ function makeItem(n: number, over: Partial<ItemSummary> = {}): ItemSummary {
     list_id: LIST,
     title: `Item ${n}`,
     kind: 'movie',
-    summary: null,
-    status: null,
     image: null,
     price: null,
-    official_website_url: null,
+    website: null,
     content_version: 0,
     sort_order: n,
     version: 1,
@@ -150,35 +148,26 @@ describe('W-06 display modes', () => {
   const rich = [
     makeItem(1, {
       title: 'The Matrix',
-      summary: 'A hacker learns the truth.',
-      status: 'Watched',
       kind: 'movie',
       price: { min: '1200', max: '1500', currency: 'EUR' },
     }),
   ]
 
-  it.each([
-    ['compact', true, false],
-    ['thumbnail', true, true],
-    ['grid', true, false],
-  ] as const)('%s renders title link, status, price and kind', async (mode, _l, hasSummary) => {
-    useBackend({ list: { display_mode: mode }, items: rich })
-    renderList(at())
-    const ul = await itemsList()
-    const link = within(ul).getByRole('link', { name: 'The Matrix' })
-    expect(link).toHaveAttribute('href', `/lists/${LIST}/items/${rich[0]!.id}`)
-    expect(within(ul).getByText('Watched')).toBeInTheDocument()
-    expect(within(ul).getByText(/1,200.*1,500/)).toBeInTheDocument()
-    expect(within(ul).getByText('Movie')).toBeInTheDocument()
-    if (hasSummary) {
-      expect(within(ul).getByText('A hacker learns the truth.')).toBeInTheDocument()
-    } else {
-      expect(within(ul).queryByText('A hacker learns the truth.')).not.toBeInTheDocument()
-    }
-    expect(screen.getByRole('radio', { name: radioName[mode] })).toBeChecked()
-  })
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s renders title link and price, no kind label, status or summary (F007-W4, W7)',
+    async (mode) => {
+      useBackend({ list: { display_mode: mode }, items: rich })
+      renderList(at())
+      const ul = await itemsList()
+      const link = within(ul).getByRole('link', { name: 'The Matrix' })
+      expect(link).toHaveAttribute('href', `/lists/${LIST}/items/${rich[0]!.id}`)
+      expect(within(ul).getByText(/1,200.*1,500/)).toBeInTheDocument()
+      expect(within(ul).queryByText('Movie')).not.toBeInTheDocument()
+      expect(screen.getByRole('radio', { name: radioName[mode] })).toBeChecked()
+    },
+  )
 
-  it('omits status and price when the item has none', async () => {
+  it('omits the price when the item has none', async () => {
     useBackend({ items: [makeItem(1)], list: { display_mode: 'compact' } })
     renderList(at())
     const ul = await itemsList()
@@ -241,6 +230,56 @@ describe('W-06 fallback tile', () => {
   })
 })
 
+describe('F007-W10 list description', () => {
+  const toggleName = /(Collapse|Expand) description/
+
+  it('renders the Markdown description, expanded, with a Collapse toggle', async () => {
+    useBackend({ list: { description: 'Some **bold** words' } })
+    renderList(at())
+    await itemsList()
+    const section = await screen.findByRole('region', { name: 'Description' })
+    expect(within(section).getByText('bold')).toBeInTheDocument()
+    expect(within(section).getByRole('button', { name: toggleName })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+  })
+
+  it('collapsing is remembered per list in localStorage', async () => {
+    useBackend({ list: { description: 'Some **bold** words' } })
+    const user = userEvent.setup()
+    renderList(at())
+    await user.click(await screen.findByRole('button', { name: 'Collapse description' }))
+    expect(screen.queryByText('bold')).not.toBeInTheDocument()
+    expect(JSON.parse(localStorage.getItem('collection:list-description-collapsed')!)).toEqual([
+      LIST,
+    ])
+  })
+
+  it('starts collapsed when this list was collapsed before, and survives blocked storage', async () => {
+    localStorage.setItem('collection:list-description-collapsed', JSON.stringify([LIST]))
+    useBackend({ list: { description: 'Some **bold** words' } })
+    renderList(at())
+    expect(await screen.findByRole('button', { name: 'Expand description' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
+    expect(screen.queryByText('bold')).not.toBeInTheDocument()
+  })
+
+  it('hides the section when the list has no description, and the menu still offers Edit description', async () => {
+    useBackend({ list: { description: null } })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    expect(screen.queryByRole('region', { name: 'Description' })).not.toBeInTheDocument()
+    await user.click(
+      within(screen.getByRole('main')).getByRole('button', { name: /More actions for/ }),
+    )
+    expect(await screen.findByRole('menuitem', { name: 'Edit description' })).toBeInTheDocument()
+  })
+})
+
 describe('W-06 URL state: sort and filter', () => {
   it('?sort=title shows "Title" in the Sort select and the request carries sort=title', async () => {
     const backend = useBackend()
@@ -253,6 +292,34 @@ describe('W-06 URL state: sort and filter', () => {
   it('sends no sort param when the URL has none and shows the list sort', async () => {
     const backend = useBackend()
     renderList(at())
+    await itemsList()
+    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
+  })
+
+  it('F007-W9 a movie list offers "Release year" and picking it sets ?sort=kind_key', async () => {
+    const backend = useBackend()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(sortSelect())
+    await user.click(await screen.findByRole('option', { name: 'Release year' }))
+    expect(router.state.location.search).toBe('?sort=kind_key')
+    await waitFor(() =>
+      expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('kind_key'),
+    )
+  })
+
+  it('F007-W9 ?sort=kind_key is ignored on a generic list', async () => {
+    const genericTree = {
+      ...(exampleResponses.getTree.body as components['schemas']['Tree']),
+    }
+    genericTree.lists = genericTree.lists.map((l) =>
+      l.id === LIST ? { ...l, kind: 'generic' as const } : l,
+    )
+    server.use(http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json(genericTree)))
+    const backend = useBackend({ list: { kind: 'generic' } })
+    renderList(at('?sort=kind_key'))
     await itemsList()
     expect(sortSelect()).toHaveTextContent('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)

@@ -16,11 +16,12 @@ import {
 } from './api'
 import { CreateItemDialog } from '../items/CreateItemDialog'
 import { withoutEdit } from '../items/editMode'
+import { sortKeyLabel } from '../items/kinds'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { useScrollRestore } from './scrollRestore'
 
-const SORTS: readonly SortMode[] = ['manual', 'title', 'updated']
+const SORTS: readonly SortMode[] = ['manual', 'title', 'updated', 'kind_key']
 const FILTER_DEBOUNCE_MS = 250
 
 function parseSort(value: string | null): SortMode | null {
@@ -28,7 +29,7 @@ function parseSort(value: string | null): SortMode | null {
 }
 
 /**
- * The list screen below the shell's breadcrumbs. URL state (UI_SPEC §1, D-063): `?q=` is the title
+ * The list screen in the shell. URL state (UI_SPEC §1, D-063): `?q=` is the title
  * filter and `?sort=` overrides the list's saved `sort_mode`. Display mode is saved on the list.
  */
 export function ListView({ treeList }: { treeList: List }) {
@@ -36,13 +37,15 @@ export function ListView({ treeList }: { treeList: List }) {
   const client = useQueryClient()
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
-  const sortOverride = parseSort(searchParams.get('sort'))
+  const parsedSort = parseSort(searchParams.get('sort'))
   const q = (searchParams.get('q') ?? '').trim()
   // `?edit=1` belongs to the open item's page; links to other items must not carry it.
   const search = withoutEdit(searchParams)
 
   const listQuery = useList(listId)
   const list = listQuery.data
+  // `kind_key` is not valid on a generic list: a URL asking for it falls back to the list's mode.
+  const sortOverride = parsedSort === 'kind_key' && !sortKeyLabel(treeList.kind) ? null : parsedSort
   // The tree is the source of truth for renames, moves and description edits (W-05 refetches it
   // after each one). When it holds a newer version than our detail, refetch the detail, or the
   // next `If-Match` would be stale and fail with a 412.

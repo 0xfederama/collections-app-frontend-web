@@ -35,21 +35,18 @@ function renderList(path = `/lists/${LIST}`) {
   return router
 }
 
-/** The item the server creates for a request body (a bare item of that title and kind). */
-const created = (body: { title: string; kind?: string }) =>
+/** The item the server creates for a request body (a bare item of that title; its kind is its list's). */
+const created = (body: { title: string }) =>
   ({
     ...matrix,
     id: NEW_ID,
     title: body.title,
-    kind: body.kind ?? 'generic',
-    summary: null,
-    status: null,
     metadata: {},
     version: 1,
   }) as Item
 
 interface Posted {
-  body: { title: string; kind?: string }
+  body: { title: string }
 }
 
 /** Records the POSTs and answers 201 with the created item; also serves it for the item page. */
@@ -80,11 +77,11 @@ const submit = (user: ReturnType<typeof userEvent.setup>, dialog: HTMLElement) =
   user.click(within(dialog).getByRole('button', { name: 'Create item' }))
 
 describe('AT-05 add item dialog', () => {
-  it('opens from "Add item" with a required Title and the Generic kind', async () => {
+  it('opens from "Add item" with a required Title and no kind (F007-W7)', async () => {
     const { dialog } = await openDialog()
     expect(titleInput(dialog)).toBeRequired()
     expect(titleInput(dialog)).toHaveValue('')
-    expect(within(dialog).getByRole('combobox', { name: 'Kind' })).toHaveTextContent('Generic')
+    expect(within(dialog).queryByRole('combobox', { name: 'Kind' })).not.toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Create item' })).toBeInTheDocument()
   })
 
@@ -130,7 +127,7 @@ describe('AT-05 add item dialog', () => {
     await waitFor(() => expect(posts).toHaveLength(1))
   })
 
-  it('POSTs { title, kind }, then opens the new item in edit mode', async () => {
+  it('POSTs { title } only, then opens the new item in edit mode', async () => {
     const posts = mockCreate()
     const { router, user, dialog } = await openDialog()
     await user.type(titleInput(dialog), '  Field notebook ')
@@ -140,26 +137,24 @@ describe('AT-05 add item dialog', () => {
       await screen.findByRole('heading', { level: 1, name: 'Edit “Field notebook”' }),
     ).toBeInTheDocument()
     expect(posts).toHaveLength(1)
-    expect(posts[0]?.body).toEqual({ title: 'Field notebook', kind: 'generic' })
+    expect(posts[0]?.body).toEqual({ title: 'Field notebook' })
     expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`)
     expect(router.state.location.search).toBe('?edit=1')
     expect(screen.queryByRole('dialog', { name: 'Add item' })).not.toBeInTheDocument()
     expect(screen.getByLabelText(/^Title/)).toHaveValue('Field notebook')
   })
 
-  it('sends the chosen kind and shows that kind’s fields in the form', async () => {
+  it('F007-W7 shows the list’s kind fields in the form, with no kind picker', async () => {
     const posts = mockCreate()
     const { user, dialog } = await openDialog()
     await user.type(titleInput(dialog), 'Heat')
-    await user.click(within(dialog).getByRole('combobox', { name: 'Kind' }))
-    await user.click(await screen.findByRole('option', { name: 'Movie' }))
     await submit(user, dialog)
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Edit “Heat”' }),
     ).toBeInTheDocument()
-    expect(posts[0]?.body).toEqual({ title: 'Heat', kind: 'movie' })
-    expect(screen.getByRole('combobox', { name: 'Kind' })).toHaveTextContent('Movie')
+    expect(posts[0]?.body).toEqual({ title: 'Heat' })
+    expect(screen.queryByRole('combobox', { name: 'Kind' })).not.toBeInTheDocument()
     expect(screen.getByLabelText(/^Release year/)).toBeInTheDocument()
   })
 

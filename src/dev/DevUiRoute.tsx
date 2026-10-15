@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 import {
   AlertDialog,
   Badge,
-  Breadcrumbs,
   Button,
   Card,
   Chip,
@@ -361,15 +360,7 @@ function Navigation() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['bikes']))
   const [selected, setSelected] = useState<string | null>('adventure')
   return (
-    <Section id="navigation" title="Breadcrumbs, Tree">
-      <Breadcrumbs
-        items={[
-          { label: 'Bikes', to: '/bikes' },
-          { label: 'Naked', to: '/naked' },
-          { label: 'Wishlist' },
-        ]}
-      />
-
+    <Section id="navigation" title="Tree">
       <div className="max-w-xs rounded-lg border border-border bg-surface p-2">
         <Tree
           aria-label="Collections"

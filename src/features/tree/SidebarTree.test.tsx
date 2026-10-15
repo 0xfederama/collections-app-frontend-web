@@ -34,7 +34,7 @@ function renderRouter(path: string) {
 }
 
 const stored = () => JSON.parse(localStorage.getItem(KEY) ?? 'null') as string[] | null
-const sidebar = () => screen.getByRole('navigation', { name: 'Collections' })
+const sidebar = () => screen.getByRole('navigation', { name: 'Library' })
 const treeitem = (name: RegExp | string) => within(sidebar()).queryByRole('treeitem', { name })
 const mainHeading = (name: string) =>
   within(screen.getByRole('main')).findByRole('heading', { name })
@@ -45,9 +45,9 @@ describe('W-04 sidebar tree states', () => {
   it('shows a loading status while the tree is fetched', async () => {
     renderAt('/')
     // Home (the page at `/`) shows its own loading status for the same query: look in the sidebar.
-    expect(within(sidebar()).getByRole('status')).toHaveTextContent('Loading collections')
+    expect(within(sidebar()).getByRole('status')).toHaveTextContent('Loading lists')
     expect(await within(sidebar()).findByRole('tree')).toBeInTheDocument()
-    expect(screen.queryByText('Loading collections')).not.toBeInTheDocument()
+    expect(screen.queryByText('Loading lists')).not.toBeInTheDocument()
   })
 
   it('shows an error with Retry that refetches successfully', async () => {
@@ -62,19 +62,19 @@ describe('W-04 sidebar tree states', () => {
     )
     const user = userEvent.setup()
     renderAt('/')
-    expect(await screen.findByText('Couldn’t load your collections.')).toBeInTheDocument()
+    expect((await screen.findAllByText('Couldn’t load your lists.')).length).toBeGreaterThan(0)
     expect(within(sidebar()).queryByRole('tree')).not.toBeInTheDocument()
 
     await user.click(within(sidebar()).getByRole('button', { name: 'Retry' }))
     expect(await within(sidebar()).findByRole('treeitem', { name: /Media/ })).toBeInTheDocument()
-    expect(screen.queryByText('Couldn’t load your collections.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Couldn’t load your lists.')).not.toBeInTheDocument()
     expect(calls).toBe(2)
   })
 
   it('shows the empty state with the first-list and first-folder actions', async () => {
     server.use(http.get(treeUrl, () => HttpResponse.json({ folders: [], lists: [] })))
     renderAt('/')
-    expect(await screen.findByText('No collections yet')).toBeInTheDocument()
+    expect(await screen.findByText('No lists yet')).toBeInTheDocument()
     expect(within(sidebar()).queryByRole('tree')).not.toBeInTheDocument()
     expect(within(sidebar()).getByRole('button', { name: 'New list' })).toBeInTheDocument()
     expect(within(sidebar()).getByRole('button', { name: 'New folder' })).toBeInTheDocument()

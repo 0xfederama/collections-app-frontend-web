@@ -13,21 +13,13 @@ import type { TreeData } from '../features/tree/api'
 import { createTestQueryClient, mockViewport, renderAt } from '../test-utils'
 
 const treeUrl = `${location.origin}/api/v1/tree`
-const MEDIA = '7c1e5a10-0000-4000-8000-000000000001'
-const MOVIES = '7c1e5a10-0000-4000-8000-000000000002'
 const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
-const MOTORBIKES = '7c1e5a10-0000-4000-8000-000000000012'
-const VEHICLES = '7c1e5a10-0000-4000-8000-000000000003'
 const ITEM = '7c1e5a10-0000-4000-8000-000000000101'
 const UNKNOWN = '7c1e5a10-0000-4000-8000-0000000000ee'
 
 const main = () => screen.getByRole('main')
 const heading = (name: string) => within(main()).findByRole('heading', { name })
 const breadcrumb = () => screen.queryByRole('navigation', { name: 'Breadcrumb' })
-const crumbs = () =>
-  within(screen.getByRole('navigation', { name: 'Breadcrumb' }))
-    .getAllByRole('listitem')
-    .map((li) => li.textContent)
 
 function renderRouter(path: string) {
   const router = createTestRouter([path])
@@ -145,115 +137,23 @@ describe('W-04 list route when the tree fails', () => {
     expect(await heading('Watchlist')).toBeInTheDocument()
     expect(within(main()).queryByText('Couldn’t load this list.')).not.toBeInTheDocument()
   })
-
-  it('does not show breadcrumbs while the tree is failing', async () => {
-    server.use(http.get(treeUrl, () => problemResponse(500, 'internal_error')))
-    renderAt(`/lists/${WATCHLIST}`)
-    await within(main()).findByText('Couldn’t load this list.')
-    expect(breadcrumb()).not.toBeInTheDocument()
-  })
 })
 
-describe('W-04 breadcrumbs', () => {
-  it('shows Folder › Sub › List on a list, folders as plain text, the list as current', async () => {
-    renderAt(`/lists/${WATCHLIST}`)
-    await heading('Watchlist')
-    const nav = await screen.findByRole('navigation', { name: 'Breadcrumb' })
-    expect(crumbs()).toEqual(['Media', 'Movies', 'Watchlist'])
-    expect(within(nav).queryByRole('link')).not.toBeInTheDocument()
-    expect(within(nav).getByText('Media')).not.toHaveAttribute('aria-current')
-    expect(within(nav).getByText('Movies')).not.toHaveAttribute('aria-current')
-    expect(within(nav).getByText('Watchlist')).toHaveAttribute('aria-current', 'page')
-  })
-
-  it('shows a single folder for a list one level deep', async () => {
-    renderAt(`/lists/${MOTORBIKES}`)
-    await screen.findByRole('navigation', { name: 'Breadcrumb' })
-    expect(crumbs()).toEqual(['Vehicles', 'Motorbikes'])
-  })
-
-  it('shows only the list for a root-level list', async () => {
-    server.use(
-      http.get(treeUrl, () =>
-        HttpResponse.json({
-          folders: [],
-          lists: [{ ...(exampleResponses.getTree.body as TreeData).lists[0], folder_id: null }],
-        }),
-      ),
-    )
-    renderAt(`/lists/${WATCHLIST}`)
-    await screen.findByRole('navigation', { name: 'Breadcrumb' })
-    expect(crumbs()).toEqual(['Watchlist'])
-  })
-
-  it('adds a trailing "Item" crumb on the item route, and the list crumb links back', async () => {
-    mockViewport(1100)
-    renderAt(`/lists/${WATCHLIST}/items/${ITEM}`)
-    const nav = await screen.findByRole('navigation', { name: 'Breadcrumb' })
-    expect(crumbs()).toEqual(['Media', 'Movies', 'Watchlist', 'Item'])
-    expect(within(nav).getByRole('link', { name: 'Watchlist' })).toHaveAttribute(
-      'href',
-      `/lists/${WATCHLIST}`,
-    )
-    expect(within(nav).getByText('Item')).toHaveAttribute('aria-current', 'page')
-    expect(within(nav).queryByRole('link', { name: 'Media' })).not.toBeInTheDocument()
-  })
-
-  it('also shows the item crumb on wide screens', async () => {
-    mockViewport(1440)
-    renderAt(`/lists/${WATCHLIST}/items/${ITEM}`)
-    await screen.findByRole('navigation', { name: 'Breadcrumb' })
-    expect(crumbs()).toEqual(['Media', 'Movies', 'Watchlist', 'Item'])
-  })
-
-  it('updates when navigating to another list', async () => {
-    const router = renderRouter(`/lists/${WATCHLIST}`)
-    await screen.findByRole('navigation', { name: 'Breadcrumb' })
-    await router.navigate(`/lists/${MOTORBIKES}`)
-    await heading('Motorbikes')
-    expect(crumbs()).toEqual(['Vehicles', 'Motorbikes'])
-  })
-
-  it('works in the mobile layout', async () => {
-    mockViewport(375)
-    renderAt(`/lists/${WATCHLIST}`)
-    await screen.findByRole('navigation', { name: 'Breadcrumb' })
-    expect(crumbs()).toEqual(['Media', 'Movies', 'Watchlist'])
-  })
-
+describe('F007-W5 no breadcrumbs', () => {
   it.each([
+    ['a list', `/lists/${WATCHLIST}`, 'Watchlist'],
+    ['an unknown list', `/lists/${UNKNOWN}`, 'List not found'],
     ['Home', '/', 'Home'],
-    ['Search', '/search?q=x', 'Search'],
-    ['Trash', '/trash', 'Trash'],
-    ['Settings', '/settings', 'Settings'],
   ])('is absent on %s', async (_, path, name) => {
     renderAt(path)
     await heading(name)
+    expect(breadcrumb()).not.toBeInTheDocument()
+  })
+
+  it('is absent on the item route', async () => {
+    mockViewport(1100)
+    renderAt(`/lists/${WATCHLIST}/items/${ITEM}`)
     await screen.findByRole('treeitem', { name: /Media/ })
     expect(breadcrumb()).not.toBeInTheDocument()
-  })
-
-  it('is absent for an unknown list', async () => {
-    renderAt(`/lists/${UNKNOWN}`)
-    await heading('List not found')
-    expect(breadcrumb()).not.toBeInTheDocument()
-  })
-
-  it('is absent for an unknown list on the item route', async () => {
-    mockViewport(1100)
-    renderAt(`/lists/${UNKNOWN}/items/${ITEM}`)
-    await heading('List not found')
-    expect(breadcrumb()).not.toBeInTheDocument()
-  })
-
-  it('is absent while the tree is loading', () => {
-    renderAt(`/lists/${WATCHLIST}`)
-    expect(breadcrumb()).not.toBeInTheDocument()
-  })
-
-  it('uses folder names from the tree, not ids', async () => {
-    renderAt(`/lists/${WATCHLIST}`)
-    await screen.findByRole('navigation', { name: 'Breadcrumb' })
-    expect(crumbs().join(' ')).not.toMatch(new RegExp(`${MEDIA}|${MOVIES}|${VEHICLES}`))
   })
 })

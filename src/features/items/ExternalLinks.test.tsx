@@ -5,7 +5,7 @@ import type { Item } from './api'
 import { ExternalLinks } from './ExternalLinks'
 
 const matrix = exampleResponses.getItem.body as Item
-const withSite = (url: string | null): Item => ({ ...matrix, official_website_url: url })
+const withSite = (url: string | null): Item => ({ ...matrix, website: url })
 
 const group = () => screen.getByRole('group', { name: 'External links' })
 const controls = () => [...group().querySelectorAll<HTMLElement>('a, button')]
@@ -17,7 +17,7 @@ describe('AT-13 external links component', () => {
     expect(items).toHaveLength(3)
     expect(items[0]).toHaveTextContent(/^Google/)
     expect(items[1]).toHaveTextContent(/^Reddit/)
-    expect(items[2]).toHaveTextContent(/^Official site/)
+    expect(items[2]).toHaveTextContent(/^Website/)
   })
 
   it('opens links in a new tab with noopener noreferrer', () => {
@@ -37,25 +37,25 @@ describe('AT-13 external links component', () => {
     expect(r.searchParams.get('q')).toBe('The Matrix 1999 film site:reddit.com')
   })
 
-  it('shows an anchor to the official site when set', () => {
+  it('shows an anchor to the website when set', () => {
     render(<ExternalLinks item={withSite('https://www.thematrix.com/')} />)
-    const official = controls()[2]
-    expect(official?.tagName).toBe('A')
-    expect(official).toHaveAttribute('href', 'https://www.thematrix.com/')
+    const website = controls()[2]
+    expect(website?.tagName).toBe('A')
+    expect(website).toHaveAttribute('href', 'https://www.thematrix.com/')
   })
 
-  it('with no official site, the third control is an aria-disabled button without href', () => {
+  it('with no website, the third control is an aria-disabled button without href', () => {
     render(<ExternalLinks item={withSite(null)} />)
     expect(within(group()).getAllByRole('link')).toHaveLength(2)
-    const disabled = within(group()).getByRole('button', { name: 'No official site' })
+    const disabled = within(group()).getByRole('button', { name: 'No website' })
     expect(disabled).toHaveAttribute('aria-disabled', 'true')
     expect(disabled).not.toHaveAttribute('href')
     expect(controls()[2]).toBe(disabled)
   })
 
-  it('treats an unsafe official site as missing', () => {
+  it('treats an unsafe website as missing', () => {
     render(<ExternalLinks item={withSite('javascript:alert(1)')} />)
-    expect(screen.getByRole('button', { name: 'No official site' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'No website' })).toHaveAttribute(
       'aria-disabled',
       'true',
     )

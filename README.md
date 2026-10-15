@@ -28,7 +28,7 @@ There is no CI. Quality gates run locally with `npm run check`.
 | Description and history | Markdown editor (CodeMirror), safe renderer, version history and restore | `src/features/items/content`, `src/components/markdown` |
 | Search                  | Sidebar dropdown and `/search` results page                              | `src/features/search`                                   |
 | Trash                   | Restore (in place or elsewhere), delete permanently                      | `src/features/trash`                                    |
-| Settings                | Theme, workspace form, and **Connection** (backend status, API address)  | `src/features/settings`, `src/features/health`          |
+| Settings                | Workspace form, and **Connection** (backend status, API address)         | `src/features/settings`, `src/features/health`          |
 | Home                    | Your lists and recently updated items                                    | `src/features/home`                                     |
 
 Stack: Tailwind 4 with design tokens (light / dark / system), Radix primitives, TanStack Query, React Router, MSW for tests and the no-backend mode,

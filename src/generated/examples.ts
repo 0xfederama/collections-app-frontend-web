@@ -34,7 +34,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "body": {
       "workspace_name": "Our Collection",
       "streaming_country_code": "IT",
-      "default_currency": "EUR",
       "markdown_history_limit": 20,
       "version": 4
     }
@@ -47,7 +46,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "body": {
       "workspace_name": "Our Collection",
       "streaming_country_code": "IT",
-      "default_currency": "EUR",
       "markdown_history_limit": 20,
       "version": 4
     }
@@ -92,6 +90,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "id": "7c1e5a10-0000-4000-8000-000000000011",
           "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
           "name": "Watchlist",
+          "kind": "movie",
           "description": "Films to watch",
           "display_mode": "thumbnail",
           "sort_mode": "manual",
@@ -105,6 +104,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "id": "7c1e5a10-0000-4000-8000-000000000012",
           "folder_id": "7c1e5a10-0000-4000-8000-000000000003",
           "name": "Motorbikes",
+          "kind": "motorcycle",
           "description": null,
           "display_mode": "grid",
           "sort_mode": "title",
@@ -198,6 +198,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000011",
       "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
       "name": "Watchlist",
+      "kind": "movie",
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
@@ -223,6 +224,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000011",
       "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
       "name": "Watchlist",
+      "kind": "movie",
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
@@ -254,6 +256,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000011",
       "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
       "name": "Watchlist",
+      "kind": "movie",
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
@@ -279,6 +282,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000011",
       "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
       "name": "Watchlist",
+      "kind": "movie",
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
@@ -301,14 +305,12 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "list_id": "7c1e5a10-0000-4000-8000-000000000011",
           "title": "The Matrix",
           "kind": "movie",
-          "summary": "A hacker learns the truth about reality.",
-          "status": "Watched",
           "image": {
             "url": "/api/v1/attachments/7c1e5a10-0000-4000-8000-000000000201/file",
             "thumbnail_url": "/api/v1/attachments/7c1e5a10-0000-4000-8000-000000000201/thumbnail"
           },
           "price": null,
-          "official_website_url": null,
+          "website": null,
           "content_version": 2,
           "sort_order": 0,
           "version": 3,
@@ -320,13 +322,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "list_id": "7c1e5a10-0000-4000-8000-000000000011",
           "title": "Blade Runner 2049",
           "kind": "movie",
-          "summary": null,
-          "status": "To watch",
           "image": {
             "url": "https://example.org/images/br2049.jpg"
           },
           "price": null,
-          "official_website_url": null,
+          "website": null,
           "content_version": 0,
           "sort_order": 1,
           "version": 1,
@@ -351,8 +351,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "list_id": "7c1e5a10-0000-4000-8000-000000000011",
       "title": "The Matrix",
       "kind": "movie",
-      "summary": "A hacker learns the truth about reality.",
-      "status": "Watched",
       "image": {
         "source": "upload",
         "attachment_id": "7c1e5a10-0000-4000-8000-000000000201",
@@ -363,7 +361,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "original_filename": "matrix.jpg"
       },
       "price": null,
-      "official_website_url": "https://www.warnerbros.com/movies/matrix",
+      "website": "https://www.warnerbros.com/movies/matrix",
       "metadata": {
         "release_year": 1999,
         "runtime_minutes": 136,
@@ -399,11 +397,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "list_id": "7c1e5a10-0000-4000-8000-000000000011",
       "title": "The Matrix",
       "kind": "movie",
-      "summary": "A hacker learns the truth about reality.",
-      "status": "Watched",
       "image": null,
       "price": null,
-      "official_website_url": null,
+      "website": null,
       "metadata": {
         "release_year": 1999,
         "runtime_minutes": 136,
@@ -450,8 +446,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "list_id": "7c1e5a10-0000-4000-8000-000000000012",
       "title": "Ducati Monster",
       "kind": "motorcycle",
-      "summary": "Naked bike with a 937 cc twin.",
-      "status": "Owned",
       "image": {
         "source": "url",
         "url": "https://example.org/images/monster.jpg"
@@ -461,17 +455,13 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "max": "13500.00",
         "currency": "EUR"
       },
-      "official_website_url": "https://www.ducati.com/",
+      "website": "https://www.ducati.com/",
       "metadata": {
         "make": "Ducati",
         "model": "Monster",
         "model_year": 2024,
-        "segment": "naked",
         "displacement_cc": 937,
         "power_hp": 111,
-        "torque_nm": 93,
-        "wet_weight_kg": 188,
-        "seat_height_mm": 820,
         "license_class": "A"
       },
       "content_version": 0,
@@ -497,8 +487,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "list_id": "7c1e5a10-0000-4000-8000-000000000012",
       "title": "Ducati Monster",
       "kind": "motorcycle",
-      "summary": "Naked bike with a 937 cc twin.",
-      "status": "Owned",
       "image": {
         "source": "url",
         "url": "https://example.org/images/monster.jpg"
@@ -508,17 +496,13 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "max": "13500.00",
         "currency": "EUR"
       },
-      "official_website_url": "https://www.ducati.com/",
+      "website": "https://www.ducati.com/",
       "metadata": {
         "make": "Ducati",
         "model": "Monster",
         "model_year": 2024,
-        "segment": "naked",
         "displacement_cc": 937,
         "power_hp": 111,
-        "torque_nm": 93,
-        "wet_weight_kg": 188,
-        "seat_height_mm": 820,
         "license_class": "A"
       },
       "content_version": 0,
@@ -538,8 +522,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "list_id": "7c1e5a10-0000-4000-8000-000000000011",
       "title": "The Matrix",
       "kind": "movie",
-      "summary": "A hacker learns the truth about reality.",
-      "status": "Watched",
       "image": {
         "source": "upload",
         "attachment_id": "7c1e5a10-0000-4000-8000-000000000201",
@@ -550,7 +532,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "original_filename": "matrix.jpg"
       },
       "price": null,
-      "official_website_url": "https://www.warnerbros.com/movies/matrix",
+      "website": "https://www.warnerbros.com/movies/matrix",
       "metadata": {
         "release_year": 1999,
         "runtime_minutes": 136,
@@ -580,8 +562,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "list_id": "7c1e5a10-0000-4000-8000-000000000012",
       "title": "Ducati Monster",
       "kind": "motorcycle",
-      "summary": "Naked bike with a 937 cc twin.",
-      "status": "Owned",
       "image": {
         "source": "url",
         "url": "https://example.org/images/monster.jpg"
@@ -591,17 +571,13 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "max": "13500.00",
         "currency": "EUR"
       },
-      "official_website_url": "https://www.ducati.com/",
+      "website": "https://www.ducati.com/",
       "metadata": {
         "make": "Ducati",
         "model": "Monster",
         "model_year": 2024,
-        "segment": "naked",
         "displacement_cc": 937,
         "power_hp": 111,
-        "torque_nm": 93,
-        "wet_weight_kg": 188,
-        "seat_height_mm": 820,
         "license_class": "A"
       },
       "content_version": 0,
@@ -704,11 +680,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "list_id": "7c1e5a10-0000-4000-8000-000000000011",
             "title": "The Matrix",
             "kind": "movie",
-            "summary": "A hacker learns the truth about reality.",
-            "status": "Watched",
             "image": null,
             "price": null,
-            "official_website_url": null,
+            "website": null,
             "content_version": 2,
             "sort_order": 0,
             "version": 3,
@@ -754,11 +728,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "list_id": "7c1e5a10-0000-4000-8000-000000000011",
             "title": "The Matrix",
             "kind": "movie",
-            "summary": "A hacker learns the truth about reality.",
-            "status": "Watched",
             "image": null,
             "price": null,
-            "official_website_url": null,
+            "website": null,
             "content_version": 2,
             "sort_order": 0,
             "version": 3,

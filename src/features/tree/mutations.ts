@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '../../components/ui'
+import { useToast, type ItemKind } from '../../components/ui'
 import { api, ApiError, ifMatch, unwrap } from '../../lib/api'
 import { invalidateContent } from '../invalidateContent'
 import { treeKeys, type Folder, type List, type TreeData } from './api'
@@ -33,8 +33,9 @@ export function useCreateFolder() {
 }
 
 export function useCreateList() {
-  return useTreeMutation(({ name, folderId }: { name: string; folderId: string | null }) =>
-    unwrap(api.POST('/api/v1/lists', { body: { name, folder_id: folderId } })),
+  return useTreeMutation(
+    ({ name, kind, folderId }: { name: string; kind: ItemKind; folderId: string | null }) =>
+      unwrap(api.POST('/api/v1/lists', { body: { name, kind, folder_id: folderId } })),
   )
 }
 
@@ -56,8 +57,8 @@ export function useUpdateList() {
       patch,
     }: {
       list: List
-      /** `description: null` clears it. */
-      patch: { name?: string; description?: string | null }
+      /** `description: null` clears it. A `kind` change clears the kind fields of all the list's items. */
+      patch: { name?: string; kind?: ItemKind; description?: string | null }
     }) =>
       unwrap(
         api.PATCH('/api/v1/lists/{id}', {

@@ -52,7 +52,9 @@ describe('W-13 home: quick links', () => {
     server.use(http.get(treeUrl, () => new Promise<Response>(() => {})))
     mockViewport(1280)
     renderAt('/')
-    expect(await screen.findByText('Loading lists', {}, { timeout: 5000 })).toBeInTheDocument()
+    expect(
+      (await screen.findAllByText('Loading lists', {}, { timeout: 5000 })).length,
+    ).toBeGreaterThan(0)
   })
 
   it('shows an error with Retry when the tree fails, and recovers', async () => {

@@ -19,7 +19,7 @@ const SIDEBAR_KEY = 'collection:sidebar'
 const settingsUrl = `${location.origin}/api/v1/settings`
 
 const storedSidebar = () => JSON.parse(localStorage.getItem(SIDEBAR_KEY) ?? 'null')
-const nav = () => screen.queryByRole('navigation', { name: 'Collections' })
+const nav = () => screen.queryByRole('navigation', { name: 'Library' })
 const separator = () => screen.queryByRole('separator', { name: 'Resize sidebar' })
 
 function renderRouter(path: string) {
@@ -134,7 +134,7 @@ describe('AT-14 mobile drawer', () => {
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
 
     const dialog = await screen.findByRole('dialog')
-    expect(within(dialog).getByRole('navigation', { name: 'Collections' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('navigation', { name: 'Library' })).toBeInTheDocument()
     expect(await within(dialog).findByRole('treeitem', { name: /Media/ })).toBeInTheDocument()
     expect(within(dialog).getByRole('link', { name: 'Trash' })).toHaveAttribute('href', '/trash')
     expect(within(dialog).getByRole('link', { name: 'Settings' })).toHaveAttribute(
@@ -371,7 +371,6 @@ describe('W-04 workspace name', () => {
         HttpResponse.json({
           workspace_name: '',
           streaming_country_code: 'IT',
-          default_currency: 'EUR',
           markdown_history_limit: 20,
           version: 1,
         }),

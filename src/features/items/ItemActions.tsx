@@ -5,7 +5,7 @@ import { AlertDialog, Button, Combobox, Dialog, useToast } from '../../component
 import { FolderInput, Pencil, Trash2 } from '../../components/ui/icons'
 import { treeKeys, useTreeIndex, type TreeIndex, type TreeNode } from '../tree/api'
 import { countsText } from '../trash/model'
-import { itemKeys, useDeleteItem, useMoveItem, type Item } from './api'
+import { itemKeys, useDeleteItem, useMoveItem, type Item, type ItemKind } from './api'
 import { withEdit, withoutEdit } from './editMode'
 import { classifyItemError, type ItemError } from './errors'
 
@@ -20,13 +20,13 @@ function ErrorBox({ error }: { error: ItemError }) {
   )
 }
 
-/** Every list as `Folder › Sub › List`, in tree order. */
-function listOptions(index: TreeIndex, currentListId: string) {
+/** Every list of the item's kind as `Folder › Sub › List`, in tree order (items only move within a kind). */
+function listOptions(index: TreeIndex, currentListId: string, kind: ItemKind) {
   const out: { value: string; label: string; disabled?: boolean }[] = []
   const visit = (nodes: TreeNode[]) => {
     for (const node of nodes) {
       if (node.kind === 'folder') visit(node.children)
-      else {
+      else if (node.list.kind === kind) {
         const path = [...index.ancestorsOf(node.id).map((f) => f.name), node.list.name].join(' › ')
         const current = node.id === currentListId
         out.push({
@@ -113,7 +113,7 @@ export function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => v
   const { error, setError, fail } = useFailure(item, onClose)
   const [target, setTarget] = useState<string | null>(null)
 
-  const options = tree.status === 'success' ? listOptions(tree.index, item.list_id) : []
+  const options = tree.status === 'success' ? listOptions(tree.index, item.list_id, item.kind) : []
   const choice = options.find((o) => o.value === target && !o.disabled)
 
   const submit = async () => {
@@ -134,7 +134,7 @@ export function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => v
       open
       onOpenChange={(open) => !open && onClose()}
       title={`Move “${item.title}”`}
-      description="Choose the list to move it to. It goes to the end of that list."
+      description="Choose the list to move it to. Only lists of the same kind are offered. It goes to the end of that list."
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -153,7 +153,7 @@ export function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => v
           value={target}
           onValueChange={setTarget}
           placeholder={tree.status === 'pending' ? 'Loading lists…' : 'Search lists'}
-          emptyMessage="No lists"
+          emptyMessage="No other lists of this kind"
         />
         {tree.status === 'error' && (
           <ErrorBox

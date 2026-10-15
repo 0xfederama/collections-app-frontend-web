@@ -134,14 +134,15 @@ export function useTreeDialogs({
           }
           submitLabel="Create"
           noun={dialog.kind}
+          kind={isFolder ? undefined : { initial: 'generic' }}
           onClose={close}
-          onSubmit={async (name) => {
+          onSubmit={async (name, kind) => {
             if (isFolder) {
               await createFolder.mutateAsync({ name, parentId: dialog.parentId })
               onCreatedFolder?.(dialog.parentId)
               toast({ kind: 'success', title: `Folder “${name}” created` })
             } else {
-              const list = await createList.mutateAsync({ name, folderId: dialog.parentId })
+              const list = await createList.mutateAsync({ name, kind, folderId: dialog.parentId })
               toast({ kind: 'success', title: `List “${name}” created` })
               void navigate(`/lists/${list.id}`)
             }
@@ -159,7 +160,7 @@ export function useTreeDialogs({
               toast({
                 kind: 'info',
                 title: 'That item no longer exists',
-                description: 'The list of collections was refreshed.',
+                description: 'The folders and lists were refreshed.',
               })
             }}
           />
@@ -171,9 +172,15 @@ export function useTreeDialogs({
             <NameDialog
               key={`rename-${node.id}`}
               title={node.kind === 'folder' ? 'Rename folder' : 'Rename list'}
+              description={node.kind === 'list' ? 'Rename the list or change its kind.' : undefined}
               submitLabel="Save"
               noun={node.kind}
               initialName={name}
+              kind={
+                node.kind === 'list'
+                  ? { initial: node.list.kind, itemCount: node.list.item_count }
+                  : undefined
+              }
               onClose={close}
               onReload={async () => {
                 const data = await reload()
@@ -181,10 +188,17 @@ export function useTreeDialogs({
                   ? data?.folders.find((f) => f.id === node.id)?.name
                   : data?.lists.find((l) => l.id === node.id)?.name
               }}
-              onSubmit={async (next) => {
+              onSubmit={async (next, nextKind) => {
                 if (node.kind === 'folder')
                   await renameFolder.mutateAsync({ folder: node.folder, name: next })
-                else await updateList.mutateAsync({ list: node.list, patch: { name: next } })
+                else
+                  await updateList.mutateAsync({
+                    list: node.list,
+                    patch: {
+                      name: next,
+                      ...(nextKind !== node.list.kind && { kind: nextKind }),
+                    },
+                  })
                 toast({ kind: 'success', title: `Renamed to “${next}”` })
               }}
             />
@@ -193,13 +207,11 @@ export function useTreeDialogs({
           content = (
             <DescriptionDialog
               key={`description-${node.id}`}
-              initialDescription={node.list.description ?? ''}
+              list={node.list}
               onClose={close}
-              onReload={async () =>
-                (await reload())?.lists.find((l) => l.id === node.id)?.description
-              }
-              onSubmit={async (description) => {
-                await updateList.mutateAsync({ list: node.list, patch: { description } })
+              onReload={async () => (await reload())?.lists.find((l) => l.id === node.id)}
+              onSubmit={async (list, description) => {
+                await updateList.mutateAsync({ list, patch: { description } })
                 toast({ kind: 'success', title: 'Description saved' })
               }}
             />

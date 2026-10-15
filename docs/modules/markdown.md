@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Renders Markdown source safely (item descriptions now; the W-10 Preview reuses it). Raw HTML is dropped and URLs are limited to http, https, mailto and relative. URL policy: `/Users/federico/Developer/collections-app/design-docs/DECISIONS.md` (D-014).
+Renders Markdown source safely (item and list descriptions, and the editors' Preview). Raw HTML is dropped and URLs are limited to http, https, mailto and relative. URL policy: `/Users/federico/Developer/collections-app/design-docs/DECISIONS.md` (D-014).
 
 ## Key files
 

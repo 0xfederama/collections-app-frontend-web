@@ -49,45 +49,11 @@ async function retype(user: ReturnType<typeof userEvent.setup>, label: string, t
   if (text) await user.type(input, text)
 }
 
-describe('AT-14 settings: theme', () => {
-  it.each([
-    ['Dark', 'dark', 'dark'],
-    ['Light', 'light', 'light'],
-  ])('choosing %s sets data-theme and persists it', async (label, theme, stored) => {
-    const user = await openSettings()
-    await user.click(screen.getByRole('radio', { name: label }))
-    expect(document.documentElement.dataset.theme).toBe(theme)
-    expect(localStorage.getItem('collection:theme')).toBe(stored)
-  })
-
-  it('choosing System removes the stored key', async () => {
-    const user = await openSettings()
-    await user.click(screen.getByRole('radio', { name: 'Dark' }))
-    expect(localStorage.getItem('collection:theme')).toBe('dark')
-    await user.click(screen.getByRole('radio', { name: 'System' }))
-    expect(localStorage.getItem('collection:theme')).toBeNull()
-    expect(document.documentElement.dataset.theme).toBe('light')
-  })
-
-  it('makes no network request when the theme changes', async () => {
-    const user = await openSettings()
-    const requests: string[] = []
-    const listener = ({ request }: { request: Request }) => requests.push(request.method)
-    server.events.on('request:start', listener)
-    try {
-      await user.click(screen.getByRole('radio', { name: 'Dark' }))
-      await user.click(screen.getByRole('radio', { name: 'Light' }))
-      await user.click(screen.getByRole('radio', { name: 'System' }))
-    } finally {
-      server.events.removeListener('request:start', listener)
-    }
-    expect(requests).toEqual([])
-  })
-
-  it('does not touch the settings version or enable Save', async () => {
-    const user = await openSettings()
-    await user.click(screen.getByRole('radio', { name: 'Dark' }))
-    expect(save()).toBeDisabled()
+describe('F007-W6 settings: theme moved to the sidebar', () => {
+  it('has no Appearance section or theme control in the page itself', async () => {
+    await openSettings()
+    expect(screen.queryByRole('heading', { name: 'Appearance' })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('main')).queryByRole('radiogroup', { name: 'Theme' })).toBeNull()
   })
 })
 
@@ -97,7 +63,6 @@ describe('W-13 settings: saving', () => {
     await openSettings()
     expect(field('Workspace name')).toHaveValue('Our Collection')
     expect(field('Streaming country')).toHaveValue('Italy (IT)')
-    expect(field('Default currency')).toHaveValue('EUR · Euro')
     expect(field('Description history limit')).toHaveValue('20')
     expect(save()).toBeDisabled()
   })
@@ -106,12 +71,11 @@ describe('W-13 settings: saving', () => {
     const { patches, backend } = mountBackend({
       workspace_name: 'Our Collection',
       streaming_country_code: 'IT',
-      default_currency: 'EUR',
       markdown_history_limit: 20,
       version: 4,
     })
     const user = await openSettings()
-    const sidebar = screen.getByRole('navigation', { name: 'Collections' })
+    const sidebar = screen.getByRole('navigation', { name: 'Library' })
     expect(await within(sidebar).findByRole('link', { name: 'Our Collection' })).toBeInTheDocument()
 
     await retype(user, 'Workspace name', 'Casa')
@@ -129,7 +93,6 @@ describe('W-13 settings: saving', () => {
     const { patches } = mountBackend({
       workspace_name: 'A',
       streaming_country_code: 'IT',
-      default_currency: 'EUR',
       markdown_history_limit: 20,
       version: 4,
     })
@@ -152,17 +115,6 @@ describe('W-13 settings: saving', () => {
     await user.click(save())
     await screen.findByText('Settings saved')
     expect(patches[0]!.body).toEqual({ streaming_country_code: 'FR' })
-  })
-
-  it('changing the currency through the picker sends the ISO code', async () => {
-    const { patches } = mountBackend()
-    const user = await openSettings()
-    await user.type(field('Default currency'), 'dollar{ArrowDown}')
-    const usd = await screen.findByRole('option', { name: /USD · US Dollar/ })
-    await user.click(usd)
-    await user.click(save())
-    await screen.findByText('Settings saved')
-    expect(patches[0]!.body).toEqual({ default_currency: 'USD' })
   })
 
   it('reverting an edit disables Save again', async () => {
@@ -224,7 +176,6 @@ describe('W-13 settings: server errors', () => {
   it.each([
     ['workspace_name', 'Workspace name'],
     ['streaming_country_code', 'Streaming country'],
-    ['default_currency', 'Default currency'],
     ['markdown_history_limit', 'Description history limit'],
   ])('422 on %s lands on the input and focuses it', async (apiField, label) => {
     mountBackend()

@@ -376,7 +376,7 @@ describe('AT-09 image changes and the item version', () => {
     await screen.findByText('Image uploaded')
     // The draft was not reset by the image response.
     expect(screen.getByLabelText(/^Title/)).toHaveValue('A new title')
-    expect(screen.getByLabelText(/^Summary/)).toHaveValue(matrix.summary)
+    expect(screen.getByLabelText(/^Website/)).toHaveValue(matrix.website ?? '')
 
     await user.click(screen.getByRole('button', { name: 'Save changes' }))
     await screen.findByText('Item saved')

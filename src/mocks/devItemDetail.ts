@@ -14,7 +14,7 @@ const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 /** Stable small number from an id, to vary the sample data without randomness. */
 const seed = (id: string) => [...id].reduce((sum, ch) => (sum * 31 + ch.charCodeAt(0)) % 9973, 7)
 
-const metadataFor = (summary: ItemSummary): Record<string, unknown> => {
+const metadataFor = (summary: Pick<ItemSummary, 'id' | 'kind'>): Record<string, unknown> => {
   const n = seed(summary.id)
   const sparse = n % 5 === 0 // every fifth item has no kind details at all
   if (sparse) return {}
@@ -41,36 +41,25 @@ const metadataFor = (summary: ItemSummary): Record<string, unknown> => {
         make: 'Ducati',
         model: 'Monster',
         model_year: 2021,
-        segment: 'naked',
         displacement_cc: 937,
         power_hp: 111,
-        torque_nm: 93.1,
-        wet_weight_kg: 188,
-        seat_height_mm: 820,
         license_class: 'A',
       }
     case 'car':
       return {
         make: 'Mazda',
         model: 'MX-5',
-        trim: 'Exceed',
         model_year: 2022,
-        body_type: 'roadster',
         fuel_type: 'petrol',
-        transmission: 'manual',
         power_hp: 184,
-        seats: 2,
       }
     case 'camera':
       return {
         make: 'Fujifilm',
         model: 'X100VI',
         release_year: 2024,
-        camera_type: 'compact',
         sensor_format: 'aps_c',
         megapixels: 40.2,
-        lens_mount: 'Fixed',
-        weight_g: 521,
       }
     default:
       return {}
@@ -92,11 +81,26 @@ Bought **second hand**, still in great shape. See the [official page](https://ex
 A broken link: [x](javascript:alert(1)). Raw HTML <script>alert(1)</script> is not rendered.
 `
 
-/** Kind details and official site of items created or edited in this session. */
+/** Kind details and website of items created or edited in this session (`kind`: the one the details belong to). */
 const extras = new Map<
   string,
-  { metadata: Record<string, unknown>; official_website_url: string | null }
+  { kind: string; metadata: Record<string, unknown>; website: string | null }
 >()
+
+type PriceInput = {
+  amount?: string
+  min?: string | null
+  max?: string | null
+  currency: string
+} | null
+
+/** A price request as the server stores it: always `min`, `max`, `currency` (a single price has min == max). */
+const toPrice = (input: PriceInput): ItemSummary['price'] =>
+  input
+    ? 'amount' in input && input.amount !== undefined
+      ? { min: input.amount, max: input.amount, currency: input.currency }
+      : { min: input.min ?? null, max: input.max ?? null, currency: input.currency }
+    : null
 
 function fullItem(summary: ItemSummary): Item {
   const list = devTreeState.lists.find((l) => l.id === summary.list_id)
@@ -107,21 +111,31 @@ function fullItem(summary: ItemSummary): Item {
   }
   if (list) path.push({ type: 'list', id: list.id, name: list.name })
   const { image, ...rest } = summary
+  // An item's kind is its list's; details written for another kind were cleared by the kind change.
+  const kind = list?.kind ?? summary.kind
+  const saved = extras.get(summary.id)
   return {
     ...rest,
+    kind,
     image: image ? { source: 'url', url: image.url } : null,
-    official_website_url:
-      extras.get(summary.id)?.official_website_url ??
-      (seed(summary.id) % 3 === 0 ? 'https://example.com/product' : null),
+    website:
+      saved?.website !== undefined
+        ? saved.website
+        : seed(summary.id) % 3 === 0
+          ? 'https://example.com/product'
+          : null,
     content_version: 1,
-    metadata: extras.get(summary.id)?.metadata ?? metadataFor(summary),
+    metadata: saved
+      ? saved.kind === kind
+        ? saved.metadata
+        : {}
+      : metadataFor({ id: summary.id, kind }),
     path,
   } as Item
 }
 
 type FieldIssue = { field: string; message: string }
 type Body = Record<string, unknown>
-const KINDS = ['generic', 'movie', 'tv_show', 'motorcycle', 'car', 'camera']
 
 /** A light version of the server's rules (DATA_MODEL §2), enough to exercise the form's 422 paths. */
 function validateBody(body: Body, kind: string, metadata: Body | undefined): FieldIssue[] {
@@ -130,18 +144,24 @@ function validateBody(body: Body, kind: string, metadata: Body | undefined): Fie
   if ('title' in body && (typeof body.title !== 'string' || !body.title.trim())) {
     add('title', 'Title must not be blank.')
   }
-  if ('kind' in body && !KINDS.includes(String(body.kind))) add('kind', 'Unknown kind.')
-  const price = body.price as { min: string | null; max: string | null; currency?: string } | null
+  const price = body.price as
+    | { amount?: string; min?: string | null; max?: string | null; currency?: string }
+    | null
+    | undefined
   if (price) {
-    if (price.min === null && price.max === null) add('price', 'Set a minimum or a maximum.')
-    else if (!price.currency) add('price.currency', 'Currency is required with a price.')
+    const hasRange = price.min !== undefined || price.max !== undefined
+    if (price.amount !== undefined && hasRange) {
+      add('price', 'Use either amount or min and max, not both.')
+    } else if (price.amount === undefined && !price.min && !price.max) {
+      add('price', 'Set an amount, a minimum or a maximum.')
+    } else if (!price.currency) add('price.currency', 'Currency is required with a price.')
     if (price.min && price.max && Number(price.min) > Number(price.max)) {
       add('price.max', 'Maximum must not be lower than the minimum.')
     }
   }
-  const url = body.official_website_url
+  const url = body.website
   if (typeof url === 'string' && !/^https?:\/\//.test(url)) {
-    add('official_website_url', 'Must be an http or https address.')
+    add('website', 'Must be an http or https address.')
   }
   for (const [key, value] of Object.entries(metadata ?? {})) {
     const field = kindFields[kind as keyof typeof kindFields]?.find((f) => f.key === key)
@@ -158,20 +178,12 @@ function validateBody(body: Body, kind: string, metadata: Body | undefined): Fie
 
 const unknownKey = (body: Body, allowed: string[]) =>
   Object.keys(body).find((key) => !allowed.includes(key))
-const ITEM_KEYS = [
-  'title',
-  'kind',
-  'summary',
-  'status',
-  'price',
-  'official_website_url',
-  'metadata',
-]
+const ITEM_KEYS = ['title', 'price', 'website', 'metadata']
 
 /**
  * Dev fake of `GET`/`PATCH`/`DELETE /items/{id}`, `POST /items/{id}/move` and `GET …/content`, on top of
  * the item store of `devItems.ts` (`VITE_API_MOCKS=1` worker only). Every item has kind details
- * (except every fifth), no official site except every third, and a short Markdown description.
+ * (except every fifth), no website except every third, and a short Markdown description.
  */
 export const devItemDetailHandlers = [
   http.post(url('/api/v1/lists/:id/items'), async ({ params, request }) => {
@@ -180,7 +192,7 @@ export const devItemDetailHandlers = [
     const body = (await request.json()) as Body
     const unknown = unknownKey(body, ITEM_KEYS)
     if (unknown) return problemResponse(400, 'unknown_field', { detail: unknown })
-    const kind = String(body.kind ?? 'generic')
+    const kind = devTreeState.lists.find((l) => l.id === listId)?.kind ?? 'generic'
     const issues = validateBody({ ...body, title: body.title ?? '' }, kind, body.metadata as Body)
     if (issues.length > 0) return problemResponse(422, 'validation_failed', { errors: issues })
     const now = new Date().toISOString()
@@ -189,11 +201,9 @@ export const devItemDetailHandlers = [
       list_id: listId,
       title: String(body.title).trim(),
       kind,
-      summary: (body.summary as string | null) ?? null,
-      status: (body.status as string | null) ?? null,
       image: null,
-      price: (body.price as ItemSummary['price']) ?? null,
-      official_website_url: null,
+      price: toPrice((body.price as PriceInput) ?? null),
+      website: null,
       content_version: 0,
       sort_order: 0,
       version: 1,
@@ -202,8 +212,9 @@ export const devItemDetailHandlers = [
     } as ItemSummary
     devItemStore.append(created)
     extras.set(created.id, {
+      kind,
       metadata: (body.metadata as Body | undefined) ?? {},
-      official_website_url: (body.official_website_url as string | null) ?? null,
+      website: (body.website as string | null) ?? null,
     })
     return HttpResponse.json(fullItem(created), {
       status: 201,
@@ -223,28 +234,26 @@ export const devItemDetailHandlers = [
     const unknown = unknownKey(body, ITEM_KEYS)
     if (unknown) return problemResponse(400, 'unknown_field', { detail: unknown })
     const current = fullItem(summary)
-    const kind = String(body.kind ?? summary.kind)
-    const metadata = (
-      'metadata' in body ? body.metadata : kind === summary.kind ? current.metadata : {}
-    ) as Body
+    const kind = current.kind
+    const metadata = ('metadata' in body ? body.metadata : current.metadata) as Body
     const issues = validateBody(body, kind, metadata)
     if (issues.length > 0) return problemResponse(422, 'validation_failed', { errors: issues })
-    const { official_website_url, metadata: _ignored, ...summaryPatch } = body
+    const { website, price, metadata: _ignored, ...summaryPatch } = body
     void _ignored
     const changed = Object.keys(body).length > 0
     const next = {
       ...summary,
       ...summaryPatch,
+      ...(price !== undefined && { price: toPrice(price as PriceInput) }),
+      kind,
       version: changed ? summary.version + 1 : summary.version,
       updated_at: changed ? new Date().toISOString() : summary.updated_at,
     } as ItemSummary
     devItemStore.replace(next)
     extras.set(next.id, {
+      kind,
       metadata,
-      official_website_url:
-        official_website_url === undefined
-          ? current.official_website_url
-          : (official_website_url as string | null),
+      website: website === undefined ? current.website : (website as string | null),
     })
     return HttpResponse.json(fullItem(next), { headers: { ETag: `"i-${next.version}"` } })
   }),
@@ -285,9 +294,9 @@ export const devItemDetailHandlers = [
       return problemResponse(412, 'version_conflict', { current_version: summary.version })
     }
     const { list_id } = (await request.json()) as { list_id: string }
-    if (!devTreeState.lists.some((l) => l.id === list_id)) {
-      return problemResponse(409, 'destination_unavailable')
-    }
+    const destination = devTreeState.lists.find((l) => l.id === list_id)
+    if (!destination) return problemResponse(409, 'destination_unavailable')
+    if (destination.kind !== fullItem(summary).kind) return problemResponse(409, 'kind_mismatch')
     devItemStore.remove(summary.id)
     devItemStore.append({ ...summary, list_id, version: summary.version + 1 })
     return HttpResponse.json(fullItem({ ...summary, list_id, version: summary.version + 1 }))

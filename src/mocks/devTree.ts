@@ -7,9 +7,11 @@ type List = components['schemas']['List']
 type Tree = components['schemas']['Tree']
 type DisplayMode = components['schemas']['DisplayMode']
 type SortMode = components['schemas']['SortMode']
+type ItemKind = components['schemas']['ItemKind']
 
 const DISPLAY_MODES: DisplayMode[] = ['compact', 'thumbnail', 'grid']
-const SORT_MODES: SortMode[] = ['manual', 'title', 'updated']
+const ITEM_KINDS: ItemKind[] = ['generic', 'movie', 'tv_show', 'motorcycle', 'car', 'camera']
+const SORT_MODES: SortMode[] = ['manual', 'title', 'updated', 'kind_key']
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 
@@ -162,9 +164,14 @@ export function createTreeBackend(initial: Tree) {
 
     // ---- lists ----
     http.post(url('/api/v1/lists'), async ({ request }) => {
-      const body = (await request.json()) as { name?: unknown; folder_id?: string | null }
+      const body = (await request.json()) as {
+        name?: unknown
+        kind?: unknown
+        folder_id?: string | null
+      }
       const name = validName(body.name)
       if (!name) return invalid('name', 'Name must be 1 to 200 characters.')
+      if (!ITEM_KINDS.includes(body.kind as ItemKind)) return invalid('kind', 'Choose a kind.')
       const parent = body.folder_id ?? null
       if (parent !== null && !folderOf(parent))
         return problemResponse(409, 'destination_unavailable')
@@ -172,6 +179,7 @@ export function createTreeBackend(initial: Tree) {
         id: newId(),
         folder_id: parent,
         name,
+        kind: body.kind as ItemKind,
         description: null,
         display_mode: 'grid',
         sort_mode: 'manual',
@@ -220,11 +228,20 @@ export function createTreeBackend(initial: Tree) {
       if (mismatch) return mismatch
       const body = (await request.json()) as {
         name?: unknown
+        kind?: unknown
         description?: string | null
         display_mode?: unknown
         sort_mode?: unknown
       }
       let changed = false
+      // `kind_key` has no key on a generic list, so the resulting pair must not be (kind_key, generic).
+      const nextKind = ITEM_KINDS.includes(body.kind as ItemKind)
+        ? (body.kind as ItemKind)
+        : list.kind
+      const nextSort = (body.sort_mode as SortMode | undefined) ?? list.sort_mode
+      if (nextSort === 'kind_key' && nextKind === 'generic') {
+        return invalid('sort_mode', 'Sorting by the kind key is not available on a generic list.')
+      }
       if (body.display_mode !== undefined) {
         if (!DISPLAY_MODES.includes(body.display_mode as DisplayMode)) {
           return invalid('display_mode', 'Unknown display mode.')
@@ -245,9 +262,19 @@ export function createTreeBackend(initial: Tree) {
         list.name = name
         changed = true
       }
+      if (body.kind !== undefined) {
+        if (!ITEM_KINDS.includes(body.kind as ItemKind)) return invalid('kind', 'Unknown kind.')
+        if (body.kind !== list.kind) {
+          list.kind = body.kind as ItemKind
+          changed = true
+        }
+      }
       if (body.description !== undefined) {
-        if (body.description !== null && body.description.length > 2000) {
-          return invalid('description', 'Description must be at most 2000 characters.')
+        if (
+          body.description !== null &&
+          new TextEncoder().encode(body.description).length > 64 * 1024
+        ) {
+          return invalid('description', 'Description must be at most 64 KiB.')
         }
         list.description = body.description
         changed = true

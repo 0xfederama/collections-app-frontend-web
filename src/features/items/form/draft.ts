@@ -16,22 +16,30 @@ import { IMDB_URL } from '../links'
 
 type UpdateItemRequest = components['schemas']['UpdateItemRequest']
 
-/** Settings the form falls back on; empty strings while the settings are still loading. */
+/** Settings the form falls back on; empty while the settings are still loading. */
 export interface Defaults {
-  currency: string
   country: string
 }
 
+/** The currency the "Add price" control starts with (there is no workspace default since 0.3.0). */
+export const INITIAL_CURRENCY = 'EUR'
+
+export type PriceMode = 'single' | 'range'
+
 export interface Draft {
   title: string
+  /** The item's kind, derived from its list. Read-only: no input edits it. */
   kind: ItemKind
-  summary: string
-  status: string
+  /** Is the price control shown? A price is never there by default ("+ Add price"). */
+  hasPrice: boolean
+  priceMode: PriceMode
+  /** The single price (`priceMode: 'single'`). */
+  priceAmount: string
+  /** The range bounds (`priceMode: 'range'`). */
   priceMin: string
   priceMax: string
-  /** Empty = "the settings currency" (resolved by `toFields`, so an untouched form stays unchanged). */
   currency: string
-  officialUrl: string
+  website: string
   /** Text of each kind field except `streaming`, by key. Empty = unset. */
   meta: Record<string, string>
   streamingCountry: string
@@ -41,20 +49,22 @@ export interface Draft {
 
 type Metadata = Record<string, unknown>
 type Streaming = { country: string; platforms?: string[] }
-type Price = { min: string | null; max: string | null; currency: string } | null
+/** A price as the API takes it (`PriceInput`): a single `amount` or a `min`/`max` range. `null` clears. */
+type PriceInput =
+  | { amount: string; currency: string }
+  | { min: string | null; max: string | null; currency: string }
+  | null
+type ItemPrice = Item['price']
 
 /** The typed values of a draft: what the API takes (`null` clears or omits). */
 export interface FormFields {
   title: string
-  kind: ItemKind
-  summary: string | null
-  status: string | null
-  price: Price
-  official_website_url: string | null
+  price: PriceInput
+  website: string | null
   metadata: Metadata
 }
 
-export const LIMITS = { title: 300, summary: 1000, status: 100, url: 2048, platform: 60 } as const
+export const LIMITS = { title: 300, url: 2048, platform: 60 } as const
 const MAX_PLATFORMS = 30
 
 const INTEGER = /^\d+$/
@@ -70,6 +80,32 @@ export const simpleFields = (kind: ItemKind): readonly Field[] =>
 export const hasStreaming = (kind: ItemKind) =>
   kindFields[kind].some((field) => field.input === 'streaming')
 
+/**
+ * The price inputs for a saved price. `min == max` is a single price; anything else (including an
+ * open range from before 0.3.0, with only one bound) is a range.
+ */
+function priceDraft(price: ItemPrice) {
+  if (!price) {
+    return {
+      hasPrice: false,
+      priceMode: 'single' as PriceMode,
+      priceAmount: '',
+      priceMin: '',
+      priceMax: '',
+      currency: '',
+    }
+  }
+  const single = price.min !== null && price.min === price.max
+  return {
+    hasPrice: true,
+    priceMode: (single ? 'single' : 'range') as PriceMode,
+    priceAmount: single ? (price.min ?? '') : '',
+    priceMin: single ? '' : (price.min ?? ''),
+    priceMax: single ? '' : (price.max ?? ''),
+    currency: price.currency,
+  }
+}
+
 export function draftFromItem(item: Item): Draft {
   const meta: Record<string, string> = {}
   const stored = metadataOf(item)
@@ -81,34 +117,13 @@ export function draftFromItem(item: Item): Draft {
   return {
     title: item.title,
     kind: item.kind,
-    summary: item.summary ?? '',
-    status: item.status ?? '',
-    priceMin: item.price?.min ?? '',
-    priceMax: item.price?.max ?? '',
-    currency: item.price?.currency ?? '',
-    officialUrl: item.official_website_url ?? '',
+    ...priceDraft(item.price),
+    website: item.website ?? '',
     meta,
     streamingCountry: streaming?.country ?? '',
     streamingPlatforms: streaming?.platforms?.join(', ') ?? '',
   }
 }
-
-/** Switching kind clears the kind details; switching back to the saved kind brings them back. */
-export function withKind(draft: Draft, base: Item, kind: ItemKind): Draft {
-  if (kind === draft.kind) return draft
-  const original = draftFromItem(base)
-  const restored = kind === base.kind
-  return {
-    ...draft,
-    kind,
-    meta: restored ? original.meta : {},
-    streamingCountry: restored ? original.streamingCountry : '',
-    streamingPlatforms: restored ? original.streamingPlatforms : '',
-  }
-}
-
-/** Does the saved item have kind details that a kind change would clear? */
-export const hasKindDetails = (item: Item) => Object.keys(metadataOf(item)).length > 0
 
 /** `"12.5"` becomes `"12.50"`; anything that is not a price of at most 2 decimals is `null`. */
 export function normalizePrice(text: string): string | null {
@@ -152,16 +167,22 @@ function fieldValue(field: Field, text: string): unknown {
 }
 
 export function toFields(draft: Draft, defaults: Defaults): FormFields {
-  const min = blank(draft.priceMin)
-  const max = blank(draft.priceMax)
-  const price: Price =
-    min === null && max === null
-      ? null
-      : {
-          min: min === null ? null : (normalizePrice(min) ?? min),
-          max: max === null ? null : (normalizePrice(max) ?? max),
-          currency: draft.currency || defaults.currency,
-        }
+  const currency = draft.currency || INITIAL_CURRENCY
+  let price: PriceInput = null
+  if (draft.hasPrice && draft.priceMode === 'single') {
+    const amount = blank(draft.priceAmount)
+    if (amount !== null) price = { amount: normalizePrice(amount) ?? amount, currency }
+  } else if (draft.hasPrice) {
+    const min = blank(draft.priceMin)
+    const max = blank(draft.priceMax)
+    if (min !== null || max !== null) {
+      price = {
+        min: min === null ? null : (normalizePrice(min) ?? min),
+        max: max === null ? null : (normalizePrice(max) ?? max),
+        currency,
+      }
+    }
+  }
 
   const metadata: Metadata = {}
   for (const field of simpleFields(draft.kind)) {
@@ -180,23 +201,20 @@ export function toFields(draft: Draft, defaults: Defaults): FormFields {
 
   return {
     title: draft.title.trim(),
-    kind: draft.kind,
-    summary: blank(draft.summary),
-    status: blank(draft.status),
     price,
-    official_website_url: blank(draft.officialUrl),
+    website: blank(draft.website),
     metadata,
   }
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
-const BASIC_KEYS = ['title', 'kind', 'summary', 'status', 'price', 'official_website_url'] as const
+const BASIC_KEYS = ['title', 'price', 'website'] as const
 
 /**
  * The PATCH body: only the fields that differ from the saved item. `metadata` replaces the whole
- * object on the server (D-062), so it goes as the full object whenever any kind field changed, and
- * always with a kind change (an explicit `{}` rather than relying on the server's reset).
+ * object on the server (D-062), so it goes as the full object whenever any kind field changed. The
+ * kind is never sent: it belongs to the list. An unchanged price sends nothing; removing it sends `null`.
  */
 export function buildPatch(base: Item, draft: Draft, defaults: Defaults): UpdateItemRequest {
   const before = toFields(draftFromItem(base), defaults)
@@ -205,7 +223,7 @@ export function buildPatch(base: Item, draft: Draft, defaults: Defaults): Update
   for (const key of BASIC_KEYS) {
     if (!same(before[key], after[key])) patch[key] = after[key]
   }
-  if (draft.kind !== base.kind || !same(before.metadata, after.metadata)) {
+  if (!same(before.metadata, after.metadata)) {
     patch.metadata = after.metadata
   }
   return patch as UpdateItemRequest
@@ -222,16 +240,7 @@ export type ErrorMap = Record<string, string>
 
 /** Every input of the form for a kind, in page order (also the order of "focus the first invalid"). */
 export function inputKeys(kind: ItemKind): string[] {
-  const keys = [
-    'title',
-    'kind',
-    'summary',
-    'status',
-    'price.min',
-    'price.max',
-    'price.currency',
-    'official_website_url',
-  ]
+  const keys = ['title', 'price.amount', 'price.min', 'price.max', 'price.currency', 'website']
   for (const field of kindFields[kind]) {
     if (field.input === 'streaming') {
       keys.push('metadata.streaming.country', 'metadata.streaming.platforms')
@@ -294,33 +303,33 @@ export function validate(draft: Draft, defaults: Defaults): ErrorMap {
   const title = draft.title.trim()
   if (!title) errors.title = 'Enter a title.'
   else if (title.length > LIMITS.title) errors.title = `Use at most ${LIMITS.title} characters.`
-  if (draft.summary.trim().length > LIMITS.summary) {
-    errors.summary = `Use at most ${LIMITS.summary} characters.`
-  }
-  if (draft.status.trim().length > LIMITS.status) {
-    errors.status = `Use at most ${LIMITS.status} characters.`
-  }
 
-  const min = blank(draft.priceMin)
-  const max = blank(draft.priceMax)
-  const priceHint = 'Use digits and a dot, with at most 2 decimals, e.g. 1299.50.'
-  if (min !== null && normalizePrice(min) === null) errors['price.min'] = priceHint
-  if (max !== null && normalizePrice(max) === null) errors['price.max'] = priceHint
-  if (min !== null && max !== null && !errors['price.min'] && !errors['price.max']) {
-    if (toCents(normalizePrice(min) as string) > toCents(normalizePrice(max) as string)) {
-      errors['price.max'] = 'The maximum can’t be lower than the minimum.'
+  if (draft.hasPrice) {
+    const priceHint = 'Use digits and a dot, with at most 2 decimals, e.g. 1299.50.'
+    if (draft.priceMode === 'single') {
+      const amount = blank(draft.priceAmount)
+      if (amount !== null && normalizePrice(amount) === null) errors['price.amount'] = priceHint
+    } else {
+      const min = blank(draft.priceMin)
+      const max = blank(draft.priceMax)
+      if (min !== null && normalizePrice(min) === null) errors['price.min'] = priceHint
+      if (max !== null && normalizePrice(max) === null) errors['price.max'] = priceHint
+      if (min !== null && max !== null && !errors['price.min'] && !errors['price.max']) {
+        if (toCents(normalizePrice(min) as string) > toCents(normalizePrice(max) as string)) {
+          errors['price.max'] = 'The maximum can’t be lower than the minimum.'
+        }
+      }
+    }
+    if (toFields(draft, defaults).price && !/^[A-Z]{3}$/.test(draft.currency || INITIAL_CURRENCY)) {
+      errors['price.currency'] = 'Choose a currency.'
     }
   }
-  if ((min !== null || max !== null) && !/^[A-Z]{3}$/.test(draft.currency || defaults.currency)) {
-    errors['price.currency'] = 'Choose a currency.'
-  }
 
-  const url = draft.officialUrl.trim()
+  const url = draft.website.trim()
   if (url) {
-    if (url.length > LIMITS.url)
-      errors.official_website_url = `Use at most ${LIMITS.url} characters.`
+    if (url.length > LIMITS.url) errors.website = `Use at most ${LIMITS.url} characters.`
     else if (!isWebUrl(url)) {
-      errors.official_website_url = 'Enter a web address starting with http:// or https://'
+      errors.website = 'Enter a web address starting with http:// or https://'
     }
   }
 
@@ -359,13 +368,6 @@ function validateKindRules(draft: Draft, errors: ErrorMap) {
       errors['metadata.end_year'] = 'The end year can’t be before the first air year.'
     }
   }
-  if (draft.kind === 'car') {
-    const fuel = (draft.meta.fuel_type ?? '').trim()
-    const range = (draft.meta.electric_range_km ?? '').trim()
-    if (range && fuel && fuel !== 'electric' && fuel !== 'plugin_hybrid') {
-      errors['metadata.electric_range_km'] = 'Only for electric and plug-in hybrid cars.'
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -380,7 +382,6 @@ export interface MappedErrors {
 
 /** Server field paths that point at a group of inputs; we show them on the first one. */
 const ALIASES: Record<string, string> = {
-  price: 'price.min',
   'metadata.streaming': 'metadata.streaming.country',
 }
 
@@ -389,12 +390,20 @@ const ALIASES: Record<string, string> = {
  * to the Power input, `metadata.streaming.platforms[2]` to the platforms input. Anything else
  * (or a metadata key the current kind has no input for) goes to `other`.
  */
-export function mapServerErrors(errors: readonly FieldError[], kind: ItemKind): MappedErrors {
+export function mapServerErrors(
+  errors: readonly FieldError[],
+  kind: ItemKind,
+  priceMode: PriceMode = 'single',
+): MappedErrors {
   const known = new Set(inputKeys(kind))
+  const aliases: Record<string, string> = {
+    ...ALIASES,
+    price: priceMode === 'single' ? 'price.amount' : 'price.min',
+  }
   const result: MappedErrors = { fields: {}, other: [] }
   for (const error of errors) {
     const path = error.field.replace(/\[\d+\]/g, '')
-    const key = ALIASES[path] ?? path
+    const key = aliases[path] ?? path
     if (known.has(key)) {
       result.fields[key] = result.fields[key]
         ? `${result.fields[key]} ${error.message}`
@@ -413,8 +422,9 @@ export const firstInvalid = (errors: ErrorMap, kind: ItemKind) =>
 // ---------------------------------------------------------------------------------------------
 // Copy my draft
 
-const priceText = (price: Price) => {
+const priceText = (price: PriceInput) => {
   if (!price) return null
+  if ('amount' in price) return `${price.amount} ${price.currency}`
   const { min, max, currency } = price
   if (min !== null && max !== null)
     return min === max ? `${min} ${currency}` : `${min}–${max} ${currency}`
@@ -443,21 +453,15 @@ export function draftDump(base: Item, draft: Draft, defaults: Defaults): string 
     lines.push(`${label}: ${value ?? '(cleared)'}`)
 
   if (!same(before.title, after.title)) line('Title', after.title)
-  if (before.kind !== after.kind) line('Kind', kindLabels[after.kind])
-  if (!same(before.summary, after.summary)) line('Summary', after.summary)
-  if (!same(before.status, after.status)) line('Status', after.status)
   if (!same(before.price, after.price)) line('Price', priceText(after.price))
-  if (!same(before.official_website_url, after.official_website_url)) {
-    line('Official website', after.official_website_url)
-  }
+  if (!same(before.website, after.website)) line('Website', after.website)
   const keys = new Set([...Object.keys(before.metadata), ...Object.keys(after.metadata)])
   const details: string[] = []
   for (const key of keys) {
-    if (same(before.metadata[key], after.metadata[key]) && before.kind === after.kind) continue
-    if (after.metadata[key] === undefined && before.kind !== after.kind) continue
-    const label = kindFields[after.kind].find((field) => field.key === key)?.label ?? key
-    details.push(`  ${label}: ${metadataText(after.kind, key, after.metadata[key])}`)
+    if (same(before.metadata[key], after.metadata[key])) continue
+    const label = kindFields[draft.kind].find((field) => field.key === key)?.label ?? key
+    details.push(`  ${label}: ${metadataText(draft.kind, key, after.metadata[key])}`)
   }
-  if (details.length > 0) lines.push(`${kindLabels[after.kind]} details:`, ...details)
+  if (details.length > 0) lines.push(`${kindLabels[draft.kind]} details:`, ...details)
   return lines.join('\n')
 }

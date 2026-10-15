@@ -39,11 +39,10 @@ async function renderOverride(over: Partial<Item>) {
 const links = () => within(screen.getByRole('group', { name: 'External links' }))
 
 describe('AT-13 item view: the example movie', () => {
-  it('shows title, kind badge, status, summary and the three links', async () => {
+  it('shows the title and the three links, with no kind label, status or summary (F007-W7, W8)', async () => {
     await renderItem()
-    expect(screen.getByText('Movie')).toBeInTheDocument()
-    expect(screen.getByText('Watched')).toBeInTheDocument()
-    expect(screen.getByText('A hacker learns the truth about reality.')).toBeInTheDocument()
+    expect(screen.queryByText('Movie')).not.toBeInTheDocument()
+    expect(screen.queryByText('Watched')).not.toBeInTheDocument()
 
     const google = links().getByRole('link', { name: /^Google/ })
     expect(new URL(google.getAttribute('href') ?? '').searchParams.get('q')).toBe(
@@ -51,7 +50,7 @@ describe('AT-13 item view: the example movie', () => {
     )
     expect(google.getAttribute('href')).toContain('1999+film')
     expect(links().getByRole('link', { name: /^Reddit/ })).toBeInTheDocument()
-    expect(links().getByRole('button', { name: 'No official site' })).toHaveAttribute(
+    expect(links().getByRole('button', { name: 'No website' })).toHaveAttribute(
       'aria-disabled',
       'true',
     )
@@ -152,11 +151,10 @@ describe('item view: kinds', () => {
     await renderOverride({
       title: 'Ducati Monster',
       kind: 'motorcycle',
-      metadata: { displacement_cc: 937, power_hp: 111, torque_nm: 93.1, license_class: 'A' },
+      metadata: { displacement_cc: 937, power_hp: 111, license_class: 'A' },
     })
     expect(await screen.findByText('937 cc')).toBeInTheDocument()
     expect(screen.getByText('111 hp')).toBeInTheDocument()
-    expect(screen.getByText('93.1 Nm')).toBeInTheDocument()
   })
 
   it('car shows units and enum labels', async () => {
@@ -180,12 +178,28 @@ describe('item view: kinds', () => {
     expect(screen.getByText('Full frame')).toBeInTheDocument()
   })
 
-  it('an unusable official site is a disabled control, a good one is a link', async () => {
-    await renderOverride({ official_website_url: 'https://www.thematrix.com/' })
-    expect(links().getByRole('link', { name: /^Official site/ })).toHaveAttribute(
+  it('an unusable website is a disabled control, a good one is a link', async () => {
+    await renderOverride({ website: 'https://www.thematrix.com/' })
+    expect(links().getByRole('link', { name: /^Website/ })).toHaveAttribute(
       'href',
       'https://www.thematrix.com/',
     )
+  })
+
+  it('F007-W8 a single price reads € 1,200, a range € 1,000–1,400, no price shows nothing', async () => {
+    await renderOverride({ price: { min: '1200.00', max: '1200.00', currency: 'EUR' } })
+    expect(await screen.findByText(/^€\s?1,200$/)).toBeInTheDocument()
+  })
+
+  it('F007-W8 a range shows both bounds with the currency once', async () => {
+    await renderOverride({ price: { min: '1000.00', max: '1400.00', currency: 'EUR' } })
+    expect(await screen.findByText(/^€\s?1,000–1,400$/)).toBeInTheDocument()
+  })
+
+  it('F007-W8 an item without a price shows no price', async () => {
+    await renderOverride({ price: null })
+    await screen.findByRole('heading', { name: 'Description' })
+    expect(screen.queryByText(/€/)).not.toBeInTheDocument()
   })
 })
 

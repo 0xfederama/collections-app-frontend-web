@@ -34,5 +34,6 @@ Global search over every item: the sidebar field (top 8 matches in a dropdown) a
 - Esc closes the dropdown and keeps the text; Tab closes it too. Rows take mouse presses without moving focus.
 - Path line reads `Media › Movies › Watchlist` from `SearchResult.path` (folders, then the list).
 - Thumbnails in result rows are `aria-hidden`, since the title is written next to them.
+- Result rows show title, path, thumbnail and kind icon; there is no summary or status line (contract 0.3.0).
 - Results page URL: typing replaces `?q=` after 250 ms (no new history entry), Enter updates it at once, back/forward move the field.
 - The dev fake only returns items whose list still exists in the dev tree.

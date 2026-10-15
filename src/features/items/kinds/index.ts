@@ -19,6 +19,19 @@ export const kindFields: Record<ItemKind, readonly Field[]> = {
   camera: cameraFields,
 }
 
+/** Label of the kind's sort key (`sort=kind_key`, F007-W9); absent for `generic`, which has none. */
+const sortKeyLabels: Partial<Record<ItemKind, string>> = {
+  movie: 'Release year',
+  tv_show: 'First air year',
+  motorcycle: 'Displacement',
+  car: 'Power',
+  camera: 'Megapixels',
+}
+
+export function sortKeyLabel(kind: ItemKind): string | undefined {
+  return sortKeyLabels[kind]
+}
+
 export interface KindRow {
   key: string
   label: string

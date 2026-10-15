@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MarkdownView } from '../../components/markdown'
 import {
   Button,
   Select,
@@ -9,8 +10,11 @@ import {
   type SegmentedOption,
 } from '../../components/ui'
 import { LayoutGrid, List as ListIcon, Plus, Rows3, Search } from '../../components/ui/icons'
+import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 import type { List as TreeList } from '../tree/api'
 import { ListActionsMenu } from '../tree/ListActionsMenu'
+import type { ItemKind } from '../items/api'
+import { sortKeyLabel } from '../items/kinds'
 import type { DisplayMode, List, SortMode } from './api'
 
 const modeOptions: SegmentedOption[] = [
@@ -19,36 +23,55 @@ const modeOptions: SegmentedOption[] = [
   { value: 'grid', label: 'Grid', icon: <LayoutGrid />, iconOnly: true },
 ]
 
-const sortOptions: SelectOption[] = [
+const baseSortOptions: SelectOption[] = [
   { value: 'manual', label: 'Manual' },
   { value: 'title', label: 'Title' },
   { value: 'updated', label: 'Recently updated' },
 ]
 
-const LONG_DESCRIPTION = 140
+/** Manual, Title, Recently updated, and the kind's sort key when the kind has one (not generic). */
+export function sortOptionsFor(kind: ItemKind): SelectOption[] {
+  const label = sortKeyLabel(kind)
+  return label ? [...baseSortOptions, { value: 'kind_key', label }] : baseSortOptions
+}
 
-function Description({ text }: { text: string }) {
-  const [expanded, setExpanded] = useState(false)
-  const long = text.length > LONG_DESCRIPTION || text.includes('\n')
+const parseIds = (raw: unknown): string[] | undefined =>
+  Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : undefined
+
+/** The list's Markdown description, shown expanded unless this list was collapsed on this device. */
+function Description({ listId, text }: { listId: string; text: string }) {
+  const [collapsed, setCollapsed] = useState(() =>
+    readStored(STORAGE_KEYS.listDescriptionCollapsed, parseIds, []).includes(listId),
+  )
+  const toggle = () => {
+    const next = !collapsed
+    setCollapsed(next)
+    const others = readStored(STORAGE_KEYS.listDescriptionCollapsed, parseIds, []).filter(
+      (id) => id !== listId,
+    )
+    writeStored(STORAGE_KEYS.listDescriptionCollapsed, next ? [...others, listId] : others)
+  }
+  const regionId = `list-description-${listId}`
   return (
-    <div className="max-w-prose text-sm text-text-muted">
-      <p className={expanded || !long ? 'whitespace-pre-line' : 'line-clamp-2'}>{text}</p>
-      {long && (
-        <button
-          type="button"
-          aria-expanded={expanded}
-          onClick={() => setExpanded((value) => !value)}
-          className="mt-1 rounded-sm text-accent-text underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
-        >
-          {expanded ? 'Show less' : 'Show more'}
-        </button>
-      )}
-    </div>
+    <section aria-label="Description" className="max-w-prose text-sm">
+      <button
+        type="button"
+        aria-expanded={!collapsed}
+        aria-controls={regionId}
+        onClick={toggle}
+        className="rounded-sm text-accent-text underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+      >
+        {collapsed ? 'Expand description' : 'Collapse description'}
+      </button>
+      <div id={regionId} hidden={collapsed} className="mt-2">
+        {!collapsed && <MarkdownView source={text} />}
+      </div>
+    </section>
   )
 }
 
 export interface ListHeaderProps {
-  /** The list as the sidebar tree has it: its name matches the breadcrumbs, shows before the list loads, and feeds the actions menu. */
+  /** The list as the sidebar tree has it: its name shows before the list loads, and feeds the actions menu. */
   treeList: TreeList
   list: List | undefined
   /** e.g. `12 items` or `3 of 12 items`. */
@@ -82,7 +105,7 @@ export function ListHeader(props: ListHeaderProps) {
         <ListActionsMenu list={props.treeList} />
       </div>
       {list ? (
-        list.description && <Description text={list.description} />
+        list.description && <Description listId={list.id} text={list.description} />
       ) : (
         <Skeleton className="h-4 w-1/2" />
       )}
@@ -97,7 +120,7 @@ export function ListHeader(props: ListHeaderProps) {
         <div className="w-44">
           <Select
             label="Sort"
-            options={sortOptions}
+            options={sortOptionsFor(props.treeList.kind)}
             value={props.sort}
             onValueChange={(value) => props.onSort(value as SortMode)}
           />

@@ -96,7 +96,7 @@ describe('W-04 "/" focuses the search field', () => {
     const user = userEvent.setup()
     renderRouter()
     await user.click(
-      within(screen.getByRole('navigation', { name: 'Collections' })).getByRole('button', {
+      within(screen.getByRole('navigation', { name: 'Library' })).getByRole('button', {
         name: 'Search',
       }),
     )

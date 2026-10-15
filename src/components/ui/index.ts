@@ -1,6 +1,5 @@
 export { AlertDialog, type AlertDialogProps } from './AlertDialog'
 export { Badge, type BadgeProps } from './Badge'
-export { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs'
 export { Button, type ButtonProps, type ButtonSize, type ButtonVariant } from './Button'
 export { Card, type CardProps } from './Card'
 export { Chip, type ChipProps, type ChipTone } from './Chip'

@@ -15,7 +15,6 @@ import {
 const base: Settings = {
   workspace_name: 'Our Collection',
   streaming_country_code: 'IT',
-  default_currency: 'EUR',
   markdown_history_limit: 20,
   version: 4,
 }
@@ -29,7 +28,6 @@ describe('AT-14 settings form model', () => {
     expect(draftFromSettings(base)).toEqual({
       workspace_name: 'Our Collection',
       streaming_country_code: 'IT',
-      default_currency: 'EUR',
       markdown_history_limit: '20',
     })
   })
@@ -48,9 +46,9 @@ describe('AT-14 settings form model', () => {
     expect(buildPatch(base, draftWith({ markdown_history_limit: '0' }))).toEqual({
       markdown_history_limit: 0,
     })
-    expect(
-      buildPatch(base, draftWith({ default_currency: 'USD', streaming_country_code: 'FR' })),
-    ).toEqual({ default_currency: 'USD', streaming_country_code: 'FR' })
+    expect(buildPatch(base, draftWith({ streaming_country_code: 'FR' }))).toEqual({
+      streaming_country_code: 'FR',
+    })
   })
 
   it('whitespace around the name is not a change', () => {
@@ -88,18 +86,16 @@ describe('AT-14 settings form model', () => {
     })
   })
 
-  it('rejects empty country and currency, and malformed codes', () => {
+  it('rejects empty country and malformed codes', () => {
     expect(validate(draftWith({ streaming_country_code: '' })).streaming_country_code).toBeDefined()
     expect(
       validate(draftWith({ streaming_country_code: 'it' })).streaming_country_code,
     ).toBeDefined()
-    expect(validate(draftWith({ default_currency: '' })).default_currency).toBeDefined()
-    expect(validate(draftWith({ default_currency: 'EU' })).default_currency).toBeDefined()
   })
 
   it('firstInvalid follows page order', () => {
-    expect(firstInvalid({ markdown_history_limit: 'x', default_currency: 'y' })).toBe(
-      'default_currency',
+    expect(firstInvalid({ markdown_history_limit: 'x', streaming_country_code: 'y' })).toBe(
+      'streaming_country_code',
     )
     expect(firstInvalid({})).toBeUndefined()
   })
@@ -113,11 +109,11 @@ describe('AT-14 settings form model', () => {
       const result = mapServerErrors([
         { field: 'workspace_name', message: 'too long' },
         { field: 'workspace_name', message: 'again' },
-        { field: 'default_currency', message: 'bad' },
+        { field: 'streaming_country_code', message: 'bad' },
       ])
       expect(result.fields).toEqual({
         workspace_name: 'too long again',
-        default_currency: 'bad',
+        streaming_country_code: 'bad',
       })
       expect(result.other).toEqual([])
     })
