@@ -127,9 +127,6 @@ export function ListHeader(props: ListHeaderProps) {
               />
             </div>
           </div>
-          {list && props.treeList.kind !== 'generic' && (
-            <PinnedMenu list={list} onChange={props.onPinned} onReset={props.onResetPinned} />
-          )}
           {props.canMakeDefault && (
             <button
               type="button"
@@ -140,22 +137,28 @@ export function ListHeader(props: ListHeaderProps) {
               Make this the default sort
             </button>
           )}
-          <IconButton
-            aria-label="Filter by title"
-            aria-expanded={filterShown}
-            aria-controls="list-filter"
-            variant="ghost"
-            onClick={() => setFilterOpen((open) => !open)}
-            className="size-9 bg-fill hover:bg-fill-hover pointer-coarse:size-11 @[44rem]:hidden"
-          >
-            <Search aria-hidden />
-          </IconButton>
+          {/* Pinned fields and the filter sit together at the right end (the filter field follows). */}
+          <div className="ml-auto flex items-center gap-2">
+            {list && props.treeList.kind !== 'generic' && (
+              <PinnedMenu list={list} onChange={props.onPinned} onReset={props.onResetPinned} />
+            )}
+            <IconButton
+              aria-label="Filter by title"
+              aria-expanded={filterShown}
+              aria-controls="list-filter"
+              variant="ghost"
+              onClick={() => setFilterOpen((open) => !open)}
+              className="size-9 bg-fill hover:bg-fill-hover pointer-coarse:size-11 @[44rem]:hidden"
+            >
+              <Search aria-hidden />
+            </IconButton>
+          </div>
           <div
             id="list-filter"
             className={
               filterShown
-                ? 'min-w-40 flex-1 @max-[44rem]:order-last @max-[44rem]:basis-full @[44rem]:ml-auto @[44rem]:max-w-xs [&_label]:sr-only'
-                : 'hidden min-w-40 flex-1 @[44rem]:ml-auto @[44rem]:block @[44rem]:max-w-xs [&_label]:sr-only'
+                ? 'min-w-40 flex-1 @max-[44rem]:order-last @max-[44rem]:basis-full @[44rem]:max-w-xs [&_label]:sr-only'
+                : 'hidden min-w-40 flex-1 @[44rem]:block @[44rem]:max-w-xs [&_label]:sr-only'
             }
           >
             <TextField
