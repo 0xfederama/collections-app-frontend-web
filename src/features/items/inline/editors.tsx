@@ -1,5 +1,5 @@
 import { Button, Select, TextField } from '../../../components/ui'
-import { X } from '../../../components/ui/icons'
+import { Plus, X } from '../../../components/ui/icons'
 import { CountrySelect, CurrencySelect } from '../../../components/ui/IsoSelects'
 import { cx } from '../../../lib/cx'
 import {
@@ -31,70 +31,96 @@ const NONE = '__none__'
 
 const PRICE_KEYS = ['price.amount', 'price.min', 'price.max', 'price.currency']
 
+/**
+ * One Price field (F008-W12): the amount and currency, with "Add range" revealing a second amount
+ * inside the same field; removing that second amount goes back to a single price. The saved shape
+ * is unchanged (`amount`, or `min` / `max` for a range).
+ */
 function PriceInputs({ form, canRemove }: { form: FieldForm; canRemove: boolean }) {
   const { draft, errors, set } = form
   const range = draft.priceMode === 'range'
   const clearErrors = () => PRICE_KEYS.forEach(form.clearError)
+  const toRange = () => {
+    clearErrors()
+    set('priceMin', draft.priceAmount, 'price.min')
+    set('priceMax', '', 'price.max')
+    set('priceMode', 'range', 'price.amount')
+  }
+  const toSingle = () => {
+    clearErrors()
+    set('priceAmount', draft.priceMin, 'price.amount')
+    set('priceMode', 'single', 'price.amount')
+  }
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-1 gap-3">
+      <div className="flex flex-wrap items-start gap-2">
         {range ? (
           <>
-            <TextField
-              id={inputId('price.min')}
-              label="Minimum price"
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="0"
-              value={draft.priceMin}
-              onChange={(event) => set('priceMin', event.target.value, 'price.min')}
-              error={errors['price.min']}
-            />
-            <TextField
-              id={inputId('price.max')}
-              label="Maximum price"
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="0"
-              value={draft.priceMax}
-              onChange={(event) => set('priceMax', event.target.value, 'price.max')}
-              error={errors['price.max']}
-            />
+            <div className="w-32">
+              <TextField
+                id={inputId('price.min')}
+                label="Minimum price"
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="0"
+                value={draft.priceMin}
+                onChange={(event) => set('priceMin', event.target.value, 'price.min')}
+                error={errors['price.min']}
+              />
+            </div>
+            <span aria-hidden className="mt-2 text-text-muted">
+              –
+            </span>
+            <div className="w-32">
+              <TextField
+                id={inputId('price.max')}
+                label="Maximum price"
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="0"
+                value={draft.priceMax}
+                onChange={(event) => set('priceMax', event.target.value, 'price.max')}
+                error={errors['price.max']}
+              />
+            </div>
           </>
         ) : (
-          <TextField
-            id={inputId('price.amount')}
-            label="Price"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            value={draft.priceAmount}
-            onChange={(event) => set('priceAmount', event.target.value, 'price.amount')}
-            error={errors['price.amount']}
-          />
+          <div className="w-32">
+            <TextField
+              id={inputId('price.amount')}
+              label="Price"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="0"
+              value={draft.priceAmount}
+              onChange={(event) => set('priceAmount', event.target.value, 'price.amount')}
+              error={errors['price.amount']}
+            />
+          </div>
         )}
-        <CurrencySelect
-          id={inputId('price.currency')}
-          label="Currency"
-          value={draft.currency || INITIAL_CURRENCY}
-          onValueChange={(value) => set('currency', value, 'price.currency')}
-          placeholder="Currency"
-          error={errors['price.currency']}
-        />
+        <div className="min-w-40 flex-1">
+          <CurrencySelect
+            id={inputId('price.currency')}
+            label="Currency"
+            value={draft.currency || INITIAL_CURRENCY}
+            onValueChange={(value) => set('currency', value, 'price.currency')}
+            placeholder="Currency"
+            error={errors['price.currency']}
+          />
+        </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="inline-flex min-h-9 items-center gap-2 text-sm pointer-coarse:min-h-11">
-          <input
-            type="checkbox"
-            className="size-4 accent-[var(--accent)]"
-            checked={range}
-            onChange={(event) => {
-              clearErrors()
-              set('priceMode', event.target.checked ? 'range' : 'single', 'price.amount')
-            }}
-          />
-          Price range
-        </label>
+        {range ? (
+          <Button variant="ghost" size="sm" onClick={toSingle}>
+            <X aria-hidden className="size-4" />
+            Remove range
+          </Button>
+        ) : (
+          <Button variant="ghost" size="sm" onClick={toRange}>
+            <Plus aria-hidden className="size-4" />
+            Add range
+          </Button>
+        )}
         {canRemove && (
           <Button variant="ghost" size="sm" onClick={() => form.commit({ hasPrice: false })}>
             <X aria-hidden className="size-4" />

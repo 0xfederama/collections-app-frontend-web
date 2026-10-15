@@ -434,7 +434,7 @@ describe('F002-W2 pinned fields', () => {
     })
     renderList(at())
     const ul = await itemsList()
-    expect(within(ul).getByText('€1,200–€1,500')).toBeInTheDocument()
+    expect(within(ul).getByText('€\u202F1,200–1,500')).toBeInTheDocument()
     expect(within(ul).queryByText('117 min')).not.toBeInTheDocument()
   })
 

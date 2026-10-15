@@ -102,16 +102,7 @@ export function FieldBlock({
   const entries = (list: FieldSpec[]): MenuItem[] =>
     missing(list).flatMap((spec) =>
       spec.id === priceSpec.id
-        ? [
-            {
-              label: 'Price',
-              onSelect: () => open({ id: spec.id, initialDraft: newPrice(false) }),
-            },
-            {
-              label: 'Price range',
-              onSelect: () => open({ id: spec.id, initialDraft: newPrice(true) }),
-            },
-          ]
+        ? [{ label: spec.label, onSelect: () => open({ id: spec.id, initialDraft: newPrice() }) }]
         : [{ label: spec.label, onSelect: () => open({ id: spec.id }) }],
     )
   const kindEntries = entries(kind)

@@ -1,33 +1,59 @@
 import { useState } from 'react'
-import { kindIcons } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import type { ItemSummary } from './api'
 
-const firstLetter = (title: string) => Array.from(title.trim())[0]?.toUpperCase() ?? '?'
+const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+
+/** First grapheme of the title, upper case (`?` for an empty title). */
+export const firstLetter = (title: string) => {
+  const first = graphemes.segment(title.trim())[Symbol.iterator]().next()
+  return first.done ? '?' : first.value.segment.toLocaleUpperCase()
+}
 
 /**
- * Cover of an item: its image, or a soft tinted tile with the kind icon and the title's first
- * letter when there is no image or the image fails to load (UI_SPEC §3), so a broken-image glyph
- * never shows. Size it with `className` (the tile fills it). The tile is decorative (the title is
- * always written next to it), so it is hidden from assistive tech; a real image uses the title as `alt`.
+ * The one placeholder of an item without an image (F008-W13): a soft tile with the title's first
+ * letter, no kind symbol. The letter scales with the tile's width (container query units), so every
+ * display mode (compact, thumbnail, grid, search, hero) shows the same tile and type.
+ */
+export function ItemInitial({ title, className }: { title: string; className?: string }) {
+  return (
+    <div
+      aria-hidden
+      data-testid="fallback-tile"
+      className={cx(
+        '@container flex items-center justify-center bg-fill text-text-muted select-none',
+        className,
+      )}
+    >
+      <span
+        className="leading-none font-semibold"
+        style={{ fontSize: 'clamp(0.875rem, 40cqw, 4rem)' }}
+      >
+        {firstLetter(title)}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * Cover of an item: its image, or the `ItemInitial` placeholder when there is no image or the
+ * image fails to load (UI_SPEC §3), so a broken-image glyph never shows. Size it with `className`
+ * (the tile fills it). The tile is decorative (the title is always written next to it), so it is
+ * hidden from assistive tech; a real image uses the title as `alt`.
  */
 export function ItemThumb({
   item,
   className,
-  compact,
   decorative,
 }: {
   item: Pick<ItemSummary, 'title' | 'kind' | 'image'>
   className?: string
-  /** Smaller icon and letter, for 40 px thumbs. */
-  compact?: boolean
   /** The title is written right next to the cover: an empty `alt` avoids reading it twice (axe `image-redundant-alt`). */
   decorative?: boolean
 }) {
   const src = item.image?.thumbnail_url ?? item.image?.url
   // The failed URL is remembered, so a new image URL gets a fresh try.
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
-  const Icon = kindIcons[item.kind]
 
   if (src && src !== failedSrc) {
     return (
@@ -44,19 +70,5 @@ export function ItemThumb({
       </div>
     )
   }
-  return (
-    <div
-      aria-hidden
-      data-testid="fallback-tile"
-      className={cx(
-        'flex flex-col items-center justify-center bg-fill text-text-muted select-none',
-        className,
-      )}
-    >
-      <Icon className={compact ? 'size-4' : 'size-1/4 min-h-5 min-w-5'} />
-      <span className={cx(' leading-none font-semibold', compact ? 'text-xs' : 'text-2xl')}>
-        {firstLetter(item.title)}
-      </span>
-    </div>
-  )
+  return <ItemInitial title={item.title} className={className} />
 }

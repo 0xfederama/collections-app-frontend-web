@@ -35,21 +35,27 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
         )}
       >
         <ItemHero item={item} />
-        <header className="flex items-start gap-2">
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
+        {/* One title block (F008-W10): kind label above, then the title with its "…" menu on the
+            same row, then the links with "+" at the end of their line. */}
+        <header className="flex flex-col gap-2">
+          <div className="flex min-w-0 flex-col gap-1">
             <p className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
               <KindIcon aria-hidden className="size-3.5" />
               {kindLabels[item.kind]}
             </p>
-            <InlineField item={item} spec={titleSpec}>
-              <h1 className="text-3xl leading-tight font-bold tracking-tight break-words">
-                {item.title}
-              </h1>
-            </InlineField>
+            <div className="flex items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <InlineField item={item} spec={titleSpec}>
+                  <h1 className="text-2xl leading-tight font-bold tracking-tight break-words sm:text-3xl">
+                    {item.title}
+                  </h1>
+                </InlineField>
+              </div>
+              <ItemMenu actions={actions} />
+            </div>
           </div>
-          <ItemMenu actions={actions} />
+          <ExternalLinks item={item} onAddWebsite={() => setWebsiteRequest((n) => n + 1)} />
         </header>
-        <ExternalLinks item={item} onAddWebsite={() => setWebsiteRequest((n) => n + 1)} />
         <FieldBlock item={item} addWebsiteRequest={websiteRequest} />
         <DescriptionField itemId={item.id} listId={item.list_id} />
       </div>

@@ -181,7 +181,7 @@ describe('F002-W3 "+ Add field" and price', () => {
       within(menu)
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
-    ).toEqual(['Price', 'Price range', 'Website'])
+    ).toEqual(['Price', 'Website'])
     await user.click(within(menu).getByRole('menuitem', { name: 'Website' }))
     expect(await screen.findByRole('textbox', { name: 'Website' })).toBeVisible()
   })
@@ -208,11 +208,17 @@ describe('F002-W3 "+ Add field" and price', () => {
     expect(calls[0]?.body).toEqual({ price: { amount: '1200.00', currency: 'EUR' } })
   })
 
-  it('Price range: opens in range mode', async () => {
+  it('F008-W12 Add range reveals a second amount in the same field; Remove range goes back to single', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
-    await addField(user, 'Price range')
-    await user.type(await screen.findByRole('textbox', { name: 'Minimum price' }), '1000')
+    await addField(user, 'Price')
+    await user.type(await screen.findByRole('textbox', { name: 'Price' }), '900')
+    await user.click(screen.getByRole('button', { name: 'Add range' }))
+    expect(screen.getByRole('textbox', { name: 'Minimum price' })).toHaveValue('900')
+    await user.click(screen.getByRole('button', { name: 'Remove range' }))
+    expect(screen.getByRole('textbox', { name: 'Price' })).toHaveValue('900')
+    await user.click(screen.getByRole('button', { name: 'Add range' }))
+    await retype(user, screen.getByRole('textbox', { name: 'Minimum price' }), '1000')
     await user.type(screen.getByRole('textbox', { name: 'Maximum price' }), '1400{Enter}')
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0]?.body).toEqual({

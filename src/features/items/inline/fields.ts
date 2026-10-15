@@ -74,10 +74,10 @@ export const websiteSpec: FieldSpec = {
   text: (item) => item.website,
 }
 
-/** The draft changes that open the price editor as a new price, single or range. */
-export const newPrice = (range: boolean): Partial<Draft> => ({
+/** The draft changes that open the price editor as a new (single) price; "Add range" widens it. */
+export const newPrice = (): Partial<Draft> => ({
   hasPrice: true,
-  priceMode: range ? 'range' : 'single',
+  priceMode: 'single',
   currency: INITIAL_CURRENCY,
 })
 

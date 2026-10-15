@@ -325,8 +325,8 @@ function Feedback() {
         <ServiceIcon name="Netflix" size={48} />
         <ServiceIcon name="Hulu" />
       </Row>
-      <Row label="LinkIcon (monogram for Google and IMDb)">
-        {['Google', 'Letterboxd', 'IMDb', 'Reddit'].map((n) => (
+      <Row label="LinkIcon">
+        {['Google', 'Letterboxd', 'IMDb', 'Reddit', 'Website'].map((n) => (
           <LinkIcon key={n} name={n} />
         ))}
       </Row>

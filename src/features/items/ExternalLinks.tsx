@@ -1,35 +1,37 @@
 import { LinkIcon } from '../../components/ServiceIcon'
-import { buttonBase, buttonVariantClasses } from '../../components/ui/Button'
-import { ExternalLink, Plus } from '../../components/ui/icons'
-import { cx } from '../../lib/cx'
+import { Plus } from '../../components/ui/icons'
 import type { Item } from './api'
 import { buildExternalLinks } from './links'
 
-// A pill like the sketches, with the site's icon tile; the tile is hidden from assistive tech
-// because the visible label already names the link.
-const classes = cx(
-  buttonBase,
-  buttonVariantClasses.secondary,
-  'h-9 gap-2 rounded-md pr-3 pl-1.5 text-sm pointer-coarse:h-11',
-)
+// Every link is the same icon tile (F008-W11): 36 px, the tile's own radius and border.
+// The visible name is the tile's tooltip; the accessible name is the sr-only text.
+const SIZE = 36
+const control =
+  'inline-flex shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring'
 
 /**
- * The external links (AT-13, F-002) on their own line under the title: Google, Letterboxd, IMDb
- * for movies; Google, IMDb for TV shows; Google, Reddit, Website for the rest. An empty website
- * shows "Add website", which asks the page to open that field's editor.
+ * The external links (AT-13, F-002) on one line under the title: Google, Letterboxd, IMDb for
+ * movies; Google, IMDb for TV shows; Google, Reddit, Website for the rest. They wrap only when
+ * there is no room. An empty website shows a "+" at the end of the row ("Add website"), which
+ * asks the page to open that field's editor.
  */
 export function ExternalLinks({ item, onAddWebsite }: { item: Item; onAddWebsite?: () => void }) {
   return (
-    <div role="group" aria-label="External links" className="flex flex-wrap gap-2">
+    <div role="group" aria-label="External links" className="flex flex-wrap items-center gap-2">
       {buildExternalLinks(item).map((link) => {
         if (link.href === null) {
           if (link.id !== 'website' || item.website || !onAddWebsite) return null
           return (
-            <button key={link.id} type="button" onClick={onAddWebsite} className={classes}>
-              <span className="inline-flex size-6 items-center justify-center rounded-md border border-dashed border-border-strong text-text-muted">
-                <Plus aria-hidden className="size-3.5" />
-              </span>
-              Add website
+            <button
+              key={link.id}
+              type="button"
+              onClick={onAddWebsite}
+              title="Add website"
+              className={`${control} items-center justify-center rounded-md border border-dashed border-border-strong text-text-muted hover:border-accent hover:text-text`}
+              style={{ width: SIZE, height: SIZE }}
+            >
+              <Plus aria-hidden className="size-4" />
+              <span className="sr-only">Add website</span>
             </button>
           )
         }
@@ -39,14 +41,13 @@ export function ExternalLinks({ item, onAddWebsite }: { item: Item; onAddWebsite
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={classes}
+            title={link.label}
+            className={control}
           >
             <span aria-hidden>
-              <LinkIcon name={link.label} size={24} />
+              <LinkIcon name={link.label} size={SIZE} />
             </span>
-            {link.label}
-            <ExternalLink aria-hidden className="size-3.5 text-text-muted" />
-            <span className="sr-only"> (opens in a new tab)</span>
+            <span className="sr-only">{link.label} (opens in a new tab)</span>
           </a>
         )
       })}

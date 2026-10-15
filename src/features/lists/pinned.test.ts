@@ -57,7 +57,7 @@ describe('F002-W2 pinned values', () => {
       price: { min: '1200', max: '1500', currency: 'EUR' },
     })
     expect(formatPinnedValue('displacement_cc', moto, 'motorcycle')).toBe('937 cc')
-    expect(formatPinnedValue('price', moto, 'motorcycle')).toBe('€1,200–€1,500')
+    expect(formatPinnedValue('price', moto, 'motorcycle')).toBe('€\u202F1,200–1,500')
     const movie = item('movie', { metadata: { runtime_minutes: 124 } })
     expect(formatPinnedValue('runtime_minutes', movie, 'movie')).toBe('124 min')
     expect(formatPinnedValue('release_year', movie, 'movie')).toBeNull()

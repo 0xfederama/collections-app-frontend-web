@@ -40,9 +40,23 @@ describe('F002-T5 ServiceIcon', () => {
     expect(container.querySelector('img')).toBeNull()
   })
 
-  it('LinkIcon draws a monogram when no file exists', () => {
-    const { container } = render(<LinkIcon name="IMDb" />)
-    expect(screen.getByRole('img', { name: 'IMDb' })).toHaveTextContent('I')
-    expect(container.querySelector('img')).toBeNull()
+  it('F008-W11 every link has a real icon tile: Google and IMDb are vendored images, Website a symbol', () => {
+    const { container } = render(
+      <>
+        {['Google', 'Letterboxd', 'IMDb', 'Reddit', 'Website'].map((n) => (
+          <LinkIcon key={n} name={n} size={36} />
+        ))}
+      </>,
+    )
+    const tiles = screen.getAllByRole('img')
+    expect(tiles).toHaveLength(5)
+    // identical tiles: same size and classes
+    for (const tile of tiles) {
+      expect(tile).toHaveStyle({ width: '36px', height: '36px' })
+      expect(tile.className).toBe(tiles[0]?.className)
+      expect(tile).not.toHaveTextContent(/\w/)
+    }
+    expect(container.querySelectorAll('img')).toHaveLength(4)
+    expect(screen.getByRole('img', { name: 'Website' }).querySelector('svg')).not.toBeNull()
   })
 })

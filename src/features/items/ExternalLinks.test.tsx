@@ -17,6 +17,16 @@ const group = () => screen.getByRole('group', { name: 'External links' })
 const controls = () => [...group().querySelectorAll<HTMLElement>('a, button')]
 
 describe('AT-13 external links component', () => {
+  it('F008-W11 links are one flex row (wrapping only when needed) of identical icon tiles, "+" last', () => {
+    render(<ExternalLinks item={withSite(null)} onAddWebsite={() => {}} />)
+    expect(group().className).toContain('flex-wrap')
+    const items = controls()
+    expect(items.at(-1)).toHaveAccessibleName('Add website')
+    const tiles = [...group().querySelectorAll('[role="img"]')]
+    expect(tiles).toHaveLength(2)
+    expect(tiles.every((t) => t.className === tiles[0]?.className)).toBe(true)
+  })
+
   it('a movie shows Google, Letterboxd, IMDb; the stored IMDb link is used', () => {
     render(<ExternalLinks item={matrix} />)
     const items = controls()

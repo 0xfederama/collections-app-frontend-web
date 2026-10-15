@@ -118,7 +118,7 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
         {...reorder?.rowProps}
         className={cx(shell, 'flex items-center gap-3 rounded-md py-1.5 pr-3 pl-1.5')}
       >
-        <ItemThumb item={item} compact decorative className="size-9 shrink-0 rounded-sm" />
+        <ItemThumb item={item} decorative className="size-9 shrink-0 rounded-sm" />
         <div className="flex min-w-0 flex-1 items-baseline gap-3">
           <span className="min-w-0 shrink-0 truncate sm:max-w-[60%]">{title}</span>
           <PinnedSlot
