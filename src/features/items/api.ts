@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { api, ifMatch, unwrap } from '../../lib/api'
+import { homeKeys } from '../home/api'
 import { invalidateContent } from '../invalidateContent'
 import { listKeys } from '../lists/api'
+import { searchKeys } from '../search/api'
 import { treeKeys } from '../tree/api'
 
 export type Item = components['schemas']['Item']
@@ -101,6 +103,9 @@ export function useUpdateItem() {
       void queryClient.invalidateQueries({ queryKey: listKeys.items(item.list_id) })
       void queryClient.invalidateQueries({ queryKey: listKeys.detail(item.list_id) })
       void queryClient.invalidateQueries({ queryKey: treeKeys.tree })
+      // A new title or status shows in search results and Home "Recently updated".
+      void queryClient.invalidateQueries({ queryKey: searchKeys.all })
+      void queryClient.invalidateQueries({ queryKey: homeKeys.recent })
     },
   )
 }
