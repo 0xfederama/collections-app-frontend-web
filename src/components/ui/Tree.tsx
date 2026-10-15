@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
-import { ChevronRight, GripVertical } from './icons'
+import { GripVertical } from './icons'
 import { SortableProvider, useSortableRow, type SortableMove, type SortableSlot } from './sortable'
 
 export interface TreeNodeBase {
@@ -24,7 +24,7 @@ export interface TreeProps<T extends TreeNodeBase> {
   /** Controlled: id of the selected node, or null. */
   selected: string | null
   onSelectedChange: (id: string) => void
-  /** Row content (icon, name, count). The chevron and indentation are drawn by the Tree. */
+  /** Row content (icon, name, count). Indentation is drawn by the Tree; a folder's own icon shows and toggles its state. */
   renderRow: (node: T, state: TreeRowState) => ReactNode
   /**
    * Opt-in drag reorder: which sortable group and position a node has (`undefined` = not
@@ -157,7 +157,6 @@ export function Tree<T extends TreeNodeBase>({
             slot={sortable?.(node)}
             onFocusRow={setFocusedId}
             onSelect={onSelectedChange}
-            onToggle={toggle}
             renderRow={renderRow}
           />
         ))}
@@ -177,7 +176,6 @@ interface TreeRowProps<T extends TreeNodeBase> {
   slot: SortableSlot | undefined
   onFocusRow: (id: string) => void
   onSelect: (id: string) => void
-  onToggle: (id: string) => void
   renderRow: TreeProps<T>['renderRow']
 }
 
@@ -194,7 +192,6 @@ function TreeRow<T extends TreeNodeBase>({
   slot,
   onFocusRow,
   onSelect,
-  onToggle,
   renderRow,
 }: TreeRowProps<T>) {
   const { ref, handleRef, isDragging } = useSortableRow(node.id, slot)
@@ -237,25 +234,12 @@ function TreeRow<T extends TreeNodeBase>({
         onFocusRow(node.id)
         onSelect(node.id)
       }}
-      style={{ paddingInlineStart: `${(level - 1) * 16 + 4}px` }}
+      style={{ paddingInlineStart: `${(level - 1) * 16 + 8}px` }}
       className={cx(
         'group/row flex min-h-9 cursor-pointer items-center gap-1 rounded-sm pr-2 text-sm text-text hover:bg-border aria-selected:bg-border aria-selected:font-medium aria-selected:shadow-[inset_3px_0_0_var(--accent)] pointer-coarse:min-h-11',
         isDragging && 'bg-surface-raised opacity-80 shadow-md',
       )}
     >
-      <span
-        aria-hidden
-        onClick={(e) => {
-          if (!hasChildren) return
-          e.stopPropagation()
-          onToggle(node.id)
-        }}
-        className="flex size-6 shrink-0 items-center justify-center text-text-muted"
-      >
-        {hasChildren && (
-          <ChevronRight className={cx('size-4 transition-transform', isExpanded && 'rotate-90')} />
-        )}
-      </span>
       {renderRow(node, { level, expanded: isExpanded, selected, hasChildren })}
       {slot && (
         <button
