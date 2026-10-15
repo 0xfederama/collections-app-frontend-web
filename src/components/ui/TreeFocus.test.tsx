@@ -145,3 +145,21 @@ describe('AT-03 tree row focus (web): keys inside a row control are not tree key
     expect(tabbable()).toEqual(['b'])
   })
 })
+
+describe('F006-W2 tree is reachable by Tab and navigated by arrows', () => {
+  it('one Tab from the element before lands on the tab-stop treeitem; arrows move inside', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <button type="button">Before</button>
+        <Harness />
+      </>,
+    )
+    screen.getByRole('button', { name: 'Before' }).focus()
+    await user.tab()
+    expect(item('Alpha')).toHaveFocus()
+    await user.keyboard('{ArrowDown}')
+    expect(item('Beta')).toHaveFocus()
+    expect(tabbable()).toEqual(['b'])
+  })
+})

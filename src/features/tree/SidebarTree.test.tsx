@@ -280,3 +280,22 @@ describe('W-04 expanded folders', () => {
     expect(treeitem(/Movies/)).toHaveAttribute('aria-expanded', 'true')
   })
 })
+
+describe('F006-W2 sidebar tree keyboard reach', () => {
+  it('Tab from the element before the tree reaches a treeitem, and arrows move inside the tree', async () => {
+    const user = userEvent.setup()
+    renderAt('/')
+    await within(sidebar()).findByRole('tree')
+    // The element right before the tree in tab order is the sidebar's "New" button.
+    screen.getByRole('button', { name: 'New folder or list' }).focus()
+    await user.tab()
+    const first = document.activeElement as HTMLElement
+    expect(first).toHaveAttribute('role', 'treeitem')
+    await user.keyboard('{ArrowDown}')
+    const second = document.activeElement as HTMLElement
+    expect(second).toHaveAttribute('role', 'treeitem')
+    expect(second).not.toBe(first)
+    expect(second).toHaveAttribute('tabindex', '0')
+    expect(first).toHaveAttribute('tabindex', '-1')
+  })
+})
