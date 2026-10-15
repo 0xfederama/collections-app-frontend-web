@@ -10,6 +10,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `src/components/ui/icons.ts`: the only Lucide import site; named glyphs, `kindIcons` and `kindLabels`.
 - `src/components/ui/fieldStyles.ts`: shared input chrome (`controlBase`, `controlBorder`).
 - `src/components/ui/sortable.tsx`: the only importer of `@dnd-kit` (pinned 0.5.0, D-061); `SortableProvider`, `useSortableRow`, `arrayMove`.
+- `src/components/ui/returnFocus.ts`: focus return for Dialog, AlertDialog, Drawer; `rememberMenuTrigger` (used by Menu).
 - `src/lib/cx.ts`: class-name joiner used by every primitive.
 - `src/dev/DevUiRoute.tsx`: component gallery at `/dev/ui`, dev builds only.
 - `*.test.tsx` beside most primitives.
@@ -44,3 +45,4 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `/dev/ui` is lazy-loaded only when `import.meta.env.DEV`; it is absent from production.
 - Use semantic token classes only (see the theme module doc); no raw colors or radii.
 - `Combobox` selects its text on focus, so typing replaces the current label.
+- Dialog, AlertDialog and Drawer return focus to the element focused when they opened, since Radix only does that for its own `trigger`. A dialog opened from a Menu item returns focus to the menu's trigger (Menu hands it over for 500 ms).
