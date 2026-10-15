@@ -7,6 +7,7 @@ import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { mockViewport, renderAt } from '../../test-utils'
 import type { Item } from './api'
+import { createContentBackend } from './content/contentTestBackend'
 
 const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
 const ITEM = '7c1e5a10-0000-4000-8000-000000000101'
@@ -302,5 +303,93 @@ describe('item view: hero image', () => {
   it('shows the tile when the item has no image', async () => {
     await renderItem()
     expect(screen.getByTestId('fallback-tile')).toBeInTheDocument()
+  })
+})
+
+describe('AT-08 web: item view description history', () => {
+  it('has no History button while the description is loading or failed', async () => {
+    server.use(http.get(contentUrl, () => problemResponse(500, 'internal_error')))
+    await renderItem()
+    await screen.findByText('The description could not be loaded.')
+    expect(screen.queryByRole('button', { name: 'History' })).not.toBeInTheDocument()
+  })
+
+  it('History lists the versions newest first with sizes', async () => {
+    createContentBackend().use()
+    const user = userEvent.setup()
+    await renderItem()
+    await user.click(await screen.findByRole('button', { name: 'History' }))
+    const drawer = await screen.findByRole('dialog', { name: 'History' })
+    const rows = await within(drawer).findAllByRole('listitem')
+    expect(rows).toHaveLength(2)
+    expect(rows[0]).toHaveTextContent('Version 2 (current)')
+    expect(rows[0]).toHaveTextContent('35 B')
+    expect(rows[1]).toHaveTextContent('Version 1')
+    expect(rows[1]).toHaveTextContent('3 B')
+  })
+
+  it('previews an old version, restores it with the current If-Match, and the view shows it', async () => {
+    const backend = createContentBackend()
+    backend.use()
+    const user = userEvent.setup()
+    await renderItem()
+    await screen.findByText('Great film, rewatch in 4K.')
+    await user.click(screen.getByRole('button', { name: 'History' }))
+    const drawer = await screen.findByRole('dialog', { name: 'History' })
+    await user.click(await within(drawer).findByRole('button', { name: /^Version 1/ }))
+    const preview = await within(drawer).findByRole('region', { name: 'Preview of version 1' })
+    expect(await within(preview).findByText('Old')).toBeVisible()
+
+    await user.click(within(preview).getByRole('button', { name: 'Restore this version' }))
+    const confirm = await screen.findByRole('alertdialog')
+    expect(backend.restores).toHaveLength(0)
+    await user.click(within(confirm).getByRole('button', { name: 'Restore this version' }))
+
+    expect(await screen.findByText('Restored version 1')).toBeInTheDocument()
+    expect(backend.restores).toEqual([{ ifMatch: '"c-2"', body: { version: 1 } }])
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'History' })).toBeNull())
+    expect(await screen.findByText('Old')).toBeInTheDocument()
+    expect(screen.queryByText('Great film, rewatch in 4K.')).not.toBeInTheDocument()
+  })
+
+  it('a 412 on restore shows a message and the view refreshes to the newer text', async () => {
+    const backend = createContentBackend()
+    backend.use()
+    const user = userEvent.setup()
+    await renderItem()
+    await screen.findByText('Great film, rewatch in 4K.')
+    await user.click(screen.getByRole('button', { name: 'History' }))
+    const drawer = await screen.findByRole('dialog', { name: 'History' })
+    await user.click(await within(drawer).findByRole('button', { name: /^Version 1/ }))
+    backend.externalSave('Changed elsewhere')
+    await user.click(await within(drawer).findByRole('button', { name: 'Restore this version' }))
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: 'Restore this version',
+      }),
+    )
+    expect(
+      await within(drawer).findByText(
+        'The description changed since you opened it. The list was refreshed; try again.',
+      ),
+    ).toBeVisible()
+    expect(await screen.findByText('Changed elsewhere')).toBeInTheDocument()
+  })
+
+  it('a pruned version shows the pruned message', async () => {
+    const backend = createContentBackend()
+    backend.pruned.add(1)
+    backend.use()
+    const user = userEvent.setup()
+    await renderItem()
+    await user.click(await screen.findByRole('button', { name: 'History' }))
+    const drawer = await screen.findByRole('dialog', { name: 'History' })
+    await user.click(await within(drawer).findByRole('button', { name: /^Version 1/ }))
+    expect(
+      await within(drawer).findByText(
+        'This version is no longer available (older versions are pruned).',
+      ),
+    ).toBeVisible()
+    expect(within(drawer).getByRole('button', { name: 'Refresh the list' })).toBeVisible()
   })
 })
