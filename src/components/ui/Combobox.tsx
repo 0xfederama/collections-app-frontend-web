@@ -138,6 +138,8 @@ export function Combobox({
                 setActive(0)
                 setOpen(true)
               }}
+              // Select the shown label so typing replaces it instead of being appended to it.
+              onFocus={(e) => e.currentTarget.select()}
               onClick={() => !disabled && setOpen(true)}
               onKeyDown={onKeyDown}
               className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-text-muted disabled:cursor-not-allowed"

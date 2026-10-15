@@ -4,7 +4,9 @@ import { devHandlers } from './devData'
 import { devImageHandlers } from './devImages'
 import { devItemDetailHandlers } from './devItemDetail'
 import { devItemHandlers } from './devItems'
+import { devRecentHandlers } from './devRecent'
 import { devSearchHandlers } from './devSearch'
+import { devSettingsHandlers } from './devSettings'
 import { devTrashHandlers } from './devTrash'
 import { handlers } from './handlers'
 
@@ -14,6 +16,8 @@ export const worker = setupWorker(
   ...devContentHandlers,
   ...devItemDetailHandlers,
   ...devSearchHandlers,
+  ...devRecentHandlers,
+  ...devSettingsHandlers,
   ...devTrashHandlers,
   ...devItemHandlers,
   ...devHandlers,

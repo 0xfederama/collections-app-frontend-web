@@ -1,5 +1,6 @@
-import { useMemo, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Select, TextArea, TextField, kindLabels, type SelectOption } from '../../../components/ui'
+import { CountrySelect, CurrencySelect } from '../../../components/ui/IsoSelects'
 import type { ItemKind } from '../api'
 import { kindFields, type Field } from '../kinds'
 import { inputId, simpleFields, type Defaults, type Draft, type ErrorMap } from './draft'
@@ -41,23 +42,6 @@ const kindOptions: SelectOption[] = (Object.keys(kindLabels) as ItemKind[]).map(
   label: kindLabels[kind],
 }))
 
-/** ISO 4217 codes the browser knows, with their names; falls back to a short list. */
-function currencyOptions(selected: string): SelectOption[] {
-  const intl = Intl as unknown as { supportedValuesOf?: (key: string) => string[] }
-  const codes = intl.supportedValuesOf?.('currency') ?? ['EUR', 'USD', 'GBP', 'JPY', 'CHF']
-  const list = selected && !codes.includes(selected) ? [selected, ...codes] : codes
-  let names: Intl.DisplayNames | undefined
-  try {
-    names = new Intl.DisplayNames(undefined, { type: 'currency' })
-  } catch {
-    names = undefined
-  }
-  return list.map((code) => ({
-    value: code,
-    label: names?.of(code) && names.of(code) !== code ? `${code} · ${names.of(code)}` : code,
-  }))
-}
-
 /** Title, kind, summary, status, price and official website (UI_SPEC §4 "Basics"). */
 export function BasicsFields({
   form,
@@ -68,7 +52,6 @@ export function BasicsFields({
 }) {
   const { draft, errors, defaults, set } = form
   const currency = draft.currency || defaults.currency
-  const currencies = useMemo(() => currencyOptions(currency), [currency])
   const onlyMax = draft.priceMax.trim() !== '' && draft.priceMin.trim() === ''
   return (
     <div className="flex flex-col gap-4">
@@ -137,11 +120,10 @@ export function BasicsFields({
             onChange={(event) => set('priceMax', event.target.value, 'price.max')}
             error={errors['price.max']}
           />
-          <Select
+          <CurrencySelect
             id={inputId('price.currency')}
             label="Currency"
-            options={currencies}
-            value={currency || undefined}
+            value={currency}
             onValueChange={(value) => set('currency', value, 'price.currency')}
             placeholder="Currency"
             error={errors['price.currency']}
@@ -235,16 +217,14 @@ export function KindFieldsSection({ form }: { form: FormState }) {
         ))}
         {streaming && (
           <>
-            <TextField
+            <CountrySelect
               id={inputId('metadata.streaming.country')}
               label="Streaming country"
-              autoComplete="off"
-              maxLength={2}
-              placeholder={defaults.country || 'IT'}
-              hint="Two-letter code. Defaults to your streaming country."
+              placeholder={defaults.country || 'Country'}
+              hint="Defaults to your streaming country."
               value={draft.streamingCountry}
-              onChange={(event) =>
-                set('streamingCountry', event.target.value, 'metadata.streaming.country')
+              onValueChange={(value) =>
+                set('streamingCountry', value, 'metadata.streaming.country')
               }
               error={errors['metadata.streaming.country']}
             />

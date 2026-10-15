@@ -20,6 +20,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `IconButton`: Button variants plus required `aria-label`.
 - `TextField` / `TextArea`: `label`, `hint`, `error` (sets `aria-invalid`, `aria-describedby`); TextField adds `prefix`, `suffix`.
 - `Select`, `Combobox`: `options`, `value`, `onValueChange`; Select wraps Radix Select, Combobox is an ARIA combobox in a Popover.
+- `CountrySelect`, `CurrencySelect` (`IsoSelects.tsx`): Combobox over ISO 3166 countries and ISO 4217 currencies; value is the code, names from `src/lib/iso.ts`. Used by the item form and Settings.
 - `SegmentedControl`: `aria-label`, `options` (`value`, `label`, `icon`, `iconOnly`), `value`, `onValueChange`.
 - `Menu`: `trigger`, `items: MenuItem[]` (`onSelect`, `destructive`, `disabled`, or `{ type: 'separator' }`), `align`.
 - `Dialog`: `title`, `description`, `footer`, `open` / `onOpenChange`, `trigger`, `initialFocus` (ref to focus on open instead of Close).
@@ -42,3 +43,4 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `Chip` always renders its text, so state is never color alone.
 - `/dev/ui` is lazy-loaded only when `import.meta.env.DEV`; it is absent from production.
 - Use semantic token classes only (see the theme module doc); no raw colors or radii.
+- `Combobox` selects its text on focus, so typing replaces the current label.

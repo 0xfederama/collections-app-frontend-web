@@ -1,3 +1,6 @@
+import { HomePage } from '../features/home/HomePage'
+
+/** `/`: Home (`src/features/home/*`). */
 export function HomeRoute() {
-  return <h1 className="text-2xl font-semibold">Home</h1>
+  return <HomePage />
 }

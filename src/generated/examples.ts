@@ -741,6 +741,51 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       }
     }
   },
+  "listRecentItems": {
+    "method": "get",
+    "path": "/api/v1/recent-items",
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "data": [
+        {
+          "item": {
+            "id": "7c1e5a10-0000-4000-8000-000000000101",
+            "list_id": "7c1e5a10-0000-4000-8000-000000000011",
+            "title": "The Matrix",
+            "kind": "movie",
+            "summary": "A hacker learns the truth about reality.",
+            "status": "Watched",
+            "image": null,
+            "price": null,
+            "official_website_url": null,
+            "content_version": 2,
+            "sort_order": 0,
+            "version": 3,
+            "created_at": "2026-10-14T09:31:00Z",
+            "updated_at": "2026-10-14T10:00:00Z"
+          },
+          "path": [
+            {
+              "type": "folder",
+              "id": "7c1e5a10-0000-4000-8000-000000000001",
+              "name": "Media"
+            },
+            {
+              "type": "folder",
+              "id": "7c1e5a10-0000-4000-8000-000000000002",
+              "name": "Movies"
+            },
+            {
+              "type": "list",
+              "id": "7c1e5a10-0000-4000-8000-000000000011",
+              "name": "Watchlist"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "listTrash": {
     "method": "get",
     "path": "/api/v1/trash",
