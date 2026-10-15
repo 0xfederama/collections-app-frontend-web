@@ -93,7 +93,8 @@ afterEach(() => {
 describe('W-11 sidebar search debounce', () => {
   it('sends no request before 250 ms, then exactly one with the trimmed q and limit 8', async () => {
     const requests = serveSearch()
-    fakeUser()
+    // Strict fake clock: a stall on a busy machine cannot let the debounce fire early.
+    vi.useFakeTimers()
     renderRouter()
 
     setText('  matrix  ')
@@ -101,16 +102,17 @@ describe('W-11 sidebar search debounce', () => {
     expect(requests).toHaveLength(0)
 
     await tick(150)
-    await waitFor(() => expect(requests).toHaveLength(1))
+    await vi.waitFor(() => expect(requests).toHaveLength(1))
     expect(requests[0]!.searchParams.get('q')).toBe('matrix')
     expect(requests[0]!.searchParams.get('limit')).toBe('8')
-    expect(await screen.findAllByRole('option')).toHaveLength(3)
+    await vi.waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3))
     expect(requests).toHaveLength(1)
   })
 
   it('restarts the pause on every keystroke and sends only the final text', async () => {
     const requests = serveSearch()
-    fakeUser()
+    // Strict fake clock: a stall on a busy machine cannot let the debounce fire early.
+    vi.useFakeTimers()
     renderRouter()
 
     setText('ma')
@@ -120,7 +122,7 @@ describe('W-11 sidebar search debounce', () => {
     expect(requests).toHaveLength(0)
 
     await tick(150)
-    await waitFor(() => expect(requests).toHaveLength(1))
+    await vi.waitFor(() => expect(requests).toHaveLength(1))
     expect(requests[0]!.searchParams.get('q')).toBe('matr')
   })
 
