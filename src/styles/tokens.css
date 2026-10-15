@@ -63,7 +63,7 @@
   --duration-fast: 150ms;
   --duration-base: 200ms;
 
-  /* Material (blur only on sidebar, toolbar, sheet, menus, dialogs, drawer). */
+  /* Material (blur only on sidebar, toolbar, sheet, dialogs, drawer; menus and popovers are solid bg-surface-raised). */
   --material-blur: 28px;
   --material-saturate: 180%;
   --material-filter: blur(var(--material-blur)) saturate(var(--material-saturate));

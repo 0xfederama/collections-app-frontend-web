@@ -1,7 +1,16 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { Button, Dialog, Select, TextArea, TextField, useToast } from '../../components/ui'
+import {
+  Button,
+  Dialog,
+  IconButton,
+  Select,
+  TextArea,
+  TextField,
+  useToast,
+} from '../../components/ui'
+import { ImagePlus, Plus, X } from '../../components/ui/icons'
 import { ApiError, NetworkError } from '../../lib/api'
 import { itemKeys, useCreateItem, type Item } from '../items/api'
 import { MAX_CONTENT_BYTES, isTooLarge } from '../items/content/limits'
@@ -59,6 +68,10 @@ export function QuickAddDialog({
   const websiteRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const chooseRef = useRef<HTMLButtonElement>(null)
+  const [showWebsite, setShowWebsite] = useState(false)
+  const [showDescription, setShowDescription] = useState(false)
+  const [showImage, setShowImage] = useState(false)
 
   const create = useCreateItem(listId ?? '')
   const saveContent = useSaveContent()
@@ -83,7 +96,7 @@ export function QuickAddDialog({
     if (next.title) return titleRef.current?.focus()
     if (next.website) return websiteRef.current?.focus()
     if (next.description) return descriptionRef.current?.focus()
-    if (next.image) return fileRef.current?.focus()
+    if (next.image) return chooseRef.current?.focus()
     if (next.list || !listId) return
 
     setBusy(true)
@@ -163,23 +176,22 @@ export function QuickAddDialog({
     if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) void submit()
   }
 
+  const reveal = (show: () => void, focus: () => void) => {
+    show()
+    // The field mounts on the next render.
+    setTimeout(focus, 0)
+  }
+  const dismiss = (key: Field) => setErrors((e) => ({ ...e, [key]: undefined }))
+
   return (
     <Dialog
       open
       onOpenChange={(open) => !open && !busy && onClose()}
       title="Quick add"
-      description="Press Enter to add. Only the title is required."
+      description="Type a title and press Enter. Everything else is optional."
+      hideTitle
+      className="max-w-xl"
       initialFocus={titleRef}
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose} disabled={busy}>
-            Cancel
-          </Button>
-          <Button type="submit" form="quick-add-form" pending={busy}>
-            Add
-          </Button>
-        </>
-      }
     >
       <form
         id="quick-add-form"
@@ -195,65 +207,177 @@ export function QuickAddDialog({
         noValidate
         className="flex flex-col gap-4"
       >
-        <TextField
-          ref={titleRef}
-          label="Title"
-          required
-          autoComplete="off"
-          className="text-lg"
-          value={title}
-          onChange={(event) => {
-            setTitle(event.target.value)
-            setErrors((e) => ({ ...e, title: undefined }))
-          }}
-          error={errors.title}
-        />
-        <Select
-          label="List"
-          required
-          placeholder={loading ? 'Loading lists…' : 'Select a list'}
-          options={lists.map((l) => ({ value: l.id, label: l.name }))}
-          value={listId}
-          onValueChange={setPickedList}
-          error={errors.list}
-        />
-        <TextField
-          ref={websiteRef}
-          label="Website"
-          inputMode="url"
-          autoComplete="off"
-          value={website}
-          onChange={(event) => {
-            setWebsite(event.target.value)
-            setErrors((e) => ({ ...e, website: undefined }))
-          }}
-          error={errors.website}
-        />
-        <TextArea
-          ref={descriptionRef}
-          label="Description"
-          hint="Markdown. Ctrl+Enter or Cmd+Enter adds."
-          rows={3}
-          value={description}
-          onChange={(event) => {
-            setDescription(event.target.value)
-            setErrors((e) => ({ ...e, description: undefined }))
-          }}
-          onKeyDown={onTextAreaKey}
-          error={errors.description}
-          maxLength={MAX_CONTENT_BYTES}
-        />
-        <TextField
-          ref={fileRef}
-          label="Image"
-          type="file"
-          accept={ACCEPT}
-          onChange={(event) => {
-            setImage(event.target.files?.[0])
-            setErrors((e) => ({ ...e, image: undefined }))
-          }}
-          error={errors.image}
-        />
+        <div className="flex flex-col gap-1 pr-10">
+          <input
+            ref={titleRef}
+            type="text"
+            aria-label="Title"
+            aria-invalid={errors.title ? true : undefined}
+            aria-describedby={errors.title ? 'quick-add-title-error' : undefined}
+            autoComplete="off"
+            placeholder="Title"
+            value={title}
+            onChange={(event) => {
+              setTitle(event.target.value)
+              dismiss('title')
+            }}
+            className="w-full border-b border-transparent bg-transparent pb-1 text-[22px] leading-snug font-semibold tracking-tight text-text outline-none placeholder:text-text-muted focus-visible:border-accent"
+          />
+          {errors.title && (
+            <p id="quick-add-title-error" className="text-xs font-medium text-danger-text">
+              {errors.title}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
+            <span aria-hidden className="text-sm text-text-muted">
+              In
+            </span>
+            <div className="w-40 [&>div>label]:sr-only [&_button]:h-8 [&_button]:rounded-full">
+              <Select
+                label="List"
+                placeholder={loading ? 'Loading lists…' : 'Select a list'}
+                options={lists.map((l) => ({ value: l.id, label: l.name }))}
+                value={listId}
+                onValueChange={setPickedList}
+                error={errors.list}
+              />
+            </div>
+          </div>
+          {!showWebsite && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                reveal(
+                  () => setShowWebsite(true),
+                  () => websiteRef.current?.focus(),
+                )
+              }
+            >
+              <Plus aria-hidden className="size-4" />
+              Website
+            </Button>
+          )}
+          {!showDescription && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                reveal(
+                  () => setShowDescription(true),
+                  () => descriptionRef.current?.focus(),
+                )
+              }
+            >
+              <Plus aria-hidden className="size-4" />
+              Description
+            </Button>
+          )}
+          {!showImage && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                reveal(
+                  () => setShowImage(true),
+                  () => chooseRef.current?.focus(),
+                )
+              }
+            >
+              <Plus aria-hidden className="size-4" />
+              Image
+            </Button>
+          )}
+        </div>
+
+        {showWebsite && (
+          <div className="[&_label]:sr-only">
+            <TextField
+              ref={websiteRef}
+              label="Website"
+              inputMode="url"
+              autoComplete="off"
+              placeholder="https://"
+              value={website}
+              onChange={(event) => {
+                setWebsite(event.target.value)
+                dismiss('website')
+              }}
+              error={errors.website}
+            />
+          </div>
+        )}
+        {showDescription && (
+          <div className="[&_label]:sr-only">
+            <TextArea
+              ref={descriptionRef}
+              label="Description"
+              hint="Markdown. Ctrl+Enter or Cmd+Enter adds."
+              placeholder="Write in Markdown…"
+              rows={3}
+              value={description}
+              onChange={(event) => {
+                setDescription(event.target.value)
+                dismiss('description')
+              }}
+              onKeyDown={onTextAreaKey}
+              error={errors.description}
+              maxLength={MAX_CONTENT_BYTES}
+            />
+          </div>
+        )}
+        {showImage && (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept={ACCEPT}
+                tabIndex={-1}
+                aria-hidden
+                className="sr-only"
+                onChange={(event) => {
+                  setImage(event.target.files?.[0])
+                  dismiss('image')
+                }}
+              />
+              <Button
+                ref={chooseRef}
+                variant="secondary"
+                size="sm"
+                onClick={() => fileRef.current?.click()}
+              >
+                <ImagePlus aria-hidden className="size-4" />
+                {image ? 'Change image' : 'Choose image'}
+              </Button>
+              {image && (
+                <>
+                  <span className="min-w-0 flex-1 truncate text-sm text-text-muted">
+                    {image.name}
+                  </span>
+                  <IconButton
+                    aria-label="Remove image"
+                    className="size-8 pointer-coarse:size-11"
+                    onClick={() => {
+                      setImage(undefined)
+                      if (fileRef.current) fileRef.current.value = ''
+                    }}
+                  >
+                    <X aria-hidden />
+                  </IconButton>
+                </>
+              )}
+            </div>
+            {errors.image && (
+              <p role="alert" className="text-xs font-medium text-danger-text">
+                {errors.image}
+              </p>
+            )}
+          </div>
+        )}
         {formError && (
           <div
             role="alert"
@@ -262,6 +386,19 @@ export function QuickAddDialog({
             {formError}
           </div>
         )}
+        <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+          <p className="text-xs text-text-muted max-sm:hidden [@media(hover:none)]:hidden">
+            Enter to add · Esc to cancel
+          </p>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="ghost" onClick={onClose} disabled={busy}>
+              Cancel
+            </Button>
+            <Button type="submit" pending={busy}>
+              Add
+            </Button>
+          </div>
+        </div>
       </form>
     </Dialog>
   )

@@ -106,7 +106,7 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
   const controls = reorder && entryControls(item.title, reorder)
 
   const shell = cx(
-    'relative list-none [-webkit-touch-callout:none]',
+    'group/entry relative list-none [-webkit-touch-callout:none]',
     surface,
     reorder?.isDragging && 'z-20 shadow-lg ring-2 ring-focus-ring',
   )
@@ -193,7 +193,10 @@ function entryControls(title: string, reorder: EntryReorder) {
         trigger={
           <IconButton
             aria-label={`Actions for ${title}`}
-            className={cx(controlButton, 'bg-surface/80')}
+            className={cx(
+              controlButton,
+              'bg-surface/80 opacity-0 transition-opacity duration-150 group-focus-within/entry:opacity-100 group-hover/entry:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 [@media(hover:none)]:opacity-100',
+            )}
           >
             <Ellipsis aria-hidden />
           </IconButton>

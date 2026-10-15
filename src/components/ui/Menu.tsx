@@ -32,7 +32,7 @@ export function Menu({ trigger, items, align = 'end' }: MenuProps) {
         <DropdownMenu.Content
           align={align}
           sideOffset={6}
-          className="material-strong z-50 min-w-48 rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+          className="bg-surface-raised z-50 min-w-48 rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
         >
           {items.map((item, index) =>
             item.type === 'separator' ? (

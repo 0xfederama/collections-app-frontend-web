@@ -18,6 +18,8 @@ export interface DialogProps {
   className?: string
   /** Element to focus when the dialog opens, instead of the first focusable one (the Close button). */
   initialFocus?: RefObject<HTMLElement | null>
+  /** Keeps the title and description for assistive tech only (a quiet dialog whose content speaks for itself). */
+  hideTitle?: boolean
 }
 
 export const overlayClasses =
@@ -33,6 +35,7 @@ export function Dialog({
   footer,
   className,
   initialFocus,
+  hideTitle = false,
 }: DialogProps) {
   const returnFocus = useReturnFocus()
   return (
@@ -53,8 +56,13 @@ export function Dialog({
             className,
           )}
         >
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex flex-col gap-1">
+          <div
+            className={cx(
+              'flex items-start justify-between gap-4',
+              hideTitle && 'absolute top-3 right-3',
+            )}
+          >
+            <div className={cx('flex flex-col gap-1', hideTitle && 'sr-only')}>
               <RadixDialog.Title className="text-xl tracking-tight font-semibold">
                 {title}
               </RadixDialog.Title>
@@ -65,7 +73,7 @@ export function Dialog({
               ) : null}
             </div>
             <RadixDialog.Close asChild>
-              <IconButton aria-label="Close" className="-mt-2 -mr-2">
+              <IconButton aria-label="Close" className={hideTitle ? undefined : '-mt-2 -mr-2'}>
                 <X aria-hidden />
               </IconButton>
             </RadixDialog.Close>

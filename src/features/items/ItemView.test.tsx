@@ -71,11 +71,14 @@ describe('AT-13 item view: the example movie', () => {
     expect(within(details).getByText('1999')).toBeInTheDocument()
     expect(within(details).queryByText('IMDb')).not.toBeInTheDocument()
     expect(within(details).queryByRole('link', { name: /IMDb/ })).not.toBeInTheDocument()
-    expect(within(details).getByText(/Streaming in Italy:/)).toBeInTheDocument()
-    const platforms = within(details).getByRole('list', { name: 'Platforms' })
+    // Streaming is its own section; its heading carries the country (F-002 finish review).
+    const streaming = screen.getByRole('heading', { name: 'Streaming · Italy' }).closest('section')!
+    expect(within(details).queryByRole('list', { name: 'Platforms' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Streaming in /)).not.toBeInTheDocument()
+    const platforms = within(streaming).getByRole('list', { name: 'Platforms' })
     expect(within(platforms).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
     expect(within(platforms).getByRole('img', { name: 'Prime Video, paid' })).toBeInTheDocument()
-    expect(within(details).queryByRole('note')).not.toBeInTheDocument()
+    expect(within(streaming).queryByRole('note')).not.toBeInTheDocument()
   })
 
   it('warns when the streaming country differs from the settings country', async () => {
@@ -86,13 +89,13 @@ describe('AT-13 item view: the example movie', () => {
     const note = await screen.findByRole('note')
     expect(note).toHaveTextContent(/Italy/)
     expect(note).toHaveTextContent(/United States/)
-    expect(screen.getByText(/Streaming in United States:/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Streaming · United States' })).toBeInTheDocument()
   })
 
   it('shows no warning while the settings are unknown', async () => {
     server.use(http.get(settingsUrl, () => problemResponse(500, 'internal_error')))
     await renderItem()
-    await screen.findByText(/Streaming in Italy:/)
+    await screen.findByRole('heading', { name: 'Streaming · Italy' })
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
   })
 

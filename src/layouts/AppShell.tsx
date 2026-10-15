@@ -136,9 +136,9 @@ function DetailPanel({ listId, search }: { listId: string | undefined; search: s
   return (
     <aside
       aria-label="Item details"
-      className="m-3.5 ml-0 flex w-[420px] shrink-0 animate-drawer-in-right flex-col overflow-y-auto rounded-xl material-strong shadow-sheet"
+      className="m-3.5 ml-0 flex w-[420px] shrink-0 animate-drawer-in-right flex-col overflow-hidden rounded-xl material-strong shadow-sheet"
     >
-      <div className="flex justify-end px-2 pt-2">
+      <div className="flex shrink-0 justify-end px-2 pt-2">
         <IconButton
           aria-label="Close details"
           onClick={() => void navigate({ pathname: `/lists/${listId}`, search })}
@@ -146,7 +146,7 @@ function DetailPanel({ listId, search }: { listId: string | undefined; search: s
           <X aria-hidden />
         </IconButton>
       </div>
-      <div className="px-6 pb-6">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6">
         <ItemRoute />
       </div>
     </aside>

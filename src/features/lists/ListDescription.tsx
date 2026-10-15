@@ -113,7 +113,7 @@ function DescriptionView({
     return (
       <section
         aria-label="List description"
-        className="group/desc flex max-w-prose items-center gap-1 text-sm"
+        className="group/desc flex max-w-prose items-center gap-1 text-xs"
       >
         <button
           type="button"

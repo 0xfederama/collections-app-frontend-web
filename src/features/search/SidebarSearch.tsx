@@ -195,7 +195,7 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
             onInteractOutside={(event) => {
               if ((event.target as HTMLElement | null)?.id === id) event.preventDefault()
             }}
-            className="z-50 max-h-(--radix-popover-content-available-height) w-[max(var(--radix-popover-trigger-width),18rem)] overflow-y-auto rounded-lg material-strong p-1 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+            className="z-50 max-h-(--radix-popover-content-available-height) w-[max(var(--radix-popover-trigger-width),18rem)] overflow-y-auto rounded-lg bg-surface-raised p-1 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
           >
             <ul id={listId} role="listbox" aria-label="Search results">
               {results.map((result, index) => (

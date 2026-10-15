@@ -1,6 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Button } from '../../components/ui'
-import { Check, ChevronDown } from '../../components/ui/icons'
+import { Check, ChevronDown, SlidersHorizontal } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { PinnedFields } from './api'
 import { MAX_PINNED_PER_SLOT, pinnableFields, resolvePinned, type PinnedSlots } from './pinned'
@@ -48,16 +48,21 @@ export function PinnedMenu({
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Button variant="secondary" className="h-9">
-          Pinned fields
-          <ChevronDown aria-hidden className="size-4" />
+        {/* Narrow toolbars (container below 44rem) show the icon only; the name stays. */}
+        <Button
+          variant="secondary"
+          className="h-9 @max-[44rem]:w-9 @max-[44rem]:px-0 pointer-coarse:@max-[44rem]:w-11"
+        >
+          <SlidersHorizontal aria-hidden className="size-4 @[44rem]:hidden" />
+          <span className="@max-[44rem]:sr-only">Pinned fields</span>
+          <ChevronDown aria-hidden className="size-4 @max-[44rem]:hidden" />
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align="start"
           sideOffset={6}
-          className="material-strong z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-60 overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+          className="bg-surface-raised z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-60 overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
         >
           {SLOTS.map(({ slot, label }) => (
             <DropdownMenu.Group key={slot}>

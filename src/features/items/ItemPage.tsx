@@ -1,6 +1,7 @@
 import { Link, Navigate, useLocation, useParams } from 'react-router'
 import { Button, EmptyState, kindIcons } from '../../components/ui'
 import { ApiError } from '../../lib/api'
+import { cx } from '../../lib/cx'
 import { useBreakpoint } from '../../lib/breakpoints'
 import { ListGate } from '../tree/ListGate'
 import { useItem } from './api'
@@ -55,7 +56,7 @@ function ItemDetail({
     return <Navigate to={`/lists/${item.data.list_id}/items/${itemId}`} replace />
   }
   return (
-    <div className="flex flex-col gap-4">
+    <div className={cx('flex flex-col gap-4', panel && 'min-h-0 flex-1')}>
       {!panel && (
         <Link
           to={backTo}
@@ -64,7 +65,7 @@ function ItemDetail({
           ← Back to {listName}
         </Link>
       )}
-      <ItemView item={item.data} />
+      <ItemView item={item.data} pinned={panel} />
     </div>
   )
 }

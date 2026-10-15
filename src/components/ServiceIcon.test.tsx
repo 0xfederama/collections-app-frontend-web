@@ -18,6 +18,17 @@ describe('F002-T5 ServiceIcon', () => {
     expect(screen.getByTestId('paid-badge')).toHaveTextContent('$')
   })
 
+  it('keeps the paid badge legible and neutral at the 20px list size and the 32px item size', () => {
+    for (const size of [20, 32]) {
+      const { unmount } = render(<ServiceIcon name="Netflix" paid size={size} />)
+      const badge = screen.getByTestId('paid-badge')
+      expect(parseInt(badge.style.width)).toBeGreaterThanOrEqual(16)
+      expect(parseInt(badge.style.fontSize)).toBeGreaterThanOrEqual(10)
+      expect(badge).toHaveClass('bg-text', 'text-surface')
+      unmount()
+    }
+  })
+
   it('shows no badge when free', () => {
     render(<ServiceIcon name="YouTube" />)
     expect(screen.queryByTestId('paid-badge')).toBeNull()

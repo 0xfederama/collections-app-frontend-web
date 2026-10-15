@@ -69,7 +69,7 @@ export function Select({
           <RadixSelect.Content
             position="popper"
             sideOffset={4}
-            className="z-50 max-h-72 min-w-(--radix-select-trigger-width) material-strong overflow-hidden rounded-lg text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+            className="z-50 max-h-72 min-w-(--radix-select-trigger-width) bg-surface-raised overflow-hidden rounded-lg text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
           >
             <RadixSelect.Viewport className="p-1">
               {options.map((option) => (

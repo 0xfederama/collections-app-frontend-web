@@ -61,7 +61,7 @@ export function KindChip({ list }: { list: TreeList }) {
           <DropdownMenu.Content
             align="start"
             sideOffset={6}
-            className="material-strong z-50 min-w-48 rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+            className="bg-surface-raised z-50 min-w-48 rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
           >
             <DropdownMenu.RadioGroup
               value={list.kind}

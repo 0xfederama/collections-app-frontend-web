@@ -94,12 +94,12 @@ function Tile({ entry: e, paid, size = 32 }: { entry: Entry; paid?: boolean; siz
           data-testid="paid-badge"
           className={cx(
             'absolute -right-1 -bottom-1 inline-flex items-center justify-center rounded-full',
-            'border border-surface bg-accent font-bold text-white',
+            'border border-surface bg-text font-bold text-surface',
           )}
           style={{
-            width: Math.max(12, Math.round(size * 0.45)),
-            height: Math.max(12, Math.round(size * 0.45)),
-            fontSize: Math.max(8, Math.round(size * 0.3)),
+            width: Math.max(16, Math.round(size * 0.5)),
+            height: Math.max(16, Math.round(size * 0.5)),
+            fontSize: Math.max(10, Math.round(size * 0.32)),
           }}
         >
           $

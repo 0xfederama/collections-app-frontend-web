@@ -156,7 +156,7 @@ export function Combobox({
             onInteractOutside={(e) => {
               if ((e.target as HTMLElement | null)?.id === id) e.preventDefault()
             }}
-            className="z-50 max-h-72 w-(--radix-popover-trigger-width) material-strong overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+            className="z-50 max-h-72 w-(--radix-popover-trigger-width) bg-surface-raised overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
           >
             <ul id={listId} role="listbox" aria-label={label}>
               {filtered.map((option, index) => (

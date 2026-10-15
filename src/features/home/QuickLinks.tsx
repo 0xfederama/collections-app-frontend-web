@@ -49,7 +49,12 @@ export function QuickLinks({ index }: { index: TreeIndex }) {
             to={`/lists/${list.id}`}
             className="flex h-full items-center gap-3 rounded-lg bg-surface p-3 shadow-md transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
           >
-            <ListIcon aria-hidden className="size-5 shrink-0 text-accent-text" />
+            <span
+              aria-hidden
+              className="grid size-8 shrink-0 place-items-center rounded-md bg-fill text-text-muted shadow-[inset_0_0_0_1px_var(--material-hairline)]"
+            >
+              <ListIcon className="size-4" />
+            </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium text-text">{list.name}</span>
               <span className="block truncate text-xs text-text-muted">

@@ -1,6 +1,7 @@
 // The only Lucide import site (D-047): each glyph is imported by name so only used icons ship.
 export {
   ArrowDown,
+  ArrowUpDown,
   ArrowUp,
   Check,
   ChevronDown,
@@ -35,6 +36,7 @@ export {
   Rows3,
   Search,
   Settings,
+  SlidersHorizontal,
   Sun,
   Trash2,
   TriangleAlert,
