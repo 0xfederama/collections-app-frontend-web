@@ -38,7 +38,7 @@ export function Sidebar({
 
   return (
     <nav
-      aria-label="Collections"
+      aria-label="Library"
       className={cx('flex min-h-0 flex-1 flex-col gap-3', rail ? 'items-center p-2' : 'p-3')}
     >
       {/* Same element in both modes, so the toggle keeps keyboard focus when it flips. */}

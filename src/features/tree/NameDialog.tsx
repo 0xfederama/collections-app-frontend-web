@@ -47,7 +47,7 @@ export function NameDialog({
     if (latest === undefined) {
       setError({
         kind: 'not_found',
-        message: `This ${noun} no longer exists. The list of collections was refreshed.`,
+        message: `This ${noun} no longer exists. The folders and lists were refreshed.`,
         fieldErrors: [],
       })
       return

@@ -40,14 +40,14 @@ export function classifyError(error: unknown, noun: 'folder' | 'list'): TreeErro
       return {
         kind: 'unavailable',
         message:
-          'That destination no longer exists or is in Trash. The list of collections was refreshed, please choose again.',
+          'That destination no longer exists or is in Trash. The folders and lists were refreshed, please choose again.',
         fieldErrors: [],
       }
     }
     if (error.status === 404) {
       return {
         kind: 'not_found',
-        message: `This ${noun} no longer exists. The list of collections was refreshed.`,
+        message: `This ${noun} no longer exists. The folders and lists were refreshed.`,
         fieldErrors: [],
       }
     }

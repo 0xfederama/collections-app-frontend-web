@@ -37,7 +37,7 @@ export function SidebarTree() {
             id="sidebar-tree-heading"
             className="text-xs font-semibold tracking-wide text-text-muted uppercase"
           >
-            Collections
+            Library
           </h2>
           <TreeHeaderActions />
         </div>
@@ -46,7 +46,7 @@ export function SidebarTree() {
           {result.status === 'pending' && <TreeSkeleton />}
           {result.status === 'error' && (
             <div role="alert" className="flex flex-col items-start gap-2 px-2 py-3 text-sm">
-              <p>Couldn’t load your collections.</p>
+              <p>Couldn’t load your lists.</p>
               <Button size="sm" variant="secondary" onClick={result.refetch}>
                 Retry
               </Button>
@@ -55,7 +55,7 @@ export function SidebarTree() {
           {index && index.nodes.length === 0 && (
             <EmptyState
               icon={Inbox}
-              title="No collections yet"
+              title="No lists yet"
               description="Create a folder to group lists, or a list to start collecting items."
               action={<TreeEmptyAction />}
             />
@@ -125,7 +125,7 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
 function TreeSkeleton() {
   return (
     <div role="status" className="flex flex-col gap-2 px-2 py-1">
-      <span className="sr-only">Loading collections</span>
+      <span className="sr-only">Loading lists</span>
       {Array.from({ length: 5 }, (_, i) => (
         <Skeleton key={i} className="h-7" />
       ))}

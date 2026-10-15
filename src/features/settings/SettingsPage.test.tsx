@@ -111,7 +111,7 @@ describe('W-13 settings: saving', () => {
       version: 4,
     })
     const user = await openSettings()
-    const sidebar = screen.getByRole('navigation', { name: 'Collections' })
+    const sidebar = screen.getByRole('navigation', { name: 'Library' })
     expect(await within(sidebar).findByRole('link', { name: 'Our Collection' })).toBeInTheDocument()
 
     await retype(user, 'Workspace name', 'Casa')

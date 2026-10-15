@@ -159,7 +159,7 @@ export function useTreeDialogs({
               toast({
                 kind: 'info',
                 title: 'That item no longer exists',
-                description: 'The list of collections was refreshed.',
+                description: 'The folders and lists were refreshed.',
               })
             }}
           />

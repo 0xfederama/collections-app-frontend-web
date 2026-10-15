@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { mockViewport, renderAt } from '../test-utils'
 
 describe('AppShell', () => {
-  it('renders Collections navigation and main landmarks, without a banner, on desktop', async () => {
+  it('renders Library navigation and main landmarks, without a banner, on desktop', async () => {
     renderAt('/')
-    expect(screen.getByRole('navigation', { name: 'Collections' })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Library' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(screen.queryByRole('banner')).not.toBeInTheDocument()
   })
@@ -31,7 +31,7 @@ describe('Unknown route', () => {
     expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /home/i })).toHaveAttribute('href', '/')
     expect(screen.getByRole('main')).toBeInTheDocument()
-    expect(screen.getByRole('navigation', { name: 'Collections' })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Library' })).toBeInTheDocument()
   })
 
   it('renders "Page not found" inside the mobile shell (banner and main)', async () => {

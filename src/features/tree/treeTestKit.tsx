@@ -101,7 +101,7 @@ export function renderRouter(path: string) {
   return { router, ...utils }
 }
 
-export const sidebar = () => screen.getByRole('navigation', { name: 'Collections' })
+export const sidebar = () => screen.getByRole('navigation', { name: 'Library' })
 
 /** Waits for the tree to load, then resolves the user and router for the test. */
 export async function openTree(path = '/', tree?: TreeData) {

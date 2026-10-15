@@ -134,7 +134,7 @@ describe('AT-03 tree write errors (web): 412 conflict', () => {
     await user.click(within(alert).getByRole('button', { name: 'Reload latest' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(
-      within(screen.getByRole('navigation', { name: 'Collections' })).queryByRole('treeitem', {
+      within(screen.getByRole('navigation', { name: 'Library' })).queryByRole('treeitem', {
         name: /^Media/,
       }),
     ).not.toBeInTheDocument()
@@ -157,7 +157,7 @@ describe('AT-03 tree write errors (web): other failures', () => {
     expect(field).toHaveValue('Tripods')
     await waitFor(() =>
       expect(
-        within(screen.getByRole('navigation', { name: 'Collections' })).queryByRole('treeitem', {
+        within(screen.getByRole('navigation', { name: 'Library' })).queryByRole('treeitem', {
           name: /^Gear/,
         }),
       ).not.toBeInTheDocument(),
@@ -172,7 +172,7 @@ describe('AT-03 tree write errors (web): other failures', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() =>
       expect(
-        within(screen.getByRole('navigation', { name: 'Collections' })).queryByRole('treeitem', {
+        within(screen.getByRole('navigation', { name: 'Library' })).queryByRole('treeitem', {
           name: /^Gear/,
         }),
       ).not.toBeInTheDocument(),
@@ -331,7 +331,7 @@ describe('AT-21 reorder siblings (web)', () => {
     const { user } = await openTree()
     const disabled = async (name: string, entry: string) => {
       await user.click(
-        within(screen.getByRole('navigation', { name: 'Collections' })).getByRole('button', {
+        within(screen.getByRole('navigation', { name: 'Library' })).getByRole('button', {
           name: `More actions for ${name}`,
         }),
       )
@@ -356,7 +356,7 @@ describe('AT-21 reorder siblings (web)', () => {
   it('a disabled entry sends nothing when activated', async () => {
     const { user, backend } = await openTree()
     await user.click(
-      within(screen.getByRole('navigation', { name: 'Collections' })).getByRole('button', {
+      within(screen.getByRole('navigation', { name: 'Library' })).getByRole('button', {
         name: 'More actions for Media',
       }),
     )

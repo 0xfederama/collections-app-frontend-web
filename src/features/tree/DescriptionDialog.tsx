@@ -35,7 +35,7 @@ export function DescriptionDialog({
     if (latest === undefined) {
       setError({
         kind: 'not_found',
-        message: 'This list no longer exists. The list of collections was refreshed.',
+        message: 'This list no longer exists. The folders and lists were refreshed.',
         fieldErrors: [],
       })
       return

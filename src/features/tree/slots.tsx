@@ -5,13 +5,16 @@ import type { TreeNode } from './api'
 import { NodeMenu } from './NodeMenu'
 import { useTreeActions } from './TreeActionsContext'
 
-/** Right side of the "Collections" heading above the tree: the "+" menu (new folder / list). */
+/** Right side of the "Library" heading above the tree: the "+" menu (new folder / list). */
 export function TreeHeaderActions(): ReactNode {
   const actions = useTreeActions()
   return (
     <Menu
       trigger={
-        <IconButton aria-label="New folder or list" className="size-8 pointer-coarse:size-11">
+        <IconButton
+          aria-label="New folder or list"
+          title="New folder or list"
+          className="size-8 pointer-coarse:size-11">
           <Plus aria-hidden />
         </IconButton>
       }
@@ -42,7 +45,7 @@ export function TreeRowActions({ node }: { node: TreeNode }): ReactNode {
   )
 }
 
-/** Primary action of the "no collections yet" empty state. */
+/** Primary action of the "No lists yet" empty state. */
 export function TreeEmptyAction(): ReactNode {
   const actions = useTreeActions()
   return (

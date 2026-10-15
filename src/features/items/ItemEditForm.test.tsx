@@ -675,7 +675,7 @@ describe('AT-09 save failures that are not conflicts', () => {
 })
 
 describe('AT-22 unsaved changes guard', () => {
-  const sidebar = () => screen.getByRole('navigation', { name: 'Collections' })
+  const sidebar = () => screen.getByRole('navigation', { name: 'Library' })
 
   async function openDirty(extra: Parameters<typeof openForm>[0] = {}) {
     localStorage.setItem('collection:tree-expanded', JSON.stringify([MEDIA, MOVIES, VEHICLES]))
