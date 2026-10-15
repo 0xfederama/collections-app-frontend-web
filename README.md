@@ -86,6 +86,20 @@ The dev server proxies `/api`, `/healthz` and `/readyz` to `API_PROXY_TARGET`, s
 | API contract              | `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]` re-vendors the spec and regenerates `src/generated/`; `npm run api:check` verifies |
 | Dependency scan           | `npm run audit`                                                                                                                                 |
 
+## e2e
+
+A few Playwright specs (`e2e/`, Chromium only) check the main user flows against the real backend. They are not part of `npm test` or `npm run check`.
+
+```bash
+# in the parent repo: a fresh stack on http://localhost:5183 (API :8090)
+./deploy/test up -d --fresh
+# here, once per machine
+npx playwright install chromium
+npm run e2e            # E2E_BASE_URL overrides the address
+```
+
+Run them when a user flow changes and before a release (D-076). Each spec creates its own data with unique names, so a stack that already holds data works too, but a fresh one is the reference.
+
 ## Troubleshooting
 
 - **Backend unreachable or unhealthy:** open **Settings → Connection**. It shows the backend status (with **Check again**), the API address (`<origin>/api`) and the API contract tag. If it says down, the backend isn't running or `API_PROXY_TARGET` is wrong; check `curl -fsS http://localhost:8080/readyz`.

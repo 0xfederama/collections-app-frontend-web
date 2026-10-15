@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { configDefaults } from 'vitest/config'
 
 // public/mockServiceWorker.js is only for `VITE_API_MOCKS=1 npm run dev`; keep it out of production builds.
 const dropMockWorker = (): Plugin => ({
@@ -39,6 +40,8 @@ export default defineConfig(({ mode }) => {
       globals: true,
       setupFiles: ['./src/test-setup.ts'],
       css: false,
+      // e2e/*.spec.ts belongs to Playwright (`npm run e2e`), not to Vitest.
+      exclude: [...configDefaults.exclude, 'e2e/**'],
       // Headroom for a cold first test in a file when every worker is busy (default 5 s).
       testTimeout: 15_000,
     },
