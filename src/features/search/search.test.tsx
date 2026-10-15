@@ -77,30 +77,24 @@ describe('W-04 "/" focuses the search field', () => {
     expect(field()).not.toHaveFocus()
   })
 
-  it('expands the tablet rail and focuses the field', async () => {
+  it('focuses the field in the top bar on the collapsed tablet rail too', async () => {
     mockViewport(800)
     localStorage.setItem('collection:sidebar', JSON.stringify({ collapsed: true, width: 280 }))
     const user = userEvent.setup()
     renderRouter()
-    expect(screen.queryByRole('combobox', { name: 'Search' })).not.toBeInTheDocument()
-
     await user.keyboard('/')
     await waitFor(() => expect(field()).toHaveFocus())
-    expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
-    expect(JSON.parse(localStorage.getItem('collection:sidebar')!).collapsed).toBe(false)
   })
 
-  it('the rail Search button expands the sidebar and focuses the field', async () => {
-    mockViewport(800)
-    localStorage.setItem('collection:sidebar', JSON.stringify({ collapsed: true, width: 280 }))
+  it('on mobile the field is in the top bar and "/" focuses it', async () => {
+    mockViewport(375)
     const user = userEvent.setup()
     renderRouter()
-    await user.click(
-      within(screen.getByRole('navigation', { name: 'Library' })).getByRole('button', {
-        name: 'Search',
-      }),
-    )
+    await user.keyboard('/')
     await waitFor(() => expect(field()).toHaveFocus())
+    expect(within(screen.getByRole('banner')).getByRole('combobox', { name: 'Search' })).toBe(
+      field(),
+    )
   })
 })
 

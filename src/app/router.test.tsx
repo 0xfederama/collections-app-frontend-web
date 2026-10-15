@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { mockViewport, renderAt } from '../test-utils'
 
 describe('AppShell', () => {
-  it('renders Library navigation and main landmarks, without a banner, on desktop', async () => {
+  it('renders Library navigation and main landmarks and the top bar banner on desktop', async () => {
     renderAt('/')
     expect(screen.getByRole('navigation', { name: 'Library' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
-    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    expect(screen.getByRole('banner')).toBeInTheDocument()
   })
 
   it('renders the banner top bar and main landmarks on mobile', async () => {

@@ -4,9 +4,21 @@ import { describe, expect, it } from 'vitest'
 import { server } from '../mocks/server'
 import { mockViewport, renderAt } from '../test-utils'
 
-const nav = () => screen.getByRole('navigation', { name: 'Library' })
+const bar = () => screen.getByRole('banner')
+const trigger = (name: string) => within(bar()).getByRole('button', { name })
 
-describe('F007-W6 theme toggle in the sidebar', () => {
+async function choose(user: ReturnType<typeof userEvent.setup>, current: string, label: string) {
+  await user.click(trigger(`Theme: ${current}`))
+  await user.click(await screen.findByRole('menuitem', { name: label }))
+}
+
+describe('F008-W1 theme selector in the top bar', () => {
+  it('defaults to System and says so', async () => {
+    mockViewport(1280)
+    renderAt('/')
+    expect(trigger('Theme: System')).toHaveTextContent('System')
+  })
+
   it.each([
     ['Dark', 'dark'],
     ['Light', 'light'],
@@ -14,17 +26,18 @@ describe('F007-W6 theme toggle in the sidebar', () => {
     mockViewport(1280)
     const user = userEvent.setup()
     renderAt('/')
-    await user.click(within(nav()).getByRole('radio', { name: label }))
+    await choose(user, 'System', label)
     expect(document.documentElement.dataset.theme).toBe(theme)
     expect(localStorage.getItem('collection:theme')).toBe(theme)
+    expect(trigger(`Theme: ${label}`)).toBeInTheDocument()
   })
 
   it('choosing System removes the stored key', async () => {
     mockViewport(1280)
     const user = userEvent.setup()
     renderAt('/')
-    await user.click(within(nav()).getByRole('radio', { name: 'Dark' }))
-    await user.click(within(nav()).getByRole('radio', { name: 'System' }))
+    await choose(user, 'System', 'Dark')
+    await choose(user, 'Dark', 'System')
     expect(localStorage.getItem('collection:theme')).toBeNull()
     expect(document.documentElement.dataset.theme).toBe('light')
   })
@@ -38,32 +51,30 @@ describe('F007-W6 theme toggle in the sidebar', () => {
     const listener = ({ request }: { request: Request }) => requests.push(request.method)
     server.events.on('request:start', listener)
     try {
-      await user.click(within(nav()).getByRole('radio', { name: 'Dark' }))
-      await user.click(within(nav()).getByRole('radio', { name: 'System' }))
+      await choose(user, 'System', 'Dark')
+      await choose(user, 'Dark', 'System')
     } finally {
       server.events.removeListener('request:start', listener)
     }
     expect(requests).toEqual([])
   })
 
-  it('is available in the mobile drawer', async () => {
-    mockViewport(375)
-    const user = userEvent.setup()
-    renderAt('/')
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    const dialog = await screen.findByRole('dialog')
-    await user.click(within(dialog).getByRole('radio', { name: 'Dark' }))
-    expect(document.documentElement.dataset.theme).toBe('dark')
-  })
+  it.each([375, 800, 1280])(
+    'is in the top bar at %ipx, next to search and Quick add',
+    async (w) => {
+      mockViewport(w)
+      renderAt('/')
+      expect(within(bar()).getByRole('combobox', { name: 'Search' })).toBeInTheDocument()
+      expect(trigger('Quick add')).toBeInTheDocument()
+      expect(trigger('Theme: System')).toBeInTheDocument()
+    },
+  )
 
-  it('the collapsed tablet rail has one button that cycles System, Light, Dark', async () => {
-    mockViewport(800)
-    localStorage.setItem('collection:sidebar', JSON.stringify({ collapsed: true, width: 280 }))
+  it('Quick add in the top bar opens the dialog', async () => {
+    mockViewport(1280)
     const user = userEvent.setup()
     renderAt('/')
-    await user.click(within(nav()).getByRole('button', { name: 'Theme: System. Switch to Light' }))
-    expect(document.documentElement.dataset.theme).toBe('light')
-    await user.click(within(nav()).getByRole('button', { name: 'Theme: Light. Switch to Dark' }))
-    expect(localStorage.getItem('collection:theme')).toBe('dark')
+    await user.click(trigger('Quick add'))
+    expect(await screen.findByRole('dialog', { name: 'Quick add' })).toBeInTheDocument()
   })
 })

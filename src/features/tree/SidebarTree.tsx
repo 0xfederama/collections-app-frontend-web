@@ -28,17 +28,7 @@ export function SidebarTree() {
 
   return (
     <TreeActionsContext.Provider value={actions}>
-      <section
-        aria-labelledby="sidebar-tree-heading"
-        className="flex min-h-0 flex-1 flex-col gap-1"
-      >
-        <h2
-          id="sidebar-tree-heading"
-          className="px-2 text-xs font-semibold tracking-wide text-text-muted uppercase"
-        >
-          Library
-        </h2>
-
+      <section className="flex min-h-0 flex-1 flex-col gap-1">
         <div className="min-h-0 flex-1 overflow-y-auto">
           {result.status === 'pending' && <TreeSkeleton />}
           {result.status === 'error' && (
@@ -77,7 +67,7 @@ export function SidebarTree() {
               renderRow={(node, state) => <Row node={node} state={state} />}
             />
           )}
-          {index && <TreeNewButton />}
+          {index && index.nodes.length > 0 && <TreeNewButton />}
         </div>
       </section>
       {dialogs}
