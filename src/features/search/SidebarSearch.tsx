@@ -138,6 +138,7 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
   return (
     <form
       role="search"
+      aria-label="Search library"
       className="[&_label]:sr-only"
       onSubmit={(event) => {
         event.preventDefault()
@@ -186,6 +187,7 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
         <Popover.Portal>
           <Popover.Content
             align="start"
+            aria-label="Search suggestions"
             sideOffset={4}
             // Focus stays in the input.
             onOpenAutoFocus={(event) => event.preventDefault()}
@@ -193,7 +195,7 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
             onInteractOutside={(event) => {
               if ((event.target as HTMLElement | null)?.id === id) event.preventDefault()
             }}
-            className="z-50 max-h-(--radix-popover-content-available-height) w-[max(var(--radix-popover-trigger-width),18rem)] overflow-y-auto rounded-md border border-border bg-surface-raised p-1 text-text shadow-lg data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+            className="z-50 max-h-(--radix-popover-content-available-height) w-[max(var(--radix-popover-trigger-width),18rem)] overflow-y-auto rounded-lg material-strong p-1 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
           >
             <ul id={listId} role="listbox" aria-label="Search results">
               {results.map((result, index) => (
@@ -208,7 +210,7 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
                   onClick={() => openResult(result)}
                   className={cx(
                     'flex cursor-pointer items-center gap-3 rounded-sm px-2 py-1.5 pointer-coarse:min-h-11',
-                    index === activeIndex && 'bg-border',
+                    index === activeIndex && 'bg-accent/10',
                   )}
                 >
                   <SearchResultBody result={result} />

@@ -6,7 +6,10 @@ import { SettingsForm } from '../features/settings/SettingsForm'
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-4">
+    <section
+      aria-labelledby={id}
+      className="flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md"
+    >
       <h2 id={id} className="text-sm font-semibold text-text-muted">
         {title}
       </h2>
@@ -34,7 +37,7 @@ export function SettingsRoute() {
   const settings = useSettings()
   return (
     <div className="flex max-w-xl flex-col gap-8">
-      <h1 className="text-2xl font-semibold">Settings</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
       <Section id="settings-workspace" title="Workspace">
         {settings.isPending ? (
           <WorkspaceSkeleton />

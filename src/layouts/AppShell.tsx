@@ -56,8 +56,8 @@ export function AppShell() {
 
   if (breakpoint === 'mobile') {
     return (
-      <div className="flex h-dvh flex-col bg-bg text-text">
-        <header className="flex items-center gap-1 border-b border-border bg-surface px-2 py-1">
+      <div className="flex h-dvh flex-col text-text">
+        <header className="flex items-center gap-1 border-b border-border material px-2 py-1">
           <Drawer
             side="left"
             open={drawerOpen}
@@ -84,11 +84,11 @@ export function AppShell() {
   const resizable = breakpoint === 'desktop' || breakpoint === 'wide'
 
   return (
-    <div className="flex h-dvh bg-bg text-text">
+    <div className="flex h-dvh text-text">
       <div
         id={SIDEBAR_ID}
         style={{ width: rail ? RAIL_WIDTH : sidebar.width }}
-        className="flex shrink-0 flex-col bg-surface"
+        className="flex shrink-0 flex-col border-r border-border material"
       >
         <Sidebar
           rail={rail}
@@ -106,7 +106,7 @@ export function AppShell() {
           controls={SIDEBAR_ID}
         />
       ) : (
-        <div aria-hidden className="w-px shrink-0 bg-border" />
+        <div aria-hidden className="w-0 shrink-0" />
       )}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex min-h-0 flex-1 overflow-hidden">
@@ -126,7 +126,7 @@ function DetailPanel({ listId, search }: { listId: string | undefined; search: s
   return (
     <aside
       aria-label="Item details"
-      className="flex w-[40%] max-w-[40rem] min-w-[26.25rem] shrink-0 animate-drawer-in-right flex-col overflow-y-auto border-l border-border bg-surface"
+      className="m-3.5 ml-0 flex w-[420px] shrink-0 animate-drawer-in-right flex-col overflow-y-auto rounded-xl material-strong shadow-sheet"
     >
       <div className="flex justify-end px-2 pt-2">
         <IconButton

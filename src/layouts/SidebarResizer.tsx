@@ -62,7 +62,7 @@ export function SidebarResizer({
     >
       <span
         aria-hidden
-        className="w-px bg-border transition-colors group-hover:bg-accent group-focus-visible:bg-accent"
+        className="w-px bg-transparent transition-colors group-hover:bg-accent group-focus-visible:bg-accent"
       />
     </div>
   )

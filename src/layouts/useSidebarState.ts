@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { readStored, STORAGE_KEYS, writeStored } from '../lib/storage'
 
-export const SIDEBAR_WIDTH = { min: 220, max: 400, default: 280 } as const
+export const SIDEBAR_WIDTH = { min: 220, max: 400, default: 268 } as const
 
 export const clampSidebarWidth = (width: number) =>
   Math.min(SIDEBAR_WIDTH.max, Math.max(SIDEBAR_WIDTH.min, Math.round(width)))

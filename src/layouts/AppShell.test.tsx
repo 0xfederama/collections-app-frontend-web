@@ -258,14 +258,14 @@ describe('AT-14 tablet rail', () => {
 })
 
 describe('AT-14 desktop sidebar resize', () => {
-  it('shows a separator at the 280px default with 220/400 limits', async () => {
+  it('shows a separator at the 268px default with 220/400 limits', async () => {
     mockViewport(1100)
     renderAt('/')
     const sep = separator()!
-    expect(sep).toHaveAttribute('aria-valuenow', '280')
+    expect(sep).toHaveAttribute('aria-valuenow', '268')
     expect(sep).toHaveAttribute('aria-valuemin', '220')
     expect(sep).toHaveAttribute('aria-valuemax', '400')
-    expect(nav()!.parentElement).toHaveStyle({ width: '280px' })
+    expect(nav()!.parentElement).toHaveStyle({ width: '268px' })
   })
 
   it('resizes by keyboard, clamps to 220/400 and persists the width', async () => {
@@ -275,9 +275,9 @@ describe('AT-14 desktop sidebar resize', () => {
     separator()!.focus()
 
     await user.keyboard('{ArrowRight}')
-    expect(separator()).toHaveAttribute('aria-valuenow', '296')
-    expect(nav()!.parentElement).toHaveStyle({ width: '296px' })
-    await waitFor(() => expect(storedSidebar().width).toBe(296))
+    expect(separator()).toHaveAttribute('aria-valuenow', '284')
+    expect(nav()!.parentElement).toHaveStyle({ width: '284px' })
+    await waitFor(() => expect(storedSidebar().width).toBe(284))
 
     await user.keyboard('{Home}')
     expect(separator()).toHaveAttribute('aria-valuenow', '220')
@@ -313,11 +313,11 @@ describe('AT-14 desktop sidebar resize', () => {
     ['a non-numeric width', JSON.stringify({ collapsed: false, width: 'wide' })],
     ['a missing width', JSON.stringify({ collapsed: false })],
     ['a NaN-like width', '{"width":null}'],
-  ])('falls back to 280 for %s in storage', async (_, raw) => {
+  ])('falls back to 268 for %s in storage', async (_, raw) => {
     mockViewport(1100)
     localStorage.setItem(SIDEBAR_KEY, raw)
     renderAt('/')
-    expect(separator()).toHaveAttribute('aria-valuenow', '280')
+    expect(separator()).toHaveAttribute('aria-valuenow', '268')
   })
 
   it.each([
@@ -339,7 +339,7 @@ describe('AT-14 desktop sidebar resize', () => {
     mockViewport(800)
     expect(separator()).not.toBeInTheDocument()
     mockViewport(1100)
-    expect(separator()).toHaveAttribute('aria-valuenow', '296')
+    expect(separator()).toHaveAttribute('aria-valuenow', '284')
   })
 })
 

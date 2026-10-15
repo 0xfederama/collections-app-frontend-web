@@ -47,7 +47,7 @@ export function QuickLinks({ index }: { index: TreeIndex }) {
         <li key={list.id}>
           <Link
             to={`/lists/${list.id}`}
-            className="flex h-full items-center gap-3 rounded-lg border border-border bg-surface p-3 hover:bg-border/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+            className="flex h-full items-center gap-3 rounded-lg bg-surface p-3 shadow-md transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
           >
             <ListIcon aria-hidden className="size-5 shrink-0 text-accent-text" />
             <span className="min-w-0 flex-1">

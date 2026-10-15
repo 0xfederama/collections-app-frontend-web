@@ -110,7 +110,12 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
         onClick={(event) => event.stopPropagation()}
         className="flex min-w-0 flex-1 items-center gap-2"
       >
-        <List aria-hidden className="size-4 shrink-0 text-text-muted" />
+        <span
+          aria-hidden
+          className="grid size-[22px] shrink-0 place-items-center rounded-[6px] bg-fill shadow-[inset_0_0_0_1px_var(--material-hairline)]"
+        >
+          <List className="size-3.5 text-text-muted" />
+        </span>
         <span className="min-w-0 flex-1 truncate">{list.name}</span>
         <span className="text-xs text-text-muted tabular-nums">
           {list.item_count}

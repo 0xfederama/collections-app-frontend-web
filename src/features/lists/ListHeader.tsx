@@ -89,39 +89,49 @@ export interface ListHeaderProps {
   onAddItem: () => void
 }
 
-/** Name, description, count, Add item, and the display mode / sort / filter toolbar (UI_SPEC §3). */
+/** Name, description, count, Add item, then the floating display mode / sort / filter toolbar (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   return (
-    <header className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="min-w-0 flex-1 text-2xl font-semibold break-words">{props.treeList.name}</h1>
-        <Button onClick={props.onAddItem}>
-          <Plus aria-hidden className="size-4" />
-          Add item
-        </Button>
-        <ListActionsMenu list={props.treeList} />
-      </div>
-      {list ? (
-        list.description && <Description listId={list.id} text={list.description} />
-      ) : (
-        <Skeleton className="h-4 w-1/2" />
-      )}
-      <p className="text-sm text-text-muted">{props.countLabel}</p>
-      <div className="flex flex-wrap items-end gap-3">
+    <>
+      <header className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="min-w-0 flex-1 text-3xl leading-tight font-bold tracking-tight break-words">
+            {props.treeList.name}
+          </h1>
+          <Button onClick={props.onAddItem}>
+            <Plus aria-hidden className="size-4" />
+            Add item
+          </Button>
+          <ListActionsMenu list={props.treeList} />
+        </div>
+        {list ? (
+          list.description && <Description listId={list.id} text={list.description} />
+        ) : (
+          <Skeleton className="h-4 w-1/2" />
+        )}
+        <p className="text-sm text-text-muted">{props.countLabel}</p>
+      </header>
+      {/* Sticky inside the scrolling `main`: it blurs the items that pass behind it. */}
+      <div className="z-10 -mx-2 sm:sticky sm:top-0 flex flex-wrap items-center gap-2 rounded-[22px] border border-border material px-2 py-1.5 shadow-float sm:rounded-full">
         <SegmentedControl
           aria-label="Display mode"
           options={modeOptions}
           value={props.displayMode}
           onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
         />
-        <div className="w-44">
-          <Select
-            label="Sort"
-            options={sortOptionsFor(props.treeList.kind)}
-            value={props.sort}
-            onValueChange={(value) => props.onSort(value as SortMode)}
-          />
+        <div className="flex items-center gap-1.5">
+          <span aria-hidden className="text-sm text-text-muted">
+            Sort
+          </span>
+          <div className="w-44 [&>div>label]:sr-only [&_button]:h-9">
+            <Select
+              label="Sort"
+              options={sortOptionsFor(props.treeList.kind)}
+              value={props.sort}
+              onValueChange={(value) => props.onSort(value as SortMode)}
+            />
+          </div>
         </div>
         {props.canMakeDefault && (
           <Button
@@ -132,7 +142,7 @@ export function ListHeader(props: ListHeaderProps) {
             Make this the default sort
           </Button>
         )}
-        <div className="min-w-48 flex-1 sm:max-w-xs [&_label]:sr-only">
+        <div className="min-w-40 flex-1 sm:ml-auto sm:max-w-xs [&_label]:sr-only">
           <TextField
             label="Filter items by title"
             type="search"
@@ -140,9 +150,10 @@ export function ListHeader(props: ListHeaderProps) {
             value={props.filter}
             onChange={(event) => props.onFilter(event.target.value)}
             prefix={<Search aria-hidden className="size-4" />}
+            className="h-9 rounded-full"
           />
         </div>
       </div>
-    </header>
+    </>
   )
 }
