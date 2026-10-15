@@ -39,7 +39,7 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - `isEditing(params)`, `withEdit(params)`, `withoutEdit(params)`: `edit` is set and removed with `replace`.
 - `useItem(itemId)`, `useItemContent(itemId)`: `GET` item and `GET …/content`.
 - `useUpdateItem()`: `PATCH /items/{id}` with `If-Match` from the snapshot's `version`; writes the response to the detail cache.
-- `useCreateItem(listId)`, `useDeleteItem()`, `useMoveItem()`: create seeds the detail cache; delete and move invalidate list and tree.
+- `useCreateItem(listId)`, `useDeleteItem()`, `useMoveItem()`: create seeds the detail cache; create, delete and move call `invalidateContent`.
 - `ContentSection({ itemId, listId, onDirtyChange })`: loads the content, then edits a snapshot of it.
 - `useSaveContent()`: `PUT /items/{id}/content`, `If-Match: "c-N"` from the snapshot.
 - `useRestoreContent()`: `POST …/content/restore`; `If-Match` is the current version, body is the old one.
@@ -71,7 +71,8 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - Description: 1 MiB UTF-8 limit (client check, 413 also shown). 412 offers Copy my draft and Reload latest; 404 (item gone) keeps the text for copying; 5xx and network errors show Retry. An identical save reports "No changes".
 - Restore sends the current version in `If-Match` and saves the old body as a new version. A pruned version (404) refreshes the history.
 - CodeMirror leaves Tab to the browser (no trap, WCAG 2.1.2).
-- Delete and move invalidate the item's list (items and detail), and the tree. Move also invalidates the destination list.
+- Delete removes the item's detail and content caches first, then calls `invalidateContent`. Move also sets the detail cache to the moved item.
+- Item PATCH invalidates only the list items, list detail and tree of its list; it does not refresh search or Recently updated.
 - Move and delete: 412 reloads the item, 404 toasts and returns to the list, 409 asks for another list, network errors keep the dialog open.
 - The delete confirm reads "This moves “X” to Trash: 1 item." (same `countsText` wording as the Trash entry).
 - An item whose `list_id` differs from the URL is redirected (replace) to its real list.

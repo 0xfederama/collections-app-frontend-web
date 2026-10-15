@@ -18,7 +18,7 @@ Global search over every item: the sidebar field (top 8 matches in a dropdown) a
 - `useSearch(q, { limit = 8, offset = 0 })`: one page for the dropdown; disabled for an empty `q`; keeps previous rows while a new query loads.
 - `useSearchResults(q)`: infinite query by offset, 50 rows per page.
 - `normalizeQuery(q)`: trims and caps at 200 characters (`MAX_QUERY_LENGTH`).
-- `searchKeys`: `all`, `top(q, limit, offset)`, `results(q)`; invalidate `searchKeys.all` after item changes.
+- `searchKeys`: `all`, `top(q, limit, offset)`, `results(q)`; `searchKeys.all` is invalidated by `invalidateContent`.
 - `SidebarSearch({ inputRef })`: `form[role="search"]` with the `role="combobox"` field.
 - `SearchResultBody({ result, large })`, `resultHref(result)`: row content and its link target.
 - `SearchRoute()`: element of `/search`.

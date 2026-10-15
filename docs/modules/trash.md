@@ -6,7 +6,8 @@ The `/trash` page: lists deleted batches (folders, lists, items), restores them 
 
 ## Key files
 
-- `src/features/trash/api.ts`: `useTrash`, `useRestoreTrash`, `usePurgeTrash`, `trashKeys`, invalidation.
+- `src/features/trash/api.ts`: `useTrash`, `useRestoreTrash`, `usePurgeTrash`.
+- `src/features/trash/keys.ts`: `trashKeys`, `LISTS_KEY_ROOT`, `ITEMS_KEY_ROOT` (re-exported by `api.ts`).
 - `src/features/trash/model.ts`: counts and path text, `blockedBy`, relative time.
 - `src/features/trash/errors.ts`: `classifyTrashError`, error kinds and messages.
 - `src/features/trash/TrashPage.tsx`: page states, Load more, dialog wiring.
@@ -23,6 +24,7 @@ The `/trash` page: lists deleted batches (folders, lists, items), restores them 
 - `useRestoreTrash()`: `mutate({ batchId, destination? })`; no destination means the original place.
 - `usePurgeTrash()`: `mutate(batchId)`, calls `DELETE /api/v1/trash/{batch_id}`.
 - `trashKeys`: `all`, `list`; invalidate with these, not literals.
+- Restore and purge call `invalidateContent` (see [api](api.md)).
 - `TrashPage()`: element of `/trash`.
 - `RestoreToDialog({ entry, onClose, onRestored, onGone })`, `destinationOptions(entry, index)`.
 - `PurgeDialog({ entry, onClose, onDone })`, `purgeDescription(entry)`.
@@ -34,7 +36,7 @@ The `/trash` page: lists deleted batches (folders, lists, items), restores them 
 
 - Layout: two-column rows from 768 px (`md`), a three-column table from 1280 px (`xl`), stacked cards below.
 - Opening the page always refetches (`staleTime: 0`, `refetchOnMount: 'always'`), since delete actions elsewhere do not update it.
-- Restore and purge invalidate trash, tree, `['lists']`, `['items']` and `searchKeys.all`. A test checks `LISTS_KEY_ROOT` and `ITEMS_KEY_ROOT` against the real keys.
+- `trash/api.test.ts` checks `LISTS_KEY_ROOT` and `ITEMS_KEY_ROOT` against the real keys.
 - A 404 or 409 refetches trash and tree. A 404 shows an "Already gone" toast and closes the dialog.
 - A blocked entry names its original parent from the last `former_path` segment. "Restore ‘X’ instead" shows only when that parent is the root of a loaded entry that is itself restorable in place. Otherwise only "Restore to…" is offered; nothing is guessed.
 - Picker: folder and list roots choose a folder or Top level; item roots choose a list, with folders as plain labels. A `cycle_detected` 409 disables the chosen folder with its reason.
