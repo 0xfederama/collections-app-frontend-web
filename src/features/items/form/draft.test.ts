@@ -191,11 +191,6 @@ describe('AT-05 item field rules: validate()', () => {
       expect(check({ model_year: '1885' })['metadata.model_year']).toBeUndefined()
       expect(check({ model_year: '2101' })['metadata.model_year']).toBeDefined()
     })
-
-    it('text fields respect their max length', () => {
-      expect(check({ make: 'a'.repeat(100) })['metadata.make']).toBeUndefined()
-      expect(check({ make: 'a'.repeat(101) })['metadata.make']).toBeDefined()
-    })
   })
 
   describe('tv_show', () => {

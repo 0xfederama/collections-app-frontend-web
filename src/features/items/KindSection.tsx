@@ -4,7 +4,7 @@ import type { Item } from './api'
 import { kindRows } from './kinds'
 import { safeImdbUrl } from './links'
 
-type Streaming = { country: string; platforms?: string[] }
+type Streaming = { country: string; platforms?: string[]; paid_platforms?: string[] }
 
 function countryName(code: string): string {
   try {

@@ -76,7 +76,7 @@ function mockPatch(respond?: (call: PatchCall, n: number) => Response | Promise<
 }
 
 /** The input of a label; required fields carry a decorative " *" in the label text. */
-const labelPattern = (name: string) => new RegExp(`^${name}( \\*)?$`)
+const labelPattern = (name: string) => new RegExp(`^${name.replace(/[()]/g, '\\$&')}( \\*)?$`)
 const field = (name: string) => screen.getByLabelText(labelPattern(name))
 const saveButton = () => screen.getByRole('button', { name: 'Save changes' })
 const search = (router: ReturnType<typeof createTestRouter>) => router.state.location.search
@@ -226,15 +226,20 @@ describe('AT-05 edit form: kind fields of every kind', () => {
     [
       'tv_show',
       'TV show',
-      ['First aired', 'Ended', 'Seasons', 'IMDb link', 'Streaming country', 'Streaming platforms'],
+      [
+        'First aired',
+        'Ended',
+        'Seasons',
+        'Episodes per season',
+        'Episode duration (min)',
+        'IMDb link',
+        'Streaming country',
+        'Streaming platforms',
+      ],
     ],
-    [
-      'motorcycle',
-      'Motorcycle',
-      ['Make', 'Model', 'Model year', 'Displacement', 'Power', 'License class'],
-    ],
+    ['motorcycle', 'Motorcycle', ['Model year', 'Displacement', 'Power', 'License class']],
     ['car', 'Car', ['Make', 'Model', 'Model year', 'Fuel', 'Power']],
-    ['camera', 'Camera', ['Make', 'Model', 'Release year', 'Sensor', 'Resolution']],
+    ['camera', 'Camera', ['Type', 'Release year', 'Sensor', 'Resolution']],
   ] as const
 
   it.each(cases)('%s renders its kind fields', async (kind, label, labels) => {
@@ -252,10 +257,10 @@ describe('AT-05 edit form: kind fields of every kind', () => {
     await openForm({
       item: {
         kind: 'camera',
-        metadata: { make: 'Sony', megapixels: 24.2, sensor_format: 'full_frame' },
+        metadata: { release_year: 2020, megapixels: 24.2, sensor_format: 'full_frame' },
       },
     })
-    expect(field('Make')).toHaveValue('Sony')
+    expect(field('Release year')).toHaveValue('2020')
     expect(field('Resolution')).toHaveValue('24.2')
     expect(field('Sensor')).toHaveTextContent('Full frame')
     expect(field('Sensor')).not.toHaveTextContent('Not set')
@@ -264,12 +269,14 @@ describe('AT-05 edit form: kind fields of every kind', () => {
   it('setting an enum sends its value', async () => {
     const calls = mockPatch()
     const { user } = await openForm({
-      item: { kind: 'camera', metadata: { make: 'Sony' } },
+      item: { kind: 'camera', metadata: { release_year: 2020 } },
     })
     await chooseOption(user, 'Sensor', 'Full frame')
     await user.click(saveButton())
     await screen.findByText('Item saved')
-    expect(calls[0]?.body).toEqual({ metadata: { make: 'Sony', sensor_format: 'full_frame' } })
+    expect(calls[0]?.body).toEqual({
+      metadata: { release_year: 2020, sensor_format: 'full_frame' },
+    })
   })
 })
 

@@ -310,6 +310,17 @@ describe('W-06 URL state: sort and filter', () => {
     )
   })
 
+  it('F002 the sort menu offers "Price" and picking it sets ?sort=price', async () => {
+    const backend = useBackend()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(sortSelect())
+    await user.click(await screen.findByRole('option', { name: 'Price' }))
+    expect(router.state.location.search).toBe('?sort=price')
+    await waitFor(() => expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('price'))
+  })
+
   it('F007-W9 ?sort=kind_key is ignored on a generic list', async () => {
     const genericTree = {
       ...(exampleResponses.getTree.body as components['schemas']['Tree']),

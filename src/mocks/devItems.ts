@@ -91,6 +91,14 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
   const bySort = (sort: SortMode) => (a: ItemSummary, b: ItemSummary) => {
     if (sort === 'title') return a.title.localeCompare(b.title)
     if (sort === 'updated') return b.updated_at.localeCompare(a.updated_at)
+    if (sort === 'price') {
+      const pa = a.price ? Number(a.price.min) : null
+      const pb = b.price ? Number(b.price.min) : null
+      if (pa === null || pb === null) {
+        if (pa !== pb) return pa === null ? 1 : -1
+      } else if (pa !== pb) return pa - pb
+      return a.title.localeCompare(b.title) || a.id.localeCompare(b.id)
+    }
     if (sort === 'kind_key') {
       const ka = fakeKey(a)
       const kb = fakeKey(b)

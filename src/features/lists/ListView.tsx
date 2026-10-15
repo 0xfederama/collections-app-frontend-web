@@ -21,7 +21,7 @@ import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { useScrollRestore } from './scrollRestore'
 
-const SORTS: readonly SortMode[] = ['manual', 'title', 'updated', 'kind_key']
+const SORTS: readonly SortMode[] = ['manual', 'title', 'updated', 'price', 'kind_key']
 const FILTER_DEBOUNCE_MS = 250
 
 function parseSort(value: string | null): SortMode | null {

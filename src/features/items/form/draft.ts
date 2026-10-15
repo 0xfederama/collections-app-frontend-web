@@ -45,10 +45,12 @@ export interface Draft {
   streamingCountry: string
   /** Comma-separated. */
   streamingPlatforms: string
+  /** Paid platforms: no input yet, carried through so a save does not drop them. */
+  streamingPaid: string[]
 }
 
 type Metadata = Record<string, unknown>
-type Streaming = { country: string; platforms?: string[] }
+type Streaming = { country: string; platforms?: string[]; paid_platforms?: string[] }
 /** A price as the API takes it (`PriceInput`): a single `amount` or a `min`/`max` range. `null` clears. */
 type PriceInput =
   | { amount: string; currency: string }
@@ -122,6 +124,7 @@ export function draftFromItem(item: Item): Draft {
     meta,
     streamingCountry: streaming?.country ?? '',
     streamingPlatforms: streaming?.platforms?.join(', ') ?? '',
+    streamingPaid: streaming?.paid_platforms ?? [],
   }
 }
 
@@ -195,6 +198,12 @@ export function toFields(draft: Draft, defaults: Defaults): FormFields {
     if (country || platforms.length > 0) {
       const streaming: Streaming = { country: country || defaults.country.toUpperCase() }
       if (platforms.length > 0) streaming.platforms = platforms
+      // Each paid entry must still be one of the platforms (case-insensitive), with that casing.
+      const paid = draft.streamingPaid.flatMap((name) => {
+        const match = platforms.find((p) => p.toLowerCase() === name.toLowerCase())
+        return match ? [match] : []
+      })
+      if (paid.length > 0) streaming.paid_platforms = paid
       metadata.streaming = streaming
     }
   }

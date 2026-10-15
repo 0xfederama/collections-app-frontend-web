@@ -27,9 +27,10 @@ const baseSortOptions: SelectOption[] = [
   { value: 'manual', label: 'Manual' },
   { value: 'title', label: 'Title' },
   { value: 'updated', label: 'Recently updated' },
+  { value: 'price', label: 'Price' },
 ]
 
-/** Manual, Title, Recently updated, and the kind's sort key when the kind has one (not generic). */
+/** Manual, Title, Recently updated, Price, and the kind's sort key when the kind has one (not generic). */
 export function sortOptionsFor(kind: ItemKind): SelectOption[] {
   const label = sortKeyLabel(kind)
   return label ? [...baseSortOptions, { value: 'kind_key', label }] : baseSortOptions

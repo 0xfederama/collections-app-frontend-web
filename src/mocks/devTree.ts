@@ -11,7 +11,7 @@ type ItemKind = components['schemas']['ItemKind']
 
 const DISPLAY_MODES: DisplayMode[] = ['compact', 'thumbnail', 'grid']
 const ITEM_KINDS: ItemKind[] = ['generic', 'movie', 'tv_show', 'motorcycle', 'car', 'camera']
-const SORT_MODES: SortMode[] = ['manual', 'title', 'updated', 'kind_key']
+const SORT_MODES: SortMode[] = ['manual', 'title', 'updated', 'price', 'kind_key']
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 
@@ -183,6 +183,7 @@ export function createTreeBackend(initial: Tree) {
         description: null,
         display_mode: 'grid',
         sort_mode: 'manual',
+        pinned_fields: null,
         sort_order: nextOrder(parent, 'list'),
         item_count: 0,
         version: 1,
@@ -232,6 +233,7 @@ export function createTreeBackend(initial: Tree) {
         description?: string | null
         display_mode?: unknown
         sort_mode?: unknown
+        pinned_fields?: List['pinned_fields']
       }
       let changed = false
       // `kind_key` has no key on a generic list, so the resulting pair must not be (kind_key, generic).
@@ -266,8 +268,15 @@ export function createTreeBackend(initial: Tree) {
         if (!ITEM_KINDS.includes(body.kind as ItemKind)) return invalid('kind', 'Unknown kind.')
         if (body.kind !== list.kind) {
           list.kind = body.kind as ItemKind
+          list.pinned_fields = null
           changed = true
         }
+      }
+      if (body.pinned_fields !== undefined) {
+        const pins = body.pinned_fields
+        list.pinned_fields =
+          pins === null ? null : { under: pins.under ?? [], right: pins.right ?? [] }
+        changed = true
       }
       if (body.description !== undefined) {
         if (
