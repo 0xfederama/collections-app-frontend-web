@@ -45,7 +45,7 @@ export function Sidebar({
       {/* Same element in both modes, so the toggle keeps keyboard focus when it flips. */}
       <div className={cx('flex items-center gap-2', rail ? 'flex-col' : 'justify-between pl-1')}>
         {showHeader && !rail && (
-          <Link to="/" className="min-w-0 truncate font-display text-lg font-semibold">
+          <Link to="/" className="min-w-0 truncate text-lg font-semibold">
             {workspaceName}
           </Link>
         )}

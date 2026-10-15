@@ -71,7 +71,7 @@ export function AppShell() {
           >
             <Sidebar showHeader={false} />
           </Drawer>
-          <Link to="/" className="min-w-0 flex-1 truncate font-display text-lg font-semibold">
+          <Link to="/" className="min-w-0 flex-1 truncate text-lg font-semibold">
             {workspaceName}
           </Link>
         </header>

@@ -6,13 +6,11 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 export type ButtonSize = 'sm' | 'md'
 
 export const buttonVariantClasses: Record<ButtonVariant, string> = {
-  primary:
-    'bg-accent text-accent-fg hover:bg-accent-hover active:bg-accent-hover active:brightness-95',
+  primary: 'bg-accent text-accent-fg shadow-accent hover:bg-accent-hover active:bg-accent-hover',
   secondary:
-    'border border-border-strong bg-surface text-text hover:bg-surface-raised active:bg-border',
-  ghost: 'text-text hover:bg-border active:bg-border-strong/30',
-  danger:
-    'bg-danger text-danger-fg hover:bg-danger-hover active:bg-danger-hover active:brightness-95',
+    'bg-surface text-text shadow-sm hover:bg-[color-mix(in_srgb,var(--surface),var(--text)_6%)] hover:shadow-md active:bg-[color-mix(in_srgb,var(--surface),var(--text)_10%)]',
+  ghost: 'text-text hover:bg-fill-hover active:bg-fill-hover',
+  danger: 'bg-danger text-danger-fg hover:bg-danger-hover active:bg-danger-hover',
 }
 
 export const buttonSizeClasses: Record<ButtonSize, string> = {
@@ -21,7 +19,7 @@ export const buttonSizeClasses: Record<ButtonSize, string> = {
 }
 
 export const buttonBase =
-  'inline-flex select-none items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50'
+  'inline-flex select-none items-center justify-center whitespace-nowrap rounded-full font-medium transition-[color,background-color,box-shadow,transform] active:scale-[0.97] active:ease-spring disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant

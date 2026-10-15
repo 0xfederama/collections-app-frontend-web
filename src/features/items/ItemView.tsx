@@ -68,9 +68,7 @@ export function ItemView({ item }: { item: Item }) {
     <article className="flex flex-col gap-5">
       <ItemHero item={item} />
       <header className="flex flex-col gap-2">
-        <h1 className="font-display text-2xl leading-tight font-semibold break-words">
-          {item.title}
-        </h1>
+        <h1 className="text-2xl leading-tight font-semibold break-words">{item.title}</h1>
         {price && <p className="text-sm font-medium tabular-nums">{price}</p>}
       </header>
       <ExternalLinks item={item} />

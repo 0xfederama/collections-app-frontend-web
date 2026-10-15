@@ -10,9 +10,9 @@ export function Card({ interactive, className, ...rest }: CardProps) {
   return (
     <div
       className={cx(
-        'rounded-lg border border-border bg-surface shadow-sm',
+        'rounded-lg bg-surface shadow-sm',
         interactive &&
-          'transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-md active:translate-y-0 active:shadow-sm',
+          'transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-lg active:translate-y-0 active:shadow-sm',
         className,
       )}
       {...rest}

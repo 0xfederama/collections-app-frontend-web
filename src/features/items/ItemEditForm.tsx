@@ -208,9 +208,7 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
 
   return (
     <form onSubmit={(event) => void save(event)} noValidate className="flex flex-col gap-6">
-      <h1 className="font-display text-2xl leading-tight font-semibold break-words">
-        Edit “{base.title}”
-      </h1>
+      <h1 className="text-2xl leading-tight font-semibold break-words">Edit “{base.title}”</h1>
 
       <div ref={alertsRef} className="flex flex-col gap-6 empty:hidden">
         {failure?.kind === 'conflict' && (

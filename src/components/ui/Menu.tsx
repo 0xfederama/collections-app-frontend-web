@@ -32,7 +32,7 @@ export function Menu({ trigger, items, align = 'end' }: MenuProps) {
         <DropdownMenu.Content
           align={align}
           sideOffset={6}
-          className="z-50 min-w-48 rounded-md border border-border bg-surface-raised p-1 text-text shadow-lg data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+          className="material-strong z-50 min-w-48 rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
         >
           {items.map((item, index) =>
             item.type === 'separator' ? (
@@ -46,7 +46,7 @@ export function Menu({ trigger, items, align = 'end' }: MenuProps) {
                   item.onSelect()
                 }}
                 className={cx(
-                  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-sm px-3 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-border pointer-coarse:min-h-11 [&_svg]:size-4',
+                  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11 [&_svg]:size-4',
                   item.destructive && 'text-danger-text data-[highlighted]:bg-danger-bg',
                 )}
               >

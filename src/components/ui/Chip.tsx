@@ -4,8 +4,8 @@ import { cx } from '../../lib/cx'
 export type ChipTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger'
 
 const toneClasses: Record<ChipTone, string> = {
-  neutral: 'border-border-strong bg-surface text-text',
-  accent: 'border-accent bg-surface text-accent-text',
+  neutral: 'border-border bg-fill text-text',
+  accent: 'border-accent/30 bg-accent/10 text-accent-text',
   success: 'border-success-border bg-success-bg text-success-text',
   warning: 'border-warning-border bg-warning-bg text-warning-text',
   danger: 'border-danger-border bg-danger-bg text-danger-text',

@@ -34,7 +34,7 @@ export function SettingsRoute() {
   const settings = useSettings()
   return (
     <div className="flex max-w-xl flex-col gap-8">
-      <h1 className="font-display text-2xl font-semibold">Settings</h1>
+      <h1 className="text-2xl font-semibold">Settings</h1>
       <Section id="settings-workspace" title="Workspace">
         {settings.isPending ? (
           <WorkspaceSkeleton />

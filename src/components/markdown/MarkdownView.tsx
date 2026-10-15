@@ -17,8 +17,8 @@ const heading =
   }
 
 const components = {
-  h1: heading('h3', 'mt-4 mb-2 font-display text-xl font-semibold'),
-  h2: heading('h3', 'mt-4 mb-2 font-display text-lg font-semibold'),
+  h1: heading('h3', 'mt-4 mb-2 text-xl font-semibold'),
+  h2: heading('h3', 'mt-4 mb-2 text-lg font-semibold'),
   h3: heading('h4', 'mt-3 mb-1 font-semibold'),
   h4: heading('h5', 'mt-3 mb-1 font-semibold'),
   h5: heading('h6', 'mt-3 mb-1 text-sm font-semibold'),

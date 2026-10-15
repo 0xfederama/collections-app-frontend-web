@@ -95,9 +95,7 @@ export function ListHeader(props: ListHeaderProps) {
   return (
     <header className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="min-w-0 flex-1 font-display text-2xl font-semibold break-words">
-          {props.treeList.name}
-        </h1>
+        <h1 className="min-w-0 flex-1 text-2xl font-semibold break-words">{props.treeList.name}</h1>
         <Button onClick={props.onAddItem}>
           <Plus aria-hidden className="size-4" />
           Add item

@@ -51,9 +51,7 @@ export function ItemThumb({
       )}
     >
       <Icon className={compact ? 'size-4' : 'size-1/4 min-h-5 min-w-5'} />
-      <span
-        className={cx('font-display leading-none font-semibold', compact ? 'text-xs' : 'text-2xl')}
-      >
+      <span className={cx(' leading-none font-semibold', compact ? 'text-xs' : 'text-2xl')}>
         {firstLetter(item.title)}
       </span>
     </div>

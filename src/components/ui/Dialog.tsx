@@ -49,13 +49,13 @@ export function Dialog({
           }}
           onCloseAutoFocus={returnFocus.restore}
           className={cx(
-            'fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-xl border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in',
+            'fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto material-strong rounded-xl p-6 text-text shadow-sheet data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in',
             className,
           )}
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <RadixDialog.Title className="font-display text-xl font-semibold">
+              <RadixDialog.Title className="text-xl tracking-tight font-semibold">
                 {title}
               </RadixDialog.Title>
               {description ? (

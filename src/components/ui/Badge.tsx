@@ -12,7 +12,7 @@ export function Badge({ kind, className }: BadgeProps) {
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1 rounded-sm bg-border px-2 py-0.5 text-xs font-medium text-text',
+        'inline-flex items-center gap-1 rounded-full bg-fill px-2.5 py-0.5 text-xs font-medium text-text',
         className,
       )}
     >

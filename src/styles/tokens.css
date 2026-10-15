@@ -1,26 +1,27 @@
 /*
- * Design tokens (UI_SPEC §11). Components use the semantic tokens only; the palette
- * vars are private to this file. global.css maps the semantic tokens into Tailwind.
+ * Design tokens (UI_SPEC §11): Frosted Gallery (F-002). Components use the semantic tokens only; the
+ * palette vars are private to this file. global.css maps the semantic tokens into Tailwind.
  */
 
 :root {
-  /* Private palette: warm stone neutrals, teal accent, status hues. */
-  --stone-50: #fafaf9;
-  --stone-200: #e7e5e4;
-  --stone-400: #a8a29e;
-  --stone-500: #78716c;
-  --stone-600: #57534e;
-  --stone-700: #44403c;
-  --stone-800: #292524;
-  --stone-900: #1c1917;
-  --stone-950: #0c0a09;
+  /* Private palette: cool graphite neutrals, indigo accent, status hues. */
   --white: #ffffff;
 
-  --teal-400: #2dd4bf;
-  --teal-500: #14b8a6;
-  --teal-700: #0f766e;
-  --teal-800: #115e59;
-  --teal-950: #042f2e;
+  --ink-900: #1d1d1f;
+  --ink-600: #5c5d66;
+
+  --graphite-950: #121215;
+  --graphite-900: #1a1a1f;
+  --graphite-800: #232329;
+  --graphite-100: #f2f2f5;
+  --graphite-400: #a3a3ae;
+
+  --indigo-300: #a5b4fc;
+  --indigo-400: #818cf8;
+  --indigo-500: #6366f1;
+  --indigo-600: #4f46e5;
+  --indigo-700: #4338ca;
+  --indigo-950: #0f0e2e;
 
   --green-50: #f0fdf4;
   --green-300: #86efac;
@@ -43,14 +44,16 @@
 /* Theme independent. In an @theme block so Tailwind's rounded-* and ease-* utilities read them. */
 @theme {
   --radius-*: initial;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-full: 9999px;
+  --radius-sm: 8px; /* controls, small rows */
+  --radius-md: 10px; /* buttons' inner parts, menu items' container */
+  --radius-lg: 18px; /* cards */
+  --radius-xl: 24px; /* sheets, dialogs, drawer */
+  --radius-full: 9999px; /* pills */
 
   --ease-*: initial;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Springs only on press (Button active scale). */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --default-transition-duration: 150ms;
   --default-transition-timing-function: var(--ease-out);
@@ -59,24 +62,34 @@
 :root {
   --duration-fast: 150ms;
   --duration-base: 200ms;
+
+  /* Material (blur only on sidebar, toolbar, sheet, menus, dialogs, drawer). */
+  --material-blur: 28px;
+  --material-saturate: 180%;
+  --material-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
 }
 
 /* Light is the default; the inline script in index.html sets data-theme before paint. */
 :root,
 [data-theme='light'] {
-  --bg: var(--stone-50);
+  --bg: #edeef1;
+  --bg-ambient:
+    radial-gradient(900px 480px at 75% -12%, rgb(99 102 241 / 0.1), transparent),
+    radial-gradient(700px 420px at 0% 105%, rgb(56 189 248 / 0.08), transparent);
   --surface: var(--white);
   --surface-raised: var(--white);
-  --border: var(--stone-200);
-  --border-strong: var(--stone-500);
-  --text: var(--stone-900);
-  --text-muted: var(--stone-600);
+  --border: rgb(60 60 90 / 0.14);
+  --border-strong: #7f8292;
+  --fill: rgb(60 60 90 / 0.055);
+  --fill-hover: rgb(60 60 90 / 0.1);
+  --text: var(--ink-900);
+  --text-muted: var(--ink-600);
 
-  --accent: var(--teal-700);
-  --accent-hover: var(--teal-800);
+  --accent: var(--indigo-600);
+  --accent-hover: var(--indigo-700);
   --accent-fg: var(--white);
-  --accent-text: var(--teal-700);
-  --focus-ring: var(--teal-700);
+  --accent-text: var(--indigo-600);
+  --focus-ring: var(--indigo-600);
 
   --success-bg: var(--green-50);
   --success-border: var(--green-300);
@@ -93,27 +106,49 @@
   --danger-hover: var(--red-800);
   --danger-fg: var(--white);
 
-  --overlay: rgb(28 25 23 / 0.45);
+  --overlay: rgb(20 20 40 / 0.4);
 
-  --shadow-sm: 0 1px 2px rgb(28 25 23 / 0.06);
-  --shadow-md: 0 4px 12px rgb(28 25 23 / 0.1);
-  --shadow-lg: 0 12px 32px rgb(28 25 23 / 0.16);
+  /* Materials. */
+  --material-bg: rgb(255 255 255 / 0.78);
+  --material-bg-strong: rgb(255 255 255 / 0.9);
+  --material-solid: #ffffff;
+  --material-hairline: rgb(60 60 90 / 0.1);
+  --material-highlight: inset 0 1px 0 rgb(255 255 255 / 0.8);
+
+  /* Layered shadows: every one starts with the 1 px hairline ring. */
+  --shadow-sm: 0 0 0 1px var(--material-hairline), 0 1px 2px rgb(30 30 70 / 0.14);
+  --shadow-md:
+    0 0 0 1px var(--material-hairline), 0 1px 2px rgb(30 30 70 / 0.14),
+    0 10px 24px -16px rgb(30 30 70 / 0.14);
+  --shadow-lg:
+    0 0 0 1px var(--material-hairline), 0 4px 10px -4px rgb(30 30 70 / 0.14),
+    0 22px 44px -14px rgb(30 30 70 / 0.18);
+  --shadow-float: var(--shadow-lg), var(--material-highlight);
+  --shadow-sheet:
+    0 0 0 1px var(--material-hairline), 0 40px 80px -20px rgb(20 20 40 / 0.35),
+    var(--material-highlight);
+  --shadow-accent: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 6px 14px -4px rgb(79 70 229 / 0.45);
 }
 
 [data-theme='dark'] {
-  --bg: var(--stone-950);
-  --surface: var(--stone-900);
-  --surface-raised: var(--stone-800);
-  --border: var(--stone-700);
-  --border-strong: var(--stone-500);
-  --text: var(--stone-50);
-  --text-muted: var(--stone-400);
+  --bg: var(--graphite-950);
+  --bg-ambient:
+    radial-gradient(900px 480px at 75% -12%, rgb(99 102 241 / 0.16), transparent),
+    radial-gradient(700px 420px at 0% 105%, rgb(56 189 248 / 0.07), transparent);
+  --surface: var(--graphite-900);
+  --surface-raised: var(--graphite-800);
+  --border: rgb(255 255 255 / 0.12);
+  --border-strong: #7d7e8c;
+  --fill: rgb(255 255 255 / 0.07);
+  --fill-hover: rgb(255 255 255 / 0.12);
+  --text: var(--graphite-100);
+  --text-muted: var(--graphite-400);
 
-  --accent: var(--teal-500);
-  --accent-hover: var(--teal-400);
-  --accent-fg: var(--teal-950);
-  --accent-text: var(--teal-400);
-  --focus-ring: var(--teal-400);
+  --accent: var(--indigo-400);
+  --accent-hover: var(--indigo-300);
+  --accent-fg: var(--indigo-950);
+  --accent-text: var(--indigo-300);
+  --focus-ring: var(--indigo-300);
 
   --success-bg: var(--green-950);
   --success-border: var(--green-800);
@@ -131,8 +166,45 @@
 
   --overlay: rgb(0 0 0 / 0.6);
 
-  /* Dark leans on borders and raised surfaces; shadows stay subtle. */
-  --shadow-sm: 0 0 0 1px rgb(0 0 0 / 0.3);
-  --shadow-md: 0 2px 8px rgb(0 0 0 / 0.4);
-  --shadow-lg: 0 8px 24px rgb(0 0 0 / 0.5);
+  --material-bg: rgb(30 30 36 / 0.78);
+  --material-bg-strong: rgb(34 34 41 / 0.9);
+  --material-solid: var(--graphite-800);
+  --material-hairline: rgb(255 255 255 / 0.1);
+  --material-highlight: inset 0 1px 0 rgb(255 255 255 / 0.08);
+
+  --shadow-sm: 0 0 0 1px var(--material-hairline), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md:
+    0 0 0 1px var(--material-hairline), 0 1px 2px rgb(0 0 0 / 0.4),
+    0 10px 24px -16px rgb(0 0 0 / 0.6);
+  --shadow-lg:
+    0 0 0 1px var(--material-hairline), 0 4px 10px -4px rgb(0 0 0 / 0.5),
+    0 22px 44px -14px rgb(0 0 0 / 0.6);
+  --shadow-sheet:
+    0 0 0 1px var(--material-hairline), 0 40px 80px -20px rgb(0 0 0 / 0.7),
+    var(--material-highlight);
+  --shadow-accent: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 6px 14px -4px rgb(129 140 248 / 0.4);
+}
+
+/*
+ * Solid fallbacks: no backdrop-filter support, or the user asked for less transparency.
+ * Placed last so they win over both theme blocks (same specificity).
+ */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root,
+  [data-theme='light'],
+  [data-theme='dark'] {
+    --material-bg: var(--material-solid);
+    --material-bg-strong: var(--material-solid);
+    --material-filter: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  [data-theme='light'],
+  [data-theme='dark'] {
+    --material-bg: var(--material-solid);
+    --material-bg-strong: var(--material-solid);
+    --material-filter: none;
+    --overlay: rgb(20 20 40 / 0.6);
+  }
 }

@@ -46,10 +46,10 @@ export function AlertDialog({
         <RadixAlertDialog.Content
           onOpenAutoFocus={returnFocus.capture}
           onCloseAutoFocus={returnFocus.restore}
-          className="fixed top-1/2 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-xl border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in"
+          className="fixed top-1/2 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-4 material-strong rounded-xl p-6 text-text shadow-sheet data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in"
         >
           <div className="flex flex-col gap-1">
-            <RadixAlertDialog.Title className="font-display text-xl font-semibold">
+            <RadixAlertDialog.Title className="text-xl font-semibold">
               {title}
             </RadixAlertDialog.Title>
             <RadixAlertDialog.Description className="text-sm text-text-muted">
