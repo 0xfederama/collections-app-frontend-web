@@ -9,7 +9,6 @@ import {
   Trash2,
   type LucideIcon,
 } from '../components/ui/icons'
-import { BackendStatus } from '../features/health/BackendStatus'
 import { SidebarSearch } from '../features/search/SidebarSearch'
 import { useWorkspaceName } from '../features/settings/api'
 import { SidebarTree } from '../features/tree/SidebarTree'
@@ -76,7 +75,6 @@ export function Sidebar({
         <FooterLink to="/trash" label="Trash" icon={Trash2} rail={rail} />
         <FooterLink to="/settings" label="Settings" icon={Settings} rail={rail} />
       </div>
-      <BackendStatus dotOnly={rail} />
     </nav>
   )
 }

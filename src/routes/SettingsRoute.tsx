@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Button, Skeleton } from '../components/ui'
 import { useSettings } from '../features/settings/api'
+import { ConnectionSection } from '../features/settings/ConnectionSection'
 import { SettingsForm } from '../features/settings/SettingsForm'
 import { ThemeSection } from '../features/settings/ThemeSection'
 
@@ -51,6 +52,9 @@ export function SettingsRoute() {
         ) : (
           <SettingsForm settings={settings.data} />
         )}
+      </Section>
+      <Section id="settings-connection" title="Connection">
+        <ConnectionSection />
       </Section>
     </div>
   )

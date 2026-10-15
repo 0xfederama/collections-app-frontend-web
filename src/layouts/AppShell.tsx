@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useMatch, useNavigate } from 'react-router'
 import { Breadcrumbs, Drawer, IconButton } from '../components/ui'
 import { MenuIcon, X } from '../components/ui/icons'
-import { BackendStatus } from '../features/health/BackendStatus'
 import { useSearchShortcut } from '../features/search/useSearchShortcut'
 import { useWorkspaceName } from '../features/settings/api'
 import { useBreadcrumbs } from '../features/tree/breadcrumbs'
@@ -83,7 +82,6 @@ export function AppShell() {
           <Link to="/" className="min-w-0 flex-1 truncate font-display text-lg font-semibold">
             {workspaceName}
           </Link>
-          <BackendStatus />
         </header>
         {crumbs}
         <main className="min-h-0 flex-1 overflow-y-auto p-4">{content}</main>
