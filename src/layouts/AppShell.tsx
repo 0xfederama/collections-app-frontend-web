@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useMatch, useNavigate } from 'react-router'
-import { Breadcrumbs, Drawer, IconButton } from '../components/ui'
+import { Drawer, IconButton } from '../components/ui'
 import { MenuIcon, X } from '../components/ui/icons'
 import { useSearchShortcut } from '../features/search/useSearchShortcut'
 import { useWorkspaceName } from '../features/settings/api'
-import { useBreadcrumbs } from '../features/tree/breadcrumbs'
 import { useBreakpoint } from '../lib/breakpoints'
 import { ItemRoute } from '../routes/ItemRoute'
 import { Sidebar } from './Sidebar'
@@ -25,7 +24,6 @@ export function AppShell() {
   const { setCollapsed } = sidebar
   const location = useLocation()
   const workspaceName = useWorkspaceName()
-  const breadcrumbs = useBreadcrumbs()
 
   // The drawer is open for the location it was opened at, so any navigation closes it.
   const [drawerAt, setDrawerAt] = useState<string | null>(null)
@@ -56,12 +54,6 @@ export function AppShell() {
   const panelVisible = breakpoint === 'wide' && itemMatch !== null
   const content = itemMatch !== null && breakpoint !== 'wide' ? <ItemRoute /> : <Outlet />
 
-  const crumbs = breadcrumbs.length > 0 && (
-    <div className="border-b border-border px-4 py-2 md:px-6">
-      <Breadcrumbs items={breadcrumbs} />
-    </div>
-  )
-
   if (breakpoint === 'mobile') {
     return (
       <div className="flex h-dvh flex-col bg-bg text-text">
@@ -83,7 +75,6 @@ export function AppShell() {
             {workspaceName}
           </Link>
         </header>
-        {crumbs}
         <main className="min-h-0 flex-1 overflow-y-auto p-4">{content}</main>
       </div>
     )
@@ -118,7 +109,6 @@ export function AppShell() {
         <div aria-hidden className="w-px shrink-0 bg-border" />
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        {crumbs}
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <main className="min-w-0 flex-1 overflow-y-auto p-6">{content}</main>
           {panelVisible && (

@@ -28,7 +28,7 @@ function parseSort(value: string | null): SortMode | null {
 }
 
 /**
- * The list screen below the shell's breadcrumbs. URL state (UI_SPEC §1, D-063): `?q=` is the title
+ * The list screen in the shell. URL state (UI_SPEC §1, D-063): `?q=` is the title
  * filter and `?sort=` overrides the list's saved `sort_mode`. Display mode is saved on the list.
  */
 export function ListView({ treeList }: { treeList: List }) {

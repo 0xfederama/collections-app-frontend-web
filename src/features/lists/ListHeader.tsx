@@ -48,7 +48,7 @@ function Description({ text }: { text: string }) {
 }
 
 export interface ListHeaderProps {
-  /** The list as the sidebar tree has it: its name matches the breadcrumbs, shows before the list loads, and feeds the actions menu. */
+  /** The list as the sidebar tree has it: its name shows before the list loads, and feeds the actions menu. */
   treeList: TreeList
   list: List | undefined
   /** e.g. `12 items` or `3 of 12 items`. */
