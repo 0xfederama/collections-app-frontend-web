@@ -143,6 +143,9 @@ const sortSelect = () => screen.getByRole('combobox', { name: /Sort/ })
 
 const radioName = { compact: 'Compact rows', thumbnail: 'Thumbnail rows', grid: 'Grid' } as const
 
+// 200-250 rows plus user-event's per-click style checks: ~1.5 s alone, 10x that on a loaded machine.
+const HEAVY_TEST_TIMEOUT = 30_000
+
 describe('W-06 display modes', () => {
   const rich = [
     makeItem(1, {
@@ -574,23 +577,27 @@ describe('W-06 reorder', () => {
       noHandles()
     })
 
-    it('when not all items are loaded: hint and Load more fetching offset=<loaded>', async () => {
-      const backend = useBackend({ items: makeItems(205) })
-      const user = userEvent.setup()
-      renderList(at())
-      await itemsList()
-      expect(screen.getByText('Load all items to reorder them.')).toBeInTheDocument()
-      noHandles()
-      await user.click(screen.getByRole('button', { name: /^Load more/ }))
-      await waitFor(() =>
-        expect(backend.itemRequests.at(-1)!.searchParams.get('offset')).toBe('200'),
-      )
-      await waitFor(() => expect(titles()).toHaveLength(205))
-      // Everything is loaded now: handles appear and the hint goes away.
-      expect(await screen.findByRole('button', { name: 'Reorder Item 1' })).toBeInTheDocument()
-      expect(screen.queryByText('Load all items to reorder them.')).toBeNull()
-      expect(screen.queryByRole('button', { name: /^Load more/ })).toBeNull()
-    })
+    it(
+      'when not all items are loaded: hint and Load more fetching offset=<loaded>',
+      async () => {
+        const backend = useBackend({ items: makeItems(205) })
+        const user = userEvent.setup()
+        renderList(at())
+        await itemsList()
+        expect(screen.getByText('Load all items to reorder them.')).toBeInTheDocument()
+        noHandles()
+        await user.click(screen.getByRole('button', { name: /^Load more/ }))
+        await waitFor(() =>
+          expect(backend.itemRequests.at(-1)!.searchParams.get('offset')).toBe('200'),
+        )
+        await waitFor(() => expect(titles()).toHaveLength(205))
+        // Everything is loaded now: handles appear and the hint goes away.
+        expect(await screen.findByRole('button', { name: 'Reorder Item 1' })).toBeInTheDocument()
+        expect(screen.queryByText('Load all items to reorder them.')).toBeNull()
+        expect(screen.queryByRole('button', { name: /^Load more/ })).toBeNull()
+      },
+      HEAVY_TEST_TIMEOUT,
+    )
 
     it('a single item has nothing to reorder', async () => {
       useBackend({ items: makeItems(1) })
@@ -602,19 +609,23 @@ describe('W-06 reorder', () => {
 })
 
 describe('W-06 load more', () => {
-  it('page 1 of 200 with total 250 shows Load more; clicking requests offset=200', async () => {
-    const backend = useBackend({ items: makeItems(250) })
-    const user = userEvent.setup()
-    renderList(at())
-    await itemsList()
-    expect(titles()).toHaveLength(200)
-    expect(backend.itemRequests[0]!.searchParams.get('limit')).toBe('200')
-    expect(backend.itemRequests[0]!.searchParams.get('offset')).toBe('0')
-    await user.click(screen.getByRole('button', { name: /^Load more/ }))
-    await waitFor(() => expect(titles()).toHaveLength(250))
-    expect(backend.itemRequests.at(-1)!.searchParams.get('offset')).toBe('200')
-    expect(screen.queryByRole('button', { name: /^Load more/ })).toBeNull()
-  })
+  it(
+    'page 1 of 200 with total 250 shows Load more; clicking requests offset=200',
+    async () => {
+      const backend = useBackend({ items: makeItems(250) })
+      const user = userEvent.setup()
+      renderList(at())
+      await itemsList()
+      expect(titles()).toHaveLength(200)
+      expect(backend.itemRequests[0]!.searchParams.get('limit')).toBe('200')
+      expect(backend.itemRequests[0]!.searchParams.get('offset')).toBe('0')
+      await user.click(screen.getByRole('button', { name: /^Load more/ }))
+      await waitFor(() => expect(titles()).toHaveLength(250))
+      expect(backend.itemRequests.at(-1)!.searchParams.get('offset')).toBe('200')
+      expect(screen.queryByRole('button', { name: /^Load more/ })).toBeNull()
+    },
+    HEAVY_TEST_TIMEOUT,
+  )
 
   it('no Load more when everything fits in one page', async () => {
     useBackend({ items: makeItems(3) })
