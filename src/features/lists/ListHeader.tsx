@@ -42,6 +42,8 @@ const baseSortOptions: SelectOption[] = [
 /** Manual, Title, Recently updated, Price, and the kind's sort key when the kind has one (not generic). */
 export function sortOptionsFor(kind: ItemKind): SelectOption[] {
   const label = sortKeyLabel(kind)
+  // Generic has no price and no kind key (F008-W14).
+  if (kind === 'generic') return baseSortOptions.filter((option) => option.value !== 'price')
   return label ? [...baseSortOptions, { value: 'kind_key', label }] : baseSortOptions
 }
 
@@ -125,7 +127,7 @@ export function ListHeader(props: ListHeaderProps) {
               />
             </div>
           </div>
-          {list && (
+          {list && props.treeList.kind !== 'generic' && (
             <PinnedMenu list={list} onChange={props.onPinned} onReset={props.onResetPinned} />
           )}
           {props.canMakeDefault && (

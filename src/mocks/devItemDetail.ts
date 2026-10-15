@@ -146,7 +146,8 @@ function validateBody(body: Body, kind: string, metadata: Body | undefined): Fie
     | { amount?: string; min?: string | null; max?: string | null; currency?: string }
     | null
     | undefined
-  if (price) {
+  if (price && kind === 'generic') add('price', 'A generic list has no price.')
+  else if (price) {
     const hasRange = price.min !== undefined || price.max !== undefined
     if (price.amount !== undefined && hasRange) {
       add('price', 'Use either amount or min and max, not both.')
@@ -200,7 +201,7 @@ export const devItemDetailHandlers = [
       title: String(body.title).trim(),
       kind,
       image: null,
-      price: toPrice((body.price as PriceInput) ?? null),
+      price: kind === 'generic' ? null : toPrice((body.price as PriceInput) ?? null),
       website: null,
       content_version: 0,
       sort_order: 0,

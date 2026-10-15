@@ -32,7 +32,7 @@ describe('F002-W2 default pinned fields', () => {
     expect(defaultPinned('motorcycle')).toEqual({ under: ['displacement_cc'], right: ['price'] })
     expect(defaultPinned('car')).toEqual({ under: ['model_year'], right: ['price'] })
     expect(defaultPinned('camera')).toEqual({ under: ['camera_type'], right: ['price'] })
-    expect(defaultPinned('generic')).toEqual({ under: [], right: ['price'] })
+    expect(defaultPinned('generic')).toEqual({ under: [], right: [] })
   })
 
   it('resolvePinned: null is the default, {} pins nothing, slots are kept in order', () => {
@@ -46,7 +46,7 @@ describe('F002-W2 default pinned fields', () => {
   it('offers the kind fields plus price, without the IMDb link', () => {
     const keys = pinnableFields('movie').map((f) => f.key)
     expect(keys).toEqual(['release_year', 'runtime_minutes', 'streaming', 'price'])
-    expect(pinnableFields('generic').map((f) => f.key)).toEqual(['price'])
+    expect(pinnableFields('generic')).toEqual([])
   })
 })
 
@@ -82,5 +82,17 @@ describe('F002-W2 pinned values', () => {
       { name: 'Netflix', paid: false },
       { name: 'Prime Video', paid: true },
     ])
+  })
+})
+
+describe('F008-W14 generic lists pin nothing', () => {
+  it('resolvePinned ignores any stored selection on a generic list', () => {
+    expect(resolvePinned({ kind: 'generic', pinned_fields: null })).toEqual({
+      under: [],
+      right: [],
+    })
+    expect(
+      resolvePinned({ kind: 'generic', pinned_fields: { under: [], right: ['price'] } }),
+    ).toEqual({ under: [], right: [] })
   })
 })

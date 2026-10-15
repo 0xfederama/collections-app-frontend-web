@@ -16,7 +16,6 @@ import {
   type SortMode,
 } from './api'
 import { NEW_ITEM_ID } from '../items/newItem'
-import { sortKeyLabel } from '../items/kinds'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { resolvePinned } from './pinned'
@@ -46,7 +45,11 @@ export function ListView({ treeList }: { treeList: List }) {
   const listQuery = useList(listId)
   const list = listQuery.data
   // `kind_key` is not valid on a generic list: a URL asking for it falls back to the list's mode.
-  const sortOverride = parsedSort === 'kind_key' && !sortKeyLabel(treeList.kind) ? null : parsedSort
+  // `price` is not valid on a generic list either (F008-W14).
+  const sortOverride =
+    treeList.kind === 'generic' && (parsedSort === 'kind_key' || parsedSort === 'price')
+      ? null
+      : parsedSort
   // The tree is the source of truth for renames, moves and description edits (W-05 refetches it
   // after each one). When it holds a newer version than our detail, refetch the detail, or the
   // next `If-Match` would be stale and fail with a 412.

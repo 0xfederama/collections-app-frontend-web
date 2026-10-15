@@ -50,7 +50,7 @@ export function useChangeKind(list: TreeList): {
       open
       onOpenChange={(open) => !open && !update.isPending && setTarget(null)}
       title={`Change ${list.name} to ${kindLabels[target]}?`}
-      description={`This permanently clears the ${kindLabels[list.kind]} details of all ${list.item_count} ${list.item_count === 1 ? 'item' : 'items'} in this list, trashed ones included. There is no undo. Titles, images, descriptions and history stay.`}
+      description={`This permanently clears the ${kindLabels[list.kind]} details${target === 'generic' ? ' and the price' : ''} of all ${list.item_count} ${list.item_count === 1 ? 'item' : 'items'} in this list, trashed ones included. There is no undo. Titles, images, descriptions and history stay.`}
       confirmLabel="Clear details and change"
       destructive
       keepOpen

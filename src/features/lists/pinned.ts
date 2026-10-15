@@ -21,7 +21,7 @@ const DEFAULTS: Record<ItemKind, PinnedSlots> = {
   motorcycle: { under: ['displacement_cc'], right: ['price'] },
   car: { under: ['model_year'], right: ['price'] },
   camera: { under: ['camera_type'], right: ['price'] },
-  generic: { under: [], right: ['price'] },
+  generic: { under: [], right: [] },
 }
 
 /** The kind default (F-002 "Pinned fields" table). The web owns it; the API stores `null` for it. */
@@ -32,6 +32,8 @@ export function defaultPinned(kind: ItemKind): PinnedSlots {
 
 /** What the list shows: its own selection, else the kind default. `{}` pins nothing. */
 export function resolvePinned(list: { kind: ItemKind; pinned_fields: PinnedFields }): PinnedSlots {
+  // A generic list has no fields at all (F008-W14): nothing is pinned, whatever was stored.
+  if (list.kind === 'generic') return { under: [], right: [] }
   if (!list.pinned_fields) return defaultPinned(list.kind)
   return {
     under: [...(list.pinned_fields.under ?? [])],
@@ -46,6 +48,7 @@ export interface PinnableField {
 
 /** Fields a list of this kind can pin: its kind fields (not the IMDb link), then price. */
 export function pinnableFields(kind: ItemKind): PinnableField[] {
+  if (kind === 'generic') return []
   const fields = kindFields[kind]
     .filter((field) => field.input !== 'imdb_url')
     .map(({ key, label }) => ({

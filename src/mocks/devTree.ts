@@ -244,6 +244,9 @@ export function createTreeBackend(initial: Tree) {
       if (nextSort === 'kind_key' && nextKind === 'generic') {
         return invalid('sort_mode', 'Sorting by the kind key is not available on a generic list.')
       }
+      if (nextSort === 'price' && nextKind === 'generic') {
+        return invalid('sort_mode', 'Sorting by price is not available on a generic list.')
+      }
       if (body.display_mode !== undefined) {
         if (!DISPLAY_MODES.includes(body.display_mode as DisplayMode)) {
           return invalid('display_mode', 'Unknown display mode.')

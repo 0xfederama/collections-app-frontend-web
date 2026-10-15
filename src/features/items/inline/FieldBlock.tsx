@@ -79,7 +79,9 @@ export function FieldBlock({
   addWebsiteRequest?: number
 }) {
   const kind = kindSpecs(item.kind)
-  const specs = [...kind, priceSpec, websiteSpec]
+  // A generic item has no price and no kind fields (F008-W14).
+  const isGeneric = item.kind === 'generic'
+  const specs = isGeneric ? [websiteSpec] : [...kind, priceSpec, websiteSpec]
   const [adding, setAdding] = useState<Adding[]>([])
   const [handledRequest, setHandledRequest] = useState(addWebsiteRequest)
   if (addWebsiteRequest !== handledRequest) {
@@ -106,7 +108,7 @@ export function FieldBlock({
         : [{ label: spec.label, onSelect: () => open({ id: spec.id }) }],
     )
   const kindEntries = entries(kind)
-  const anyEntries = entries([priceSpec, websiteSpec])
+  const anyEntries = entries(isGeneric ? [websiteSpec] : [priceSpec, websiteSpec])
   const menu: MenuItem[] = [
     ...kindEntries,
     ...(kindEntries.length > 0 && anyEntries.length > 0 ? [{ type: 'separator' as const }] : []),

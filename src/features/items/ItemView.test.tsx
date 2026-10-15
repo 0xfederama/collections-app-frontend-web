@@ -160,6 +160,15 @@ describe('item view: kinds', () => {
     expect(await screen.findByText('2019–2023')).toBeInTheDocument()
   })
 
+  it('F008-W14 a generic item offers only Website, never Price', async () => {
+    const user = userEvent.setup()
+    await renderOverride({ title: 'Notebook', kind: 'generic', metadata: {}, price: null })
+    await screen.findByRole('heading', { name: 'Description' })
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    expect(await screen.findByRole('menuitem', { name: 'Website' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Price' })).not.toBeInTheDocument()
+  })
+
   it('generic item with nothing set shows no rows, only "Add field"', async () => {
     await renderOverride({ title: 'Notebook', kind: 'generic', metadata: {} })
     await screen.findByRole('heading', { name: 'Description' })
