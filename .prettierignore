@@ -5,3 +5,5 @@ package-lock.json
 src/generated
 api/openapi.yaml
 public/mockServiceWorker.js
+test-results
+playwright-report

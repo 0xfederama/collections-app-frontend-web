@@ -5,7 +5,16 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig(
-  { ignores: ['dist', 'coverage', 'src/generated', 'public/mockServiceWorker.js'] },
+  {
+    ignores: [
+      'dist',
+      'coverage',
+      'playwright-report',
+      'test-results',
+      'src/generated',
+      'public/mockServiceWorker.js',
+    ],
+  },
   js.configs.recommended,
   tseslint.configs.recommended,
   reactHooks.configs.flat.recommended,
@@ -14,7 +23,13 @@ export default defineConfig(
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['vite.config.ts', 'eslint.config.js', 'scripts/**/*.mjs'],
+    files: [
+      'vite.config.ts',
+      'playwright.config.ts',
+      'eslint.config.js',
+      'scripts/**/*.mjs',
+      'e2e/**/*.ts',
+    ],
     languageOptions: { globals: globals.node },
   },
 )
