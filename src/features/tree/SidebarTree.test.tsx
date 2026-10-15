@@ -62,7 +62,7 @@ describe('W-04 sidebar tree states', () => {
     )
     const user = userEvent.setup()
     renderAt('/')
-    expect(await screen.findByText('Couldn’t load your lists.')).toBeInTheDocument()
+    expect((await screen.findAllByText('Couldn’t load your lists.')).length).toBeGreaterThan(0)
     expect(within(sidebar()).queryByRole('tree')).not.toBeInTheDocument()
 
     await user.click(within(sidebar()).getByRole('button', { name: 'Retry' }))

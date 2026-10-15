@@ -33,6 +33,7 @@ describe('F007-W6 theme toggle in the sidebar', () => {
     mockViewport(1280)
     const user = userEvent.setup()
     renderAt('/')
+    await screen.findByRole('tree')
     const requests: string[] = []
     const listener = ({ request }: { request: Request }) => requests.push(request.method)
     server.events.on('request:start', listener)

@@ -239,7 +239,7 @@ describe('AT-03 tree CRUD (web): description', () => {
   it('saves a trimmed description with If-Match', async () => {
     const { user, backend } = await openTree()
     await pickRowAction(user, 'Wishlist', 'Edit description')
-    const field = within(await dialog()).getByRole('textbox', { name: 'Description' })
+    const field = await within(await dialog()).findByRole('textbox', { name: 'Description' })
     expect(field).toHaveValue('')
     await user.type(field, '  Things I want  ')
     await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -256,7 +256,7 @@ describe('AT-03 tree CRUD (web): description', () => {
     tree.lists.find((l) => l.id === ID.wishlist)!.description = 'Old text'
     const { user, backend } = await openTree('/', tree)
     await pickRowAction(user, 'Wishlist', 'Edit description')
-    const field = within(await dialog()).getByRole('textbox', { name: 'Description' })
+    const field = await within(await dialog()).findByRole('textbox', { name: 'Description' })
     expect(field).toHaveValue('Old text')
     await user.clear(field)
     await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -280,7 +280,7 @@ describe('AT-03 tree CRUD (web): description', () => {
   it('F007-W10 blocks Save above 64 KiB (bytes, not characters) without a request', async () => {
     const { user, backend } = await openTree()
     await pickRowAction(user, 'Wishlist', 'Edit description')
-    await user.click(within(await dialog()).getByRole('textbox', { name: 'Description' }))
+    await user.click(await within(await dialog()).findByRole('textbox', { name: 'Description' }))
     // 2 bytes per character: 33000 characters are 66000 bytes, over 65536.
     await user.paste('é'.repeat(33_000))
     expect(screen.getByRole('alert')).toHaveTextContent('the limit is 64.0 KB')
@@ -291,7 +291,7 @@ describe('AT-03 tree CRUD (web): description', () => {
   it('F007-W10 the Preview tab renders the Markdown', async () => {
     const { user } = await openTree()
     await pickRowAction(user, 'Wishlist', 'Edit description')
-    await user.click(within(await dialog()).getByRole('textbox', { name: 'Description' }))
+    await user.click(await within(await dialog()).findByRole('textbox', { name: 'Description' }))
     await user.paste('**bold** text')
     await user.click(screen.getByRole('radio', { name: 'Preview' }))
     expect(
