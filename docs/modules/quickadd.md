@@ -14,7 +14,7 @@ Quick add (F-002): one dialog to create an item from anywhere: a title, a destin
 ## Interfaces
 
 - `QuickAddProvider({ children })`: context provider plus the dialog; mounted by `layouts/AppShell.tsx`.
-- `useQuickAdd(): { open(listId?) }`: opens the dialog; the sidebar "Quick add" button and `ListView` "Add item" call it.
+- `useQuickAdd(): { open(listId?) }`: opens the dialog; the top-bar "Quick add" button calls it. A list's "New item" uses the inline draft instead (see [items](items.md)).
 - `QuickAddDialog({ initialListId?, onClose })`: rendered by the provider only while open.
 
 ## Gotchas

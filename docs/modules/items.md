@@ -2,13 +2,14 @@
 
 ## Purpose
 
-The item page at `/lists/:listId/items/:itemId`: hero image, links, kind details, description, Move and Delete. Fields, description and image are edited in place (F-002, no edit mode), each with its own save. Spec: `/Users/federico/Developer/collections-app/design-docs/UI_SPEC.md` §4–5; redesign: `design-docs/features/F-002-ui-refresh.md`.
+The item page at `/lists/:listId/items/:itemId`: title block, icon-only links, hero image, kind details, description, Move and Delete. Fields, description and image are edited in place (F-002, no edit mode), each with its own save. New items start as an inline draft at `/lists/:listId/items/new`. Spec: `/Users/federico/Developer/collections-app/design-docs/UI_SPEC.md` §4–5; redesign: `design-docs/features/F-002-ui-refresh.md`.
 
 ## Key files
 
 - `src/features/items/ItemPage.tsx`: route body (lazy via `routes/ItemRoute.tsx`), list gate, 404, list redirect.
 - `ItemView.tsx`, `ItemHero.tsx`, `ItemActions.tsx`: sections; hero "Change image"; Move and Delete.
-- `ExternalLinks.tsx`, `links.ts`: link row; `buildExternalLinks`, `safeImdbUrl`.
+- `ExternalLinks.tsx`, `links.ts`: icon-only link row; `buildExternalLinks`, `safeImdbUrl`.
+- `NewItemDraft.tsx`, `newItem.ts`: inline draft (`NEW_ITEM_ID` = `new`), Enter POSTs, Esc discards.
 - `inline/`: `InlineField`, `FieldBlock` ("+ Add field"), `editors.tsx`, `fields.ts`, `Banners.tsx`, `guard.tsx`.
 - `form/draft.ts`: draft, `buildPatch`, `validate`, `mapServerErrors`, `LIMITS`.
 - `content/`: `DescriptionField.tsx`, `HistoryDrawer.tsx`, lazy `MarkdownEditor.tsx`, `api.ts`.
@@ -32,7 +33,9 @@ The item page at `/lists/:listId/items/:itemId`: hero image, links, kind details
 - An editor holds a snapshot; `If-Match` comes from it. 412 keeps the draft (Copy / Reload latest); 404 keeps it for copying.
 - The snapshot moves forward only along versions this client wrote (`recordOwnWrite`), so others' changes still 412.
 - Each save sends only its field. Kind metadata is replaced whole (D-062); the kind is never sent (it belongs to the list).
-- Price is optional: one amount or a min / max range, one currency. Website is `website` (was `official_url`).
+- Price is one optional field: one amount, or "Add range" for min / max; one currency. Display text is `formatPrice` (see [lists](lists.md)). Generic items have no price and no kind fields.
+- Website is `website` (was `official_url`). Links are 36 px icon tiles (Google, IMDb, Letterboxd, Reddit, Globe for website) with the name as tooltip and sr-only text; an empty website shows a dashed "+" that opens its editor.
+- New item: nothing is saved until the title is committed (Enter or ✓), which POSTs and replaces the URL with the item page. Esc, ✕ or a blur with an empty title drops the draft, and unsaved text blocks navigation like an editor.
 - Description saves do not bump the item `version`. Limit 1 MiB; History is disabled while unsaved text is open. Restore sends the current version.
 - Unsaved editors block navigation (`useBlocker`) and the unload prompt; changing `?q=` on the same item does not.
 - Image changes are not part of any save: each is its own request and toast; the first success closes the dialog. 412 or 404 sets the banner.

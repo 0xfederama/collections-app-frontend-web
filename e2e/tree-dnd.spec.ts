@@ -23,16 +23,18 @@ test.describe('F008-W4 drag into a folder', () => {
     const listName = uniqueName('Drop list')
     const folder = await createFolder(request, folderName)
     const list = await createList(request, listName)
+    // A tall viewport keeps both rows on screen in a long shared tree (the drag helper cannot scroll mid-drag).
+    await page.setViewportSize({ width: 1440, height: 4000 })
     await page.goto('/')
     await expect(row(page, listName)).toHaveAttribute('aria-level', '1')
 
     await drag(page, row(page, listName), row(page, folderName))
 
     await expect.poll(() => folderOf(request, list.id)).toBe(folder.id)
-    await page.reload()
-    await expect.poll(() => folderOf(request, list.id)).toBe(folder.id)
     // The folder opens to show what it received.
     await expect(row(page, listName)).toHaveAttribute('aria-level', '2')
+    await page.reload()
+    await expect.poll(() => folderOf(request, list.id)).toBe(folder.id)
   })
 
   test('a folder cannot be dropped into itself: nothing moves', async ({ page, request }) => {
@@ -40,6 +42,8 @@ test.describe('F008-W4 drag into a folder', () => {
     const childName = uniqueName('Inner')
     const parent = await createFolder(request, parentName)
     await createFolder(request, childName, parent.id)
+    // A tall viewport keeps both rows on screen in a long shared tree (the drag helper cannot scroll mid-drag).
+    await page.setViewportSize({ width: 1440, height: 4000 })
     await page.goto('/')
     await row(page, parentName).click()
     await expect(row(page, childName)).toHaveAttribute('aria-level', '2')

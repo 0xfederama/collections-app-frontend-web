@@ -27,8 +27,9 @@ test.describe('F003-W1 item: kind field, price, website, sort by kind key', () =
     await expect(panel.getByRole('button', { name: 'Edit release year' })).toBeVisible()
 
     await panel.getByRole('button', { name: 'Add field' }).click()
-    await page.getByRole('menuitem', { name: 'Price range' }).click()
-    await panel.getByRole('textbox', { name: 'Minimum price' }).fill('10')
+    await page.getByRole('menuitem', { name: 'Price', exact: true }).click()
+    await panel.getByRole('textbox', { name: 'Price', exact: true }).fill('10')
+    await panel.getByRole('button', { name: 'Add range' }).click()
     await panel.getByRole('textbox', { name: 'Maximum price' }).fill('20')
     await panel.getByRole('button', { name: 'Save price' }).click()
     await expect(panel.getByRole('button', { name: 'Edit price' })).toBeVisible()
