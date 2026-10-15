@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../../components/ui'
 import { api, ApiError, ifMatch, unwrap } from '../../lib/api'
+import { invalidateContent } from '../invalidateContent'
 import { treeKeys, type Folder, type List, type TreeData } from './api'
 import { shouldRefreshTree } from './errors'
 import { applyOrder, type SiblingKind } from './order'
 
 /**
  * Tree writes (folders and lists). Every write sends `If-Match` built from the version the user
- * saw, is never retried (mutation defaults), and refetches the tree when it succeeds. Move and
+ * saw, is never retried (mutation defaults), and refetches all content (`invalidateContent`) when it succeeds. Move and
  * reorder bodies always carry the parent field, `null` meaning the root (D-060).
  *
  * A 412 does NOT refetch: the dialog keeps the user's draft and the stale version, so a second
@@ -15,7 +16,7 @@ import { applyOrder, type SiblingKind } from './order'
  */
 function useTreeMutation<TVars, TData = unknown>(mutationFn: (vars: TVars) => Promise<TData>) {
   const queryClient = useQueryClient()
-  const refresh = () => queryClient.invalidateQueries({ queryKey: treeKeys.tree })
+  const refresh = () => invalidateContent(queryClient)
   return useMutation({
     mutationFn,
     onSuccess: refresh,

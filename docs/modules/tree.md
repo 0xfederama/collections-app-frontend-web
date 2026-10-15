@@ -25,7 +25,7 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `useTreeIndex()`: `{ status: 'pending' }`, `{ status: 'error', refetch }` or `{ status: 'success', index }`.
 - `createTreeIndex(data)`: `nodes`, `folders` and `lists` maps, `ancestorsOf(id)`.
 - `SidebarTree()`: provides `TreeActionsContext` and renders the dialogs. `useTreeActions()` throws outside it.
-- `useCreateFolder()`, `useCreateList()`, `useRenameFolder()`, `useUpdateList()`, `useMoveFolder()`, `useMoveList()`, `useDeleteFolder()`, `useDeleteList()`: mutations; `If-Match` from `version`; success invalidates `treeKeys.tree`.
+- `useCreateFolder()`, `useCreateList()`, `useRenameFolder()`, `useUpdateList()`, `useMoveFolder()`, `useMoveList()`, `useDeleteFolder()`, `useDeleteList()`: mutations; `If-Match` from `version`; success calls `invalidateContent`.
 - `useReorderSiblings()`: `mutate({ kind, parentId, ids })`; optimistic, rolled back on error.
 - `useTreeDialogs({ onCreatedFolder? })`: `{ actions: TreeActions, dialogs }`; `TreeActions` has create, rename, editDescription, move, remove, nudge, position, applyMove.
 - `DestinationPicker({ options, value, onChange, label? })`: options `{ key, name, depth, reason?, group? }`; `reason` disables an option, `group` is a label with no radio.
@@ -39,7 +39,7 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 ## Gotchas
 
 - Move, reorder and create bodies always send the parent field (`parent_folder_id` / `folder_id`); `null` means root (D-060).
-- A 412 keeps the draft and the stale version, and the dialog offers "Reload latest". The tree refetches on success and on 404/409, never on 412.
+- A 412 keeps the draft and the stale version, and the dialog offers "Reload latest". Success and 404/409 call `invalidateContent`; 412 never does.
 - Reorder only moves same-kind siblings under one parent. Cross-parent moves use the Move dialog; "Move up" / "Move down" in the menu are the keyboard fallback.
 - A Radix Dialog opened from a menu needs `initialFocus` on `Dialog` (see the ui module).
 - The drag handle is a real button labelled `Reorder <name>`, rendered only on sortable rows. Row actions stop click propagation.
@@ -47,5 +47,5 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - The delete confirm states the same counts as the Trash entry (`countsText`, root included, D-065): "This moves “X” to Trash: 4 folders, 4 lists, 72 items."
 - Sub-folders come first in each parent, then lists, each by `(sort_order, id)`. Folders with a missing parent, and anything in a parent cycle, are left out.
 - Expanded ids persist under `collection:tree-expanded`; ids of deleted folders are dropped on the next write. Nothing is written before the tree loads.
-- When the active list changes, its ancestors open once; a manual collapse sticks until then. Mutations invalidate `treeKeys.tree`, not a string literal.
+- When the active list changes, its ancestors open once; a manual collapse sticks until then. Writes go through `invalidateContent` (see [api](api.md)), not per-feature keys.
 - The item crumb is always the generic label "Item" (`breadcrumbs.ts`).

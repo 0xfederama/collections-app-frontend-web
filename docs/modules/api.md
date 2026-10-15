@@ -13,6 +13,7 @@ Vendors the backend OpenAPI contract at a pinned tag, generates its TypeScript t
 - `src/generated/schema.d.ts`, `examples.ts`: generated types and first 2xx example per operation.
 - `src/lib/api/client.ts`, `errors.ts`, `etag.ts`: client, error classes, `If-Match` builder.
 - `src/app/queryClient.ts`: app-wide QueryClient defaults and `shouldRetry`.
+- `src/features/invalidateContent.ts`: the one invalidation for create, trash, restore, purge and move.
 - `src/mocks/`: `handlers.ts`, `server.ts` (Node), `browser.ts` (worker), `devData.ts` (dev-only tree), `devTree.ts` (`createTreeBackend`, stateful folders and lists fake), `problems.ts`.
 - `src/test-utils.tsx`: render helpers with a fresh QueryClient.
 - `src/main.tsx`, `vite.config.ts`, `public/mockServiceWorker.js`: dev-only mock worker.
@@ -25,6 +26,7 @@ Vendors the backend OpenAPI contract at a pinned tag, generates its TypeScript t
 - `ApiError` (`status`, `code`, `title`, `detail?`, `currentVersion?`, `errors?`, `requestId?`, `raw`), `NetworkError`.
 - `etag(resource, version)`: e.g. `"i-3"`. `ifMatch(resource, version)`: `{ 'If-Match': … }`. Resources: folder, list, item, content, settings.
 - `createQueryClient()`, `shouldRetry(failureCount, error)`: `staleTime` 30 s; mutations never retried.
+- `invalidateContent(queryClient)`: invalidates tree, `['lists']`, `['items']`, search, `homeKeys.recent` and trash.
 - `handlers`, `server`, `worker` (`devHandlers` + `handlers`), `problemResponse(status, code, extra?, headers?)`.
 - `renderWithProviders(ui, client?)`, `renderAt(path, client?)`, `createTestQueryClient()`.
 

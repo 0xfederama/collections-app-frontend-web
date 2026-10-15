@@ -26,5 +26,5 @@
 
 - Quick links come from `GET /tree` (`useTreeIndex`), not from the recent endpoint; "Recently updated" uses the server's order.
 - With no lists at all, the empty state replaces both sections (the wording differs when folders exist).
-- Nothing invalidates `homeKeys.recent`; `staleTime: 0` makes it refetch whenever Home mounts.
+- Creates, trash, restore, purge and move invalidate `homeKeys.recent` (via `invalidateContent`); `staleTime: 0` also refetches on every mount.
 - Recent rows link through `resultHref`, the same as search results.
