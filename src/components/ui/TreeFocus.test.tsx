@@ -162,4 +162,58 @@ describe('F006-W2 tree is reachable by Tab and navigated by arrows', () => {
     expect(item('Beta')).toHaveFocus()
     expect(tabbable()).toEqual(['b'])
   })
+
+  it('the whole tree is one Tab stop: only the active row controls are tabbable, then Tab leaves', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <button type="button">Before</button>
+        <Harness
+          sortable={(n) => ({
+            group: 'g',
+            index: nodes.findIndex((x) => x.id === n.id),
+            size: nodes.length,
+            label: n.name,
+          })}
+        />
+        <button type="button">After</button>
+      </>,
+    )
+    screen.getByRole('button', { name: 'Before' }).focus()
+    await user.tab()
+    expect(item('Alpha')).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Actions for Alpha' })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Reorder Alpha' })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'After' })).toHaveFocus()
+    // Shift+Tab walks back through the same row, not another one.
+    await user.tab({ shift: true })
+    expect(screen.getByRole('button', { name: 'Reorder Alpha' })).toHaveFocus()
+    // The row link keeps its own -1.
+    expect(within(item('Alpha')).getByRole('link')).toHaveAttribute('tabindex', '-1')
+  })
+
+  it('after arrowing to another row, that row controls become the tab stops', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <button type="button">Before</button>
+        <Harness />
+        <button type="button">After</button>
+      </>,
+    )
+    screen.getByRole('button', { name: 'Before' }).focus()
+    await user.tab()
+    await user.keyboard('{ArrowDown}')
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Actions for Beta' })).toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Actions for Alpha' })).toHaveAttribute(
+      'tabindex',
+      '-1',
+    )
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'After' })).toHaveFocus()
+  })
 })
