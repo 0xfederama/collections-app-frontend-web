@@ -1,6 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
+import { rememberMenuTrigger } from './returnFocus'
 
 export type MenuItem =
   | {
@@ -21,9 +22,12 @@ export interface MenuProps {
 }
 
 export function Menu({ trigger, items, align = 'end' }: MenuProps) {
+  const opener = useRef<HTMLButtonElement>(null)
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
+      <DropdownMenu.Trigger asChild ref={opener}>
+        {trigger}
+      </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align={align}
@@ -37,7 +41,10 @@ export function Menu({ trigger, items, align = 'end' }: MenuProps) {
               <DropdownMenu.Item
                 key={item.label}
                 disabled={item.disabled}
-                onSelect={item.onSelect}
+                onSelect={() => {
+                  rememberMenuTrigger(opener.current)
+                  item.onSelect()
+                }}
                 className={cx(
                   'flex h-9 cursor-pointer select-none items-center gap-2 rounded-sm px-3 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-border pointer-coarse:min-h-11 [&_svg]:size-4',
                   item.destructive && 'text-danger-text data-[highlighted]:bg-danger-bg',

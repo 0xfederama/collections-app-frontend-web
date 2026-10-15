@@ -4,6 +4,7 @@ import { cx } from '../../lib/cx'
 import { overlayClasses } from './Dialog'
 import { IconButton } from './IconButton'
 import { X } from './icons'
+import { useReturnFocus } from './returnFocus'
 
 export interface DrawerProps {
   open?: boolean
@@ -25,12 +26,15 @@ export function Drawer({
   side = 'right',
   children,
 }: DrawerProps) {
+  const returnFocus = useReturnFocus()
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <RadixDialog.Trigger asChild>{trigger}</RadixDialog.Trigger>}
       <RadixDialog.Portal>
         <RadixDialog.Overlay className={overlayClasses} />
         <RadixDialog.Content
+          onOpenAutoFocus={returnFocus.capture}
+          onCloseAutoFocus={returnFocus.restore}
           className={cx(
             'fixed inset-y-0 z-50 flex w-[min(24rem,100%-3rem)] flex-col gap-4 overflow-y-auto border-border bg-surface-raised p-6 text-text shadow-lg',
             side === 'right'

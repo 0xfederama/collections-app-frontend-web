@@ -2,6 +2,7 @@ import * as RadixAlertDialog from '@radix-ui/react-alert-dialog'
 import type { ReactNode } from 'react'
 import { Button } from './Button'
 import { overlayClasses } from './Dialog'
+import { useReturnFocus } from './returnFocus'
 
 export interface AlertDialogProps {
   open?: boolean
@@ -36,12 +37,17 @@ export function AlertDialog({
   children,
   keepOpen,
 }: AlertDialogProps) {
+  const returnFocus = useReturnFocus()
   return (
     <RadixAlertDialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <RadixAlertDialog.Trigger asChild>{trigger}</RadixAlertDialog.Trigger>}
       <RadixAlertDialog.Portal>
         <RadixAlertDialog.Overlay className={overlayClasses} />
-        <RadixAlertDialog.Content className="fixed top-1/2 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-xl border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in">
+        <RadixAlertDialog.Content
+          onOpenAutoFocus={returnFocus.capture}
+          onCloseAutoFocus={returnFocus.restore}
+          className="fixed top-1/2 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-xl border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in"
+        >
           <div className="flex flex-col gap-1">
             <RadixAlertDialog.Title className="font-display text-xl font-semibold">
               {title}

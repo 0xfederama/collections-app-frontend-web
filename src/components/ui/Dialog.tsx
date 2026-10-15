@@ -3,6 +3,7 @@ import type { ReactNode, RefObject } from 'react'
 import { cx } from '../../lib/cx'
 import { IconButton } from './IconButton'
 import { X } from './icons'
+import { useReturnFocus } from './returnFocus'
 
 export interface DialogProps {
   open?: boolean
@@ -33,6 +34,7 @@ export function Dialog({
   className,
   initialFocus,
 }: DialogProps) {
+  const returnFocus = useReturnFocus()
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <RadixDialog.Trigger asChild>{trigger}</RadixDialog.Trigger>}
@@ -40,10 +42,12 @@ export function Dialog({
         <RadixDialog.Overlay className={overlayClasses} />
         <RadixDialog.Content
           onOpenAutoFocus={(event) => {
+            returnFocus.capture()
             if (!initialFocus?.current) return
             event.preventDefault()
             initialFocus.current.focus()
           }}
+          onCloseAutoFocus={returnFocus.restore}
           className={cx(
             'fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-xl border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in',
             className,
