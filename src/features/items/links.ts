@@ -41,7 +41,7 @@ function safeOfficialUrl(url: string | null): string | null {
 }
 
 /** Same pattern as the contract: `imdb_url` in api/openapi.yaml (movie / TV show metadata). */
-const IMDB_URL = /^https:\/\/(www\.|m\.)?imdb\.com\/title\/tt\d{7,10}\/?$/
+export const IMDB_URL = /^https:\/\/(www\.|m\.)?imdb\.com\/title\/tt\d{7,10}\/?$/
 
 /**
  * The IMDb URL only if it matches the contract pattern and parses as `https` on an IMDb host;

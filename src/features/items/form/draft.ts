@@ -3,6 +3,7 @@ import type { FieldError } from '../../../lib/api'
 import { kindLabels } from '../../../components/ui'
 import type { Item, ItemKind } from '../api'
 import { formatField, kindFields, type Field } from '../kinds'
+import { IMDB_URL } from '../links'
 
 /**
  * The form state of the item editor and everything derived from it, as pure functions: validation,
@@ -59,7 +60,6 @@ const MAX_PLATFORMS = 30
 const INTEGER = /^\d+$/
 const ONE_DECIMAL = /^\d+(\.\d)?$/
 const PRICE = /^\d{1,10}(\.\d{1,2})?$/
-const IMDB = /^https:\/\/(www\.|m\.)?imdb\.com\/title\/tt\d{7,10}\/?$/
 
 const metadataOf = (item: Item) => item.metadata as Metadata
 
@@ -270,7 +270,7 @@ function validateField(field: Field, text: string): string | undefined {
         ? undefined
         : 'Choose one of the options.'
     case 'imdb_url':
-      return IMDB.test(value)
+      return IMDB_URL.test(value)
         ? undefined
         : 'Enter an IMDb title link like https://www.imdb.com/title/tt0133093/'
     default:
