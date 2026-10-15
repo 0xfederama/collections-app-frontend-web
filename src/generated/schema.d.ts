@@ -572,6 +572,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/recent-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List recently updated items
+         * @description Active items across the workspace, most recently updated first (a PATCH or a content save moves an item up), with their paths.
+         *     Not paginated: it feeds the Home block.
+         */
+        get: operations["listRecentItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/trash": {
         parameters: {
             query?: never;
@@ -962,6 +983,9 @@ export interface components {
         SearchPage: {
             data: components["schemas"]["SearchResult"][];
             page: components["schemas"]["Page"];
+        };
+        RecentItems: {
+            data: components["schemas"]["SearchResult"][];
         };
         CreateItemRequest: {
             title: string;
@@ -2406,6 +2430,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRecentItems: {
+        parameters: {
+            query?: {
+                /** @description Number of items to return. */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The most recently updated items with their paths */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecentItems"];
                 };
             };
             400: components["responses"]["BadRequest"];

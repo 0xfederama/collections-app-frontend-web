@@ -44,7 +44,8 @@ describe('W-04 sidebar tree states', () => {
 
   it('shows a loading status while the tree is fetched', async () => {
     renderAt('/')
-    expect(screen.getByRole('status', { hidden: false })).toHaveTextContent('Loading collections')
+    // Home (the page at `/`) shows its own loading status for the same query: look in the sidebar.
+    expect(within(sidebar()).getByRole('status')).toHaveTextContent('Loading collections')
     expect(await within(sidebar()).findByRole('tree')).toBeInTheDocument()
     expect(screen.queryByText('Loading collections')).not.toBeInTheDocument()
   })
@@ -64,7 +65,7 @@ describe('W-04 sidebar tree states', () => {
     expect(await screen.findByText('Couldn’t load your collections.')).toBeInTheDocument()
     expect(within(sidebar()).queryByRole('tree')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Retry' }))
+    await user.click(within(sidebar()).getByRole('button', { name: 'Retry' }))
     expect(await within(sidebar()).findByRole('treeitem', { name: /Media/ })).toBeInTheDocument()
     expect(screen.queryByText('Couldn’t load your collections.')).not.toBeInTheDocument()
     expect(calls).toBe(2)

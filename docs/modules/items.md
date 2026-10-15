@@ -64,7 +64,6 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - `ItemEditForm` keeps `base` in state. A successful image change moves `base.version`, `image` and `updated_at` forward and leaves the draft alone, so the next Save sends the new `If-Match`.
 - 412 or 404 on an image call shows the form's conflict or gone banner; no extra toast.
 - Closing the form cancels an upload in flight. Client checks (JPEG, PNG, WebP; 10 MiB; `https://` only) save a round trip; the server stays authoritative.
-- Streaming country is a 2-letter text field (no ISO picker yet; W-13 may add one).
 - Required labels render as `Title *`; the asterisk is decorative.
 - Description saves do not bump the item `version` (checked on the real backend). They refresh the content, versions, detail and list-items caches, never the Basics snapshot.
 - Description has its own draft and Save. Saving Basics while the description is dirty stays in edit mode and rebases the Basics draft.
@@ -75,4 +74,6 @@ The item page at `/lists/:listId/items/:itemId`: view mode (hero, external links
 - Move and delete: 412 reloads the item, 404 toasts and returns to the list, 409 asks for another list, network errors keep the dialog open.
 - An item whose `list_id` differs from the URL is redirected (replace) to its real list.
 - `ItemPage` keys its body by `itemId`, so moving between items remounts it.
+- The streaming warning compares the item's streaming country with `settings.streaming_country_code`.
+- Streaming country and price currency use the ISO pickers (`CountrySelect`, `CurrencySelect`; see ui).
 - The hero image sends no referrer; if it fails to load, the fallback tile shows.

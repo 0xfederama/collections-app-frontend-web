@@ -12,3 +12,5 @@
 - [ui](modules/ui.md): Design-system primitives in `src/components/ui/` and the `/dev/ui` gallery.
 - [items](modules/items.md): Item detail at `/lists/:listId/items/:itemId`: hero, external links, kind details, description, Move and Delete.
 - [markdown](modules/markdown.md): Safe Markdown renderer (`MarkdownView`) and URL policy `sanitizeUrl`.
+- [settings](modules/settings.md): `/settings`: per-device theme and the workspace form (If-Match snapshot, 412 and 422 handling, unsaved guard).
+- [home](modules/home.md): Home at `/`: quick links to every list, "Recently updated" items (D-070) and the empty state.

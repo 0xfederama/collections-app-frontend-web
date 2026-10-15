@@ -112,7 +112,7 @@ describe('AT-05 edit form: saving', () => {
     expect(field('Release year')).toHaveValue('1999')
     expect(field('Runtime')).toHaveValue('136')
     expect(field('IMDb link')).toHaveValue('https://www.imdb.com/title/tt0133093/')
-    expect(field('Streaming country')).toHaveValue('IT')
+    expect(field('Streaming country')).toHaveValue('Italy (IT)')
     expect(field('Streaming platforms')).toHaveValue('Netflix, Prime Video')
     expect(screen.getByRole('combobox', { name: 'Kind' })).toHaveTextContent('Movie')
   })
@@ -369,7 +369,7 @@ describe('AT-05 edit form: price', () => {
     const calls = mockPatch()
     const { user } = await openForm()
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'Currency' })).toHaveTextContent(/EUR/),
+      expect(screen.getByRole('combobox', { name: 'Currency' })).toHaveValue('EUR · Euro'),
     )
     await user.type(field('Minimum price'), '12.5')
     await user.type(field('Maximum price'), '20')
