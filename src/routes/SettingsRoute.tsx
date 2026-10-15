@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Button, Skeleton } from '../components/ui'
+import { useLocation, useNavigate } from 'react-router'
+import { Button, Dialog, Skeleton } from '../components/ui'
 import { AppearanceSection } from '../features/settings/AppearanceSection'
 import { useSettings } from '../features/settings/api'
 import { ConnectionSection } from '../features/settings/ConnectionSection'
@@ -33,12 +34,24 @@ function WorkspaceSkeleton() {
   )
 }
 
-/** `/settings` (UI_SPEC §8): the workspace settings form and the theme choice and the connection info. */
+/**
+ * `/settings` (UI_SPEC §8): a large pane over the page it was opened from (the shell renders that
+ * page behind it). Closing goes back there, or to Home on a deep link. The form keeps its own
+ * unsaved-changes guard, so closing with edits asks first.
+ */
 export function SettingsRoute() {
   const settings = useSettings()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const hasBackground = Boolean((location.state as { background?: unknown } | null)?.background)
+  const close = () => void (hasBackground ? navigate(-1) : navigate('/', { replace: true }))
   return (
-    <div className="flex max-w-xl flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+    <Dialog
+      open
+      onOpenChange={(open) => !open && close()}
+      title="Settings"
+      className="max-h-[90dvh] w-[min(90vw,720px)]! max-w-none! gap-6"
+    >
       <Section id="settings-workspace" title="Workspace">
         {settings.isPending ? (
           <WorkspaceSkeleton />
@@ -59,6 +72,6 @@ export function SettingsRoute() {
       <Section id="settings-connection" title="Connection">
         <ConnectionSection />
       </Section>
-    </div>
+    </Dialog>
   )
 }

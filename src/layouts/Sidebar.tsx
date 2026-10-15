@@ -1,5 +1,5 @@
 import type { Ref } from 'react'
-import { Link, NavLink } from 'react-router'
+import { Link, NavLink, useLocation } from 'react-router'
 import { Button, IconButton, Tooltip } from '../components/ui'
 import {
   PanelLeftClose,
@@ -142,9 +142,12 @@ function FooterLink({
   icon: LucideIcon
   rail: boolean
 }) {
+  // Settings is a pane over the current page, which it needs to know to render and to return to.
+  const here = useLocation()
   const link = (
     <NavLink
       to={to}
+      state={to === '/settings' && here.pathname !== to ? { background: here } : undefined}
       aria-label={rail ? label : undefined}
       className={cx(
         'flex min-h-9 items-center gap-2 rounded-md text-sm text-text hover:bg-fill-hover aria-[current=page]:bg-accent/10 aria-[current=page]:font-medium pointer-coarse:min-h-11',

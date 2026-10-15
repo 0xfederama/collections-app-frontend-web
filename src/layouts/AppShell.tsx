@@ -1,10 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
-import { Outlet, useLocation, useMatch, useNavigate } from 'react-router'
+import { Outlet, useLocation, useMatch, useNavigate, useRoutes, type Location } from 'react-router'
 import { Drawer, IconButton } from '../components/ui'
 import { MenuIcon, X } from '../components/ui/icons'
 import { QuickAddProvider } from '../features/quickadd/QuickAddProvider'
 import { useSearchShortcut } from '../features/search/useSearchShortcut'
 import { useWorkspaceName } from '../features/settings/api'
+import { contentRoutes } from '../app/contentRoutes'
 import { useBreakpoint } from '../lib/breakpoints'
 import { ItemRoute } from '../routes/ItemRoute'
 import { Sidebar } from './Sidebar'
@@ -62,7 +63,21 @@ function ShellFrame() {
 
   const itemMatch = useMatch('/lists/:listId/items/:itemId')
   const panelVisible = breakpoint === 'wide' && itemMatch !== null
-  const content = itemMatch !== null && breakpoint !== 'wide' ? <ItemRoute /> : <Outlet />
+  // The Settings pane (`/settings`) floats over the page it was opened from: that page is rendered
+  // again behind it from the location the sidebar link passed along (none on a deep link).
+  const background = (location.state as { background?: Location } | null)?.background
+  const behind = useRoutes(contentRoutes, background ?? location)
+  const settingsOpen = location.pathname === '/settings'
+  const content = settingsOpen ? (
+    <>
+      {background ? behind : null}
+      <Outlet />
+    </>
+  ) : itemMatch !== null && breakpoint !== 'wide' ? (
+    <ItemRoute />
+  ) : (
+    <Outlet />
+  )
 
   if (mobile) {
     return (

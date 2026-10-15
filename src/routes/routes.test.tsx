@@ -69,7 +69,7 @@ describe('W-04 routes render their heading', () => {
 
   it('/settings is Settings', async () => {
     renderAt('/settings')
-    expect(await heading('Settings')).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
   })
 
   it('an unknown path is Page not found', async () => {

@@ -16,7 +16,7 @@ async function openSettings() {
   mockViewport(1280)
   const user = userEvent.setup()
   renderAt('/settings')
-  await screen.findByRole('heading', { level: 1, name: 'Settings' })
+  await screen.findByRole('dialog', { name: 'Settings' })
   await screen.findByRole('button', { name: 'Save settings' })
   return user
 }
@@ -299,33 +299,56 @@ describe('W-13 settings: load failure', () => {
   })
 })
 
+describe('W-13 settings: pane', () => {
+  it('opens as a dialog over the page it came from; Escape and Close go back to it', async () => {
+    mountBackend()
+    mockViewport(1280)
+    const user = userEvent.setup()
+    renderAt('/trash')
+    await screen.findByRole('heading', { level: 1, name: 'Trash' })
+    await user.click(screen.getByRole('link', { name: 'Settings' }))
+    await screen.findByRole('dialog', { name: 'Settings' })
+    expect(screen.getByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+  })
+
+  it('a deep link has nothing behind it, and closing goes Home', async () => {
+    mountBackend()
+    const user = await openSettings()
+    await user.keyboard('{Escape}')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
+  })
+})
+
 describe('W-13 settings: unsaved changes guard', () => {
   it('asks before leaving with a dirty form; Keep editing stays', async () => {
     mountBackend()
     const user = await openSettings()
     await retype(user, 'Workspace name', 'Dirty')
-    await user.click(screen.getByRole('link', { name: 'Trash' }))
+    await user.click(screen.getByRole('button', { name: 'Close' }))
     const dialog = await screen.findByRole('alertdialog', { name: 'Discard changes?' })
     await user.click(within(dialog).getByRole('button', { name: 'Keep editing' }))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(field('Workspace name')).toHaveValue('Dirty')
   })
 
-  it('Discard changes proceeds to the next page', async () => {
+  it('Discard changes closes the pane and goes Home', async () => {
     mountBackend()
     const user = await openSettings()
     await retype(user, 'Workspace name', 'Dirty')
-    await user.click(screen.getByRole('link', { name: 'Trash' }))
+    await user.click(screen.getByRole('button', { name: 'Close' }))
     const dialog = await screen.findByRole('alertdialog', { name: 'Discard changes?' })
     await user.click(within(dialog).getByRole('button', { name: 'Discard changes' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
   })
 
   it('does not ask when nothing changed', async () => {
     mountBackend()
     const user = await openSettings()
-    await user.click(screen.getByRole('link', { name: 'Trash' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 
@@ -335,7 +358,7 @@ describe('W-13 settings: unsaved changes guard', () => {
     await retype(user, 'Workspace name', 'Saved')
     await user.click(save())
     await screen.findByText('Settings saved')
-    await user.click(screen.getByRole('link', { name: 'Trash' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Trash' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
   })
 })

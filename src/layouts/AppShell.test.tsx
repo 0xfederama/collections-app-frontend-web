@@ -183,10 +183,8 @@ describe('AT-14 mobile drawer', () => {
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
     const dialog = await screen.findByRole('dialog')
     await user.click(within(dialog).getByRole('link', { name: 'Settings' }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(
-      await within(screen.getByRole('main')).findByRole('heading', { name: 'Settings' }),
-    ).toBeInTheDocument()
+    // The drawer is gone; the dialog left is the Settings pane.
+    expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
   })
 
   it('stays closed after navigating and can be opened again', async () => {
