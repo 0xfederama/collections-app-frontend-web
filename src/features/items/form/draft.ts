@@ -45,7 +45,7 @@ export interface Draft {
   streamingCountry: string
   /** Comma-separated. */
   streamingPlatforms: string
-  /** Paid platforms: no input yet, carried through so a save does not drop them. */
+  /** Paid platforms (each one must also be in `streamingPlatforms`). */
   streamingPaid: string[]
 }
 
@@ -423,10 +423,6 @@ export function mapServerErrors(
   }
   return result
 }
-
-/** The first input (in page order) that has an error. */
-export const firstInvalid = (errors: ErrorMap, kind: ItemKind) =>
-  inputKeys(kind).find((key) => errors[key])
 
 // ---------------------------------------------------------------------------------------------
 // Copy my draft

@@ -62,7 +62,7 @@ test.describe('AT-14 axe: no serious or critical issues (light and dark, 375 and
 })
 
 test.describe('AT-22 unsaved changes guard', () => {
-  test('leaving a dirty item asks first: keep editing keeps the edits, discard leaves', async ({
+  test('leaving an item with an open field asks first: keep editing keeps the edits, discard leaves', async ({
     page,
     request,
   }) => {
@@ -71,8 +71,9 @@ test.describe('AT-22 unsaved changes guard', () => {
     const list = await createList(request, uniqueName('Editing'), 'generic')
     const item = await createItem(request, list.id, uniqueName('Draft'))
 
-    await page.goto(itemUrl(list.id, item.id, true))
-    const title = itemPanel(page).getByRole('textbox', { name: 'Title', exact: true })
+    await page.goto(itemUrl(list.id, item.id))
+    await itemPanel(page).getByRole('button', { name: 'Edit title' }).click()
+    const title = itemPanel(page).getByRole('textbox', { name: 'Title' })
     await title.fill('Changed title')
     const dialog = page.getByRole('alertdialog', { name: 'Discard changes?' })
 
@@ -80,7 +81,7 @@ test.describe('AT-22 unsaved changes guard', () => {
     await expect(dialog).toBeVisible()
     await dialog.getByRole('button', { name: 'Keep editing' }).click()
     await expect(dialog).toBeHidden()
-    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}/items/${item.id}\\?edit=1`))
+    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}/items/${item.id}$`))
     await expect(title).toHaveValue('Changed title')
 
     await sidebarTree(page).getByText(otherName).click()

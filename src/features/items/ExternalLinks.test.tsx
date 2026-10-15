@@ -11,7 +11,7 @@ const group = () => screen.getByRole('group', { name: 'External links' })
 const controls = () => [...group().querySelectorAll<HTMLElement>('a, button')]
 
 describe('AT-13 external links component', () => {
-  it('renders a group with exactly three controls in order', () => {
+  it('renders a group with the three controls in order', () => {
     render(<ExternalLinks item={withSite('https://www.thematrix.com/')} />)
     const items = controls()
     expect(items).toHaveLength(3)
@@ -44,21 +44,13 @@ describe('AT-13 external links component', () => {
     expect(website).toHaveAttribute('href', 'https://www.thematrix.com/')
   })
 
-  it('with no website, the third control is an aria-disabled button without href', () => {
-    render(<ExternalLinks item={withSite(null)} />)
-    expect(within(group()).getAllByRole('link')).toHaveLength(2)
-    const disabled = within(group()).getByRole('button', { name: 'No website' })
-    expect(disabled).toHaveAttribute('aria-disabled', 'true')
-    expect(disabled).not.toHaveAttribute('href')
-    expect(controls()[2]).toBe(disabled)
-  })
-
-  it('treats an unsafe website as missing', () => {
+  it('with no website, or an unsafe one, only Google and Reddit show (no "No website" button)', () => {
+    const { unmount } = render(<ExternalLinks item={withSite(null)} />)
+    expect(controls()).toHaveLength(2)
+    expect(screen.queryByText('No website')).not.toBeInTheDocument()
+    unmount()
     render(<ExternalLinks item={withSite('javascript:alert(1)')} />)
-    expect(screen.getByRole('button', { name: 'No website' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
+    expect(controls()).toHaveLength(2)
     expect(document.querySelector('a[href^="javascript"]')).toBeNull()
   })
 })

@@ -65,9 +65,7 @@ test.describe('AT-12 search and AT-13 external links', () => {
 
     await page.goto(`/lists/${list.id}/items/${without.id}`)
     group = itemPanel(page).getByRole('group', { name: 'External links' })
-    await expect(group.locator('a, button')).toHaveText([/^Google/, /^Reddit/, /^No website/])
-    const disabled = group.getByRole('button', { name: 'No website' })
-    await expect(disabled).toHaveAttribute('aria-disabled', 'true')
+    await expect(group.locator('a, button')).toHaveText([/^Google/, /^Reddit/])
     await expect(group.getByRole('link')).toHaveCount(2)
   })
 })

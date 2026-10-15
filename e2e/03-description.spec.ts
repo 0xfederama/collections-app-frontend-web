@@ -1,40 +1,30 @@
 import { expect, test } from '@playwright/test'
 import { createItem, createList, itemPanel, itemUrl, uniqueName } from './helpers'
 
-test.describe('F003-W1 description: edit, preview, save, history restore', () => {
-  test('edit Markdown, preview it, save twice, restore the first version', async ({
+test.describe('F003-W1 description: edit in place, save, history restore', () => {
+  test('write Markdown in place, save twice, restore the first version', async ({
     page,
     request,
   }) => {
     const list = await createList(request, uniqueName('Notes'), 'generic')
     const item = await createItem(request, list.id, uniqueName('Doc'))
-    await page.goto(itemUrl(list.id, item.id, true))
+    await page.goto(itemUrl(list.id, item.id))
 
     const panel = itemPanel(page)
     const editor = panel.getByRole('textbox', { name: 'Description (Markdown)' })
     const save = panel.getByRole('button', { name: 'Save description' })
 
-    await editor.click()
+    await panel.getByRole('button', { name: 'Click to start writing' }).click()
+    await expect(editor).toBeFocused()
     await page.keyboard.type('# First heading')
-    await panel.getByRole('radiogroup', { name: 'Description view' }).getByText('Preview').click()
-    await expect(
-      panel
-        .getByRole('region', { name: 'Description preview' })
-        .getByRole('heading', { name: 'First heading' }),
-    ).toBeVisible()
-    await panel
-      .getByRole('radiogroup', { name: 'Description view' })
-      .getByText('Edit', { exact: true })
-      .click()
     await save.click()
-    await expect(save).toBeDisabled()
+    await expect(panel.getByRole('heading', { name: 'First heading' })).toBeVisible()
 
-    await editor.click()
+    await panel.getByRole('button', { name: 'Edit description' }).click()
     await page.keyboard.press('ControlOrMeta+a')
     await page.keyboard.type('Second text')
-    await save.click()
-    await expect(save).toBeDisabled()
-    await expect(editor).toContainText('Second text')
+    await page.keyboard.press('ControlOrMeta+Enter')
+    await expect(panel.getByText('Second text')).toBeVisible()
 
     await panel.getByRole('button', { name: 'History' }).click()
     const history = page.getByRole('dialog', { name: 'History' })
@@ -47,6 +37,6 @@ test.describe('F003-W1 description: edit, preview, save, history restore', () =>
       .getByRole('button', { name: 'Restore this version' })
       .click()
     await expect(history).toBeHidden()
-    await expect(editor).toContainText('# First heading')
+    await expect(panel.getByRole('heading', { name: 'First heading' })).toBeVisible()
   })
 })

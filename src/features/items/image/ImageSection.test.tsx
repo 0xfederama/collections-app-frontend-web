@@ -37,7 +37,7 @@ const fromUrl: NonNullable<Item['image']> = {
 
 function renderForm() {
   mockViewport(1100)
-  const router = createTestRouter([`${PATH}?edit=1`])
+  const router = createTestRouter([PATH])
   render(
     <QueryClientProvider client={createTestQueryClient()}>
       <ToastProvider>
@@ -47,11 +47,16 @@ function renderForm() {
   )
 }
 
+/** Opens the item and the image dialog ("Add image" when it has none, else "Change image"). */
 async function openForm(item: Partial<Item> = { image: null }) {
   server.use(http.get(itemUrl, () => HttpResponse.json({ ...matrix, ...item })))
   renderForm()
   const user = userEvent.setup()
-  await screen.findByRole('heading', { level: 1, name: /^Edit/ })
+  await screen.findByRole('heading', { level: 1, name: 'The Matrix' })
+  await user.click(
+    await screen.findByRole('button', { name: item.image ? 'Change image' : 'Add image' }),
+  )
+  await screen.findByRole('dialog')
   return { user }
 }
 
@@ -165,9 +170,9 @@ describe('AT-06 image upload', () => {
     expect(calls).toHaveLength(1)
     expect(calls[0]).toMatchObject({ method: 'PUT', ifMatch: '"i-3"' })
     expect(calls[0]?.fileName).toBe('cover.png')
-    // The new image is described in the section.
-    expect(await screen.findByText('Uploaded file: cover.png')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Remove image' })).toBeInTheDocument()
+    // The dialog closes and the picture itself shows the new image.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Change image' })).toBeInTheDocument()
   })
 
   it('shows a progress bar while uploading and Cancel upload aborts it', async () => {
@@ -253,8 +258,7 @@ describe('AT-07 image URL', () => {
     expect(calls[0]?.ifMatch).toBe('"i-3"')
     expect(calls[0]?.contentType).toContain('application/json')
     expect(calls[0]?.body).toEqual({ url: 'https://example.com/photo.jpg' })
-    expect(urlField()).toHaveValue('')
-    expect(await screen.findByText('From example.com')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('Enter in the URL field applies the address and does not submit the item form', async () => {
@@ -271,7 +275,7 @@ describe('AT-07 image URL', () => {
     await screen.findByText('Image address saved')
     expect(calls).toHaveLength(1)
     expect(patches).toBe(0)
-    expect(screen.getByRole('heading', { level: 1, name: /^Edit/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'The Matrix' })).toBeInTheDocument()
   })
 
   it('Enter on an invalid address shows the error and does not submit the item form', async () => {
@@ -309,7 +313,7 @@ describe('AT-07 image URL', () => {
 })
 
 describe('AT-07 replace and remove', () => {
-  it('Remove image sends DELETE with If-Match, toasts and returns focus to browse', async () => {
+  it('Remove image sends DELETE with If-Match, toasts and closes the dialog', async () => {
     const calls = mockImage()
     const { user } = await openForm({ image: fromUrl })
     expect(screen.getByText('From example.com')).toBeInTheDocument()
@@ -317,8 +321,8 @@ describe('AT-07 replace and remove', () => {
     expect(await screen.findByText('Image removed')).toBeInTheDocument()
     expect(calls).toHaveLength(1)
     expect(calls[0]).toMatchObject({ method: 'DELETE', ifMatch: '"i-3"' })
-    expect(screen.queryByRole('button', { name: 'Remove image' })).not.toBeInTheDocument()
-    await waitFor(() => expect(browse()).toHaveFocus())
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Add image' })).toBeInTheDocument()
   })
 
   it('replaces an upload with a URL and back, each request using the newest version', async () => {
@@ -335,12 +339,12 @@ describe('AT-07 replace and remove', () => {
 
     await user.type(urlField(), 'https://example.com/photo.jpg')
     await user.click(screen.getByRole('button', { name: 'Use image URL' }))
-    expect(await screen.findByText('From example.com')).toBeInTheDocument()
-    expect(screen.queryByText('Uploaded file: cover.png')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
+    await user.click(screen.getByRole('button', { name: 'Change image' }))
+    expect(await screen.findByText('From example.com')).toBeInTheDocument()
     await choose(png())
-    expect(await screen.findByText('Uploaded file: cover.png')).toBeInTheDocument()
-    expect(screen.queryByText('From example.com')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     expect(calls.map((c) => c.ifMatch)).toEqual(['"i-3"', '"i-4"'])
   })
@@ -354,33 +358,27 @@ describe('AT-07 replace and remove', () => {
 })
 
 describe('AT-09 image changes and the item version', () => {
-  it('Save after an upload sends If-Match "i-2" and only the changed title; the draft survives', async () => {
+  it('a field saved after an upload sends the new If-Match "i-2" and only its own change', async () => {
     const patches: { ifMatch: string | null; body: Record<string, unknown> }[] = []
     server.use(
       http.patch(itemUrl, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>
         patches.push({ ifMatch: request.headers.get('If-Match'), body })
-        return HttpResponse.json({ ...matrix, ...body, version: 3 })
+        return HttpResponse.json({ ...matrix, ...body, image: uploaded, version: 3 })
       }),
     )
-    mockImage((call) =>
-      HttpResponse.json({ ...matrix, image: uploaded, version: 2, call: call.method }),
-    )
+    mockImage(() => HttpResponse.json({ ...matrix, image: uploaded, version: 2 }))
     const { user } = await openForm({ version: 1, image: null })
-
-    const title = screen.getByLabelText(/^Title/)
-    await user.clear(title)
-    await user.type(title, 'A new title')
 
     await choose(png())
     await screen.findByText('Image uploaded')
-    // The draft was not reset by the image response.
-    expect(screen.getByLabelText(/^Title/)).toHaveValue('A new title')
-    expect(screen.getByLabelText(/^Website/)).toHaveValue(matrix.website ?? '')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
-    await user.click(screen.getByRole('button', { name: 'Save changes' }))
-    await screen.findByText('Item saved')
-    expect(patches).toHaveLength(1)
+    await user.click(screen.getByRole('button', { name: 'Edit title' }))
+    const title = screen.getByRole('textbox', { name: /Title/ })
+    await user.clear(title)
+    await user.type(title, 'A new title{Enter}')
+    await waitFor(() => expect(patches).toHaveLength(1))
     expect(patches[0]?.ifMatch).toBe('"i-2"')
     expect(patches[0]?.body).toEqual({ title: 'A new title' })
   })
@@ -393,23 +391,17 @@ describe('AT-09 image changes and the item version', () => {
     expect(calls[0]?.ifMatch).toBe('"i-1"')
   })
 
-  it('a 412 on the image request keeps the draft and shows the conflict banner', async () => {
+  it('a 412 on the image request shows the conflict banner with Reload latest and keeps the dialog', async () => {
     mockImage(() => problemResponse(412, 'version_conflict', { current_version: 5 }))
     const { user } = await openForm()
-    const title = screen.getByLabelText(/^Title/)
-    await user.clear(title)
-    await user.type(title, 'Typed before conflict')
-
     await user.type(urlField(), 'https://example.com/photo.jpg')
     await user.click(screen.getByRole('button', { name: 'Use image URL' }))
 
-    const banner = (await screen.findAllByRole('alert')).find((a) =>
-      a.textContent?.includes('Someone else changed this item while you were editing'),
-    )
-    expect(banner).toBeDefined()
-    expect(within(banner!).getByRole('button', { name: 'Reload latest' })).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Title/)).toHaveValue('Typed before conflict')
-    expect(screen.getByRole('heading', { level: 1, name: /^Edit/ })).toBeInTheDocument()
+    const banner = await screen.findByText(/Someone else changed this item/)
+    expect(
+      within(banner.parentElement as HTMLElement).getByRole('button', { name: 'Reload latest' }),
+    ).toBeInTheDocument()
     expect(screen.queryByText('Image address saved')).not.toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 })

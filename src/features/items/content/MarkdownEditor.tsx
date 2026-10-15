@@ -47,6 +47,8 @@ export interface MarkdownEditorProps {
   label: string
   placeholderText?: string
   id?: string
+  /** Focus the editor, caret at the end, when it opens (an editor the user just asked for). */
+  autoFocus?: boolean
 }
 
 /**
@@ -62,6 +64,7 @@ export default function MarkdownEditor({
   label,
   placeholderText,
   id,
+  autoFocus,
 }: MarkdownEditorProps) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
@@ -92,13 +95,17 @@ export default function MarkdownEditor({
       }),
     })
     view.current = editor
+    if (autoFocus) {
+      editor.dispatch({ selection: { anchor: editor.state.doc.length } })
+      editor.focus()
+    }
     return () => {
       editor.destroy()
       view.current = null
     }
     // The editor is created once; later `value` changes are applied by the effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [label, placeholderText])
+  }, [label, placeholderText, autoFocus])
 
   // External changes (Reload latest, Restore) replace the document; typing echoes the same string.
   useEffect(() => {

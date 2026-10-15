@@ -16,6 +16,7 @@ export {
   FolderOpen,
   FolderPlus,
   GripVertical,
+  ImagePlus,
   Inbox,
   Globe,
   Info,

@@ -48,8 +48,7 @@ export async function trashFolder(request: APIRequestContext, folder: Created) {
   expect(response.status(), 'DELETE folder').toBe(204)
 }
 
-export const itemUrl = (listId: string, itemId: string, edit = false) =>
-  `/lists/${listId}/items/${itemId}${edit ? '?edit=1' : ''}`
+export const itemUrl = (listId: string, itemId: string) => `/lists/${listId}/items/${itemId}`
 
 /** The sidebar tree. */
 export const sidebarTree = (page: Page) => page.getByRole('tree', { name: 'Folders and lists' })

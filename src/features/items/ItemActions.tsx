@@ -1,13 +1,21 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { AlertDialog, Button, Combobox, Dialog, useToast } from '../../components/ui'
-import { FolderInput, Pencil, Trash2 } from '../../components/ui/icons'
+import {
+  AlertDialog,
+  Button,
+  Combobox,
+  Dialog,
+  IconButton,
+  Menu,
+  useToast,
+} from '../../components/ui'
+import { Ellipsis, FolderInput, Trash2 } from '../../components/ui/icons'
 import { treeKeys, useTreeIndex, type TreeIndex, type TreeNode } from '../tree/api'
 import { countsText } from '../trash/model'
 import { itemKeys, useDeleteItem, useMoveItem, type Item, type ItemKind } from './api'
-import { withEdit, withoutEdit } from './editMode'
 import { classifyItemError, type ItemError } from './errors'
+import { useEditGuard } from './inline/guard'
 
 function ErrorBox({ error }: { error: ItemError }) {
   return (
@@ -41,36 +49,63 @@ function listOptions(index: TreeIndex, currentListId: string, kind: ItemKind) {
   return out
 }
 
+interface ItemActionsState {
+  move: () => void
+  remove: () => void
+  /** The Move and Delete dialogs: render them once. */
+  dialogs: ReactNode
+}
+
+/** Move and Delete share their dialogs between the footer buttons and the header "…" menu. */
+export function useItemActions(item: Item): ItemActionsState {
+  const [dialog, setDialog] = useState<'move' | 'delete' | null>(null)
+  return {
+    move: () => setDialog('move'),
+    remove: () => setDialog('delete'),
+    dialogs: (
+      <>
+        {dialog === 'move' && <MoveItemDialog item={item} onClose={() => setDialog(null)} />}
+        {dialog === 'delete' && <DeleteItemDialog item={item} onClose={() => setDialog(null)} />}
+      </>
+    ),
+  }
+}
+
 /**
- * Edit (switches the page to the form, `?edit=1`), Move and Delete, with their dialogs. Errors follow UI_SPEC §9: 412
+ * Move and Delete (footer), with the dialogs of `useItemActions`. Errors follow UI_SPEC §9: 412
  * loads the latest item and asks to try again, 404 says the item is gone and goes back to the
  * list, 409 asks for another destination, a network failure keeps the dialog open to retry.
  */
-export function ItemActions({ item }: { item: Item }) {
-  const [dialog, setDialog] = useState<'move' | 'delete' | null>(null)
-  const navigate = useNavigate()
-  const { pathname, search } = useLocation()
+export function ItemActions({ actions }: { actions: ItemActionsState }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => void navigate({ pathname, search: withEdit(search) }, { replace: true })}
-      >
-        <Pencil aria-hidden className="size-4" />
-        Edit
-      </Button>
-      <Button variant="secondary" size="sm" onClick={() => setDialog('move')}>
+      <Button variant="secondary" size="sm" onClick={actions.move}>
         <FolderInput aria-hidden className="size-4" />
         Move
       </Button>
-      <Button variant="secondary" size="sm" onClick={() => setDialog('delete')}>
+      <Button variant="secondary" size="sm" onClick={actions.remove}>
         <Trash2 aria-hidden className="size-4" />
         Delete
       </Button>
-      {dialog === 'move' && <MoveItemDialog item={item} onClose={() => setDialog(null)} />}
-      {dialog === 'delete' && <DeleteItemDialog item={item} onClose={() => setDialog(null)} />}
     </div>
+  )
+}
+
+/** The "…" menu of the item header: the same two actions as the footer. */
+export function ItemMenu({ actions }: { actions: ItemActionsState }) {
+  return (
+    <Menu
+      trigger={
+        <IconButton aria-label="Item actions" title="Item actions" className="size-9">
+          <Ellipsis aria-hidden />
+        </IconButton>
+      }
+      items={[
+        { label: 'Move', icon: <FolderInput />, onSelect: actions.move },
+        { type: 'separator' },
+        { label: 'Delete', icon: <Trash2 />, destructive: true, onSelect: actions.remove },
+      ]}
+    />
   )
 }
 
@@ -80,6 +115,7 @@ function useFailure(item: Item, onClose: () => void) {
   const toast = useToast()
   const navigate = useNavigate()
   const { search } = useLocation()
+  const guard = useEditGuard()
   const [error, setError] = useState<ItemError | null>(null)
 
   const fail = (caught: unknown) => {
@@ -94,23 +130,21 @@ function useFailure(item: Item, onClose: () => void) {
       void client.invalidateQueries({ queryKey: treeKeys.tree })
       toast({ kind: 'error', title: classified.message })
       onClose()
-      void navigate(
-        { pathname: `/lists/${item.list_id}`, search: withoutEdit(search) },
-        { replace: true },
-      )
+      guard.allowLeave()
+      void navigate({ pathname: `/lists/${item.list_id}`, search }, { replace: true })
       return
     }
     setError(classified)
   }
-  return { error, setError, fail }
+  return { error, setError, fail, guard }
 }
 
-export function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
+function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
   const tree = useTreeIndex()
   const move = useMoveItem()
   const toast = useToast()
   const navigate = useNavigate()
-  const { error, setError, fail } = useFailure(item, onClose)
+  const { error, setError, fail, guard } = useFailure(item, onClose)
   const [target, setTarget] = useState<string | null>(null)
 
   const options = tree.status === 'success' ? listOptions(tree.index, item.list_id, item.kind) : []
@@ -123,6 +157,7 @@ export function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => v
       const moved = await move.mutateAsync({ item, listId: choice.value })
       toast({ kind: 'success', title: 'Item moved', description: choice.label })
       onClose()
+      guard.allowLeave()
       void navigate(`/lists/${moved.list_id}/items/${moved.id}`)
     } catch (caught) {
       fail(caught)
@@ -171,7 +206,7 @@ function DeleteItemDialog({ item, onClose }: { item: Item; onClose: () => void }
   const toast = useToast()
   const navigate = useNavigate()
   const { search } = useLocation()
-  const { error, setError, fail } = useFailure(item, onClose)
+  const { error, setError, fail, guard } = useFailure(item, onClose)
 
   const confirm = async () => {
     setError(null)
@@ -179,10 +214,8 @@ function DeleteItemDialog({ item, onClose }: { item: Item; onClose: () => void }
       await remove.mutateAsync({ item })
       toast({ kind: 'success', title: 'Item moved to Trash', description: item.title })
       onClose()
-      void navigate(
-        { pathname: `/lists/${item.list_id}`, search: withoutEdit(search) },
-        { replace: true },
-      )
+      guard.allowLeave()
+      void navigate({ pathname: `/lists/${item.list_id}`, search }, { replace: true })
     } catch (caught) {
       fail(caught)
     }

@@ -20,33 +20,41 @@ test.describe('F003-W1 item: kind field, price, website, sort by kind key', () =
     await page.getByRole('button', { name: 'Add', exact: true }).click()
     const panel = itemPanel(page)
     await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
-    await panel.getByRole('button', { name: 'Edit' }).click()
-    await expect(page.getByRole('heading', { level: 1, name: `Edit “${title}”` })).toBeVisible()
 
+    // Each field is edited in place and saved on its own (pen, input, Enter or ✓).
+    await panel.getByRole('button', { name: 'Add field' }).click()
+    await page.getByRole('menuitem', { name: 'Release year' }).click()
     await panel.getByRole('textbox', { name: 'Release year' }).fill('2005')
-    await panel.getByRole('button', { name: 'Add price' }).click()
-    await panel.getByRole('textbox', { name: 'Price', exact: true }).fill('12.00')
-    await panel.getByRole('checkbox', { name: 'Price range' }).check()
-    await panel.getByRole('textbox', { name: 'Minimum price' }).fill('10.00')
-    await panel.getByRole('textbox', { name: 'Maximum price' }).fill('20.00')
-    await panel.getByRole('textbox', { name: 'Website', exact: true }).fill(website)
-    await panel.getByRole('button', { name: 'Save changes' }).click()
-    await expect(page).not.toHaveURL(/edit=1/)
+    await panel.getByRole('button', { name: 'Save release year' }).click()
+    await expect(panel.getByRole('button', { name: 'Edit release year' })).toBeVisible()
+
+    await panel.getByRole('button', { name: 'Add field' }).click()
+    await page.getByRole('menuitem', { name: 'Price range' }).click()
+    await panel.getByRole('textbox', { name: 'Minimum price' }).fill('10')
+    await panel.getByRole('textbox', { name: 'Maximum price' }).fill('20')
+    await panel.getByRole('button', { name: 'Save price' }).click()
+    await expect(panel.getByRole('button', { name: 'Edit price' })).toBeVisible()
+
+    await panel.getByRole('button', { name: 'Add field' }).click()
+    await page.getByRole('menuitem', { name: 'Website' }).click()
+    await panel.getByRole('textbox', { name: 'Website' }).fill(website)
+    await panel.getByRole('textbox', { name: 'Website' }).press('Enter')
+    await expect(panel.getByRole('button', { name: 'Edit website' })).toBeVisible()
 
     await page.reload()
     const item = itemPanel(page)
     await expect(item.getByRole('heading', { level: 1, name: title })).toBeVisible()
     await expect(item.getByText('2005', { exact: true })).toBeVisible()
-    await expect(item.locator('header').first()).toContainText(/10\D+20/)
+    await expect(item.getByText(/10\D+20/)).toBeVisible()
     await expect(item.getByRole('link', { name: /^Website/ })).toHaveAttribute('href', website)
 
-    // Remove the price, save, reload: it is gone.
-    await item.getByRole('button', { name: 'Edit' }).click()
+    // Remove the price, reload: it is gone.
+    await item.getByRole('button', { name: 'Edit price' }).click()
     await item.getByRole('button', { name: 'Remove price' }).click()
-    await item.getByRole('button', { name: 'Save changes' }).click()
-    await expect(page).not.toHaveURL(/edit=1/)
+    await expect(item.getByRole('button', { name: 'Edit price' })).toBeHidden()
     await page.reload()
-    await expect(itemPanel(page).locator('header').first()).toHaveText(title)
+    await expect(itemPanel(page).getByRole('heading', { level: 1, name: title })).toBeVisible()
+    await expect(itemPanel(page).getByRole('button', { name: 'Edit price' })).toBeHidden()
 
     // Sort by the kind key (release year, ascending): 2005 before 2020.
     await page.goto(`/lists/${list.id}`)

@@ -6,7 +6,7 @@ import { putImageFile } from './upload'
 
 /**
  * The three image writes of an item (API §4). Each is its own request with `If-Match` from the
- * version of the item the user is editing, is never retried on 412, and returns the updated item.
+ * version of the item as it is now, is never retried on 412, and returns the updated item.
  * On success the detail cache gets the answer and the list (which shows thumbnails) is refetched.
  */
 export function useItemImage(item: Item) {

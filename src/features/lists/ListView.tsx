@@ -16,7 +16,6 @@ import {
   type SortMode,
 } from './api'
 import { useQuickAdd } from '../quickadd/QuickAddContext'
-import { withoutEdit } from '../items/editMode'
 import { sortKeyLabel } from '../items/kinds'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
@@ -41,8 +40,8 @@ export function ListView({ treeList }: { treeList: List }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const parsedSort = parseSort(searchParams.get('sort'))
   const q = (searchParams.get('q') ?? '').trim()
-  // `?edit=1` belongs to the open item's page; links to other items must not carry it.
-  const search = withoutEdit(searchParams)
+  // Links to items keep the list's `?q=` and `?sort=`.
+  const search = searchParams.size > 0 ? `?${searchParams.toString()}` : ''
 
   const listQuery = useList(listId)
   const list = listQuery.data

@@ -23,11 +23,10 @@ function describeCurrent(image: NonNullable<Item['image']>) {
 }
 
 /**
- * The Image section of the edit form (UI_SPEC §4): set, replace or remove the image by drop, file
- * picker or URL. Every change is its own request, applied at once (not part of "Save changes"),
- * with its own toast. `item` is the form's base item: its version goes into `If-Match`, and
- * `onChanged` hands back the new item so the form can move its base version forward without
- * touching the draft. `onStale` reports a 412 or 404 so the form shows its conflict banner.
+ * Set, replace or remove the item's image by drop, file picker or URL (UI_SPEC §4). It lives in
+ * `ImageDialog`. Every change is its own request, applied at once, with its own toast. `item` is
+ * the item as it is now: its version goes into `If-Match`, and `onChanged` hands back the updated
+ * item. `onStale` reports a 412 or 404 so the dialog shows its conflict banner.
  */
 export function ImageSection({
   item,
@@ -78,7 +77,7 @@ export function ImageSection({
       }
       const failure = describeImageError(caught, action)
       if (failure.stale) {
-        // The form's conflict banner says it; a second alert and a toast would repeat it.
+        // The dialog's conflict banner says it; a second alert and a toast would repeat it.
         onStale(failure.stale)
         return false
       }
@@ -253,7 +252,7 @@ export function ImageSection({
               setUrl(event.target.value)
               setUrlError(undefined)
             }}
-            // Enter must not submit the surrounding item form.
+            // Enter applies the address (and never submits anything around it).
             onKeyDown={(event: KeyboardEvent) => {
               if (event.key === 'Enter') {
                 event.preventDefault()

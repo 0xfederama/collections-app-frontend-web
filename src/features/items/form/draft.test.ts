@@ -4,7 +4,6 @@ import {
   buildPatch,
   draftDump,
   draftFromItem,
-  firstInvalid,
   isDirty,
   mapServerErrors,
   normalizePrice,
@@ -603,23 +602,5 @@ describe('AT-22 server errors: mapServerErrors()', () => {
   it('two errors on the same input are joined', () => {
     const { fields } = mapServerErrors([err('title', 'A.'), err('title', 'B.')], 'generic')
     expect(fields.title).toBe('A. B.')
-  })
-})
-
-describe('AT-22 server errors: firstInvalid()', () => {
-  it('returns the first invalid input in page order, not in error order', () => {
-    const errors = { 'metadata.runtime_minutes': 'x', 'price.max': 'y', website: 'z' }
-    expect(firstInvalid(errors, 'movie')).toBe('price.max')
-    expect(firstInvalid({ ...errors, title: 'T' }, 'movie')).toBe('title')
-    expect(firstInvalid({ website: 'z', 'price.amount': 'a' }, 'movie')).toBe('price.amount')
-  })
-  it('is undefined with no errors or only keys of another kind', () => {
-    expect(firstInvalid({}, 'movie')).toBeUndefined()
-    expect(firstInvalid({ 'metadata.power_hp': 'x' }, 'movie')).toBeUndefined()
-  })
-  it('streaming inputs come after the other kind fields', () => {
-    expect(
-      firstInvalid({ 'metadata.streaming.country': 'c', 'metadata.imdb_url': 'i' }, 'movie'),
-    ).toBe('metadata.imdb_url')
   })
 })

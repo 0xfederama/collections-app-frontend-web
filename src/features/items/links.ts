@@ -3,11 +3,9 @@ import type { ItemKind } from './api'
 export interface ExternalLink {
   id: 'google' | 'reddit' | 'website'
   label: string
-  /** `null` = disabled: the item has no (usable) website. */
+  /** `null`: the item has no (usable) website, so no control is shown. */
   href: string | null
 }
-
-export const NO_WEBSITE = 'No website'
 
 interface LinkSource {
   title: string
