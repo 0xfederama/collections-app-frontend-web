@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Production web image (Q-03w, D-069): a Node 24 build stage, then a Caddy 2.11.7 server that serves `dist/` as an SPA and reverse-proxies `/api` and `/readyz`. The parent's `deploy/compose.prod.yaml` (Q-03) builds it on the server with `build: ../frontend-web`; there is no registry.
+Production web image (Q-03w, D-069): a Node 24 build stage, then a Caddy 2.11.7 server that serves `dist/` as an SPA and reverse-proxies `/api` and `/readyz`. The parent's `deploy/server/compose.yaml` (Q-03) builds it on the server with `build: ../frontend-web`; there is no registry.
 
 ## Key files
 
