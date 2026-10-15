@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useBlocker, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { AlertDialog, Button, Dialog, kindLabels, useToast } from '../../components/ui'
 import { ApiError, NetworkError } from '../../lib/api'
@@ -22,6 +22,7 @@ import {
 } from './form/draft'
 import { BasicsFields, FormSection, KindFieldsSection, type FormState } from './form/FormFields'
 import { ImageSection } from './image/ImageSection'
+import { ContentSection } from './content/ContentEditor'
 import { MoveItemDialog } from './ItemActions'
 
 /** Why the last save did not go through, other than field errors. */
@@ -61,7 +62,11 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
   const copyRef = useRef<HTMLTextAreaElement>(null)
   const alertsRef = useRef<HTMLDivElement>(null)
 
-  const dirty = isDirty(base, draft, defaults)
+  const basicsDirty = isDirty(base, draft, defaults)
+  // The description editor has its own draft and Save; it only reports whether it holds unsaved text.
+  const [contentDirty, setContentDirty] = useState(false)
+  const onContentDirty = useCallback((value: boolean) => setContentDirty(value), [])
+  const dirty = basicsDirty || contentDirty
 
   // Leaving on purpose (cancel, discard, saved, reloaded) must not trigger the guard.
   const allowLeave = useRef(false)
@@ -148,7 +153,11 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
         patch: buildPatch(base, draft, defaults),
       })
       toast({ kind: 'success', title: 'Item saved', description: saved.title })
-      leave()
+      if (contentDirty) {
+        // Stay in edit mode: the description still has unsaved text. Rebase the Basics draft.
+        setBase(saved)
+        setDraft(draftFromItem(saved))
+      } else leave()
     } catch (caught) {
       fail(caught)
     }
@@ -319,7 +328,7 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
       <KindFieldsSection form={form} />
 
       <FormSection id="item-form-description" title="Description">
-        <p className="text-sm text-text-muted">Editing the description is coming soon.</p>
+        <ContentSection itemId={base.id} listId={base.list_id} onDirtyChange={onContentDirty} />
       </FormSection>
 
       <FormSection id="item-form-organization" title="Organization">
@@ -343,7 +352,7 @@ export function ItemEditForm({ item, listName }: { item: Item; listName: string 
         <Button
           type="submit"
           pending={update.isPending}
-          disabled={!dirty || failure?.kind === 'conflict'}
+          disabled={!basicsDirty || failure?.kind === 'conflict'}
         >
           Save changes
         </Button>
