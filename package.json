@@ -15,7 +15,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run api:check && npm run format:check && npm run lint && npm run typecheck && npm run test && vite build",
+    "check": "npm run api:check && npm run format:check && npm run lint && npm run typecheck && npm run test && vite build && npm run docker:build",
+    "docker:build": "node scripts/docker-build.mjs",
     "audit": "npm audit",
     "api:sync": "node scripts/api-sync.mjs",
     "api:check": "node scripts/api-check.mjs"
