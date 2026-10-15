@@ -23,7 +23,7 @@ Top-level providers, router, and the responsive frame every route renders into (
 - `routes: RouteObject[]`; `createAppRouter()` (browser history); `createTestRouter(initialEntries?)` (memory history).
 - `lazyRoute(load)`: returns a route element that loads its component on first render, with a `Suspense` skeleton.
 - `AppShell()`: element of the `/` route; renders the frame for the current breakpoint.
-  - `mobile` (< 768 px): `header` with "Open menu" (left drawer holding the Sidebar), workspace link, backend status; breadcrumbs; `main`.
+  - `mobile` (< 768 px): `header` with "Open menu" (left drawer holding the Sidebar), workspace link; breadcrumbs; `main`.
   - `tablet` (768–1023): sidebar at saved width, or a 64 px icon rail when collapsed; not resizable.
   - `desktop` (1024–1279): sidebar at saved width with `SidebarResizer`.
   - `wide` (≥ 1280): as desktop, plus `aside[aria-label="Item details"]` beside `main` on item routes.
