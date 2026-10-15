@@ -32,7 +32,7 @@ describe('F002-W2 default pinned fields', () => {
     expect(defaultPinned('motorcycle')).toEqual({ under: ['displacement_cc'], right: ['price'] })
     expect(defaultPinned('car')).toEqual({ under: ['model_year'], right: ['price'] })
     expect(defaultPinned('camera')).toEqual({ under: ['camera_type'], right: ['price'] })
-    expect(defaultPinned('generic')).toEqual({ under: [], right: ['price'] })
+    expect(defaultPinned('generic')).toEqual({ under: [], right: [] })
   })
 
   it('resolvePinned: null is the default, {} pins nothing, slots are kept in order', () => {
@@ -46,7 +46,7 @@ describe('F002-W2 default pinned fields', () => {
   it('offers the kind fields plus price, without the IMDb link', () => {
     const keys = pinnableFields('movie').map((f) => f.key)
     expect(keys).toEqual(['release_year', 'runtime_minutes', 'streaming', 'price'])
-    expect(pinnableFields('generic').map((f) => f.key)).toEqual(['price'])
+    expect(pinnableFields('generic')).toEqual([])
   })
 })
 
@@ -57,7 +57,7 @@ describe('F002-W2 pinned values', () => {
       price: { min: '1200', max: '1500', currency: 'EUR' },
     })
     expect(formatPinnedValue('displacement_cc', moto, 'motorcycle')).toBe('937 cc')
-    expect(formatPinnedValue('price', moto, 'motorcycle')).toBe('€1,200–€1,500')
+    expect(formatPinnedValue('price', moto, 'motorcycle')).toBe('€\u202F1,200–1,500')
     const movie = item('movie', { metadata: { runtime_minutes: 124 } })
     expect(formatPinnedValue('runtime_minutes', movie, 'movie')).toBe('124 min')
     expect(formatPinnedValue('release_year', movie, 'movie')).toBeNull()
@@ -82,5 +82,17 @@ describe('F002-W2 pinned values', () => {
       { name: 'Netflix', paid: false },
       { name: 'Prime Video', paid: true },
     ])
+  })
+})
+
+describe('F008-W14 generic lists pin nothing', () => {
+  it('resolvePinned ignores any stored selection on a generic list', () => {
+    expect(resolvePinned({ kind: 'generic', pinned_fields: null })).toEqual({
+      under: [],
+      right: [],
+    })
+    expect(
+      resolvePinned({ kind: 'generic', pinned_fields: { under: [], right: ['price'] } }),
+    ).toEqual({ under: [], right: [] })
   })
 })

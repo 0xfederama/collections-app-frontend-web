@@ -266,12 +266,12 @@ describe('F007-W10 list description', () => {
     expect(screen.queryByText('bold')).not.toBeInTheDocument()
   })
 
-  it('without a description the section shows the "No description yet" placeholder', async () => {
+  it('without a description the section shows the "Add a description" placeholder', async () => {
     useBackend({ list: { description: null } })
     renderList(at())
     await itemsList()
     const section = screen.getByRole('region', { name: 'List description' })
-    expect(within(section).getByRole('button', { name: 'No description yet' })).toBeInTheDocument()
+    expect(within(section).getByRole('button', { name: 'Add a description' })).toBeInTheDocument()
     expect(within(section).queryByRole('button', { name: /^(Collapse|Expand)/ })).toBeNull()
   })
 })
@@ -330,6 +330,25 @@ describe('W-06 URL state: sort and filter', () => {
     await itemsList()
     expect(sortSelect()).toHaveTextContent('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
+  })
+
+  it('F008-W14 ?sort=price is ignored on a generic list, whose sort menu has no Price', async () => {
+    const genericTree = {
+      ...(exampleResponses.getTree.body as components['schemas']['Tree']),
+    }
+    genericTree.lists = genericTree.lists.map((l) =>
+      l.id === LIST ? { ...l, kind: 'generic' as const } : l,
+    )
+    server.use(http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json(genericTree)))
+    const backend = useBackend({ list: { kind: 'generic' } })
+    const user = userEvent.setup()
+    renderList(at('?sort=price'))
+    await itemsList()
+    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
+    await user.click(sortSelect())
+    expect(screen.queryByRole('option', { name: 'Price' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Pinned fields/ })).not.toBeInTheDocument()
   })
 
   it('typing in the filter updates ?q= after the debounce and the request carries q', async () => {
@@ -434,7 +453,7 @@ describe('F002-W2 pinned fields', () => {
     })
     renderList(at())
     const ul = await itemsList()
-    expect(within(ul).getByText('€1,200–€1,500')).toBeInTheDocument()
+    expect(within(ul).getByText(/€\s1,200–1,500/)).toBeInTheDocument()
     expect(within(ul).queryByText('117 min')).not.toBeInTheDocument()
   })
 
@@ -528,12 +547,24 @@ describe('W-06 display mode', () => {
 })
 
 describe('W-06 empty and error states', () => {
-  it('an empty list shows "No items yet" with Add item', async () => {
+  it('an empty list shows "No items yet" with the only New item button', async () => {
     useBackend({ items: [], list: { item_count: 0 } })
     renderList(at())
     expect(await screen.findByText('No items yet')).toBeInTheDocument()
     expect(screen.queryByRole('list', { name: 'Items' })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: 'Add item' }).length).toBeGreaterThan(0)
+    // F008-W7: the centered call to action is the only "New item" while the list is empty.
+    expect(screen.getAllByRole('button', { name: 'New item' })).toHaveLength(1)
+  })
+
+  it('F008-W7 the top-right New item shows once the list has items, with the count at the end', async () => {
+    useBackend()
+    renderList(at())
+    await itemsList()
+    expect(screen.getAllByRole('button', { name: 'New item' })).toHaveLength(1)
+    expect(screen.queryByText('No items yet')).not.toBeInTheDocument()
+    const count = screen.getByText(/^\d+ items?$/)
+    const items = screen.getByRole('list', { name: 'Items' })
+    expect(items.compareDocumentPosition(count) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('an empty filter result shows "No items match" and Clear filter clears ?q=', async () => {
@@ -876,17 +907,122 @@ describe('W-06 list actions menu (W-05) in the header', () => {
   })
 })
 
-describe('F006-W3 Add item dialog focus', () => {
-  it('Esc on the Add item dialog returns focus to the Add item button', async () => {
+describe('F008-W9 New item opens a draft, nothing is sent until the title is committed', () => {
+  const NEW_ID = '7c1e5a10-0000-4000-8000-000000000999'
+  const createUrl = `${location.origin}/api/v1/lists/${LIST}/items`
+
+  function useCreate() {
+    const posts: unknown[] = []
+    server.use(
+      http.post(createUrl, async ({ request }) => {
+        const body = (await request.json()) as { title: string }
+        posts.push(body)
+        const created = {
+          ...(exampleResponses.getItem.body as object),
+          id: NEW_ID,
+          list_id: LIST,
+          title: body.title,
+          metadata: {},
+          version: 1,
+        }
+        server.use(
+          http.get(`${location.origin}/api/v1/items/${NEW_ID}`, () => HttpResponse.json(created)),
+        )
+        return HttpResponse.json(created, { status: 201 })
+      }),
+    )
+    return posts
+  }
+
+  it('inserts a draft row and a focused title in the side page, with no request', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    await waitFor(() => expect(title).toHaveFocus())
+    expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/new`)
+    const rows = within(screen.getByRole('list', { name: 'Items' })).getAllByRole('listitem')
+    expect(rows.at(-1)).toHaveAccessibleName('New item (draft)')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(posts).toHaveLength(0)
+  })
+
+  it('an empty title is not sent; Enter on a title creates the item and opens its page', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    await user.keyboard('{Enter}')
+    expect(await within(panel).findByText('Enter a title.')).toBeInTheDocument()
+    expect(posts).toHaveLength(0)
+
+    await user.type(title, '  Field notebook {Enter}')
+    await waitFor(() => expect(posts).toEqual([{ title: 'Field notebook' }]))
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+    expect(
+      await within(panel).findByRole('heading', { level: 1, name: 'Field notebook' }),
+    ).toBeInTheDocument()
+  })
+
+  it('Esc removes the draft row and the side page without a request or a confirmation', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    await user.type(within(panel).getByRole('textbox', { name: 'Title' }), 'Half typed')
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(screen.queryByRole('listitem', { name: 'New item (draft)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('complementary', { name: 'Item details' })).not.toBeInTheDocument()
+    expect(posts).toHaveLength(0)
+  })
+
+  it('leaving with an empty title removes the draft; the unsaved-changes guard does not trap it', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    fireEvent.blur(title, { relatedTarget: document.body })
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(posts).toHaveLength(0)
+  })
+
+  it('below 1280 px the draft is the full item page with a back link', async () => {
+    mockViewport(1000)
     useBackend()
     const user = userEvent.setup()
-    renderList(at())
+    const router = renderList(at())
     await itemsList()
-    const button = screen.getAllByRole('button', { name: 'Add item' })[0]!
-    await user.click(button)
-    await screen.findByRole('dialog')
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    expect(await screen.findByRole('link', { name: /Back to/ })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Title' })).toBeInTheDocument()
     await user.keyboard('{Escape}')
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    await waitFor(() => expect(button).toHaveFocus())
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
   })
 })

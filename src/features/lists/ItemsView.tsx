@@ -70,6 +70,8 @@ export interface ItemsViewProps {
   mode: DisplayMode
   kind: ItemKind
   pinned: PinnedSlots
+  /** e.g. `12 items` or `3 of 12 items`; shown after the items. */
+  countLabel: string
   items: ItemSummary[]
   total: number
   /** The query the items belong to (its cache entry is reordered optimistically). */
@@ -84,6 +86,8 @@ export interface ItemsViewProps {
   onOpenItem: () => void
   onClearFilter: () => void
   onAddItem: () => void
+  /** The draft row of a new item (F008-W9), at the end of the list while its side page is open. */
+  draft?: boolean
 }
 
 /** The list body: empty states, the items in the display mode, drag-reorder and "Load more". */
@@ -94,7 +98,7 @@ export function ItemsView(props: ItemsViewProps) {
   const reorder = useReorderItems(listId)
   const [announcement, setAnnouncement] = useState('')
 
-  if (items.length === 0) {
+  if (items.length === 0 && !props.draft) {
     return params.q ? (
       <EmptyState
         icon={Search}
@@ -111,7 +115,7 @@ export function ItemsView(props: ItemsViewProps) {
         icon={ListIcon}
         title="No items yet"
         description="Add the first item to this list."
-        action={<Button onClick={props.onAddItem}>Add item</Button>}
+        action={<Button onClick={props.onAddItem}>New item</Button>}
       />
     )
   }
@@ -189,6 +193,7 @@ export function ItemsView(props: ItemsViewProps) {
     ),
   )
 
+  const draftRow = props.draft ? <DraftRow key="draft" mode={mode} /> : null
   return (
     <div className="flex flex-col gap-3">
       {hint && items.length > 1 && <p className="text-sm text-text-muted">{hint}</p>}
@@ -196,11 +201,13 @@ export function ItemsView(props: ItemsViewProps) {
         <SortableProvider onMove={move}>
           <ul aria-label="Items" className={cx(containerClass[mode])}>
             {entries}
+            {draftRow}
           </ul>
         </SortableProvider>
       ) : (
         <ul aria-label="Items" className={cx(containerClass[mode])}>
           {entries}
+          {draftRow}
         </ul>
       )}
       <p role="status" className="sr-only">
@@ -219,7 +226,27 @@ export function ItemsView(props: ItemsViewProps) {
           </Button>
         </div>
       )}
+      <p className="text-sm text-text-muted">{props.countLabel}</p>
     </div>
+  )
+}
+
+/** The not-yet-created item: dashed and muted, so it never reads as a saved row (nor as Quick add). */
+function DraftRow({ mode }: { mode: DisplayMode }) {
+  return (
+    <li
+      aria-label="New item (draft)"
+      aria-current="true"
+      className={cx(
+        'flex items-center gap-3 rounded-lg border border-dashed border-accent bg-fill/40 p-3 text-text-muted',
+        mode === 'grid' && 'aspect-4/3 flex-col justify-center text-center',
+      )}
+    >
+      <span className="rounded-sm bg-fill px-1.5 py-0.5 text-xs font-medium text-text-muted">
+        Draft
+      </span>
+      <span className="italic">Untitled item</span>
+    </li>
   )
 }
 

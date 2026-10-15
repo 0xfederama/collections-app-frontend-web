@@ -51,12 +51,12 @@ describe('AT-14 landmarks per breakpoint', () => {
     ['desktop', 1024],
     ['desktop (upper edge)', 1279],
     ['wide', 1440],
-  ])('%s (%ipx): navigation and main, no banner, no aside on the home page', async (_, width) => {
+  ])('%s (%ipx): top bar, navigation and main, no aside on the home page', async (_, width) => {
     mockViewport(width)
     renderAt('/')
     expect(nav()).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
-    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
 
@@ -115,12 +115,12 @@ describe('AT-14 landmarks per breakpoint', () => {
     expect(await screen.findByRole('complementary', { name: 'Item details' })).toBeInTheDocument()
   })
 
-  it('swaps the sidebar for the top bar when the viewport shrinks below 768', async () => {
+  it('drops the sidebar for the drawer button when the viewport shrinks below 768', async () => {
     mockViewport(1100)
     renderAt('/')
     expect(nav()).toBeInTheDocument()
     mockViewport(700)
-    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
     expect(nav()).not.toBeInTheDocument()
   })
 })
@@ -217,8 +217,8 @@ describe('AT-14 tablet rail', () => {
     const expand = screen.getByRole('button', { name: 'Expand sidebar' })
     expect(expand).toHaveAttribute('aria-expanded', 'false')
     expect(within(nav()!).queryByRole('tree')).not.toBeInTheDocument()
-    expect(within(nav()!).queryByRole('searchbox')).not.toBeInTheDocument()
-    expect(within(nav()!).getByRole('button', { name: 'Search' })).toBeInTheDocument()
+    expect(within(nav()!).queryByRole('combobox')).not.toBeInTheDocument()
+    expect(within(nav()!).queryByRole('button', { name: 'Quick add' })).not.toBeInTheDocument()
     expect(within(nav()!).getByRole('link', { name: 'Trash' })).toHaveAttribute('href', '/trash')
     expect(within(nav()!).getByRole('link', { name: 'Settings' })).toHaveAttribute(
       'href',
@@ -380,13 +380,11 @@ describe('W-04 workspace name', () => {
     expect(within(nav()!).getByRole('link', { name: 'Collection' })).toBeInTheDocument()
   })
 
-  it('shows the name in the mobile top bar and as the drawer title', async () => {
+  it('shows the name as the drawer title', async () => {
     mockViewport(375)
     const user = userEvent.setup()
     renderAt('/')
-    const banner = screen.getByRole('banner')
-    expect(await within(banner).findByRole('link', { name: 'Our Collection' })).toBeInTheDocument()
-    await user.click(within(banner).getByRole('button', { name: 'Open menu' }))
+    await user.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Open menu' }))
     expect(await screen.findByRole('dialog', { name: 'Our Collection' })).toBeInTheDocument()
   })
 })

@@ -20,6 +20,8 @@ export interface DialogProps {
   initialFocus?: RefObject<HTMLElement | null>
   /** Keeps the title and description for assistive tech only (a quiet dialog whose content speaks for itself). */
   hideTitle?: boolean
+  /** Runs as the dialog closes; call `event.preventDefault()` to take over where focus goes next. */
+  onCloseAutoFocus?: (event: Event) => void
 }
 
 export const overlayClasses =
@@ -36,6 +38,7 @@ export function Dialog({
   className,
   initialFocus,
   hideTitle = false,
+  onCloseAutoFocus,
 }: DialogProps) {
   const returnFocus = useReturnFocus()
   return (
@@ -50,7 +53,10 @@ export function Dialog({
             event.preventDefault()
             initialFocus.current.focus()
           }}
-          onCloseAutoFocus={returnFocus.restore}
+          onCloseAutoFocus={(event) => {
+            onCloseAutoFocus?.(event)
+            if (!event.defaultPrevented) returnFocus.restore(event)
+          }}
           className={cx(
             'fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto material-strong rounded-xl p-6 text-text shadow-sheet data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in',
             className,

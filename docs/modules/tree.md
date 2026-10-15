@@ -14,7 +14,7 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `NameDialog.tsx`: create and rename (a kind picker only on create).
 - `MoveDialog.tsx`, `DeleteDialog.tsx`, `DestinationPicker.tsx`, `FormError.tsx`, `useAction.ts`: dialogs.
 - `NodeMenu.tsx`, `ListActionsMenu.tsx`, `TreeActionsContext.tsx`, `slots.tsx`: row menu, list header menu, "+" menu.
-- `order.ts`, `errors.ts`, `ListGate.tsx`: sibling order, error classes, list-id gate.
+- `order.ts` (sibling order, `canDropInto`), `errors.ts`, `ListGate.tsx`: error classes, list-id gate.
 
 ## Interfaces
 
@@ -24,7 +24,9 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `useCreateFolder()`, `useCreateList()`, `useRenameFolder()`, `useUpdateList()`, `useMoveFolder()`, `useMoveList()`, `useDeleteFolder()`, `useDeleteList()`: `If-Match` from `version`; success calls `invalidateContent`.
 - `useReorderSiblings()`: `mutate({ kind, parentId, ids })`; optimistic, rolled back on error.
 - `useTreeDialogs({ onCreatedFolder? })`: `{ actions, dialogs }`; actions: create, rename, move, remove, applyMove.
-- `ListActionsMenu({ list })`: list header menu (rename, move, delete) with its own dialogs.
+- `ListActionsMenu({ list })`: list header "…" menu (Kind, rename, move, delete) with its own dialogs.
+- `useChangeKind(list)` (`useChangeKind.tsx`): `{ pick(kind), dialog }`; the confirm clears item kind fields.
+- `canDropInto(index, sourceId, folderId)`: `order.ts`.
 - `ListGate({ listId, children })`, `useExpandedFolders`, `useWorkspaceName()`.
 
 ## Gotchas
@@ -32,7 +34,8 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - Create, move and reorder bodies always send the parent field (`parent_folder_id` / `folder_id`); `null` is root (D-060).
 - A 412 keeps the draft and offers "Reload latest"; success and 404/409 call `invalidateContent`, 412 does not.
 - Reorder moves same-kind siblings under one parent only, by dragging the row. Cross-parent moves use the Move dialog.
-- A list's kind is set at create and changed from the list header's kind chip, not here; a rename never changes it.
+- A pointer drag (mouse, touch, pen) can also drop a row onto a folder row (`acceptsDrop` = `canDropInto`: not itself, not a descendant, not its current parent). Keyboard drags only reorder.
+- A list's kind is set at create and changed from the list header's "…" menu (`useChangeKind`); a rename never changes it.
 - List description is edited on the list page, not in the tree.
 - Folder rows have no chevron: the folder icon shows open or closed, and selecting the row toggles it.
 - A Radix Dialog opened from a menu needs `initialFocus` (see [ui](ui.md)).

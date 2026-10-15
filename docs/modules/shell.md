@@ -10,9 +10,10 @@ Top-level providers, router, and the responsive frame every route renders into: 
 - `src/app/router.tsx`: `routes` (every route is registered here), `createAppRouter`, `createTestRouter`.
 - `src/app/lazyRoute.tsx`: `lazyRoute(load)`, code-split route screens with a skeleton.
 - `src/layouts/AppShell.tsx`: layout per breakpoint, drawer, detail sheet, `/` shortcut, `QuickAddProvider`.
+- `src/layouts/TopBar.tsx`: the one `banner` above the frame: search, Quick add button, theme menu.
 - `src/layouts/Sidebar.tsx`, `SidebarResizer.tsx`, `useSidebarState.ts`: sidebar, splitter, persisted width.
-- `src/layouts/ThemeToggle.tsx`: theme control in the sidebar footer (see [theme](theme.md)).
-- `src/features/search/`, `src/features/quickadd/`: sidebar search and Quick add (see [search](search.md), [quickadd](quickadd.md)).
+- `src/layouts/ThemeToggle.tsx`: theme menu in the top bar (see [theme](theme.md)).
+- `src/features/search/`, `src/features/quickadd/`: top-bar search and Quick add (see [search](search.md), [quickadd](quickadd.md)).
 - `src/routes/*Route.tsx`: route components; `ItemRoute` is a lazy wrapper of `features/items`.
 
 ## Interfaces
@@ -27,7 +28,8 @@ Top-level providers, router, and the responsive frame every route renders into: 
   - `wide` (≥ 1280): as desktop, plus a 420 px floating `aside[aria-label="Item details"]` on item routes.
 - `useBreakpoint()`: `'mobile' | 'tablet' | 'desktop' | 'wide'`, from `BREAKPOINTS` (768, 1024, 1280).
 - `useSidebarState()`: `{ collapsed, width, setCollapsed, setWidth }`; width 220–400, default 268.
-- `Sidebar({ rail, showHeader, onToggleRail, onRevealSearch, searchRef })`: `nav[aria-label="Library"]`; "Quick add" button (`N`) under the workspace name, then search and the tree; footer has Trash, Settings, theme toggle.
+- `TopBar({ leading?, searchRef? })`: `header`; search, "Quick add" (`N`, icon only below `sm`), theme menu.
+- `Sidebar({ rail, showHeader, onToggleRail })`: `nav[aria-label="Library"]`; workspace name, tree, then Trash and Settings.
 
 ## Gotchas
 
@@ -37,5 +39,6 @@ Top-level providers, router, and the responsive frame every route renders into: 
 - The drawer is open for one `location.key`, so any navigation closes it.
 - Sidebar state persists as `collection:sidebar` (`{ collapsed, width }`); `collapsed` only applies at tablet.
 - Resizer: `role="separator"` "Resize sidebar", `aria-controls="app-sidebar"`; ←/→ move 16 px, Home/End jump to min/max.
-- `/` focuses the sidebar search (on the rail it expands the sidebar first; on mobile it opens the drawer only).
+- `/` focuses the top-bar search field (`searchRef` in `AppShell`).
+- The sidebar has no search or Quick add of its own; "+ New" under the tree appears only when the tree has nodes.
 - Route owners: `/` Home; `/lists/:listId` ListRoute; `/lists/:listId/items/:itemId` ItemRoute; `/search`; `/trash`; `/settings`. `*` is NotFoundRoute.

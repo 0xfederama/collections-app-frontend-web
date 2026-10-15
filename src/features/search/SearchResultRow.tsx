@@ -35,7 +35,6 @@ export function SearchResultBody({ result, large }: { result: SearchResult; larg
       <div aria-hidden className="shrink-0">
         <ItemThumb
           item={item}
-          compact={!large}
           className={cx('rounded-sm', large ? 'size-16 md:size-20 md:rounded-md' : 'size-10')}
         />
       </div>

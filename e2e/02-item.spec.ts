@@ -12,13 +12,11 @@ test.describe('F003-W1 item: kind field, price, website, sort by kind key', () =
     await createItem(request, list.id, older, { metadata: { release_year: 2020 } })
 
     await page.goto(`/lists/${list.id}`)
-    await page.getByRole('button', { name: 'Add item' }).click()
-    await page
-      .getByRole('dialog', { name: 'Quick add' })
-      .getByRole('textbox', { name: 'Title' })
-      .fill(title)
-    await page.getByRole('button', { name: 'Add', exact: true }).click()
+    await page.getByRole('button', { name: 'New item' }).click()
+    // F008-W9: "New item" in a list opens a draft in the side page; Enter on the title creates it.
     const panel = itemPanel(page)
+    await panel.getByRole('textbox', { name: 'Title' }).fill(title)
+    await panel.getByRole('textbox', { name: 'Title' }).press('Enter')
     await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
 
     // Each field is edited in place and saved on its own (pen, input, Enter or ✓).
@@ -29,8 +27,9 @@ test.describe('F003-W1 item: kind field, price, website, sort by kind key', () =
     await expect(panel.getByRole('button', { name: 'Edit release year' })).toBeVisible()
 
     await panel.getByRole('button', { name: 'Add field' }).click()
-    await page.getByRole('menuitem', { name: 'Price range' }).click()
-    await panel.getByRole('textbox', { name: 'Minimum price' }).fill('10')
+    await page.getByRole('menuitem', { name: 'Price', exact: true }).click()
+    await panel.getByRole('textbox', { name: 'Price', exact: true }).fill('10')
+    await panel.getByRole('button', { name: 'Add range' }).click()
     await panel.getByRole('textbox', { name: 'Maximum price' }).fill('20')
     await panel.getByRole('button', { name: 'Save price' }).click()
     await expect(panel.getByRole('button', { name: 'Edit price' })).toBeVisible()

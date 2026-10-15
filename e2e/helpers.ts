@@ -63,10 +63,21 @@ export async function createViaSidebar(
   name: string,
   kind?: string,
 ) {
-  await page.getByRole('button', { name: 'New', exact: true }).click()
-  await page
-    .getByRole('menuitem', { name: what === 'folder' ? 'Folder' : 'List', exact: true })
-    .click()
+  // The sidebar "New" row only exists once something does (F008-W2); an empty workspace starts
+  // from the buttons in the middle of Home.
+  const sidebarNew = page.getByRole('button', { name: 'New', exact: true })
+  const startButton = page
+    .getByRole('main')
+    .getByRole('button', { name: what === 'folder' ? 'New folder' : 'New list', exact: true })
+  await expect(sidebarNew.or(startButton).first()).toBeVisible()
+  if (await sidebarNew.isVisible()) {
+    await sidebarNew.click()
+    await page
+      .getByRole('menuitem', { name: what === 'folder' ? 'Folder' : 'List', exact: true })
+      .click()
+  } else {
+    await startButton.click()
+  }
   const dialog = page.getByRole('dialog', { name: what === 'folder' ? 'New folder' : 'New list' })
   await dialog.getByRole('textbox', { name: 'Name' }).fill(name)
   if (kind) {

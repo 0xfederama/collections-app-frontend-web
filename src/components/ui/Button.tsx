@@ -19,7 +19,7 @@ export const buttonSizeClasses: Record<ButtonSize, string> = {
 }
 
 export const buttonBase =
-  'inline-flex select-none items-center justify-center whitespace-nowrap rounded-full font-medium transition-[color,background-color,box-shadow,transform] active:scale-[0.97] active:ease-spring disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50'
+  'inline-flex select-none items-center justify-center whitespace-nowrap rounded-md font-medium transition-[color,background-color,box-shadow,transform] active:scale-[0.97] active:ease-spring disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant

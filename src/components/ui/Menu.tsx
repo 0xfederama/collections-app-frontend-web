@@ -1,6 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useRef, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
+import { Check, ChevronRight } from './icons'
 import { rememberMenuTrigger } from './returnFocus'
 
 export type MenuItem =
@@ -12,6 +13,15 @@ export type MenuItem =
       destructive?: boolean
       disabled?: boolean
     }
+  | {
+      /** A submenu with one choice checked (e.g. a list's kind). */
+      type: 'radio-submenu'
+      label: string
+      value: string
+      options: { value: string; label: string }[]
+      onValueChange: (value: string) => void
+      icon?: ReactNode
+    }
   | { type: 'separator' }
 
 export interface MenuProps {
@@ -20,6 +30,9 @@ export interface MenuProps {
   items: MenuItem[]
   align?: 'start' | 'center' | 'end'
 }
+
+const itemClass =
+  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11 [&_svg]:size-4'
 
 export function Menu({ trigger, items, align = 'end' }: MenuProps) {
   const opener = useRef<HTMLButtonElement>(null)
@@ -37,6 +50,40 @@ export function Menu({ trigger, items, align = 'end' }: MenuProps) {
           {items.map((item, index) =>
             item.type === 'separator' ? (
               <DropdownMenu.Separator key={`sep-${index}`} className="my-1 h-px bg-border" />
+            ) : item.type === 'radio-submenu' ? (
+              <DropdownMenu.Sub key={item.label}>
+                <DropdownMenu.SubTrigger
+                  className={cx(itemClass, 'data-[state=open]:bg-accent/10')}
+                >
+                  {item.icon && <span aria-hidden>{item.icon}</span>}
+                  <span className="flex-1">{item.label}</span>
+                  <ChevronRight aria-hidden />
+                </DropdownMenu.SubTrigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.SubContent
+                    sideOffset={6}
+                    className="bg-surface-raised z-50 min-w-40 rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+                  >
+                    <DropdownMenu.RadioGroup value={item.value} onValueChange={item.onValueChange}>
+                      {item.options.map((option) => (
+                        <DropdownMenu.RadioItem
+                          key={option.value}
+                          value={option.value}
+                          onSelect={() => rememberMenuTrigger(opener.current)}
+                          className={itemClass}
+                        >
+                          <span aria-hidden className="grid size-4 shrink-0 place-items-center">
+                            <DropdownMenu.ItemIndicator>
+                              <Check />
+                            </DropdownMenu.ItemIndicator>
+                          </span>
+                          {option.label}
+                        </DropdownMenu.RadioItem>
+                      ))}
+                    </DropdownMenu.RadioGroup>
+                  </DropdownMenu.SubContent>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Sub>
             ) : (
               <DropdownMenu.Item
                 key={item.label}
@@ -46,7 +93,7 @@ export function Menu({ trigger, items, align = 'end' }: MenuProps) {
                   item.onSelect()
                 }}
                 className={cx(
-                  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11 [&_svg]:size-4',
+                  itemClass,
                   item.destructive && 'text-danger-text data-[highlighted]:bg-danger-bg',
                 )}
               >

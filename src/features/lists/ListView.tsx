@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { Button, EmptyState, Skeleton, useToast } from '../../components/ui'
 import { List as ListIcon } from '../../components/ui/icons'
 import { ApiError } from '../../lib/api'
@@ -15,8 +15,7 @@ import {
   type PinnedFields,
   type SortMode,
 } from './api'
-import { useQuickAdd } from '../quickadd/QuickAddContext'
-import { sortKeyLabel } from '../items/kinds'
+import { NEW_ITEM_ID } from '../items/newItem'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { resolvePinned } from './pinned'
@@ -46,7 +45,11 @@ export function ListView({ treeList }: { treeList: List }) {
   const listQuery = useList(listId)
   const list = listQuery.data
   // `kind_key` is not valid on a generic list: a URL asking for it falls back to the list's mode.
-  const sortOverride = parsedSort === 'kind_key' && !sortKeyLabel(treeList.kind) ? null : parsedSort
+  // `price` is not valid on a generic list either (F008-W14).
+  const sortOverride =
+    treeList.kind === 'generic' && (parsedSort === 'kind_key' || parsedSort === 'price')
+      ? null
+      : parsedSort
   // The tree is the source of truth for renames, moves and description edits (W-05 refetches it
   // after each one). When it holds a newer version than our detail, refetch the detail, or the
   // next `If-Match` would be stale and fail with a 412.
@@ -128,8 +131,11 @@ export function ListView({ treeList }: { treeList: List }) {
     )
 
   const clearFilter = () => setFilter('')
-  const quickAdd = useQuickAdd()
-  const addItem = () => quickAdd.open(listId)
+  // F008-W9: "New item" opens the draft item page; the draft row shows while that route is open.
+  const navigate = useNavigate()
+  const draft = useParams().itemId === NEW_ITEM_ID
+  const addItem = () =>
+    void navigate({ pathname: `/lists/${listId}/items/${NEW_ITEM_ID}`, search }, { replace: draft })
 
   if (listQuery.isError) {
     if (listQuery.error instanceof ApiError && listQuery.error.status === 404) {
@@ -165,7 +171,7 @@ export function ListView({ treeList }: { treeList: List }) {
       <ListHeader
         treeList={treeList}
         list={list}
-        countLabel={countLabel}
+        showAddItem={!!list && (list.item_count > 0 || draft)}
         displayMode={mode}
         onDisplayMode={setDisplayMode}
         sort={effectiveSort}
@@ -197,6 +203,7 @@ export function ListView({ treeList }: { treeList: List }) {
           mode={mode}
           kind={list.kind}
           pinned={resolvePinned(list)}
+          countLabel={countLabel}
           items={items}
           total={total}
           params={params}
@@ -208,6 +215,7 @@ export function ListView({ treeList }: { treeList: List }) {
           onOpenItem={remember}
           onClearFilter={clearFilter}
           onAddItem={addItem}
+          draft={draft}
         />
       )}
     </div>

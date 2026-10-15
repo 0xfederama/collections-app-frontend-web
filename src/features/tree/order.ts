@@ -42,6 +42,19 @@ export function buildSortable(nodes: readonly TreeNode[]) {
   return { groups, slots }
 }
 
+/**
+ * Whether dropping `sourceId` (a folder or a list) onto folder `folderId` is a real move: not onto
+ * itself, not into its own descendants (the server refuses a cycle), not where it already is.
+ */
+export function canDropInto(index: TreeIndex, sourceId: string, folderId: string): boolean {
+  if (sourceId === folderId) return false
+  const folder = index.folders.get(sourceId)
+  const list = index.lists.get(sourceId)
+  if (!folder && !list) return false
+  if ((folder ? folder.parent_folder_id : list?.folder_id) === folderId) return false
+  return !index.ancestorsOf(folderId).some((a) => a.id === sourceId)
+}
+
 /** The tree with `ids` (all siblings of one kind under one parent) renumbered `0..n-1` in that order. */
 export function applyOrder(data: TreeData, kind: SiblingKind, ids: readonly string[]): TreeData {
   const position = new Map(ids.map((id, i) => [id, i]))

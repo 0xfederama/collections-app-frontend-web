@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { MarkdownView } from '../../components/markdown'
 import { Button, IconButton, Skeleton, useToast } from '../../components/ui'
-import { Check, Pencil, X } from '../../components/ui/icons'
+import { Check, X } from '../../components/ui/icons'
 import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 import { byteLength, formatBytes } from '../items/content/limits'
 import { treeKeys, type List as TreeList, type TreeData } from '../tree/api'
@@ -30,8 +30,8 @@ const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring'
 
 /**
- * The list's Markdown description, edited in place. Click the text (or the "No description yet"
- * placeholder), or the pen, to write; ✓ saves, ✕ or Esc cancels, Ctrl/Cmd+Enter saves (Enter is a
+ * The list's Markdown description, edited in place. Click the text (or the "Add a description"
+ * placeholder) to write; ✓ saves, ✕ or Esc cancels, Ctrl/Cmd+Enter saves (Enter is a
  * new line). The editor works on a snapshot of the list taken when editing starts: `If-Match` comes
  * from it, and a 412 keeps the draft (Copy draft / Reload latest, no auto-merge).
  */
@@ -68,7 +68,10 @@ export function ListDescription({
   )
 }
 
-/** Shown expanded unless this list was collapsed on this device; the pen shows on hover and keyboard focus. */
+/**
+ * Shown expanded unless this list was collapsed on this device. There is no pen: a click on the text
+ * (or the placeholder) edits. Keyboard users reach "Edit description", a button that shows on focus.
+ */
 function DescriptionView({
   listId,
   text,
@@ -80,9 +83,9 @@ function DescriptionView({
   restoreFocus: boolean
   onEdit: () => void
 }) {
-  const penRef = useRef<HTMLButtonElement>(null)
+  const entryRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
-    if (restoreFocus) penRef.current?.focus()
+    if (restoreFocus) entryRef.current?.focus()
   }, [restoreFocus])
   const [collapsed, setCollapsed] = useState(() =>
     readStored(STORAGE_KEYS.listDescriptionCollapsed, parseIds, []).includes(listId),
@@ -97,32 +100,17 @@ function DescriptionView({
   }
   const regionId = `list-description-${listId}`
 
-  const pen = (
-    <IconButton
-      ref={penRef}
-      aria-label="Edit description"
-      title="Edit description"
-      onClick={onEdit}
-      className="size-8 text-text-muted opacity-0 group-hover/desc:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 pointer-coarse:size-11"
-    >
-      <Pencil aria-hidden />
-    </IconButton>
-  )
-
   if (!text) {
     return (
-      <section
-        aria-label="List description"
-        className="group/desc flex max-w-prose items-center gap-1 text-xs"
-      >
+      <section aria-label="List description" className="max-w-prose text-sm">
         <button
+          ref={entryRef}
           type="button"
           onClick={onEdit}
-          className={`rounded-sm text-text-muted italic hover:text-text ${focusRing}`}
+          className={`rounded-md px-1 text-text-muted italic hover:bg-fill hover:text-text ${focusRing}`}
         >
-          No description yet
+          Add a description
         </button>
-        {pen}
       </section>
     )
   }
@@ -134,8 +122,8 @@ function DescriptionView({
     onEdit()
   }
   return (
-    <section aria-label="List description" className="group/desc max-w-prose text-sm">
-      <div className="flex items-center gap-1">
+    <section aria-label="List description" className="max-w-prose text-sm">
+      <div className="flex items-center gap-3">
         <button
           type="button"
           aria-expanded={!collapsed}
@@ -145,14 +133,21 @@ function DescriptionView({
         >
           {collapsed ? 'Expand description' : 'Collapse description'}
         </button>
-        {pen}
+        {/* The click on the text is a mouse shortcut: this is the keyboard path, visible on focus. */}
+        <button
+          ref={entryRef}
+          type="button"
+          onClick={onEdit}
+          className={`rounded-sm text-text-muted underline underline-offset-2 sr-only focus-visible:not-sr-only ${focusRing}`}
+        >
+          Edit description
+        </button>
       </div>
-      {/* The click is a mouse shortcut: keyboard users have the pen button. */}
       <div
         id={regionId}
         hidden={collapsed}
         onClick={onTextClick}
-        className="mt-2 cursor-text rounded-sm"
+        className="mt-2 cursor-text rounded-md transition-colors hover:bg-fill/60"
       >
         {!collapsed && <MarkdownView source={text} />}
       </div>

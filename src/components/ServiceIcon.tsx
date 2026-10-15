@@ -7,17 +7,26 @@ import timvision from '../assets/services/timvision.webp'
 import infinity from '../assets/services/infinity.webp'
 import letterboxd from '../assets/services/letterboxd.webp'
 import reddit from '../assets/services/reddit.webp'
+import google from '../assets/services/google.svg'
+import imdb from '../assets/services/imdb.svg'
 import { cx } from '../lib/cx'
 import { Chip } from './ui'
+import { Globe } from './ui/icons'
 
 interface Entry {
-  /** Display name, also the monogram source. */
+  /** Display name. */
   label: string
-  /** Local favicon; absent when no good one exists, so a monogram tile is drawn. */
+  /** Local image (favicon or vendored brand mark), full-bleed in the tile. */
   src?: string
+  /** A neutral symbol instead of an image (websites). */
+  neutral?: boolean
 }
 
-const entry = (label: string, src?: string): Entry => ({ label, src })
+const entry = (label: string, src?: string, neutral?: boolean): Entry => ({
+  label,
+  src,
+  neutral,
+})
 
 const netflixEntry = entry('Netflix', netflix)
 const primeEntry = entry('Prime Video', primeVideo)
@@ -45,9 +54,10 @@ const serviceEntries: Record<string, Entry> = {
 }
 
 const linkEntries: Record<string, Entry> = {
-  google: entry('Google'),
+  google: entry('Google', google),
   letterboxd: entry('Letterboxd', letterboxd),
-  imdb: entry('IMDb'),
+  imdb: entry('IMDb', imdb),
+  website: entry('Website', undefined, true),
   reddit: entry('Reddit', reddit),
 }
 
@@ -79,15 +89,9 @@ function Tile({ entry: e, paid, size = 32 }: { entry: Entry; paid?: boolean; siz
           referrerPolicy="no-referrer"
           className="size-full rounded-[inherit] object-cover"
         />
-      ) : (
-        <span
-          aria-hidden
-          className="font-semibold text-text-muted uppercase"
-          style={{ fontSize: Math.round(size * 0.45) }}
-        >
-          {e.label.charAt(0)}
-        </span>
-      )}
+      ) : e.neutral ? (
+        <Globe aria-hidden className="size-1/2 text-text-muted" />
+      ) : null}
       {paid && (
         <span
           aria-hidden
@@ -116,7 +120,7 @@ export function ServiceIcon({ name, paid, size }: ServiceIconProps) {
   return <Tile entry={found} paid={paid} size={size} />
 }
 
-/** External link site (Google, Letterboxd, IMDb, Reddit) as a favicon tile. */
+/** External link site (Google, Letterboxd, IMDb, Reddit, Website) as an icon tile. */
 export function LinkIcon({ name, size }: { name: string; size?: number }) {
   const found = linkEntries[normalize(name)]
   if (!found) return <Chip>{name}</Chip>

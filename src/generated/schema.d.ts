@@ -244,10 +244,11 @@ export interface paths {
         /**
          * Update a list
          * @description Requires `If-Match` (`"l-N"`). Send `description: null` to clear it. `description` is Markdown (up to 64 KiB) and has no version
-         *     history: it is edited with the list's `version`. `sort_mode: kind_key` is rejected (`422 validation_failed`) on a `generic` list.
+         *     history: it is edited with the list's `version`. `sort_mode: kind_key` and `sort_mode: price` are rejected (`422 validation_failed`) on a `generic` list.
          *
          *     Changing `kind` on a list that has items **clears the `metadata` of all its items** (trashed ones too; their `version` is bumped),
-         *     because the kind fields differ per kind. Clients should warn first. If the list is left on `sort_mode: kind_key` and the new
+         *     because the kind fields differ per kind. A change **to `generic`** also clears the `price` of all its items (trashed ones too) and
+         *     turns a stored `sort_mode: price` into `manual`. Clients should warn first. If the list is left on `sort_mode: kind_key` and the new
          *     kind is `generic`, the request is rejected with `422 validation_failed`. A kind change also resets `pinned_fields` to `null` (unless
          *     the same request sets it, which is then validated against the new kind). Send `pinned_fields: null` to reset it to the kind default;
          *     absent leaves it unchanged.
@@ -302,7 +303,7 @@ export interface paths {
          * Create an item
          * @description Appended to the end of the list. The item's `kind` is the list's kind (read-only, not accepted in the body). Image and Markdown
          *     content are set through their own endpoints after creation. `metadata` is validated against the list's kind (see the `*Metadata` schemas).
-         *     `price` is either `{amount, currency}` (single price) or `{min, max, currency}` (range).
+         *     `price` is either `{amount, currency}` (single price) or `{min, max, currency}` (range). A `price` on an item of a `generic` list is rejected with `422 validation_failed` on `price` (`null` is fine).
          */
         post: operations["createItem"];
         delete?: never;
@@ -361,7 +362,7 @@ export interface paths {
         head?: never;
         /**
          * Update an item
-         * @description Requires `If-Match` (`"i-N"`). Any of `title, price, website, metadata`; send `null` to clear a nullable field. `metadata` is
+         * @description Requires `If-Match` (`"i-N"`). Any of `title, price, website, metadata`; send `null` to clear a nullable field. A non-null `price` on an item of a `generic` list is rejected with `422 validation_failed`. `metadata` is
          *     validated against the list's kind and replaces the stored one. The kind cannot be changed here (it belongs to the list).
          *     Image changes go through the image endpoints.
          */
@@ -844,7 +845,7 @@ export interface components {
         /**
          * @description `kind_key` sorts by the kind's sort key (movie: `release_year`, tv_show: `first_air_year`, motorcycle: `displacement_cc`,
          *     car: `power_hp`, camera: `megapixels`), ascending, empty values last. It is not valid on `generic` lists.
-         *     `price` sorts by the lowest price (`price.min`) ascending, items without a price last, ties by title and then id. Currencies are not
+         *     `price` is not valid on `generic` lists either (they have no price). `price` sorts by the lowest price (`price.min`) ascending, items without a price last, ties by title and then id. Currencies are not
          *     converted, so mixed currencies compare by amount only. The manual order is kept when the mode changes.
          * @enum {string}
          */
@@ -852,7 +853,7 @@ export interface components {
         /**
          * @description The fields a list shows in its rows, by field key: `under` (under the title) and `right` (on the right), in order. `null` means the
          *     kind default (the web app owns the defaults). `{}` or two empty slots pin nothing, which is different from `null`. Allowed keys: the
-         *     keys of the kind's `metadata` fields plus `price` (`streaming` is a movie and tv_show field). Each slot holds at most 6 unique
+         *     keys of the kind's `metadata` fields plus `price` (`generic` has no pinnable key at all; `streaming` is a movie and tv_show field). Each slot holds at most 6 unique
          *     keys and a key is in at most one slot, else `422 validation_failed` on `pinned_fields.under[i]` / `pinned_fields.right[i]`.
          *     Responses always carry both slots. Changing the list's `kind` resets it to `null`.
          * @example {

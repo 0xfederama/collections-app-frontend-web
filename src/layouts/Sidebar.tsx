@@ -1,21 +1,15 @@
-import type { Ref } from 'react'
 import { Link, NavLink } from 'react-router'
 import { IconButton, Tooltip } from '../components/ui'
 import {
   PanelLeftClose,
   PanelLeftOpen,
-  Plus,
-  Search,
   Settings,
   Trash2,
   type LucideIcon,
 } from '../components/ui/icons'
-import { useQuickAdd } from '../features/quickadd/QuickAddContext'
-import { SidebarSearch } from '../features/search/SidebarSearch'
 import { useWorkspaceName } from '../features/settings/api'
 import { SidebarTree } from '../features/tree/SidebarTree'
 import { cx } from '../lib/cx'
-import { ThemeToggle } from './ThemeToggle'
 
 export interface SidebarProps {
   /** Tablet icon rail: icons only, no tree. */
@@ -24,21 +18,11 @@ export interface SidebarProps {
   showHeader?: boolean
   /** Tablet only: collapse / expand toggle. */
   onToggleRail?: () => void
-  /** Rail only: the search icon expands the sidebar and focuses the field. */
-  onRevealSearch?: () => void
-  searchRef?: Ref<HTMLInputElement>
 }
 
-/** Sidebar content (landmark `nav`): workspace, search, tree, then Trash, Settings and the theme toggle. */
-export function Sidebar({
-  rail = false,
-  showHeader = true,
-  onToggleRail,
-  onRevealSearch,
-  searchRef,
-}: SidebarProps) {
+/** Sidebar content (landmark `nav`): workspace, tree, then Trash and Settings. */
+export function Sidebar({ rail = false, showHeader = true, onToggleRail }: SidebarProps) {
   const workspaceName = useWorkspaceName()
-  const quickAdd = useQuickAdd()
 
   return (
     <nav
@@ -63,42 +47,11 @@ export function Sidebar({
         )}
       </div>
 
-      {rail ? (
-        <Tooltip content="Quick add (N)" side="right">
-          <IconButton aria-label="Quick add" onClick={() => quickAdd.open()}>
-            <Plus aria-hidden />
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <button
-          type="button"
-          onClick={() => quickAdd.open()}
-          className="flex min-h-9 items-center gap-2 rounded-md bg-accent px-3 text-sm font-medium text-accent-fg shadow-accent hover:bg-accent-hover pointer-coarse:min-h-11"
-        >
-          <Plus aria-hidden className="size-4 shrink-0" />
-          Quick add
-          <kbd className="ml-auto text-xs opacity-80">N</kbd>
-        </button>
-      )}
-
-      {rail ? (
-        <Tooltip content="Search" side="right">
-          <IconButton aria-label="Search" onClick={onRevealSearch}>
-            <Search aria-hidden />
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <SidebarSearch inputRef={searchRef} />
-      )}
-
       {rail ? <div className="flex-1" /> : <SidebarTree />}
 
       <div className={cx('flex gap-1', rail ? 'flex-col' : 'flex-col border-t border-border pt-2')}>
         <FooterLink to="/trash" label="Trash" icon={Trash2} rail={rail} />
         <FooterLink to="/settings" label="Settings" icon={Settings} rail={rail} />
-        <div className={cx(!rail && 'px-2 pt-1')}>
-          <ThemeToggle rail={rail} />
-        </div>
       </div>
     </nav>
   )
