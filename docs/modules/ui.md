@@ -31,12 +31,13 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `ToastProvider` / `useToast()`: `useToast()` returns `(options: { kind?, title, description?, action? }) => void`; `action: { label, onAction }` renders a Radix `Toast.Action` button.
 - `Tree<T>`: `nodes`, `expanded` / `onExpandedChange`, `selected` / `onSelectedChange`, `renderRow`, `sortable(node)`, `onReorder(move)`, `aria-label`.
 - `Card`: `interactive`. `Chip`: `tone` (neutral, accent, success, warning, danger), `icon`. `Badge`: `kind: ItemKind`.
-- `Breadcrumbs`: `items: { label, to? }[]`. `EmptyState`: `icon`, `title`, `description`, `action`, `headingLevel`. `Skeleton`: `className`.
+- `EmptyState`: `icon`, `title`, `description`, `action`, `headingLevel`. `Skeleton`: `className`.
 - `SortableProvider({ onMove })`, `useSortableRow(id, slot)`: drag reorder; `SortableSlot` = `{ group, index, size, label }`.
 
 ## Gotchas
 
 - Import Lucide icons only from `./icons`, never from `lucide-react` directly. Import dnd-kit only through `sortable.tsx`.
+- `Tree` has no expand chevron: a folder's icon shows its state, and selecting the row (click, Enter, Space) is what toggles it, as decided by the parent's `onSelectedChange`.
 - `Tree` is controlled: the parent owns `expanded` and `selected`. Drag reorder is opt-in: only nodes with a `sortable` slot get a `Reorder <label>` handle, and `onReorder` fires once per changed drop.
 - Focus anywhere in a row (its link, menu or handle) makes it the roving stop. Keys pressed inside a row's own buttons are ignored by the tree. The whole `Tree` is one Tab stop: inner controls of other rows get `tabindex=-1` (original value kept in `data-tree-tab`), so the drag handle is reached by Tab only on the roving row.
 - `useToast()` throws outside `ToastProvider`, which `App.tsx` mounts. Error toasts stay 8 s, others 5 s.

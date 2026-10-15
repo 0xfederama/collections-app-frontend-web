@@ -11,12 +11,14 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `src/features/tree/useExpandedFolders.ts`: persisted expanded folder ids.
 - `src/features/tree/mutations.ts`: folder and list write hooks, `useReorderSiblings`.
 - `src/features/tree/useTreeDialogs.tsx`: all write flows; returns `{ actions, dialogs }`.
-- `src/features/tree/NameDialog.tsx`, `DescriptionDialog.tsx`, `MoveDialog.tsx`, `DeleteDialog.tsx`, `FormError.tsx`, `useAction.ts`: dialogs, pending and error state.
+- `src/features/tree/NameDialog.tsx`: create and rename; a list's kind picker, with a warning on change.
+- `src/features/tree/DescriptionDialog.tsx`: list description, Markdown Edit / Preview, 64 KiB.
+- `src/features/tree/MoveDialog.tsx`, `DeleteDialog.tsx`, `FormError.tsx`, `useAction.ts`: dialogs, pending and error state.
 - `src/features/tree/DestinationPicker.tsx`: radio list of destinations (Move, trash "Restore to…").
 - `src/features/tree/NodeMenu.tsx`, `ListActionsMenu.tsx`, `TreeActionsContext.tsx`: row and list menus, and their context.
 - `src/features/tree/slots.tsx`: W-05 slots (header "+" menu, row "More", empty-state buttons).
 - `src/features/tree/order.ts`, `errors.ts`: sibling groups, order helpers, error classification.
-- `src/features/tree/ListGate.tsx`, `breadcrumbs.ts`: list gate; breadcrumb trail (rendered by the shell).
+- `src/features/tree/ListGate.tsx`: loading, error and not-found gate for list ids.
 - `src/features/settings/api.ts`: `useSettings`, `useWorkspaceName`, `settingsKeys`.
 
 ## Interfaces
@@ -27,20 +29,23 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `SidebarTree()`: provides `TreeActionsContext` and renders the dialogs. `useTreeActions()` throws outside it.
 - `useCreateFolder()`, `useCreateList()`, `useRenameFolder()`, `useUpdateList()`, `useMoveFolder()`, `useMoveList()`, `useDeleteFolder()`, `useDeleteList()`: mutations; `If-Match` from `version`; success calls `invalidateContent`.
 - `useReorderSiblings()`: `mutate({ kind, parentId, ids })`; optimistic, rolled back on error.
-- `useTreeDialogs({ onCreatedFolder? })`: `{ actions: TreeActions, dialogs }`; `TreeActions` has create, rename, editDescription, move, remove, nudge, position, applyMove.
+- `useTreeDialogs({ onCreatedFolder? })`: `{ actions: TreeActions, dialogs }`; `TreeActions` has create, rename, editDescription, move, remove, applyMove. `nudge` and `position` exist but no menu calls them.
+- `useCreateList()` sends the `kind` (picked at create); `useUpdateList()` patches `name`, `kind` or `description`.
 - `DestinationPicker({ options, value, onChange, label? })`: options `{ key, name, depth, reason?, group? }`; `reason` disables an option, `group` is a label with no radio.
 - `ListActionsMenu({ list })`: list overflow menu (rename, description, move, delete) with its own dialogs.
 - `NodeMenu({ node, actions, name, reorder?, className? })`: row "More" menu.
 - `TreeHeaderActions()`, `TreeRowActions({ node })`, `TreeEmptyAction()`: W-05 slots.
 - `classifyError(error, noun)`: `conflict`, `cycle`, `unavailable`, `not_found`, `validation`, `network`, `other`.
 - `buildSortable`, `applyOrder`, `flattenFolders`, `subtreeCounts`: order helpers in `order.ts`. `subtreeCounts` includes the deleted node itself.
-- `useExpandedFolders(index, activeListId)`, `ListGate({ listId, children })`, `useBreadcrumbs()`, `useWorkspaceName()`.
+- `useExpandedFolders(index, activeListId)`, `ListGate({ listId, children })`, `useWorkspaceName()`.
 
 ## Gotchas
 
 - Move, reorder and create bodies always send the parent field (`parent_folder_id` / `folder_id`); `null` means root (D-060).
 - A 412 keeps the draft and the stale version, and the dialog offers "Reload latest". Success and 404/409 call `invalidateContent`; 412 never does.
-- Reorder only moves same-kind siblings under one parent. Cross-parent moves use the Move dialog; "Move up" / "Move down" in the menu are the keyboard fallback.
+- Reorder only moves same-kind siblings under one parent. Cross-parent moves use the Move dialog. The row menu has no Move up / Move down; the drag handle (a button) is the reorder path.
+- Folder rows have no chevron: the folder icon shows open or closed, and selecting the row toggles it.
+- A list has one kind. The rename dialog can change it; with items in the list it warns that their kind fields are cleared.
 - A Radix Dialog opened from a menu needs `initialFocus` on `Dialog` (see the ui module).
 - The drag handle is a real button labelled `Reorder <name>`, rendered only on sortable rows. Row actions stop click propagation.
 - Delete moves to Trash and navigates to `/` when the open list is the deleted node or lives inside it.
@@ -48,4 +53,3 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - Sub-folders come first in each parent, then lists, each by `(sort_order, id)`. Folders with a missing parent, and anything in a parent cycle, are left out.
 - Expanded ids persist under `collection:tree-expanded`; ids of deleted folders are dropped on the next write. Nothing is written before the tree loads.
 - When the active list changes, its ancestors open once; a manual collapse sticks until then. Writes go through `invalidateContent` (see [api](api.md)), not per-feature keys.
-- The item crumb is always the generic label "Item" (`breadcrumbs.ts`).

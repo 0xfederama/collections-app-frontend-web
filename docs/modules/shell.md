@@ -11,9 +11,9 @@ Top-level providers, router, and the responsive frame every route renders into (
 - `src/app/lazyRoute.tsx`: `lazyRoute(load)`, code-split route screens with a skeleton.
 - `src/layouts/AppShell.tsx`: layout per breakpoint, drawer state, detail panel, `/` shortcut.
 - `src/layouts/Sidebar.tsx`, `SidebarResizer.tsx`, `useSidebarState.ts`: sidebar nav, splitter, persisted state.
+- `src/layouts/ThemeToggle.tsx`: theme control in the sidebar footer (see [theme](theme.md)).
 - `src/lib/breakpoints.ts`, `src/lib/storage.ts`: breakpoint hook; `collection:` storage helpers.
 - `src/features/search/`: sidebar search and `/` shortcut (see [search](search.md)).
-- `src/features/tree/breadcrumbs.ts`: `useBreadcrumbs`.
 - `src/routes/*Route.tsx`: route components; `ItemRoute` is a lazy wrapper of `features/items`; `ListRoute` and `SearchRoute` are implemented.
 - `vite.config.ts`: dev server on :5173; proxies `/api` and `/readyz` to `API_PROXY_TARGET`.
 
@@ -23,14 +23,13 @@ Top-level providers, router, and the responsive frame every route renders into (
 - `routes: RouteObject[]`; `createAppRouter()` (browser history); `createTestRouter(initialEntries?)` (memory history).
 - `lazyRoute(load)`: returns a route element that loads its component on first render, with a `Suspense` skeleton.
 - `AppShell()`: element of the `/` route; renders the frame for the current breakpoint.
-  - `mobile` (< 768 px): `header` with "Open menu" (left drawer holding the Sidebar), workspace link; breadcrumbs; `main`.
+  - `mobile` (< 768 px): `header` with "Open menu" (left drawer holding the Sidebar), workspace link; `main`.
   - `tablet` (768–1023): sidebar at saved width, or a 64 px icon rail when collapsed; not resizable.
   - `desktop` (1024–1279): sidebar at saved width with `SidebarResizer`.
   - `wide` (≥ 1280): as desktop, plus `aside[aria-label="Item details"]` beside `main` on item routes.
 - `useBreakpoint()`: `'mobile' | 'tablet' | 'desktop' | 'wide'`, from `BREAKPOINTS` (768, 1024, 1280).
 - `useSidebarState()`: `{ collapsed, width, setCollapsed, setWidth }`; width 220–400, default 280.
-- `Sidebar({ rail, showHeader, onToggleRail, onRevealSearch, searchRef })`: `nav[aria-label="Collections"]`.
-- `useBreadcrumbs()`: trail for the current list or item; `[]` on other routes.
+- `Sidebar({ rail, showHeader, onToggleRail, onRevealSearch, searchRef })`: `nav[aria-label="Library"]`; footer has Trash, Settings, then the theme toggle.
 - `useSearchShortcut(onTrigger)`: `/` outside text fields.
 
 ## Gotchas
