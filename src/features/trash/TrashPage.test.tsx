@@ -36,6 +36,20 @@ describe('AT-11 trash list states', () => {
     expect(screen.queryByRole('button', { name: /^Restore/ })).not.toBeInTheDocument()
   })
 
+  it('centres the empty state in the content area, both ways (F009-W7)', async () => {
+    await openTrash([])
+    const heading = await screen.findByRole('heading', { name: 'Trash is empty' })
+    // The shared EmptyState block, unchanged: centred text in its own column.
+    const emptyState = heading.parentElement!
+    expect(emptyState).toHaveClass('flex', 'items-center', 'text-center')
+    // Its box grows with the page and centres the block vertically and horizontally.
+    const centred = emptyState.parentElement!
+    expect(centred).toHaveClass('flex', 'flex-1', 'items-center', 'justify-center')
+    // The page itself fills the scroll container, which is what gives `items-center` its height.
+    const page = centred.closest('section')!
+    expect(page).toHaveClass('min-h-full', 'flex-col')
+  })
+
   it('shows an error with Retry when loading fails, and Retry loads the list', async () => {
     const trash = installTrash()
     let fail = true

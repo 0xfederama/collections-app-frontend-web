@@ -76,12 +76,16 @@ export function TrashPage() {
       />
     )
   } else if (entries.length === 0) {
+    // F009-W7: the shared empty state, centred in the content area both ways. The box grows with
+    // the section (`min-h-full` below) so `items-center` has room, the content itself is unchanged.
     body = (
-      <EmptyState
-        icon={Trash2}
-        title="Trash is empty"
-        description="Folders, lists and items you delete show up here, so you can restore them."
-      />
+      <div className="flex flex-1 items-center justify-center">
+        <EmptyState
+          icon={Trash2}
+          title="Trash is empty"
+          description="Folders, lists and items you delete show up here, so you can restore them."
+        />
+      </div>
     )
   } else {
     body = (
@@ -123,7 +127,7 @@ export function TrashPage() {
   }
 
   return (
-    <section className="flex max-w-5xl flex-col gap-4">
+    <section className="flex min-h-full max-w-5xl flex-col gap-4">
       <div>
         <h1
           ref={headingRef}
