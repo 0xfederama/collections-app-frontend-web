@@ -33,7 +33,9 @@ describe('F012-W3 empty trash', () => {
   })
 
   it('keeps confirmation closed when a later page fails, then retries loading the full count', async () => {
-    const entries = Array.from({ length: 60 }, (_, index) => entry(index))
+    const entries = Array.from({ length: 60 }, (_, index) =>
+      entry(index, { counts: { folders: 0, lists: 1, items: 1 } }),
+    )
     const { user } = await openTrash(entries)
     let failSecondPage = true
     server.use(
@@ -73,7 +75,8 @@ describe('F012-W3 empty trash', () => {
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('Nothing was changed')
     await user.click(within(dialog).getByRole('button', { name: 'Retry' }))
     expect(await screen.findByText('Trash emptied')).toBeInTheDocument()
-    expect(trash.calls('DELETE', '/api/v1/trash')).toHaveLength(2)
+    expect(calls).toBe(2)
+    expect(trash.calls('DELETE', '/api/v1/trash')).toHaveLength(1)
   })
 
   it('includes root items and nested batch counts in the confirmation', async () => {

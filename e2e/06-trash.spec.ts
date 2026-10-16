@@ -41,6 +41,18 @@ test.describe('AT-11 trash', () => {
     page,
     request,
   }) => {
+    const before = await request.get('/api/v1/trash?limit=200&offset=0')
+    const beforePage = await before.json()
+    const previousEntries = beforePage.page.total as number
+    const allPrevious = [...(beforePage.data as { counts: { items: number }[] })]
+    let offset = allPrevious.length
+    while (offset < previousEntries) {
+      const next = await request.get(`/api/v1/trash?limit=200&offset=${offset}`)
+      const nextPage = await next.json()
+      allPrevious.push(...(nextPage.data as { counts: { items: number }[] }))
+      offset += nextPage.data.length
+    }
+    const previousItems = allPrevious.reduce((total, entry) => total + entry.counts.items, 0)
     const folderName = uniqueName('Emptyable')
     const folder = await createFolder(request, folderName)
     const list = await createList(request, uniqueName('Inside'), 'generic', folder.id)
@@ -56,7 +68,12 @@ test.describe('AT-11 trash', () => {
     await page.getByRole('link', { name: 'Trash', exact: true }).click()
     await page.getByRole('button', { name: 'Empty trash' }).click()
     const dialog = page.getByRole('alertdialog', { name: 'Empty trash permanently?' })
-    await expect(dialog).toContainText('items, including items inside trashed folders and lists')
+    const totalItems = previousItems + 1
+    const totalEntries = previousEntries + 1
+    const expectedItems = `${totalItems} ${totalItems === 1 ? 'item' : 'items'}`
+    const expectedEntries = `${totalEntries} trash ${totalEntries === 1 ? 'entry' : 'entries'}`
+    await expect(dialog).toContainText(`${expectedEntries} and ${expectedItems}`)
+    await expect(dialog).toContainText('including items inside trashed folders and lists')
     await dialog.getByRole('button', { name: 'Empty trash' }).click()
     await expect(page.getByRole('heading', { name: 'Trash is empty' })).toBeVisible()
     const response = await request.get('/api/v1/trash?limit=200&offset=0')
