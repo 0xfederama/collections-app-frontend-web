@@ -60,6 +60,9 @@ export function PenButton({
       onClick={onClick}
       className={cx(
         'absolute right-0 size-8 text-text-muted opacity-0 transition-opacity duration-150 focus-visible:opacity-100 pointer-coarse:size-11',
+        // No hover fill of its own: it drew a box as strong as the row behind it, so the glyph just
+        // darkens and the row reads as one thing (F011-W5).
+        'hover:bg-transparent hover:text-text',
         // A field is one line at least as tall as the pen, so the pen is centered in it; the
         // description is long, so its pen stays at the top.
         group === 'field'
@@ -187,7 +190,9 @@ export function InlineField({
       <div
         onClick={onClick}
         className={cx(
-          'grid min-h-8 cursor-text content-center rounded-sm pr-9 transition-colors hover:bg-fill/60 pointer-coarse:min-h-11 pointer-coarse:pr-12',
+          // F011-W5: the hover follows the whole row (the pen is inside this wrapper), so pointing at
+          // the pen lights the same background instead of leaving it bare.
+          'grid min-h-8 cursor-text content-center rounded-sm pr-9 transition-colors group-hover/field:bg-fill/60 pointer-coarse:min-h-11 pointer-coarse:pr-12',
           barClassName,
         )}
       >
