@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useBlocker } from 'react-router'
-import { AlertDialog, Button, Dialog, TextField, useToast } from '../../components/ui'
+import { AlertDialog, Button, Dialog, Select, TextField, useToast } from '../../components/ui'
 import { CountrySelect } from '../../components/ui/IsoSelects'
 import { ApiError, NetworkError } from '../../lib/api'
 import { settingsKeys, useUpdateSettings, type Settings } from './api'
@@ -13,7 +13,9 @@ import {
   draftFromSettings,
   firstInvalid,
   inputId,
+  isFormDirty,
   isDirty,
+  isRetentionDirty,
   mapServerErrors,
   validate,
   type ErrorMap,
@@ -47,8 +49,11 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   const [copyFallback, setCopyFallback] = useState<string | null>(null)
   const [focusRequest, setFocusRequest] = useState<{ id: string; n: number } | null>(null)
   const copyRef = useRef<HTMLTextAreaElement>(null)
+  const retryAction = useRef<() => void>(() => undefined)
 
   const dirty = isDirty(base, draft)
+  const formDirty = isFormDirty(base, draft)
+  const retentionDirty = isRetentionDirty(base, draft)
 
   // Block leaving the page with unsaved changes (router navigation and closing the tab).
   const blocker = useBlocker(({ currentLocation, nextLocation }) => {
@@ -104,6 +109,8 @@ export function SettingsForm({ settings }: { settings: Settings }) {
 
   const save = async (event?: FormEvent) => {
     event?.preventDefault()
+    if (retentionDirty) return
+    retryAction.current = () => void save()
     setFailure(null)
     setOtherErrors([])
     const found = validate(draft)
@@ -114,6 +121,23 @@ export function SettingsForm({ settings }: { settings: Settings }) {
       setBase(saved)
       setDraft(draftFromSettings(saved))
       toast({ kind: 'success', title: 'Settings saved' })
+    } catch (caught) {
+      fail(caught)
+    }
+  }
+
+  const saveRetention = async (value: string) => {
+    const days = value === 'off' ? null : Number(value)
+    setDraft((current) => ({ ...current, trash_retention_days: value }))
+    setFailure(null)
+    setErrors({})
+    setOtherErrors([])
+    retryAction.current = () => void saveRetention(value)
+    try {
+      const saved = await update.mutateAsync({ base, patch: { trash_retention_days: days } })
+      setBase(saved)
+      setDraft((current) => ({ ...current, trash_retention_days: value }))
+      toast({ kind: 'success', title: 'Trash retention saved' })
     } catch (caught) {
       fail(caught)
     }
@@ -189,7 +213,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => void save()}
+                onClick={() => retryAction.current()}
                 pending={update.isPending}
               >
                 Retry
@@ -239,6 +263,29 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         onValueChange={(value) => set('streaming_country_code', value)}
         error={errors.streaming_country_code}
       />
+      <Select
+        id={inputId('trash_retention_days')}
+        label="Delete trash automatically"
+        hint="Automatically and permanently delete trashed items after the selected number of days. This runs daily; it doesn’t empty the trash immediately."
+        value={draft.trash_retention_days}
+        onValueChange={(value) => void saveRetention(value)}
+        error={errors.trash_retention_days}
+        disabled={update.isPending}
+        options={[
+          { value: 'off', label: 'Off' },
+          { value: '7', label: '7 days' },
+          { value: '30', label: '30 days' },
+          { value: '90', label: '90 days' },
+          ...(!['off', '7', '30', '90'].includes(draft.trash_retention_days)
+            ? [
+                {
+                  value: draft.trash_retention_days,
+                  label: `Current: ${draft.trash_retention_days} days`,
+                },
+              ]
+            : []),
+        ]}
+      />
       <TextField
         id={inputId('markdown_history_limit')}
         label="Description history limit"
@@ -254,7 +301,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         <Button
           type="submit"
           pending={update.isPending}
-          disabled={!dirty || failure?.kind === 'conflict'}
+          disabled={!formDirty || retentionDirty || failure?.kind === 'conflict'}
         >
           Save settings
         </Button>

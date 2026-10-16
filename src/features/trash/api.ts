@@ -87,3 +87,14 @@ export function usePurgeTrash() {
     onError: (error) => refreshAfterFailure(queryClient, error),
   })
 }
+
+/** `DELETE /trash`: permanently removes every batch and its files in one request. */
+export function useEmptyTrash() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      await api.DELETE('/api/v1/trash')
+    },
+    onSuccess: () => invalidateContent(queryClient),
+  })
+}

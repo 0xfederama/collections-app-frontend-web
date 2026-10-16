@@ -39,6 +39,18 @@
   --red-700: #b91c1c;
   --red-800: #991b1b;
   --red-950: #450a0a;
+
+  /* F012 list glyph colours: dark enough for light surfaces. */
+  --list-icon-red: #b42318;
+  --list-icon-orange: #b54708;
+  --list-icon-amber: #8a5b00;
+  --list-icon-green: #147d38;
+  --list-icon-teal: #087e78;
+  --list-icon-blue: #175cd3;
+  --list-icon-indigo: #4f46e5;
+  --list-icon-purple: #6941c6;
+  --list-icon-pink: #c11574;
+  --list-icon-gray: #5c5d66;
 }
 
 /* Theme independent. In an @theme block so Tailwind's rounded-* and ease-* utilities read them. */
@@ -135,6 +147,17 @@
 }
 
 [data-theme='dark'] {
+  /* Lifted versions preserve visible marks against graphite tiles. */
+  --list-icon-red: #f97066;
+  --list-icon-orange: #fb8c47;
+  --list-icon-amber: #fdb022;
+  --list-icon-green: #75e0a7;
+  --list-icon-teal: #5fe9dc;
+  --list-icon-blue: #84adff;
+  --list-icon-indigo: #a5b4fc;
+  --list-icon-purple: #b69cff;
+  --list-icon-pink: #ff85c2;
+  --list-icon-gray: #c1c2cc;
   --bg: var(--graphite-950);
   --bg-ambient:
     radial-gradient(900px 480px at 75% -12%, rgb(99 102 241 / 0.16), transparent),

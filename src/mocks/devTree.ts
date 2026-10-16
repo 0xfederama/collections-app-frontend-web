@@ -169,6 +169,8 @@ export function createTreeBackend(initial: Tree) {
         name?: unknown
         kind?: unknown
         folder_id?: string | null
+        icon?: string | null
+        icon_color?: List['icon_color']
       }
       const name = validName(body.name)
       if (!name) return invalid('name', 'Name must be 1 to 200 characters.')
@@ -185,6 +187,8 @@ export function createTreeBackend(initial: Tree) {
         display_mode: 'grid',
         sort_mode: 'manual',
         pinned_fields: null,
+        icon: body.icon ?? null,
+        icon_color: body.icon_color ?? null,
         sort_order: nextOrder(parent, 'list'),
         item_count: 0,
         version: 1,
@@ -235,6 +239,8 @@ export function createTreeBackend(initial: Tree) {
         display_mode?: unknown
         sort_mode?: unknown
         pinned_fields?: List['pinned_fields']
+        icon?: List['icon']
+        icon_color?: List['icon_color']
       }
       let changed = false
       // `kind_key` has no key on a generic list, so the resulting pair must not be (kind_key, generic).
@@ -279,6 +285,15 @@ export function createTreeBackend(initial: Tree) {
       if (body.pinned_fields !== undefined) {
         const pins = body.pinned_fields
         list.pinned_fields = pins === null ? null : [...pins]
+        changed = true
+      }
+      if (body.icon !== undefined) {
+        list.icon = body.icon
+        if (body.icon === null || !body.icon.startsWith('i:')) list.icon_color = null
+        changed = true
+      }
+      if (body.icon_color !== undefined) {
+        list.icon_color = body.icon_color
         changed = true
       }
       if (body.description !== undefined) {

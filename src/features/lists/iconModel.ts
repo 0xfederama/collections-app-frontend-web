@@ -1,0 +1,175 @@
+import type { LucideIcon } from '../../components/ui/icons'
+import type { components } from '../../generated/schema'
+import {
+  Aperture,
+  Archive,
+  Baby,
+  Backpack,
+  Bike,
+  BookOpen,
+  Bookmark,
+  Box,
+  BriefcaseBusiness,
+  CalendarDays,
+  Camera,
+  Car,
+  Clapperboard,
+  Coffee,
+  Compass,
+  Dumbbell,
+  Earth,
+  FerrisWheel,
+  Fish,
+  Flame,
+  Flower2,
+  Film,
+  Footprints,
+  Gamepad2,
+  Gem,
+  Gift,
+  GraduationCap,
+  Headphones,
+  Heart,
+  House,
+  Image,
+  Laptop,
+  Map,
+  MessagesSquare,
+  Mountain,
+  Motorbike,
+  Music,
+  PawPrint,
+  Plane,
+  Puzzle,
+  Rocket,
+  ShoppingBag,
+  Smartphone,
+  Sparkles,
+  Star,
+  Sun,
+  Tent,
+  Theater,
+  Ticket,
+  TrainFront,
+  TreePine,
+  Trophy,
+  Tv,
+  Utensils,
+  Wallet,
+  Watch,
+  Wine,
+  Wrench,
+  Tag,
+  Volleyball,
+} from '../../components/ui/icons'
+import { EMOJI_KEYWORDS } from './emojiKeywords'
+
+export const LIST_ICON_COLORS = [
+  'red',
+  'orange',
+  'amber',
+  'green',
+  'teal',
+  'blue',
+  'indigo',
+  'purple',
+  'pink',
+  'gray',
+] as const
+export type ListIconColor = Exclude<components['schemas']['ListIconColor'], null>
+
+type BuiltinIcon = { key: string; name: string; keywords: string[]; Icon: LucideIcon }
+const iconRows: [string, LucideIcon, ...string[]][] = [
+  ['aperture', Aperture, 'camera', 'photo'],
+  ['archive', Archive, 'box', 'storage'],
+  ['baby', Baby, 'child'],
+  ['backpack', Backpack, 'bag', 'travel'],
+  ['bike', Bike, 'bicycle', 'cycling'],
+  ['book-open', BookOpen, 'book', 'reading'],
+  ['bookmark', Bookmark, 'save'],
+  ['box', Box, 'package', 'collection'],
+  ['briefcase-business', BriefcaseBusiness, 'work', 'office'],
+  ['calendar-days', CalendarDays, 'date', 'events'],
+  ['camera', Camera, 'photo', 'photography'],
+  ['car', Car, 'auto', 'vehicle'],
+  ['clapperboard', Clapperboard, 'film', 'movie'],
+  ['coffee', Coffee, 'cafe', 'drink'],
+  ['compass', Compass, 'direction', 'travel'],
+  ['dumbbell', Dumbbell, 'fitness', 'gym'],
+  ['earth', Earth, 'world', 'travel'],
+  ['ferris-wheel', FerrisWheel, 'amusement', 'park'],
+  ['fish', Fish, 'animal', 'seafood'],
+  ['flame', Flame, 'fire', 'camping'],
+  ['flower-2', Flower2, 'garden', 'plant'],
+  ['film', Film, 'movie', 'cinema'],
+  ['footprints', Footprints, 'hiking', 'walking'],
+  ['gamepad-2', Gamepad2, 'gaming', 'video'],
+  ['gem', Gem, 'jewelry', 'diamond'],
+  ['gift', Gift, 'present'],
+  ['graduation-cap', GraduationCap, 'school', 'study'],
+  ['headphones', Headphones, 'audio', 'music'],
+  ['heart', Heart, 'favorite', 'love'],
+  ['house', House, 'home'],
+  ['image', Image, 'picture', 'photo'],
+  ['laptop', Laptop, 'computer', 'tech'],
+  ['map', Map, 'travel', 'places'],
+  ['messages-square', MessagesSquare, 'chat', 'notes'],
+  ['mountain', Mountain, 'outdoors', 'hiking'],
+  ['motorbike', Motorbike, 'motorcycle', 'vehicle'],
+  ['music', Music, 'audio', 'songs'],
+  ['paw-print', PawPrint, 'pet', 'animal'],
+  ['plane', Plane, 'airplane', 'travel'],
+  ['puzzle', Puzzle, 'game', 'toy'],
+  ['rocket', Rocket, 'space', 'science'],
+  ['shopping-bag', ShoppingBag, 'shop', 'wishlist'],
+  ['smartphone', Smartphone, 'phone', 'tech'],
+  ['sparkles', Sparkles, 'magic', 'new'],
+  ['star', Star, 'favorite', 'rating'],
+  ['sun', Sun, 'weather', 'summer'],
+  ['tent', Tent, 'camping', 'outdoors'],
+  ['theater', Theater, 'stage', 'performance'],
+  ['ticket', Ticket, 'event', 'movie'],
+  ['train-front', TrainFront, 'rail', 'travel'],
+  ['tree-pine', TreePine, 'forest', 'nature'],
+  ['trophy', Trophy, 'award', 'sports'],
+  ['tv', Tv, 'television', 'shows'],
+  ['utensils', Utensils, 'food', 'restaurant'],
+  ['wallet', Wallet, 'money', 'finance'],
+  ['watch', Watch, 'time', 'accessory'],
+  ['wine', Wine, 'drink', 'food'],
+  ['wrench', Wrench, 'tool', 'repair'],
+  ['volleyball', Volleyball, 'sport', 'ball'],
+  ['tag', Tag, 'label', 'generic'],
+]
+export const BUILTIN_LIST_ICONS: BuiltinIcon[] = iconRows.map(([name, Icon, ...keywords]) => ({
+  key: name,
+  name: name.replaceAll('-', ' '),
+  keywords,
+  Icon,
+}))
+export const builtinListIcon = (key: string) =>
+  BUILTIN_LIST_ICONS.find((entry) => entry.key === key)
+
+export type IconChoice = { icon: string | null; icon_color: ListIconColor | null }
+
+export function searchListIcons(query: string) {
+  const normalized = query.trim().toLocaleLowerCase()
+  if (!normalized) return { builtins: BUILTIN_LIST_ICONS, emoji: EMOJI_KEYWORDS }
+  const words = normalized.split(/\s+/)
+  return {
+    builtins: BUILTIN_LIST_ICONS.filter((entry) =>
+      words.every(
+        (word) =>
+          entry.name.includes(word) || entry.keywords.some((keyword) => keyword.includes(word)),
+      ),
+    ),
+    emoji: EMOJI_KEYWORDS.filter(([, keywords]) =>
+      words.every((word) => keywords.split(/\s+/).some((keyword) => keyword.includes(word))),
+    ),
+  }
+}
+
+export const parseListIcon = (value: string | null | undefined) =>
+  value?.startsWith('i:')
+    ? { builtin: value.slice(2), emoji: null }
+    : { builtin: null, emoji: value ?? null }

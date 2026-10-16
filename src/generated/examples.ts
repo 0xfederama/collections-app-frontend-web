@@ -35,6 +35,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "workspace_name": "Our Collection",
       "streaming_country_code": "IT",
       "markdown_history_limit": 20,
+      "trash_retention_days": null,
       "version": 4
     }
   },
@@ -47,6 +48,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "workspace_name": "Our Collection",
       "streaming_country_code": "IT",
       "markdown_history_limit": 20,
+      "trash_retention_days": null,
       "version": 4
     }
   },
@@ -98,6 +100,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "release_year",
             "runtime_minutes"
           ],
+          "icon": "i:film",
+          "icon_color": "indigo",
           "sort_order": 0,
           "item_count": 2,
           "version": 1,
@@ -113,6 +117,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "display_mode": "grid",
           "sort_mode": "title",
           "pinned_fields": null,
+          "icon": null,
+          "icon_color": null,
           "sort_order": 0,
           "item_count": 1,
           "version": 2,
@@ -211,6 +217,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "release_year",
         "runtime_minutes"
       ],
+      "icon": "i:film",
+      "icon_color": "indigo",
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -241,6 +249,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "release_year",
         "runtime_minutes"
       ],
+      "icon": "i:film",
+      "icon_color": "indigo",
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -277,6 +287,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "release_year",
         "runtime_minutes"
       ],
+      "icon": "i:film",
+      "icon_color": "indigo",
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -307,6 +319,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "release_year",
         "runtime_minutes"
       ],
+      "icon": "i:film",
+      "icon_color": "indigo",
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -746,17 +760,23 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             {
               "type": "folder",
               "id": "7c1e5a10-0000-4000-8000-000000000001",
-              "name": "Media"
+              "name": "Media",
+              "icon": null,
+              "icon_color": null
             },
             {
               "type": "folder",
               "id": "7c1e5a10-0000-4000-8000-000000000002",
-              "name": "Movies"
+              "name": "Movies",
+              "icon": null,
+              "icon_color": null
             },
             {
               "type": "list",
               "id": "7c1e5a10-0000-4000-8000-000000000011",
-              "name": "Watchlist"
+              "name": "Watchlist",
+              "icon": "i:film",
+              "icon_color": "indigo"
             }
           ]
         }
@@ -808,17 +828,23 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             {
               "type": "folder",
               "id": "7c1e5a10-0000-4000-8000-000000000001",
-              "name": "Media"
+              "name": "Media",
+              "icon": null,
+              "icon_color": null
             },
             {
               "type": "folder",
               "id": "7c1e5a10-0000-4000-8000-000000000002",
-              "name": "Movies"
+              "name": "Movies",
+              "icon": null,
+              "icon_color": null
             },
             {
               "type": "list",
               "id": "7c1e5a10-0000-4000-8000-000000000011",
-              "name": "Watchlist"
+              "name": "Watchlist",
+              "icon": "i:film",
+              "icon_color": "indigo"
             }
           ]
         }
@@ -884,6 +910,12 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         "total": 2
       }
     }
+  },
+  "emptyTrash": {
+    "method": "delete",
+    "path": "/api/v1/trash",
+    "status": 204,
+    "contentType": null
   },
   "restoreTrashBatch": {
     "method": "post",

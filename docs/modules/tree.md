@@ -2,48 +2,30 @@
 
 ## Purpose
 
-The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expanded state, folder and list writes (create, rename, move, delete, drag reorder), and the list gate for list routes. Ordering spec: `design-docs/UI_SPEC.md` §2; write errors: §9.
+The folder/list tree, its query and index, and folder and list writes including list icon creation and editing.
 
 ## Key files
 
-- `src/features/tree/api.ts`: query hooks, `createTreeIndex`, `treeKeys`.
-- `SidebarTree.tsx`: sidebar tree, its UI states, mounts the dialogs.
-- `useExpandedFolders.ts`: persisted expanded folder ids.
-- `mutations.ts`: folder and list write hooks, `useReorderSiblings`.
-- `useTreeDialogs.tsx`: all write flows; returns `{ actions, dialogs }`.
-- `NameDialog.tsx`: create and rename (a kind picker, and a folder picker for a new list, only on create).
-- `MoveDialog.tsx`, `DeleteDialog.tsx`, `DestinationPicker.tsx`, `FormError.tsx`, `useAction.ts`: dialogs.
-- `NodeMenu.tsx`, `ListActionsMenu.tsx`, `TreeActionsContext.tsx`, `slots.tsx`: row menu, list header menu, "+" menu.
-- `order.ts` (sibling order, `canDropInto`), `errors.ts`, `ListGate.tsx`: error classes, list-id gate.
+- `src/features/tree/api.ts`: tree query, types and index.
+- `SidebarTree.tsx`, `RailTree.tsx`: sidebar and collapsed rail.
+- `mutations.ts`: folder/list writes, including icon updates.
+- `useTreeDialogs.tsx`, `NameDialog.tsx`: create flows and dialogs.
+- `ListIconDialog.tsx`: edit a list mark with a version snapshot.
+- `ListActionsMenu.tsx`, `NodeMenu.tsx`: list and node actions.
+- `order.ts`, `ListGate.tsx`: ordering rules and list route gate.
 
 ## Interfaces
 
-- `useTree()`: `/api/v1/tree`, key `treeKeys.tree` (`['tree']`). `useTreeIndex()`: `pending`, `error` or `success` with `index`.
-- `createTreeIndex(data)`: `nodes`, `folders`, `lists` maps; `ancestorsOf(id)`.
-- `SidebarTree()`: provides `TreeActionsContext` and renders the dialogs.
-- `useCreateFolder()`, `useCreateList()`, `useRenameFolder()`, `useUpdateList()`, `useMoveFolder()`, `useMoveList()`, `useDeleteFolder()`, `useDeleteList()`: `If-Match` from `version`; success calls `invalidateContent`.
-- `useReorderSiblings()`: `mutate({ kind, parentId, ids })`; optimistic, rolled back on error.
-- `useTreeDialogs({ onCreatedFolder? })`: `{ actions, dialogs }`; actions: create, rename, move, remove, applyMove.
-- `listPathOptions(index)`, `ROOT_KEY`, `destinationKey(id)`, `destinationId(key)` (`MoveDialog.tsx`): the folders a new list can go into, and the top-level key of `DestinationPicker`.
-- `ListActionsMenu({ list })`: list header "…" menu (Kind, rename, move, delete) with its own dialogs.
-- `useChangeKind(list)` (`useChangeKind.tsx`): `{ pick(kind), dialog }`; the confirm clears item kind fields.
-- `canDropInto(index, sourceId, folderId)`: `order.ts`.
-- `ListGate({ listId, children })`, `useExpandedFolders`, `useWorkspaceName()`.
+- `useTree()`, `useTreeIndex()`, `createTreeIndex(data)`: tree data and index.
+- `useCreateList()`, `useUpdateListIcon()`, `useMoveList()`, `useDeleteList()`: list mutations.
+- `useTreeDialogs()`: tree actions and dialogs.
+- `ListIconDialog({ list, onClose })`: list icon editor.
+- `ListActionsMenu({ list })`, `SidebarTree()`, `ListGate({ listId, children })`.
 
 ## Gotchas
 
-- Create, move and reorder bodies always send the parent field (`parent_folder_id` / `folder_id`); `null` is root (D-060).
-- F010-W1: the "New list" dialog also picks the folder. Default = the opener's folder if the menu said "New list inside X", else the folder the last created list went into, else the top level. That memory is `sessionStorage` (`collection:list-folder`, `null` = top level), written only after a list is really created, and a stale id falls back to the top level. Frontend only: `folder_id` was already part of `POST /lists`. Only lists get it; a folder dialog has none.
-- F011-W6 (2026-10-16): the folder is a **`Select` dropdown beside the Kind one** (`sm:grid-cols-2`), not a list of radios — `DestinationPicker` is now only used by the Move and Restore dialogs. Options come from `listPathOptions` as `SelectOption`s, labelled with the full path (`Films › Watchlist`) because a dropdown cannot show the move picker's indentation. The dialog description still follows the choice.
-- F011-W4 (2026-10-16): a tree row's "…" button paints **no hover fill of its own** (`hover:bg-transparent hover:text-text`); inside a hovered row it drew a second box as big as the row. The row keeps its one full-width pill. `+ New` uses an inset focus ring (`focus-visible:-outline-offset-2` + `focus-visible:bg-fill-hover`): the outer one was clipped by the scroll container.
-- A 412 keeps the draft and offers "Reload latest"; success and 404/409 call `invalidateContent`, 412 does not.
-- Reorder moves same-kind siblings under one parent only, by dragging the row. Cross-parent moves use the Move dialog.
-- A pointer drag (mouse, touch, pen) can also drop a row onto a folder row (`acceptsDrop` = `canDropInto`: not itself, not a descendant, not its current parent). Keyboard drags only reorder.
-- A list's kind is set at create and changed from the list header's "…" menu (`useChangeKind`); a rename never changes it.
-- List description is edited on the list page, not in the tree.
-- Folder rows have no chevron: the folder icon shows open or closed, and selecting the row toggles it.
-- A Radix Dialog opened from a menu needs `initialFocus` (see [ui](ui.md)).
-- Delete goes to Trash and navigates to `/` when the open list is the deleted node or lives inside it. The confirm counts match the Trash entry (`countsText`, root included, D-065).
-- Sub-folders come first in each parent, then lists, each by `(sort_order, id)`. Folders with a missing parent, or in a parent cycle, are left out.
-- Expanded ids persist under `collection:tree-expanded`; nothing is written before the tree loads.
-- When the active list changes, its ancestors open once; a manual collapse sticks until then.
+- Create and icon update send `icon` and `icon_color`; icon update uses the list snapshot's version in `If-Match`.
+- A 412 on icon update preserves the selected mark and offers Copy draft or Reload latest; reload requires confirmation and refreshes the tree before replacing the snapshot.
+- New list icon choice is collected with the create form; the list mark is rendered by [lists](lists.md) in the sidebar, rail, list header and search results.
+- Create/move bodies include `folder_id` (`null` = top level); reorder is within same-kind siblings under one parent.
+- See [design docs](/Users/federico/Developer/collections-app/design-docs/) for full interaction details.

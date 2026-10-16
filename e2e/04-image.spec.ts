@@ -2,6 +2,37 @@ import { expect, test } from '@playwright/test'
 import { createItem, createList, itemPanel, itemUrl, uniqueName } from './helpers'
 
 test.describe('AT-06 item image', () => {
+  test('F012-W2 pastes a screenshot into the open item', async ({ page, request }) => {
+    const list = await createList(request, uniqueName('Paste'), 'generic')
+    const title = uniqueName('Clipboard image')
+    const item = await createItem(request, list.id, title)
+    await page.goto(itemUrl(list.id, item.id))
+    const panel = itemPanel(page)
+    await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
+    await expect(panel.getByRole('button', { name: 'Add image' })).toBeVisible()
+
+    await page.evaluate(async () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 48
+      canvas.height = 32
+      const context = canvas.getContext('2d')!
+      context.fillStyle = '#336699'
+      context.fillRect(0, 0, 48, 32)
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+      const file = new File([blob!], 'screenshot.png', { type: 'image/png' })
+      const transfer = new DataTransfer()
+      transfer.items.add(file)
+      window.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, clipboardData: transfer }))
+    })
+
+    const thumbnail = panel.getByRole('img', { name: title })
+    await expect(thumbnail).toBeVisible()
+    await expect
+      .poll(() => thumbnail.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0)
+    await expect(panel.getByRole('button', { name: 'Change image' })).toBeVisible()
+  })
+
   test('a rejected file shows its error, a JPEG uploads and shows its thumbnail', async ({
     page,
     request,

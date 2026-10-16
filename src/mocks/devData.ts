@@ -34,6 +34,8 @@ const list = (
   display_mode: 'grid',
   sort_mode: 'manual',
   pinned_fields: null,
+  icon: null,
+  icon_color: null,
   sort_order: sortOrder,
   item_count: itemCount,
   version: 1,

@@ -1,7 +1,9 @@
 import { kindIcons, kindLabels } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import { ItemThumb } from '../lists/ItemThumb'
+import { ListIconMark } from '../lists/ListIconMark'
 import type { SearchResult } from './api'
+import type { ItemKind } from '../items/api'
 
 /** Where a result opens. The shell decides between the side panel and a full page. */
 export const resultHref = ({ item }: SearchResult) => `/lists/${item.list_id}/items/${item.id}`
@@ -10,14 +12,25 @@ export const resultHref = ({ item }: SearchResult) => `/lists/${item.list_id}/it
 export function ResultPath({
   path,
   className,
+  kind = 'generic',
 }: {
   path: SearchResult['path']
   className?: string
+  kind?: ItemKind
 }) {
   return (
     <span className={cx('block truncate text-text-muted', className)}>
       <span className="sr-only">in </span>
       {path.map((segment) => segment.name).join(' › ')}
+      {path.at(-1)?.type === 'list' && (
+        <ListIconMark
+          icon={path.at(-1)?.icon}
+          iconColor={path.at(-1)?.icon_color}
+          kind={kind}
+          className="ml-1 inline-grid size-4 align-middle"
+          iconClassName="size-3"
+        />
+      )}
     </span>
   )
 }
@@ -44,7 +57,7 @@ export function SearchResultBody({ result, large }: { result: SearchResult; larg
         >
           {item.title}
         </span>
-        <ResultPath path={path} className="text-xs" />
+        <ResultPath path={path} className="text-xs" kind={item.kind} />
       </span>
       <span className="inline-flex shrink-0 text-text-muted" title={kindLabels[item.kind]}>
         <KindIcon aria-hidden className="size-4" />

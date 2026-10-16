@@ -115,6 +115,30 @@ async function choose(file: File) {
 }
 
 describe('AT-06 image upload', () => {
+  it('uploads a pasted clipboard file through the standard image upload path', async () => {
+    const calls = mockImage()
+    server.use(http.get(itemUrl, () => HttpResponse.json({ ...matrix, image: null })))
+    mockViewport(1100)
+    const router = createTestRouter([PATH])
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
+      </QueryClientProvider>,
+    )
+    await screen.findByRole('heading', { level: 1, name: 'The Matrix' })
+    const file = png('clipboard.png')
+    fireEvent.paste(window, {
+      clipboardData: {
+        items: [{ kind: 'file', type: 'image/png', getAsFile: () => file }],
+      } as unknown as DataTransfer,
+    })
+    expect(await screen.findByText('Image uploaded')).toBeInTheDocument()
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toMatchObject({ method: 'PUT', ifMatch: '"i-3"', fileName: 'clipboard.png' })
+  })
+
   it('has a keyboard-reachable browse button and a restricted file input', async () => {
     const { user } = await openForm()
     expect(fileInput()).toHaveAttribute('accept', 'image/jpeg,image/png,image/webp')

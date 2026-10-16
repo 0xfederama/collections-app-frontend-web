@@ -2,44 +2,28 @@
 
 ## Purpose
 
-Vendors the backend OpenAPI contract at a pinned tag (currently `api-v0.7.0`, see `api/openapi.lock.json`), generates its TypeScript types and examples, and provides the only client for server calls (`src/lib/api`), the TanStack Query defaults and the MSW mocks. Contract rules: [API.md](/Users/federico/Developer/collections-app/design-docs/API.md).
+Pins the backend OpenAPI contract, generates TypeScript types/examples, and provides the API client, query defaults and MSW mocks.
 
 ## Key files
 
-- `scripts/api-sync.mjs`, `api-check.mjs`, `lib/generate.mjs`: vendor and regenerate; offline check of lock and generated files.
-- `api/openapi.yaml`, `api/openapi.lock.json`: vendored spec and `{ tag, commit, sha256 }`.
-- `src/generated/schema.d.ts`, `examples.ts`: generated types (typed `ItemSummary.metadata`, `PinnedFields`) and examples.
-- `src/lib/api/client.ts`, `errors.ts`, `etag.ts`: client, error classes, `If-Match` builder.
-- `src/app/queryClient.ts`: app-wide QueryClient defaults and `shouldRetry`.
-- `src/features/invalidateContent.ts`: the one invalidation for create, trash, restore, purge and move.
-- `src/mocks/`: `handlers.ts`, `server.ts` (Node), `browser.ts` (worker), `devData.ts`, `devTree.ts` (`createTreeBackend`), `problems.ts`.
-- `src/test-utils.tsx`: render helpers with a fresh QueryClient.
-- `src/main.tsx`, `vite.config.ts`, `public/mockServiceWorker.js`: dev-only mock worker.
+- `api/openapi.yaml`, `api/openapi.lock.json`: vendored contract and pin.
+- `scripts/api-sync.mjs`, `api-check.mjs`: sync and offline drift check.
+- `src/generated/schema.d.ts`, `examples.ts`: generated API types and examples.
+- `src/lib/api/`: openapi-fetch client, errors and ETag helpers.
+- `src/features/invalidateContent.ts`: shared content invalidation.
+- `src/mocks/`: test handlers and dev fakes.
 
 ## Interfaces
 
-- `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]`: tag only; without `--from` it shallow-clones the backend repo.
-- `npm run api:check`: offline; runs first in `npm run check`.
-- `api`, `createApiClient()`, `unwrap(call)`: openapi-fetch client, error middleware, empty-body guard.
-- `ApiError` (`status`, `code`, `title`, `detail?`, `currentVersion?`, `errors?`, `requestId?`, `raw`), `NetworkError`.
-- `etag(resource, version)`: e.g. `"i-3"`. `ifMatch(resource, version)`: `{ 'If-Match': … }`. Resources: folder, list, item, content, settings.
-- `createQueryClient()`, `shouldRetry(failureCount, error)`: `staleTime` 30 s; mutations never retried.
-- `invalidateContent(queryClient)`: invalidates tree, `['lists']`, `['items']`, search, `homeKeys.recent` and trash.
-- `handlers`, `server`, `worker` (`devHandlers` + `handlers`), `problemResponse(status, code, extra?, headers?)`.
-- `renderWithProviders(ui, client?)`, `renderAt(path, client?)`, `createTestQueryClient()`.
+- `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]`, `npm run api:check`.
+- `api`, `createApiClient()`, `unwrap(call)`, `ApiError`, `NetworkError`.
+- `etag(resource, version)`, `ifMatch(resource, version)`, `invalidateContent(queryClient)`.
+- `createQueryClient()`, `shouldRetry(failureCount, error)`.
 
 ## Gotchas
 
-- Never edit `api/openapi.yaml` or `src/generated/`; `api:check` fails on any byte change. Restore with `api:sync -- <tag>`.
-- Contract 0.5.0 added list `pinned_fields` (PATCH; `null` resets), item `paid_platforms`, and kind fields such as `camera_type` and episodes.
-- Contract 0.7.0 (2026-10-16, breaking) replaces the `pinned_fields` `{ under, right }` object with an ordered array of at most 2 unique keys (`string[] | null`), and makes `price` (item field and `sort_mode`) valid only on `motorcycle`, `car` and `camera`.
-- Non-2xx responses throw `ApiError`; a failed fetch throws `NetworkError`; aborts pass through unwrapped.
-- Retries: one retry only for `NetworkError` or 5xx. 4xx (including 412) is never retried.
-- `ifMatch` has no way to send `*`. The 412 `currentVersion` is exposed on `ApiError` for the conflict UI.
-- Client and MSW handlers use absolute `location.origin` URLs, because Node's fetch rejects relative URLs.
-- Mocks are stateless: each operation answers with its first 2xx example, except folders and lists, which `createTreeBackend` keeps in memory (checks `If-Match`, cycles and order_stale). Image endpoints return a placeholder SVG.
-- `/readyz` is `text/plain`: call it with `parseAs: 'text'`.
-- MSW 3 imports from `msw/http`. Tests use `onUnhandledFrame: 'error'`; the dev worker uses `'bypass'`.
-- `package.json` `overrides` lets openapi-typescript use the root TypeScript 6. Keep it.
-- `api:sync` without `--from` needs network. `js-yaml` is a devDependency used only by `generate.mjs`.
-- `VITE_API_MOCKS=1 npm run dev` starts the worker, which prepends the richer, stateful tree from `devData.ts`. Vitest uses only the spec examples. A Vite plugin removes `dist/mockServiceWorker.js` from builds.
+- Current pinned contract: `api-v0.8.0`. Do not edit `api/openapi.yaml` or `src/generated/`; run `api:sync` and verify with `api:check`.
+- F012 adds nullable list `icon` and `icon_color` fields, `DELETE /api/v1/trash` for bulk purge, and nullable `trash_retention_days` in settings.
+- Setting retention to `null` disables it; changing the value does not purge immediately. The API accepts 1–365 days; the UI offers Off, 7, 30 and 90.
+- Mutations use ETags; 412 is not retried. Network and 5xx failures can retry once.
+- See [API design docs](/Users/federico/Developer/collections-app/design-docs/API.md) for the contract.

@@ -2,43 +2,28 @@
 
 ## Purpose
 
-The list screen at `/lists/:listId`: header (title alone, in-place Markdown description, "…" menu with Kind), a floating toolbar (display mode, pinned fields, sort, title filter, item count), and the items in the chosen display mode with drag reorder. Inline new-item draft at `/lists/:listId/items/new`. Spec: `design-docs/UI_SPEC.md` §3; redesign: `design-docs/features/F-002-ui-refresh.md`.
+The list screen at `/lists/:listId`, its header and item rows, and list icon selection and display.
 
 ## Key files
 
-- `src/features/lists/ListView.tsx`: URL state (`?q=` debounced, `?sort=` override), display-mode, pinned and default-sort writes.
-- `ListHeader.tsx`: title, "New item" (hidden on an empty list), toolbar; `sortOptionsFor(kind)`; embeds `ListActionsMenu`.
-- `toolbarStyles.ts`: `toolbarControl` class (36 px, `rounded-md`, fill background).
-- `ListDescription.tsx`: in-place Markdown description (lazy editor, 64 KiB).
-- `pinned.ts`, `PinnedMenu.tsx`: pinned-field defaults per kind, resolution of the ordered selection, the "Pinned fields" menu.
-- `ItemsView.tsx`, `ItemEntry.tsx`, `ItemThumb.tsx`: states, reorder rules, rows; `ItemThumb` falls back to `ItemInitial` (first letter, `firstLetter` in `src/lib/text.ts`, see [ui](ui.md)).
-- `price.ts`: `formatPrice`. `scrollRestore.ts`: scroll restore for `main`.
-- `api.ts`: `listKeys`, `useList`, `useListItems`, `useUpdateList`, `useReorderItems`.
-- `src/routes/ListRoute.tsx`: route; `ListGate` wraps `ListView`. `src/mocks/devItems.ts`: dev fake.
+- `src/features/lists/ListView.tsx`: list screen and URL state.
+- `ListIconPicker.tsx`, `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices and parsing.
+- `ListIconMark.tsx`: shared list mark renderer.
+- `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`: header and item rows.
+- `pinned.ts`, `PinnedMenu.tsx`, `toolbarStyles.ts`: pinned fields and toolbar.
+- `api.ts`: list and item queries/mutations.
 
 ## Interfaces
 
-- `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: presentational pieces; props in source.
-- `useListItems(listId, { sort, q })`, `flattenItems`, `listKeys`, `ITEMS_PAGE_SIZE` (200).
-- `useUpdateList(listId)`: PATCH `display_mode`, `sort_mode` or `pinned_fields` (`null` = kind default); optimistic.
-- `useReorderItems(listId)`: PUT of all item ids, optimistic.
-- `resolvePinned(list)`, `defaultPinned(kind)`, `pinnableFields(kind)`, `pinnedPlacements(pinned)`, `MAX_PINNED` (2): `pinned.ts`.
-- `formatPrice(price)`: `€ 1,200–1,500`, `from € 1,200`, `up to € 1,500` (no cents), or `null`.
-- `ItemInitial({ title, className? })`: the no-image tile (first letter, container-query sized).
-- `useScrollRestore(anchor, ready)`: returns `remember`, called before navigating to an item.
+- `ListIconPicker({ value, onChange, onClose, kind? })`: built-in icons, emoji, mark color and default.
+- `ListIconMark({ icon, iconColor, kind, className, iconClassName })`: list mark.
+- `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
+- `useListItems`, `useUpdateList`, `useReorderItems`, `listKeys`: list API hooks and query keys.
+- `resolvePinned`, `defaultPinned`, `pinnableFields`, `formatPrice`: list display helpers.
 
 ## Gotchas
 
-- Display modes: compact, thumbnail, grid (default). The mode is saved on the list.
-- Pinned fields (`pinned_fields`): an ordered array of at most 2 keys (`api-v0.7.0`, D-085), the first read beside the title and the second at the right end of the row; the kind default applies until the list saves its own (`null` resets, `[]` pins nothing). A TV show's seasons and episodes read as one `5×7` in the first placement. Generic lists pin nothing and have no pinnable fields.
-- `PinnedMenu` is one checklist with no left/right choice: ticking appends, unticking removes (so the second becomes the first), each row shows its position, and "Reset to default" sends `null`.
-- Sort options: Manual, Title, Recently updated, Price (motorcycle, car and camera only, `hasPrice` in `features/items/kinds`), and the kind's key. Generic lists have neither Price nor the kind key. `?sort=` overrides the saved `sort_mode` (an override the kind does not define is ignored); "Make this the default" saves it.
-- Kind is changed from the "…" menu (`ListActionsMenu`, see [tree](tree.md)), not from the header.
-- Drag reorder works on the whole row in Manual sort, with no filter, all items loaded and more than one item; otherwise a hint says why. Keyboard: Space picks up, arrows move.
-- Each row has an "Actions for …" menu; the row itself is the drag handle (no grip).
-- "New item" (header, or the single CTA of an empty list) opens the inline draft row at `/lists/:listId/items/new` (`NewItemDraft`, see [items](items.md)); Quick add is not used here.
-- Item links carry the list's query string, so `?q=` and `?sort=` survive opening an item.
-- `main` is the scroll container, so `ScrollRestoration` is not used; `scrollRestore.ts` keys by `location.key`.
-- The header heading reads the tree, so it follows a rename; `ListView` refetches the list when the tree holds a newer version.
-- Description: Click or the pen to edit; ✓ or Ctrl/Cmd+Enter saves, ✕ or Esc cancels. Collapsed state is per device (`collection:list-description-collapsed`).
-- A 412 on list update refetches the list with a toast. A 409 `order_stale` on reorder refetches the items; other reorder errors roll back.
+- Icon choices are stored as `i:<name>` for built-in marks or as one emoji; the keyword aliases are vendored locally without an emoji dependency.
+- Ten named colors apply only to built-in icon marks; emoji and default marks remain uncolored. The neutral tile is shared across views.
+- List icon writes are owned by the tree feature and use the list version with `If-Match`.
+- See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.

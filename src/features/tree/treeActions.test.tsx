@@ -47,6 +47,8 @@ describe('AT-03 tree CRUD (web): create', () => {
       name: 'Games',
       kind: 'generic',
       folder_id: null,
+      icon: null,
+      icon_color: null,
     })
     const created = backend.state.lists.find((l) => l.name === 'Games')!
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${created.id}`))
@@ -69,8 +71,34 @@ describe('AT-03 tree CRUD (web): create', () => {
       name: 'Cameras',
       kind: 'camera',
       folder_id: null,
+      icon: null,
+      icon_color: null,
     })
     expect(backend.state.lists.find((l) => l.name === 'Cameras')?.kind).toBe('camera')
+  })
+
+  it('F012-W1 creates a list with a searchable built-in icon and named color', async () => {
+    const { user, backend } = await openTree()
+    await pickHeaderAction(user, 'List')
+    const create = await dialog()
+    await user.type(within(create).getByRole('textbox', { name: 'Name' }), 'Camera shelf')
+    await user.click(within(create).getByRole('button', { name: 'Choose icon' }))
+    const picker = await screen.findByRole('dialog', { name: 'Choose list icon' })
+    await user.type(
+      within(picker).getByRole('textbox', { name: 'Search icons and emoji' }),
+      'camer',
+    )
+    await user.click(within(picker).getByRole('button', { name: 'camera' }))
+    await user.click(within(picker).getByRole('button', { name: 'Teal' }))
+    await user.click(within(picker).getByRole('button', { name: 'Done' }))
+    await user.click(within(create).getByRole('button', { name: 'Create' }))
+
+    await waitFor(() => expect(backend.writes('POST', '/api/v1/lists')).toHaveLength(1))
+    expect(backend.writes('POST', '/api/v1/lists')[0]?.body).toMatchObject({
+      name: 'Camera shelf',
+      icon: 'i:camera',
+      icon_color: 'teal',
+    })
   })
 
   it('a new folder has no kind picker', async () => {
@@ -107,6 +135,8 @@ describe('AT-03 tree CRUD (web): create', () => {
       name: 'Lenses',
       kind: 'generic',
       folder_id: ID.gear,
+      icon: null,
+      icon_color: null,
     })
     const created = backend.state.lists.find((l) => l.name === 'Lenses')!
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${created.id}`))
@@ -138,6 +168,8 @@ describe('AT-03 tree CRUD (web): create', () => {
       name: 'Lenses',
       kind: 'generic',
       folder_id: ID.gear,
+      icon: null,
+      icon_color: null,
     })
   })
 

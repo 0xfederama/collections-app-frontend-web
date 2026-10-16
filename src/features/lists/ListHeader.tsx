@@ -23,6 +23,7 @@ import type { ItemKind } from '../items/api'
 import { hasPrice, sortKeyLabel } from '../items/kinds'
 import type { DisplayMode, List, PinnedFields, SortMode } from './api'
 import { ListDescription } from './ListDescription'
+import { ListIconMark } from './ListIconMark'
 import { PinnedMenu } from './PinnedMenu'
 import { toolbarControl } from './toolbarStyles'
 
@@ -83,6 +84,13 @@ export function ListHeader(props: ListHeaderProps) {
       <header className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="min-w-0 flex-1 text-3xl leading-tight font-bold tracking-tight break-words">
+            <ListIconMark
+              icon={props.treeList.icon}
+              iconColor={props.treeList.icon_color}
+              kind={props.treeList.kind}
+              className="mr-3 inline-grid size-9 align-middle"
+              iconClassName="size-5"
+            />
             {props.treeList.name}
           </h1>
           {props.showAddItem && (

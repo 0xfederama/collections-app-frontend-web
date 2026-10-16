@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast, type ItemKind } from '../../components/ui'
 import { api, ApiError, ifMatch, unwrap } from '../../lib/api'
 import { invalidateContent } from '../invalidateContent'
+import type { IconChoice } from '../lists/iconModel'
 import { treeKeys, type Folder, type List, type TreeData } from './api'
 import { shouldRefreshTree } from './errors'
 import { applyOrder, type SiblingKind } from './order'
@@ -34,9 +35,38 @@ export function useCreateFolder() {
 
 export function useCreateList() {
   return useTreeMutation(
-    ({ name, kind, folderId }: { name: string; kind: ItemKind; folderId: string | null }) =>
-      unwrap(api.POST('/api/v1/lists', { body: { name, kind, folder_id: folderId } })),
+    ({
+      name,
+      kind,
+      folderId,
+      icon,
+    }: {
+      name: string
+      kind: ItemKind
+      folderId: string | null
+      icon: IconChoice
+    }) =>
+      unwrap(
+        api.POST('/api/v1/lists', {
+          body: { name, kind, folder_id: folderId, icon: icon.icon, icon_color: icon.icon_color },
+        }),
+      ),
   )
+}
+
+/** List icon edits use the list snapshot captured when the picker opened (D-083). */
+export function useUpdateListIcon() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ list, icon }: { list: List; icon: IconChoice }) =>
+      unwrap(
+        api.PATCH('/api/v1/lists/{id}', {
+          params: { path: { id: list.id }, header: ifMatch('list', list.version) },
+          body: { icon: icon.icon, icon_color: icon.icon_color },
+        }),
+      ),
+    onSuccess: () => invalidateContent(queryClient),
+  })
 }
 
 export function useRenameFolder() {

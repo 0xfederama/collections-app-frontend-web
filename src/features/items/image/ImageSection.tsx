@@ -30,10 +30,12 @@ function describeCurrent(image: NonNullable<Item['image']>) {
  */
 export function ImageSection({
   item,
+  initialFile = null,
   onChanged,
   onStale,
 }: {
   item: Item
+  initialFile?: File | null
   onChanged: (updated: Item) => void
   onStale: (kind: 'conflict' | 'gone') => void
 }) {
@@ -47,6 +49,7 @@ export function ImageSection({
   const fileInput = useRef<HTMLInputElement>(null)
   const browse = useRef<HTMLButtonElement>(null)
   const abort = useRef<AbortController | null>(null)
+  const pastedUploadStarted = useRef(false)
   // Focus can only move to "browse" once it is enabled again, i.e. after the next render.
   const [refocus, setRefocus] = useState(0)
 
@@ -107,6 +110,23 @@ export function ImageSection({
       'Image uploaded',
     )
   }
+
+  // A paste is a one-time upload from the item snapshot that opened this dialog.
+  const initialPaste = useRef({ file: initialFile, upload })
+  useEffect(() => {
+    const { file, upload: uploadPasted } = initialPaste.current
+    if (!file || pastedUploadStarted.current) return
+    let cancelled = false
+    queueMicrotask(() => {
+      if (cancelled || pastedUploadStarted.current) return
+      pastedUploadStarted.current = true
+      uploadPasted(file)
+    })
+    // Defer until effects settle so Strict Mode's rehearsal cleanup cancels the first attempt.
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const pickFiles = (files: FileList | null | undefined) => {
     const first = files?.[0]

@@ -6,6 +6,7 @@ import {
   draftFromSettings,
   firstInvalid,
   inputId,
+  isFormDirty,
   isDirty,
   mapServerErrors,
   validate,
@@ -16,6 +17,7 @@ const base: Settings = {
   workspace_name: 'Our Collection',
   streaming_country_code: 'IT',
   markdown_history_limit: 20,
+  trash_retention_days: null,
   version: 4,
 }
 const draftWith = (over: Partial<SettingsDraft> = {}): SettingsDraft => ({
@@ -29,6 +31,7 @@ describe('AT-14 settings form model', () => {
       workspace_name: 'Our Collection',
       streaming_country_code: 'IT',
       markdown_history_limit: '20',
+      trash_retention_days: 'off',
     })
   })
 
@@ -49,6 +52,14 @@ describe('AT-14 settings form model', () => {
     expect(buildPatch(base, draftWith({ streaming_country_code: 'FR' }))).toEqual({
       streaming_country_code: 'FR',
     })
+  })
+
+  it('tracks retention drafts independently from the form Save fields', () => {
+    expect(buildPatch(base, draftWith({ trash_retention_days: '7' }))).toEqual({})
+    expect(isDirty(base, draftWith({ trash_retention_days: 'off' }))).toBe(false)
+    const savedRetention = { ...base, trash_retention_days: 30 }
+    expect(isDirty(savedRetention, draftWith({ trash_retention_days: 'off' }))).toBe(true)
+    expect(isFormDirty(savedRetention, draftWith({ trash_retention_days: 'off' }))).toBe(false)
   })
 
   it('whitespace around the name is not a change', () => {

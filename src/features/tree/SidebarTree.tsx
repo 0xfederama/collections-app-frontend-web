@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useMatch, useNavigate } from 'react-router'
 import { Button, EmptyState, Skeleton, Tree, type TreeRowState } from '../../components/ui'
-import { Folder, FolderOpen, Inbox, List } from '../../components/ui/icons'
+import { Folder, FolderOpen, Inbox } from '../../components/ui/icons'
+import { ListIconMark } from '../lists/ListIconMark'
 import { useTreeIndex, type TreeNode } from './api'
 import { buildSortable } from './order'
 import { TreeNewButton, TreeRowActions } from './slots'
@@ -122,7 +123,13 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
           aria-hidden
           className="grid size-[22px] shrink-0 place-items-center rounded-[6px] bg-fill shadow-[inset_0_0_0_1px_var(--material-hairline)]"
         >
-          <List className="size-3.5 text-text-muted" />
+          <ListIconMark
+            icon={list.icon}
+            iconColor={list.icon_color}
+            kind={list.kind}
+            className="size-full"
+            iconClassName="size-3.5"
+          />
         </span>
         <span className="min-w-0 flex-1 truncate">{list.name}</span>
         <span className="text-xs text-text-muted tabular-nums">

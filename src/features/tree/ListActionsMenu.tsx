@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { kindLabels, type ItemKind, type MenuItem } from '../../components/ui'
 import { useTreeDialogs } from './useTreeDialogs'
 import { NodeMenu } from './NodeMenu'
 import type { List } from './api'
 import { kindOptions, useChangeKind } from './useChangeKind'
+import { ListIconDialog } from './ListIconDialog'
 
 /**
  * The list's overflow menu for the list header (W-06): Kind, rename, move, delete.
@@ -10,6 +12,7 @@ import { kindOptions, useChangeKind } from './useChangeKind'
  * that list was open. Kind lives here (F008-W5); a change on a list with items asks first.
  */
 export function ListActionsMenu({ list }: { list: List }) {
+  const [iconOpen, setIconOpen] = useState(false)
   const { actions, dialogs } = useTreeDialogs()
   const kind = useChangeKind(list)
   const leading: MenuItem[] = [
@@ -20,6 +23,8 @@ export function ListActionsMenu({ list }: { list: List }) {
       options: kindOptions,
       onValueChange: (value) => kind.pick(value as ItemKind),
     },
+    { type: 'separator' },
+    { label: 'List icon…', onSelect: () => setIconOpen(true) },
     { type: 'separator' },
   ]
   return (
@@ -32,6 +37,7 @@ export function ListActionsMenu({ list }: { list: List }) {
       />
       {dialogs}
       {kind.dialog}
+      {iconOpen && <ListIconDialog list={list} onClose={() => setIconOpen(false)} />}
     </>
   )
 }

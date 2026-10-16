@@ -454,6 +454,7 @@ describe('W-04 workspace name', () => {
           workspace_name: '',
           streaming_country_code: 'IT',
           markdown_history_limit: 20,
+          trash_retention_days: null,
           version: 1,
         }),
       ),

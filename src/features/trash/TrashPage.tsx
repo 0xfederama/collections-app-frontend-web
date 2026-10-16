@@ -4,6 +4,7 @@ import { Trash2 } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import { useTrash, type RestoreDestination, type RestoreResult, type TrashEntry } from './api'
 import { GONE_MESSAGE } from './errors'
+import { EmptyTrashDialog } from './EmptyTrashDialog'
 import { PurgeDialog } from './PurgeDialog'
 import { RestoreToDialog } from './RestoreToDialog'
 import { TrashErrorMessage } from './TrashError'
@@ -42,6 +43,9 @@ export function TrashPage() {
   const headingRef = useRef<HTMLHeadingElement>(null)
   const [restoreTo, setRestoreTo] = useState<TrashEntry | null>(null)
   const [purging, setPurging] = useState<TrashEntry | null>(null)
+  const [emptyCount, setEmptyCount] = useState<number | null>(null)
+  const [loadingAll, setLoadingAll] = useState(false)
+  const [emptyLoadFailed, setEmptyLoadFailed] = useState(false)
 
   const entries = useMemo(() => query.data?.pages.flatMap((page) => page.data) ?? [], [query.data])
 
@@ -63,6 +67,26 @@ export function TrashPage() {
   const gone = () => {
     toast({ kind: 'info', title: 'Already gone', description: GONE_MESSAGE })
     settle()
+  }
+
+  const prepareEmpty = async () => {
+    setLoadingAll(true)
+    setEmptyLoadFailed(false)
+    try {
+      let result = await query.fetchNextPage()
+      if (result.isError) throw result.error ?? new Error('Trash page could not be loaded')
+      while (result.hasNextPage) {
+        result = await query.fetchNextPage()
+        if (result.isError) throw result.error ?? new Error('Trash page could not be loaded')
+      }
+      if (!result.data) throw new Error('Trash entries could not be loaded')
+      const allEntries = result.data.pages.flatMap((page) => page.data)
+      setEmptyCount(allEntries.reduce((total, entry) => total + entry.counts.items, 0))
+    } catch {
+      setEmptyLoadFailed(true)
+    } finally {
+      setLoadingAll(false)
+    }
   }
 
   let body
@@ -150,6 +174,23 @@ export function TrashPage() {
           pending={query.isFetching}
         />
       )}
+      <div className="flex justify-end">
+        <Button
+          variant="danger"
+          disabled={query.isPending || entries.length === 0 || query.isFetching || loadingAll}
+          pending={loadingAll}
+          onClick={() => void prepareEmpty()}
+        >
+          Empty trash
+        </Button>
+      </div>
+      {emptyLoadFailed && (
+        <TrashErrorMessage
+          error={{ kind: 'network', message: 'All trash entries could not be loaded. Try again.' }}
+          onRetry={() => void prepareEmpty()}
+          pending={loadingAll}
+        />
+      )}
       {body}
       {restoreTo && (
         <RestoreToDialog
@@ -168,6 +209,18 @@ export function TrashPage() {
               toast({ kind: 'success', title: `Permanently deleted “${purging.root_name}”` })
               settle()
             } else gone()
+          }}
+        />
+      )}
+      {emptyCount !== null && (
+        <EmptyTrashDialog
+          entries={query.data?.pages.reduce((total, page) => total + page.data.length, 0) ?? 0}
+          itemCount={emptyCount}
+          onClose={() => setEmptyCount(null)}
+          onDone={() => {
+            toast({ kind: 'success', title: 'Trash emptied' })
+            setEmptyCount(null)
+            headingRef.current?.focus()
           }}
         />
       )}
