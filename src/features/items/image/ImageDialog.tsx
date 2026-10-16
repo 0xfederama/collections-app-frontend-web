@@ -47,12 +47,7 @@ export function ImageDialog({
       title={item.image ? 'Change image' : 'Add image'}
       className="max-w-xl"
     >
-      <ImageSection
-        item={item}
-        initialFile={initialFile}
-        onChanged={onClose}
-        onStale={setStale}
-      />
+      <ImageSection item={item} initialFile={initialFile} onChanged={onClose} onStale={setStale} />
       {stale === 'conflict' && (
         <ConflictBanner
           message="Someone else changed this item. The image has not been changed."
