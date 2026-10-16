@@ -138,7 +138,6 @@ test.describe('F012-W1 list icons', () => {
         request,
       }) => {
         const name = uniqueName('Responsive icon list')
-        const created = await createList(request, name)
         const context = await browser.newContext({
           viewport: { width, height: 900 },
           hasTouch: width === 375,
@@ -146,6 +145,32 @@ test.describe('F012-W1 list icons', () => {
         const page = await context.newPage()
         await page.addInitScript((value) => localStorage.setItem('collection:theme', value), theme)
         const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:5183'
+        await page.goto(new URL('/', baseUrl).toString())
+        await page.getByRole('main').getByRole('button', { name: 'New list', exact: true }).click()
+        const create = page.getByRole('dialog', { name: 'New list' })
+        const nameLabel = create.getByText('Name', { exact: true })
+        const iconLabel = create.getByText('Icon', { exact: true })
+        const nameInput = create.getByRole('textbox', { name: 'Name' })
+        const iconButton = create.getByRole('button', { name: 'Choose icon' })
+        const [nameLabelBox, iconLabelBox, nameInputBox, iconButtonBox] = await Promise.all([
+          nameLabel.boundingBox(),
+          iconLabel.boundingBox(),
+          nameInput.boundingBox(),
+          iconButton.boundingBox(),
+        ])
+        expect(nameLabelBox).not.toBeNull()
+        expect(iconLabelBox).not.toBeNull()
+        expect(nameInputBox).not.toBeNull()
+        expect(iconButtonBox).not.toBeNull()
+        if (!nameLabelBox || !iconLabelBox || !nameInputBox || !iconButtonBox) {
+          throw new Error('The new-list name and icon controls must be visible.')
+        }
+        expect(iconLabelBox.y).toBe(nameLabelBox.y)
+        expect(iconButtonBox.x).toBeGreaterThanOrEqual(nameInputBox.x + nameInputBox.width)
+        expect(iconButtonBox.y).toBe(nameInputBox.y)
+        await create.getByRole('button', { name: 'Cancel' }).click()
+
+        const created = await createList(request, name)
         await page.goto(new URL(`/lists/${created.id}`, baseUrl).toString())
         await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
         await page
