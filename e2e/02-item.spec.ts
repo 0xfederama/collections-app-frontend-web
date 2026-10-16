@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createItem, createList, itemPanel, uniqueName } from './helpers'
+import { createItem, createList, itemPanel, itemUrl, uniqueName } from './helpers'
 
 test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
   test('create a movie item, fill it in, save, reload, values stick', async ({ page, request }) => {
@@ -54,6 +54,61 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
     await page.getByRole('option', { name: 'Release year' }).click()
     await expect(page).toHaveURL(/sort=kind_key/)
     await expect(links).toHaveText([title, older])
+  })
+})
+
+test.describe('F011-W1/W2 streaming: no country, several platforms from a dropdown', () => {
+  test('tick two services from the dropdown, save, reload, they stick', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Shows'), 'tv_show')
+    const title = uniqueName('Severance')
+    const item = await createItem(request, list.id, title)
+
+    await page.goto(itemUrl(list.id, item.id))
+    const panel = itemPanel(page)
+    await panel.getByRole('button', { name: 'Add field' }).click()
+    await page.getByRole('menuitem', { name: 'Streaming' }).click()
+
+    // F011-W1: no country field on the item — it comes from Settings.
+    await expect(panel.getByText('Streaming country')).toBeHidden()
+    await expect(panel.getByRole('combobox', { name: /country/i })).toBeHidden()
+
+    // F011-W2: several services, ticked one after another in one dropdown.
+    await panel.getByRole('button', { name: 'Choose platforms' }).click()
+    await page.getByRole('menuitemcheckbox', { name: /Netflix/ }).click()
+    await page.getByRole('menuitemcheckbox', { name: /Disney\+/ }).click()
+    // The menu stays open so several can be ticked; close it before saving.
+    await page.keyboard.press('Escape')
+
+    // A service we ship no logo for can still be typed in.
+    await panel.getByRole('textbox', { name: 'Another service' }).fill('Sky')
+    await panel.getByRole('button', { name: 'Add', exact: true }).click()
+    await panel.getByRole('button', { name: 'Save streaming' }).click()
+
+    await page.reload()
+    const shown = itemPanel(page)
+    await expect(shown.getByRole('heading', { level: 1, name: title })).toBeVisible()
+    // F009-W1: it comes back read-only, as the three service tiles.
+    await shown.getByRole('button', { name: 'Add field' }).click()
+    await page.getByRole('menuitem', { name: 'Streaming' }).click()
+    for (const service of ['Netflix', 'Disney+', 'Sky']) {
+      await expect(shown.getByRole('img', { name: service })).toBeVisible()
+    }
+
+    // Untick one and it is gone from the saved item.
+    await shown.getByRole('button', { name: 'Edit streaming' }).click()
+    await shown.getByRole('button', { name: 'Netflix, Disney+, Sky' }).click()
+    await page.getByRole('menuitemcheckbox', { name: /Disney\+/ }).click()
+    await page.keyboard.press('Escape')
+    await shown.getByRole('button', { name: 'Save streaming' }).click()
+    await page.reload()
+    await itemPanel(page).getByRole('button', { name: 'Add field' }).click()
+    await page.getByRole('menuitem', { name: 'Streaming' }).click()
+    await expect(itemPanel(page).getByRole('img', { name: 'Netflix' })).toBeVisible()
+    await expect(itemPanel(page).getByRole('img', { name: 'Sky' })).toBeVisible()
+    await expect(itemPanel(page).getByRole('img', { name: 'Disney+' })).toHaveCount(0)
   })
 })
 

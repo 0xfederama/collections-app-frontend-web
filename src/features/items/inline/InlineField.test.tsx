@@ -175,16 +175,46 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
     })
   })
 
-  it('streaming: removing a platform from the text drops it from paid_platforms', async () => {
+  it('streaming: unticking a platform drops it, and the country comes from Settings (F011-W1)', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
     await editField(user, 'Streaming')
-    await retype(user, screen.getByRole('textbox', { name: 'Streaming platforms' }), 'Netflix')
+    // F011-W2: the platforms are a multi-choice dropdown, not a comma-separated field.
+    await user.click(screen.getByRole('button', { name: /Netflix, Prime Video/ }))
+    // The example has Netflix and Prime Video (paid); unticking Prime Video leaves Netflix.
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Prime Video/ }))
+    // The menu stays open so several can be ticked; close it before reaching for the save button.
+    await user.keyboard('{Escape}')
     await user.click(save('streaming'))
     await waitFor(() => expect(calls).toHaveLength(1))
     expect((calls[0]?.body.metadata as Record<string, unknown>).streaming).toEqual({
       country: 'IT',
       platforms: ['Netflix'],
+    })
+  })
+
+  it('streaming: the country is not asked on the item (F011-W1)', async () => {
+    const { user } = await openItem()
+    await editField(user, 'Streaming')
+    expect(screen.queryByLabelText(/streaming country/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: /country/i })).not.toBeInTheDocument()
+  })
+
+  it('streaming: a service we have no logo for can still be added (F011-W2)', async () => {
+    const calls = mockPatch()
+    const { user } = await openItem()
+    await editField(user, 'Streaming')
+    await user.click(screen.getByRole('button', { name: /Netflix, Prime Video/ }))
+    // Untick the two the example has.
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Netflix/ }))
+    await user.click(screen.getByRole('menuitemcheckbox', { name: /Prime Video/ }))
+    await user.keyboard('{Escape}')
+    await user.type(screen.getByRole('textbox', { name: 'Another service' }), 'Sky{Enter}')
+    await user.click(save('streaming'))
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect((calls[0]?.body.metadata as Record<string, unknown>).streaming).toEqual({
+      country: 'IT',
+      platforms: ['Sky'],
     })
   })
 })

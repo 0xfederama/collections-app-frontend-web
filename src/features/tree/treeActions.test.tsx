@@ -117,15 +117,18 @@ describe('AT-03 tree CRUD (web): create', () => {
     const { user, backend } = await openTree()
     await pickHeaderAction(user, 'List')
     const dlg = await dialog()
-    // The shared destination picker, every folder of the tree, "Top level" chosen.
-    const folders = within(dlg).getByRole('radiogroup', { name: 'Folder' })
-    expect(within(folders).getByRole('radio', { name: 'Top level' })).toBeChecked()
-    expect(within(folders).getByRole('radio', { name: 'Vehicles' })).not.toBeChecked()
-    expect(within(folders).getByRole('radio', { name: 'Gear' })).not.toBeChecked()
+    // F011-W6: a dropdown beside the Kind picker, not a list of radios.
+    const folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    expect(folders).toHaveTextContent('Top level')
     expect(within(dlg).getByText('It will be created at the top level.')).toBeInTheDocument()
 
-    // A folder can be chosen from the dialog, and the description follows it.
-    await user.click(within(folders).getByRole('radio', { name: 'Gear' }))
+    // Every folder of the tree is offered, nested ones by their path.
+    await user.click(folders)
+    expect(await screen.findByRole('option', { name: 'Top level' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Gear' })).toBeInTheDocument()
+    await user.click(screen.getByRole('option', { name: 'Gear' }))
+
+    // The description follows the choice.
     expect(within(dlg).getByText('It will be created inside “Gear”.')).toBeInTheDocument()
     await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Lenses')
     await user.click(within(dlg).getByRole('button', { name: 'Create' }))
@@ -142,7 +145,7 @@ describe('AT-03 tree CRUD (web): create', () => {
     const { user } = await openTree()
     await pickHeaderAction(user, 'Folder')
     const dlg = await dialog()
-    expect(within(dlg).queryByRole('radiogroup', { name: 'Folder' })).not.toBeInTheDocument()
+    expect(within(dlg).queryByRole('combobox', { name: 'Folder' })).not.toBeInTheDocument()
   })
 
   it('F010-W1 "New list inside" preselects that folder, and it wins over the remembered one', async () => {
@@ -150,8 +153,9 @@ describe('AT-03 tree CRUD (web): create', () => {
     // Remember "Vehicles" from an earlier list in this session.
     await pickHeaderAction(user, 'List')
     let dlg = await dialog()
-    let folders = within(dlg).getByRole('radiogroup', { name: 'Folder' })
-    await user.click(within(folders).getByRole('radio', { name: 'Vehicles' }))
+    let folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    await user.click(folders)
+    await user.click(await screen.findByRole('option', { name: 'Vehicles' }))
     await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Bikes')
     await user.click(within(dlg).getByRole('button', { name: 'Create' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
@@ -159,23 +163,24 @@ describe('AT-03 tree CRUD (web): create', () => {
     // The next "New list" opens on the folder the last one went into.
     await pickHeaderAction(user, 'List')
     dlg = await dialog()
-    folders = within(dlg).getByRole('radiogroup', { name: 'Folder' })
-    expect(within(folders).getByRole('radio', { name: 'Vehicles' })).toBeChecked()
+    folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    expect(folders).toHaveTextContent('Vehicles')
     await user.click(within(dlg).getByRole('button', { name: 'Cancel' }))
 
     // A menu that names its own folder is an explicit choice and still wins.
     await pickRowAction(user, 'Gear', 'New list inside')
     dlg = await dialog()
-    folders = within(dlg).getByRole('radiogroup', { name: 'Folder' })
-    expect(within(folders).getByRole('radio', { name: 'Gear' })).toBeChecked()
+    folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    expect(folders).toHaveTextContent('Gear')
   })
 
   it('F010-W1 the remembered folder is forgotten with the session, never written to localStorage', async () => {
     const { user } = await openTree()
     await pickHeaderAction(user, 'List')
     const dlg = await dialog()
-    const folders = within(dlg).getByRole('radiogroup', { name: 'Folder' })
-    await user.click(within(folders).getByRole('radio', { name: 'Gear' }))
+    const folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    await user.click(folders)
+    await user.click(await screen.findByRole('option', { name: 'Gear' }))
     // Nothing is remembered until a list is really created there.
     expect(sessionStorage.getItem('collection:list-folder')).toBeNull()
     await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Lenses')
@@ -191,8 +196,8 @@ describe('AT-03 tree CRUD (web): create', () => {
     sessionStorage.setItem('collection:list-folder', JSON.stringify('folder-that-is-gone'))
     await pickHeaderAction(user, 'List')
     const dlg = await dialog()
-    const folders = within(dlg).getByRole('radiogroup', { name: 'Folder' })
-    expect(within(folders).getByRole('radio', { name: 'Top level' })).toBeChecked()
+    const folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    expect(folders).toHaveTextContent('Top level')
     expect(within(dlg).getByText('It will be created at the top level.')).toBeInTheDocument()
   })
 

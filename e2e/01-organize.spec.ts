@@ -24,16 +24,17 @@ test.describe('F010-W1 the folder path of a new list', () => {
     await expect(row(page, folderName)).toBeVisible()
 
     const first = uniqueName('Vinyl')
-    // The picker opens on the top level, and the dialog says so.
+    // F011-W6: the folder is a dropdown beside the Kind one, opening on the top level.
     const newList = () => page.getByRole('dialog', { name: 'New list' })
+    const folderSelect = () => newList().getByRole('combobox', { name: 'Folder' })
     await page.getByRole('button', { name: 'New', exact: true }).click()
     await page.getByRole('menuitem', { name: 'List', exact: true }).click()
-    const folders = newList().getByRole('radiogroup', { name: 'Folder' })
-    await expect(folders.getByRole('radio', { name: 'Top level' })).toBeChecked()
+    await expect(folderSelect()).toHaveText('Top level')
     await expect(newList().getByText('It will be created at the top level.')).toBeVisible()
 
     // Pick the folder: the description follows the choice and the list lands there.
-    await folders.getByRole('radio', { name: folderName }).click()
+    await folderSelect().click()
+    await page.getByRole('option', { name: folderName, exact: true }).click()
     await expect(newList().getByText(`It will be created inside “${folderName}”.`)).toBeVisible()
     await newList().getByRole('textbox', { name: 'Name' }).fill(first)
     await newList().getByRole('button', { name: 'Create' }).click()
@@ -44,11 +45,7 @@ test.describe('F010-W1 the folder path of a new list', () => {
     const second = uniqueName('Cassettes')
     await page.getByRole('button', { name: 'New', exact: true }).click()
     await page.getByRole('menuitem', { name: 'List', exact: true }).click()
-    await expect(
-      newList()
-        .getByRole('radiogroup', { name: 'Folder' })
-        .getByRole('radio', { name: folderName }),
-    ).toBeChecked()
+    await expect(folderSelect()).toHaveText(folderName)
     await newList().getByRole('textbox', { name: 'Name' }).fill(second)
     await newList().getByRole('button', { name: 'Create' }).click()
     await expect(newList()).toBeHidden()
@@ -62,17 +59,11 @@ test.describe('F010-W1 the folder path of a new list', () => {
     await page.reload()
     await page.getByRole('button', { name: 'New', exact: true }).click()
     await page.getByRole('menuitem', { name: 'List', exact: true }).click()
-    await expect(
-      newList()
-        .getByRole('radiogroup', { name: 'Folder' })
-        .getByRole('radio', { name: folderName }),
-    ).toBeChecked()
+    await expect(folderSelect()).toHaveText(folderName)
 
     // Picking "Top level" again is remembered too.
-    await newList()
-      .getByRole('radiogroup', { name: 'Folder' })
-      .getByRole('radio', { name: 'Top level' })
-      .click()
+    await folderSelect().click()
+    await page.getByRole('option', { name: 'Top level' }).click()
     await newList().getByRole('textbox', { name: 'Name' }).fill(uniqueName('Loose'))
     await newList().getByRole('button', { name: 'Create' }).click()
     await expect(newList()).toBeHidden()

@@ -83,10 +83,8 @@ export async function createViaSidebar(
   const dialog = page.getByRole('dialog', { name: what === 'folder' ? 'New folder' : 'New list' })
   await dialog.getByRole('textbox', { name: 'Name' }).fill(name)
   if (folder) {
-    await dialog
-      .getByRole('radiogroup', { name: 'Folder' })
-      .getByRole('radio', { name: folder })
-      .click()
+    await dialog.getByRole('combobox', { name: 'Folder' }).click()
+    await page.getByRole('option', { name: folder, exact: true }).click()
   }
   if (kind) {
     await dialog.getByRole('combobox', { name: 'Kind' }).click()
