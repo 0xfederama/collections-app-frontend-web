@@ -49,6 +49,7 @@ export function ImageSection({
   const fileInput = useRef<HTMLInputElement>(null)
   const browse = useRef<HTMLButtonElement>(null)
   const abort = useRef<AbortController | null>(null)
+  const pastedUploadStarted = useRef(false)
   // Focus can only move to "browse" once it is enabled again, i.e. after the next render.
   const [refocus, setRefocus] = useState(0)
 
@@ -58,18 +59,6 @@ export function ImageSection({
 
   // Leaving the page cancels an upload in flight.
   useEffect(() => () => abort.current?.abort(), [])
-
-  useEffect(() => {
-    let cancelled = false
-    queueMicrotask(() => {
-      if (!cancelled && initialFile) upload(initialFile)
-    })
-    // A pasted file is a one-time trigger when the dialog mounts.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   const run = async (
     state: Busy,
@@ -121,6 +110,20 @@ export function ImageSection({
       'Image uploaded',
     )
   }
+
+  useEffect(() => {
+    if (!initialFile || pastedUploadStarted.current) return
+    let cancelled = false
+    queueMicrotask(() => {
+      if (cancelled || pastedUploadStarted.current) return
+      pastedUploadStarted.current = true
+      upload(initialFile)
+    })
+    // Defer until effects settle so Strict Mode's rehearsal cleanup cancels the first attempt.
+    return () => {
+      cancelled = true
+    }
+  }, [initialFile, upload])
 
   const pickFiles = (files: FileList | null | undefined) => {
     const first = files?.[0]
