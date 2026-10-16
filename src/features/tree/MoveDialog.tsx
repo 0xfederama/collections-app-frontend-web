@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Button, Dialog } from '../../components/ui'
+import { Button, Dialog, type SelectOption } from '../../components/ui'
 import type { TreeIndex, TreeNode } from './api'
-import { DestinationPicker, type DestinationOption } from './DestinationPicker'
+import { DestinationPicker } from './DestinationPicker'
 import { FormError } from './FormError'
 import { flattenFolders, parentIdOf } from './order'
 import { useAction } from './useAction'
@@ -54,16 +54,16 @@ export const destinationKey = (folderId: string | null) => folderId ?? ROOT_KEY
 export const destinationId = (key: string) => (key === ROOT_KEY ? null : key)
 
 /**
- * Every folder a **new list** can go into, in tree order, with the top level first. Nothing is
- * invalid here (unlike a move), so there are no reasons to show.
+ * Every folder a **new list** can go into, in tree order, with the top level first. The label is the
+ * full path (`Films › Watchlist`) because the new-list dialog shows these in a dropdown, where the
+ * indentation of the move picker cannot help. Nothing is invalid here, unlike a move.
  */
-export function listPathOptions(index: TreeIndex): DestinationOption[] {
+export function listPathOptions(index: TreeIndex): SelectOption[] {
   return [
-    { key: ROOT_KEY, name: 'Top level', depth: 0 },
-    ...flattenFolders(index).map(({ folder, depth }) => ({
-      key: folder.id,
-      name: folder.name,
-      depth: depth + 1,
+    { value: ROOT_KEY, label: 'Top level' },
+    ...flattenFolders(index).map(({ folder }) => ({
+      value: folder.id,
+      label: [...index.ancestorsOf(folder.id).map((a) => a.name), folder.name].join(' › '),
     })),
   ]
 }

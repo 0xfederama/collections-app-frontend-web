@@ -1,6 +1,14 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { Button, Dialog, Select, TextField, kindLabels, type ItemKind } from '../../components/ui'
-import { DestinationPicker, type DestinationOption } from './DestinationPicker'
+import {
+  Button,
+  Dialog,
+  Select,
+  TextField,
+  kindLabels,
+  type ItemKind,
+  type SelectOption,
+} from '../../components/ui'
+import { cx } from '../../lib/cx'
 import { destinationId, destinationKey } from './MoveDialog'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
@@ -17,7 +25,7 @@ export interface NameDialogProps {
    * Create list only: the folder the list goes into, as the shared destination picker. Renaming
    * and the folder dialog have none, and never move anything.
    */
-  path?: { options: DestinationOption[]; initial: string | null }
+  path?: { options: SelectOption[]; initial: string | null }
   /** `folderId` is the chosen path on create (`null` = top level); rename ignores it. */
   onSubmit: (name: string, kind: ItemKind, folderId: string | null) => Promise<unknown>
   onClose: () => void
@@ -55,14 +63,13 @@ export function NameDialog({
   const [chosenPath, setChosenPath] = useState<string | undefined>(() => {
     if (!path) return undefined
     const initial = destinationKey(path.initial)
-    return path.options.some((option) => option.key === initial) ? initial : destinationKey(null)
+    return path.options.some((option) => option.value === initial) ? initial : destinationKey(null)
   })
   const [fieldError, setFieldError] = useState<string>()
   const inputRef = useRef<HTMLInputElement>(null)
   const { error, pending, run, clearError, setError } = useAction(noun)
 
-  const selectedFolder = path?.options.find((option) => option.key === chosenPath)
-  const selectedName = selectedFolder?.name
+  const selectedLabel = path?.options.find((option) => option.value === chosenPath)?.label
 
   const submit = async (event?: FormEvent) => {
     event?.preventDefault()
@@ -100,8 +107,8 @@ export function NameDialog({
       description={
         // With a path picker the description follows the choice; the old text was fixed per opener.
         path
-          ? selectedName && selectedName !== 'Top level'
-            ? `It will be created inside “${selectedName}”.`
+          ? selectedLabel && selectedLabel !== 'Top level'
+            ? `It will be created inside “${selectedLabel}”.`
             : 'It will be created at the top level.'
           : description
       }
@@ -128,22 +135,27 @@ export function NameDialog({
           ref={inputRef}
           error={fieldError ?? serverField}
         />
-        {kind && (
-          <Select
-            label="Kind"
-            hint="Every item in the list has this kind."
-            options={kindOptions}
-            value={chosenKind}
-            onValueChange={(value) => setChosenKind(value as ItemKind)}
-          />
-        )}
-        {path && (
-          <DestinationPicker
-            label="Folder"
-            options={path.options}
-            value={chosenPath}
-            onChange={setChosenPath}
-          />
+        {/* F011-W6: Kind and Folder sit side by side, the folder as a dropdown on the right. */}
+        {(kind || path) && (
+          <div className={cx('grid gap-4', kind && path && 'sm:grid-cols-2')}>
+            {kind && (
+              <Select
+                label="Kind"
+                hint="Every item in the list has this kind."
+                options={kindOptions}
+                value={chosenKind}
+                onValueChange={(value) => setChosenKind(value as ItemKind)}
+              />
+            )}
+            {path && (
+              <Select
+                label="Folder"
+                options={path.options}
+                value={chosenPath}
+                onValueChange={setChosenPath}
+              />
+            )}
+          </div>
         )}
         {error && !serverField && (
           <FormError
