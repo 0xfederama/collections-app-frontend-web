@@ -24,5 +24,6 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - Pasting an image file while an item's detail page is open opens the image dialog and uploads that file through the normal upload path; the same file checks, progress, request version and feedback apply.
 - Image changes are individual requests using the item's `If-Match`; 412/404 keeps the dialog open with a reload action.
 - Field editors use the version snapshot captured when opened; a 412 keeps the draft and offers Copy draft and Reload latest.
+- Simple field editors keep the input immediately beside the row label, with ✓ / ✕ at the input's right on the same row; composite price, years and streaming editors retain their existing layouts.
 - The item page is calm by default; kind fields and price are revealed with "+ Add field".
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for detailed field and image rules.

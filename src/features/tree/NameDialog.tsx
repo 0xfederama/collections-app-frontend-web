@@ -1,7 +1,8 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FormEvent } from 'react'
 import {
   Button,
   Dialog,
+  IconButton,
   Select,
   TextField,
   kindLabels,
@@ -79,6 +80,7 @@ export function NameDialog({
     return path.options.some((option) => option.value === initial) ? initial : destinationKey(null)
   })
   const [fieldError, setFieldError] = useState<string>()
+  const iconControlId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const { error, pending, run, clearError, setError } = useAction(noun)
 
@@ -139,15 +141,41 @@ export function NameDialog({
       }
     >
       <form id="tree-name-form" onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <TextField
-          label="Name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          maxLength={MAX_LENGTH}
-          autoComplete="off"
-          ref={inputRef}
-          error={fieldError ?? serverField}
-        />
+        <div className={cx(listIcon && 'grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3')}>
+          <div className="min-w-0">
+            <TextField
+              label="Name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              maxLength={MAX_LENGTH}
+              autoComplete="off"
+              ref={inputRef}
+              error={fieldError ?? serverField}
+            />
+          </div>
+          {listIcon && (
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={iconControlId} className="text-sm font-medium text-text">
+                Icon
+              </label>
+              <IconButton
+                id={iconControlId}
+                aria-label="Choose icon"
+                variant="secondary"
+                className="size-10 pointer-coarse:size-11"
+                onClick={() => setIconPickerOpen(true)}
+              >
+                <ListIconMark
+                  icon={iconChoice.icon}
+                  iconColor={iconChoice.icon_color}
+                  kind={chosenKind}
+                  className="size-8"
+                  iconClassName="size-4"
+                />
+              </IconButton>
+            </div>
+          )}
+        </div>
         {/* F011-W6: Kind and Folder sit side by side, the folder as a dropdown on the right. */}
         {(kind || path) && (
           <div className={cx('grid gap-4', kind && path && 'sm:grid-cols-2')}>
@@ -168,23 +196,6 @@ export function NameDialog({
                 onValueChange={setChosenPath}
               />
             )}
-          </div>
-        )}
-        {listIcon && (
-          <div className="flex items-center justify-between rounded-md border border-border p-3">
-            <span className="flex items-center gap-2 text-sm text-text-muted">
-              <ListIconMark
-                icon={iconChoice.icon}
-                iconColor={iconChoice.icon_color}
-                kind={chosenKind}
-                className="size-9"
-                iconClassName="size-5"
-              />
-              List icon
-            </span>
-            <Button type="button" variant="secondary" onClick={() => setIconPickerOpen(true)}>
-              Choose icon
-            </Button>
           </div>
         )}
         {error && !serverField && (

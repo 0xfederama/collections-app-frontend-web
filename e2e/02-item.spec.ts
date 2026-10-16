@@ -55,6 +55,44 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
     await expect(page).toHaveURL(/sort=kind_key/)
     await expect(links).toHaveText([title, older])
   })
+
+  test('F011 simple field editor keeps label, input, and actions on one row', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Films'), 'movie')
+    const item = await createItem(request, list.id, uniqueName('Heat'))
+    for (const width of [375, 1440]) {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto(itemUrl(list.id, item.id))
+      await page.getByRole('button', { name: 'Add field' }).click()
+      await page.getByRole('menuitem', { name: 'Release year' }).click()
+
+      const label = page.locator('dt').getByText('Release year', { exact: true })
+      const input = page.getByRole('textbox', { name: 'Release year' })
+      const save = page.getByRole('button', { name: 'Save release year' })
+      const cancel = page.getByRole('button', { name: 'Cancel editing release year' })
+      await expect(input).toBeVisible()
+      const [labelBox, inputBox, saveBox, cancelBox] = await Promise.all([
+        label.boundingBox(),
+        input.boundingBox(),
+        save.boundingBox(),
+        cancel.boundingBox(),
+      ])
+      expect(labelBox).not.toBeNull()
+      expect(inputBox).not.toBeNull()
+      expect(saveBox).not.toBeNull()
+      expect(cancelBox).not.toBeNull()
+      const centerY = (box: NonNullable<typeof inputBox>) => box.y + box.height / 2
+      expect(Math.abs(centerY(labelBox!) - centerY(inputBox!))).toBeLessThan(4)
+      expect(Math.abs(centerY(inputBox!) - centerY(saveBox!))).toBeLessThan(4)
+      expect(Math.abs(centerY(saveBox!) - centerY(cancelBox!))).toBeLessThan(4)
+      expect(inputBox!.x).toBeGreaterThan(labelBox!.x)
+      expect(saveBox!.x).toBeGreaterThan(inputBox!.x)
+      expect(cancelBox!.x).toBeGreaterThan(saveBox!.x)
+      await cancel.click()
+    }
+  })
 })
 
 test.describe('F011-W1/W2 streaming: no country, several platforms from a dropdown', () => {

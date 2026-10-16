@@ -169,11 +169,13 @@ export function FieldBlock({
                 {rows.map((spec) => (
                   <div
                     key={spec.id}
-                    className="grid grid-cols-[minmax(0,1fr)] items-center gap-x-6 gap-y-1 sm:grid-cols-[8rem_minmax(0,1fr)]"
+                    className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] items-center gap-x-3 gap-y-1"
                   >
                     {/* F011-W5: the label takes the same height as the value row, so the name and
                         its value sit on one line instead of drifting apart. */}
-                    <dt className="flex min-h-8 items-center text-text-muted">{spec.label}</dt>
+                    <dt className="flex min-h-8 min-w-0 items-center text-text-muted">
+                      {spec.label}
+                    </dt>
                     <dd className="min-w-0">{editor(spec, <Value item={item} spec={spec} />)}</dd>
                   </div>
                 ))}
