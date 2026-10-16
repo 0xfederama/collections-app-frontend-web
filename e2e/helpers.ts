@@ -62,6 +62,8 @@ export async function createViaSidebar(
   what: 'folder' | 'list',
   name: string,
   kind?: string,
+  /** Create list only: the folder to put it in, by its exact name in the dialog's picker. */
+  folder?: string,
 ) {
   // The sidebar "New" row only exists once something does (F008-W2); an empty workspace starts
   // from the buttons in the middle of Home.
@@ -80,6 +82,12 @@ export async function createViaSidebar(
   }
   const dialog = page.getByRole('dialog', { name: what === 'folder' ? 'New folder' : 'New list' })
   await dialog.getByRole('textbox', { name: 'Name' }).fill(name)
+  if (folder) {
+    await dialog
+      .getByRole('radiogroup', { name: 'Folder' })
+      .getByRole('radio', { name: folder })
+      .click()
+  }
   if (kind) {
     await dialog.getByRole('combobox', { name: 'Kind' }).click()
     await page.getByRole('option', { name: kind, exact: true }).click()
