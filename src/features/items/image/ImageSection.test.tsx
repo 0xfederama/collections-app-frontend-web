@@ -131,7 +131,7 @@ describe('AT-06 image upload', () => {
     const file = png('clipboard.png')
     fireEvent.paste(window, {
       clipboardData: {
-        items: [{ kind: 'file', getAsFile: () => file }],
+        items: [{ kind: 'file', type: 'image/png', getAsFile: () => file }],
       } as unknown as DataTransfer,
     })
     expect(await screen.findByText('Image uploaded')).toBeInTheDocument()

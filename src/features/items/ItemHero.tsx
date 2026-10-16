@@ -37,7 +37,7 @@ export function ItemHero({ item }: { item: Item }) {
       ) {
         return
       }
-      if (document.querySelector('[role="dialog"]')) return
+      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return
       const files = Array.from(event.clipboardData?.items ?? [])
         .filter((entry) => entry.kind === 'file')
         .map((entry) => ({ file: entry.getAsFile(), type: entry.type }))
