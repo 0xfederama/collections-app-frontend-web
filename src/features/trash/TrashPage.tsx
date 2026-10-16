@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { Button, EmptyState, Skeleton, useToast } from '../../components/ui'
 import { Trash2 } from '../../components/ui/icons'
+import { cx } from '../../lib/cx'
 import { useTrash, type RestoreDestination, type RestoreResult, type TrashEntry } from './api'
 import { GONE_MESSAGE } from './errors'
 import { PurgeDialog } from './PurgeDialog'
@@ -65,6 +66,8 @@ export function TrashPage() {
   }
 
   let body
+  // The rows read best in a narrow column; the empty state wants the full content width.
+  let narrow = true
   if (query.isPending) {
     body = <TrashSkeleton />
   } else if (query.isError && !query.data) {
@@ -76,17 +79,17 @@ export function TrashPage() {
       />
     )
   } else if (entries.length === 0) {
-    // F009-W7: the shared empty state, centred in the content area both ways. The box grows with
-    // the section (`min-h-full` below) so `items-center` has room, the content itself is unchanged.
+    // F009-W7: the shared empty state, centred in the whole content area exactly like the Home one.
+    // The rows are a narrow column, so the page drops `max-w-5xl` when the Trash is empty and lets
+    // `EmptyState` centre itself in the full width; it stays in normal flow, under the heading.
     body = (
-      <div className="flex flex-1 items-center justify-center">
-        <EmptyState
-          icon={Trash2}
-          title="Trash is empty"
-          description="Folders, lists and items you delete show up here, so you can restore them."
-        />
-      </div>
+      <EmptyState
+        icon={Trash2}
+        title="Trash is empty"
+        description="Folders, lists and items you delete show up here, so you can restore them."
+      />
     )
+    narrow = false
   } else {
     body = (
       <>
@@ -127,7 +130,7 @@ export function TrashPage() {
   }
 
   return (
-    <section className="flex min-h-full max-w-5xl flex-col gap-4">
+    <section className={cx('flex flex-col gap-4', narrow && 'max-w-5xl')}>
       <div>
         <h1
           ref={headingRef}

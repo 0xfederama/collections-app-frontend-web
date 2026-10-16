@@ -36,18 +36,17 @@ describe('AT-11 trash list states', () => {
     expect(screen.queryByRole('button', { name: /^Restore/ })).not.toBeInTheDocument()
   })
 
-  it('centres the empty state in the content area, both ways (F009-W7)', async () => {
+  it('centres the empty state in the whole content area, like Home (F009-W7)', async () => {
     await openTrash([])
     const heading = await screen.findByRole('heading', { name: 'Trash is empty' })
     // The shared EmptyState block, unchanged: centred text in its own column.
     const emptyState = heading.parentElement!
     expect(emptyState).toHaveClass('flex', 'items-center', 'text-center')
-    // Its box grows with the page and centres the block vertically and horizontally.
-    const centred = emptyState.parentElement!
-    expect(centred).toHaveClass('flex', 'flex-1', 'items-center', 'justify-center')
-    // The page itself fills the scroll container, which is what gives `items-center` its height.
-    const page = centred.closest('section')!
-    expect(page).toHaveClass('min-h-full', 'flex-col')
+    // It sits directly in the page, which no longer caps its width, so `items-center` centres it
+    // in the whole content area instead of in the narrow column the rows use.
+    const page = emptyState.closest('section')!
+    expect(page).not.toHaveClass('max-w-5xl')
+    expect(emptyState.parentElement).toBe(page)
   })
 
   it('shows an error with Retry when loading fails, and Retry loads the list', async () => {
@@ -83,6 +82,8 @@ describe('AT-11 trash rows', () => {
     await openTrash()
     const rows = await waitForRows()
     expect(rows).toHaveLength(devTrash.length)
+    // With rows in it, the page is the narrow column again (the empty state is the only full width).
+    expect(rows[0]?.closest('section')).toHaveClass('max-w-5xl')
     expect(rows.map((li) => li.querySelector('span.truncate')?.textContent)).toEqual([
       'Crime',
       'Heat',
