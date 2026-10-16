@@ -12,7 +12,10 @@ export function TreeNewButton(): ReactNode {
     <Menu
       align="start"
       trigger={
-        <Button variant="ghost" className="w-full justify-start text-text-muted">
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-text-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring focus-visible:bg-fill-hover"
+        >
           <Plus aria-hidden className="size-4" />
           New
         </Button>
@@ -42,7 +45,9 @@ export function TreeRowActions({ node }: { node: TreeNode }): ReactNode {
         node={node}
         actions={actions}
         name={name}
-        className="size-8 pointer-coarse:size-11"
+        // No hover fill of its own: inside a hovered row it drew a second box as big as the row, so
+        // the button just darkens its glyph (F011-W4).
+        className="size-8 pointer-coarse:size-11 hover:bg-transparent hover:text-text"
       />
     </span>
   )
