@@ -1,6 +1,6 @@
-import { List as ListIcon } from '../../components/ui/icons'
+import { kindIcons, List as ListIcon } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
-import { builtinListIcon, defaultListIcon, parseListIcon } from './iconModel'
+import { builtinListIcon, parseListIcon } from './iconModel'
 import type { ListIconColor } from './iconModel'
 import type { ItemKind } from '../items/api'
 
@@ -32,7 +32,7 @@ export function ListIconMark({
 }) {
   const parsed = parseListIcon(icon)
   const Builtin = parsed.builtin ? builtinListIcon(parsed.builtin)?.Icon : undefined
-  const Glyph = Builtin ?? defaultListIcon(kind) ?? ListIcon
+  const Glyph = Builtin ?? kindIcons[kind] ?? ListIcon
   return (
     <span
       aria-hidden="true"

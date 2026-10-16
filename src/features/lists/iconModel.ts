@@ -62,7 +62,6 @@ import {
   Tag,
   Volleyball,
 } from '../../components/ui/icons'
-import type { ItemKind } from '../items/api'
 import { EMOJI_KEYWORDS } from './emojiKeywords'
 
 export const LIST_ICON_COLORS = [
@@ -174,14 +173,3 @@ export const parseListIcon = (value: string | null | undefined) =>
   value?.startsWith('i:')
     ? { builtin: value.slice(2), emoji: null }
     : { builtin: null, emoji: value ?? null }
-
-export function defaultListIcon(kind: ItemKind): LucideIcon {
-  return {
-    generic: Tag,
-    movie: Film,
-    tv_show: Tv,
-    motorcycle: Motorbike,
-    car: Car,
-    camera: Camera,
-  }[kind]
-}
