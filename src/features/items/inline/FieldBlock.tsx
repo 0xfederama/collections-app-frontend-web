@@ -93,9 +93,14 @@ export function FieldBlock({
     if (!websiteSpec.isSet(item) && !adding.some((entry) => entry.id === websiteSpec.id))
       setAdding([...adding, { id: websiteSpec.id }])
   }
-  const open = (entry: Adding) => {
-    setAdded((current) => (current.includes(entry.id) ? current : [...current, entry.id]))
-    setAdding((current) => [...current, entry])
+  /**
+   * "+ Add field" on a field that already has a value only reveals it: the user asked to read it.
+   * A field still empty opens its editor straight away, since that is what they are there to do.
+   */
+  const reveal = (spec: FieldSpec, initialDraft?: Partial<Draft>) => {
+    setAdded((current) => (current.includes(spec.id) ? current : [...current, spec.id]))
+    if (spec.isSet(item)) return
+    setAdding((current) => [...current, { id: spec.id, initialDraft }])
   }
   const closed = (id: string) => setAdding((current) => current.filter((entry) => entry.id !== id))
   const isAdding = (spec: FieldSpec) => adding.some((entry) => entry.id === spec.id)
@@ -112,11 +117,10 @@ export function FieldBlock({
   /** Every field of the kind that is not shown yet, set or not: "+ Add field" offers them all. */
   const offerable = (list: FieldSpec[]) => list.filter((spec) => !isShown(spec))
   const entries = (list: FieldSpec[]): MenuItem[] =>
-    offerable(list).flatMap((spec) =>
-      spec.id === priceSpec.id
-        ? [{ label: spec.label, onSelect: () => open({ id: spec.id, initialDraft: newPrice() }) }]
-        : [{ label: spec.label, onSelect: () => open({ id: spec.id }) }],
-    )
+    offerable(list).map((spec) => ({
+      label: spec.label,
+      onSelect: () => reveal(spec, spec.id === priceSpec.id ? newPrice() : undefined),
+    }))
   const kindEntries = entries(kind)
   const anyEntries = entries([...price, websiteSpec])
   const menu: MenuItem[] = [

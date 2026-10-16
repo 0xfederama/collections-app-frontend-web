@@ -44,15 +44,14 @@ async function addField(user: ReturnType<typeof userEvent.setup>, label: string)
   await user.click(await screen.findByRole('menuitem', { name: label }))
 }
 
-/** "+ Add field" opens the editor it just revealed; ✕ closes it and the row stays shown. */
-async function cancelEditor(user: ReturnType<typeof userEvent.setup>, label: string) {
-  await user.click(screen.getByRole('button', { name: `Cancel editing ${label.toLowerCase()}` }))
-}
-
-/** Adds a field and closes its editor, so its saved value reads in the row. */
+/**
+ * Adds a field so its saved value reads in the row. An empty one opens its editor, which is
+ * closed again; a field that already had a value is only revealed, so nothing is opened.
+ */
 async function reveal(user: ReturnType<typeof userEvent.setup>, label: string) {
   await addField(user, label)
-  await cancelEditor(user, label)
+  const cancel = screen.queryByRole('button', { name: `Cancel editing ${label.toLowerCase()}` })
+  if (cancel) await user.click(cancel)
 }
 
 describe('AT-13 item view: the example movie', () => {
@@ -94,11 +93,10 @@ describe('AT-13 item view: the example movie', () => {
     expect(screen.getByRole('button', { name: 'Add field' })).toBeVisible()
   })
 
-  it('F009-W1 adds a saved kind field with "+" and then shows its value, with no IMDb row (F-002)', async () => {
+  it('F009-W1 adds a saved kind field with "+" and shows its value read-only, with no IMDb row (F-002)', async () => {
     const user = userEvent.setup()
     await renderItem()
-    await addField(user, 'Runtime')
-    await cancelEditor(user, 'Runtime')
+    await reveal(user, 'Runtime')
     const details = (await screen.findByRole('heading', { name: 'Details' })).closest('section')!
     expect(within(details).getByText('136 min')).toBeVisible()
     expect(within(details).getByText('Runtime')).toBeVisible()
@@ -113,6 +111,9 @@ describe('AT-13 item view: the example movie', () => {
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
     ).toEqual(['Release year', 'Streaming', 'Website'])
+    // Revealing a field that already has a value does not drop the user into an editor.
+    await user.click(within(menu).getByRole('menuitem', { name: 'Streaming' }))
+    expect(screen.queryByRole('textbox', { name: /Streaming/ })).not.toBeInTheDocument()
   })
 
   it('F009-W1 a saved website stays visible by default', async () => {

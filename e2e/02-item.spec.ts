@@ -38,10 +38,10 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
     // F009-W1: the item page is calm by default. The website shows, the kind field does not.
     await expect(item.getByText(website)).toBeVisible()
     await expect(item.getByText('2005', { exact: true })).toBeHidden()
-    // Adding it back with "+ Add field" shows the saved value.
+    // Adding it back with "+ Add field" shows the saved value, read-only: no editor opens.
     await item.getByRole('button', { name: 'Add field' }).click()
     await page.getByRole('menuitem', { name: 'Release year' }).click()
-    await item.getByRole('button', { name: 'Cancel editing release year' }).click()
+    await expect(item.getByRole('textbox', { name: 'Release year' })).toBeHidden()
     await expect(item.getByText('2005', { exact: true })).toBeVisible()
     // A movie has no Website link button (F-002); the saved value reads in the Details row.
     await expect(item.getByText(website)).toBeVisible()
@@ -85,7 +85,7 @@ test.describe('D-085 price only on the kinds that have one', () => {
     await expect(item.getByRole('button', { name: 'Edit price' })).toBeHidden()
     await item.getByRole('button', { name: 'Add field' }).click()
     await page.getByRole('menuitem', { name: 'Price', exact: true }).click()
-    await item.getByRole('button', { name: 'Cancel editing price' }).click()
+    await expect(item.getByRole('textbox', { name: 'Price', exact: true })).toBeHidden()
     await expect(item.getByText(/10\D+20/)).toBeVisible()
 
     // Remove the price: the row stays (it was added), the value is gone.
@@ -139,14 +139,14 @@ test.describe('F009-W3 pinned fields: up to two, in order', () => {
     const pinnedMenu = page.getByRole('button', { name: 'Pinned fields' })
     await pinnedMenu.click()
     const checkbox = (name: string) => page.getByRole('menuitemcheckbox', { name })
-    // The kind default is runtime + streaming; both fields of these items are set, so streaming is
-    // the only one showing nothing. Untick both to start from an empty selection.
+    // The kind default is runtime + streaming; both are set on this item, so untick them to start
+    // from an empty selection.
     await checkbox('Runtime').click()
     await checkbox('Streaming').click()
-    // Two fields in a row, in the order they are ticked; a third is disabled.
+    // Two fields in a row, in the order they are ticked; a third cannot be added.
     await checkbox('Release year').click()
     await checkbox('Runtime').click()
-    await expect(checkbox('Runtime')).toBeDisabled()
+    await expect(checkbox('Streaming')).toBeDisabled()
     await page.keyboard.press('Escape')
 
     // The first pinned field reads next to the title, the second at the right end of the row.

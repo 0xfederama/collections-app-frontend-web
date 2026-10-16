@@ -67,16 +67,26 @@ function mockPatch(respond?: (call: PatchCall, n: number) => Response | Promise<
 const pen = (label: string) => screen.getByRole('button', { name: `Edit ${label}` })
 const save = (label: string) => screen.getByRole('button', { name: `Save ${label}` })
 
-/** F009-W1: a kind field is hidden until "+ Add field" reveals it and opens its editor. */
+/** F009-W1: a kind field is hidden until "+ Add field" reveals it. */
 async function addField(user: User, entry: string) {
   await user.click(screen.getByRole('button', { name: 'Add field' }))
   await user.click(await screen.findByRole('menuitem', { name: entry }))
 }
 
-/** Adds a field and closes the editor it opened, so its saved value reads in the row. */
+/**
+ * Adds a field so its value reads in the row. An empty one opens its editor, which is closed
+ * again; a field that already had a value is only revealed, so nothing is opened.
+ */
 async function reveal(user: User, entry: string) {
   await addField(user, entry)
-  await user.click(screen.getByRole('button', { name: `Cancel editing ${entry.toLowerCase()}` }))
+  const cancel = screen.queryByRole('button', { name: `Cancel editing ${entry.toLowerCase()}` })
+  if (cancel) await user.click(cancel)
+}
+
+/** Reveals the row, then opens its editor with the pen (the saved value is already in it). */
+async function editField(user: User, entry: string) {
+  await reveal(user, entry)
+  await user.click(pen(entry.toLowerCase()))
 }
 
 async function retype(user: User, input: HTMLElement, text: string) {
@@ -126,7 +136,7 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
   it('a kind field sends the metadata object with that field changed', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
-    await addField(user, 'Runtime')
+    await editField(user, 'Runtime')
     await retype(user, screen.getByRole('textbox', { name: 'Runtime' }), '140')
     await user.click(save('runtime'))
     await waitFor(() => expect(calls).toHaveLength(1))
@@ -149,7 +159,7 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
   it('streaming: a platform can be marked paid, and paid stays within platforms', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
-    await addField(user, 'Streaming')
+    await editField(user, 'Streaming')
     const paid = screen.getByRole('group', { name: 'Paid platforms' })
     expect(within(paid).getByRole('button', { name: /Prime Video/ })).toHaveAttribute(
       'aria-pressed',
@@ -168,7 +178,7 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
   it('streaming: removing a platform from the text drops it from paid_platforms', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
-    await addField(user, 'Streaming')
+    await editField(user, 'Streaming')
     await retype(user, screen.getByRole('textbox', { name: 'Streaming platforms' }), 'Netflix')
     await user.click(save('streaming'))
     await waitFor(() => expect(calls).toHaveLength(1))
@@ -199,9 +209,10 @@ describe('F002-W3 "+ Add field" and price', () => {
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
     ).toEqual(['Make', 'Model', 'Model year', 'Fuel', 'Power', 'Price', 'Website'])
-    // Adding one reveals it and drops it from the menu; the value it already had is there.
+    // Adding one reveals it read-only with its saved value, and drops it from the menu.
     await user.click(within(menu).getByRole('menuitem', { name: 'Make' }))
-    expect(await screen.findByDisplayValue('Volkswagen')).toBeVisible()
+    expect(await screen.findByText('Volkswagen')).toBeVisible()
+    expect(screen.queryByRole('textbox', { name: 'Make' })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     const next = await screen.findByRole('menu')
     expect(
@@ -299,7 +310,7 @@ describe('AT-05 in-place fields: server errors', () => {
       }),
     )
     const { user } = await openItem()
-    await addField(user, 'Runtime')
+    await editField(user, 'Runtime')
     await retype(user, screen.getByRole('textbox', { name: 'Runtime' }), '140{Enter}')
     expect(await screen.findByText('Runtime is not plausible.')).toBeVisible()
     const input = screen.getByRole('textbox', { name: 'Runtime' })
@@ -313,8 +324,7 @@ describe('AT-09 If-Match comes from the version the editor opened on', () => {
   it('another client changes the item after the editor opened: the save sends the old version, gets 412 and keeps the draft', async () => {
     const calls = mockPatch(() => problemResponse(412, 'version_conflict', { current_version: 7 }))
     const { user } = await openItem()
-    await addField(user, 'Runtime')
-    // Close the editor "+ Add field" opened, so the row shows its saved value again.
+    await editField(user, 'Runtime')
     await user.click(screen.getByRole('button', { name: 'Cancel editing runtime' }))
     await user.click(pen('title'))
     await retype(user, screen.getByRole('textbox', { name: /Title/ }), 'My title')
@@ -339,7 +349,7 @@ describe('AT-09 If-Match comes from the version the editor opened on', () => {
   it('our own save of another field while this editor is open moves its version forward', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
-    await addField(user, 'Runtime')
+    await editField(user, 'Runtime')
     await user.click(pen('title'))
     await retype(user, screen.getByRole('textbox', { name: /Title/ }), 'Reloaded')
     await retype(user, screen.getByRole('textbox', { name: 'Runtime' }), '140{Enter}')
