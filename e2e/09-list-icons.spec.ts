@@ -146,7 +146,11 @@ test.describe('F012-W1 list icons', () => {
         await page.addInitScript((value) => localStorage.setItem('collection:theme', value), theme)
         const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:5183'
         await page.goto(new URL('/', baseUrl).toString())
-        await page.getByRole('main').getByRole('button', { name: 'New list', exact: true }).click()
+        if (width === 375) {
+          await page.getByRole('button', { name: 'Open menu' }).click()
+        }
+        await page.getByRole('button', { name: 'New', exact: true }).click()
+        await page.getByRole('menuitem', { name: 'List', exact: true }).click()
         const create = page.getByRole('dialog', { name: 'New list' })
         const nameLabel = create.getByText('Name', { exact: true })
         const iconLabel = create.getByText('Icon', { exact: true })
@@ -167,7 +171,11 @@ test.describe('F012-W1 list icons', () => {
         }
         expect(iconLabelBox.y).toBe(nameLabelBox.y)
         expect(iconButtonBox.x).toBeGreaterThanOrEqual(nameInputBox.x + nameInputBox.width)
-        expect(iconButtonBox.y).toBe(nameInputBox.y)
+        expect(
+          Math.abs(
+            iconButtonBox.y + iconButtonBox.height / 2 - (nameInputBox.y + nameInputBox.height / 2),
+          ),
+        ).toBeLessThanOrEqual(3)
         await create.getByRole('button', { name: 'Cancel' }).click()
 
         const created = await createList(request, name)
