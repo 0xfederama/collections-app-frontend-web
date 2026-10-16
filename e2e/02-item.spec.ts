@@ -62,16 +62,16 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
   }) => {
     const list = await createList(request, uniqueName('Films'), 'movie')
     const item = await createItem(request, list.id, uniqueName('Heat'))
-    await page.goto(itemUrl(list.id, item.id))
-    await page.getByRole('button', { name: 'Add field' }).click()
-    await page.getByRole('menuitem', { name: 'Release year' }).click()
-
-    const label = page.locator('dt').getByText('Release year', { exact: true })
-    const input = page.getByRole('textbox', { name: 'Release year' })
-    const save = page.getByRole('button', { name: 'Save release year' })
-    const cancel = page.getByRole('button', { name: 'Cancel editing release year' })
     for (const width of [375, 1440]) {
       await page.setViewportSize({ width, height: 900 })
+      await page.goto(itemUrl(list.id, item.id))
+      await page.getByRole('button', { name: 'Add field' }).click()
+      await page.getByRole('menuitem', { name: 'Release year' }).click()
+
+      const label = page.locator('dt').getByText('Release year', { exact: true })
+      const input = page.getByRole('textbox', { name: 'Release year' })
+      const save = page.getByRole('button', { name: 'Save release year' })
+      const cancel = page.getByRole('button', { name: 'Cancel editing release year' })
       await expect(input).toBeVisible()
       const [labelBox, inputBox, saveBox, cancelBox] = await Promise.all([
         label.boundingBox(),
@@ -89,8 +89,8 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
       expect(inputBox!.x).toBeGreaterThan(labelBox!.x)
       expect(saveBox!.x).toBeGreaterThan(inputBox!.x)
       expect(cancelBox!.x).toBeGreaterThan(saveBox!.x)
+      await cancel.click()
     }
-    await cancel.click()
   })
 })
 
