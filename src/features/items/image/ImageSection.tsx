@@ -30,10 +30,12 @@ function describeCurrent(image: NonNullable<Item['image']>) {
  */
 export function ImageSection({
   item,
+  initialFile = null,
   onChanged,
   onStale,
 }: {
   item: Item
+  initialFile?: File | null
   onChanged: (updated: Item) => void
   onStale: (kind: 'conflict' | 'gone') => void
 }) {
@@ -56,6 +58,18 @@ export function ImageSection({
 
   // Leaving the page cancels an upload in flight.
   useEffect(() => () => abort.current?.abort(), [])
+
+  useEffect(() => {
+    let cancelled = false
+    queueMicrotask(() => {
+      if (!cancelled && initialFile) upload(initialFile)
+    })
+    // A pasted file is a one-time trigger when the dialog mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const run = async (
     state: Busy,

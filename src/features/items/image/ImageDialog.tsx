@@ -10,7 +10,15 @@ import { ImageSection } from './ImageSection'
  * opened from the picture itself. Each change is its own request with `If-Match` from the item as
  * it is now; the first successful one closes the dialog. A 412 / 404 shows the usual banner.
  */
-export function ImageDialog({ item, onClose }: { item: Item; onClose: () => void }) {
+export function ImageDialog({
+  item,
+  initialFile = null,
+  onClose,
+}: {
+  item: Item
+  initialFile?: File | null
+  onClose: () => void
+}) {
   const client = useQueryClient()
   const [stale, setStale] = useState<'conflict' | 'gone' | null>(null)
   const [reloading, setReloading] = useState(false)
@@ -39,7 +47,12 @@ export function ImageDialog({ item, onClose }: { item: Item; onClose: () => void
       title={item.image ? 'Change image' : 'Add image'}
       className="max-w-xl"
     >
-      <ImageSection item={item} onChanged={onClose} onStale={setStale} />
+      <ImageSection
+        item={item}
+        initialFile={initialFile}
+        onChanged={onClose}
+        onStale={setStale}
+      />
       {stale === 'conflict' && (
         <ConflictBanner
           message="Someone else changed this item. The image has not been changed."

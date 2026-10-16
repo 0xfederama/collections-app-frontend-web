@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Dialog } from '../../components/ui'
 import { ImagePlus } from '../../components/ui/icons'
 import { ItemThumb } from '../lists/ItemThumb'
@@ -19,9 +19,48 @@ export function ItemHero({ item }: { item: Item }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState(false)
   const [changing, setChanging] = useState(false)
+  const [pastedFile, setPastedFile] = useState<File | null>(null)
   const frame = 'aspect-video max-h-[45dvh] w-full rounded-xl'
 
-  const dialog = changing && <ImageDialog item={item} onClose={() => setChanging(false)} />
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      const target = event.target
+      const activeElement = document.activeElement
+      if (
+        [target, activeElement].some(
+          (element) =>
+            element instanceof Element &&
+            element.closest(
+              'input, textarea, select, [contenteditable="true"], [role="textbox"], [role="dialog"]',
+            ),
+        )
+      ) {
+        return
+      }
+      if (document.querySelector('[role="dialog"]')) return
+      const file = Array.from(event.clipboardData?.items ?? [])
+        .filter((entry) => entry.kind === 'file')
+        .map((entry) => entry.getAsFile())
+        .find((entry): entry is File => entry !== null)
+      if (!file) return
+      event.preventDefault()
+      setPastedFile(file)
+      setChanging(true)
+    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [])
+
+  const dialog = changing && (
+    <ImageDialog
+      item={item}
+      initialFile={pastedFile}
+      onClose={() => {
+        setChanging(false)
+        setPastedFile(null)
+      }}
+    />
+  )
 
   if (!item.image) {
     return (
