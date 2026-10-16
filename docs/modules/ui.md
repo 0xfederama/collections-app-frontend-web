@@ -33,8 +33,9 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - "Drop into" is pointer-only: a `into:<id>` droppable on a row is live while the pointer is over its middle, and only with `acceptsDrop`. Keyboard drags never drop into.
 - `Tree` is controlled and has no expand chevron: selecting a row (click, Enter, Space) is what toggles a folder.
 - Focus anywhere in a row makes it the roving stop; keys pressed inside a row's own buttons are ignored by the tree.
-- Unknown streaming services render as a text `Chip`; the `$` badge marks paid platforms, and every tile has a text label.
-- Google and IMDb use their vendored Simple Icons SVG marks, not favicons.
+- Every link and streaming icon is the same tile (`TILE_SIZE`, `rounded-md`, `bg-fill`): the logo, the Website globe and the letter of an unknown service all sit in the same 18% inset, contained and never cropped. An unknown service is a letter tile, never a text `Chip`; the `$` badge marks paid platforms and the tile's own text label names it.
+- Only `size` varies between callers: a tight list row asks for a smaller tile, the shape, radius and padding do not change.
+- Google and IMDb use their vendored Simple Icons SVG marks, not favicons. Those two SVGs carry no white background: the tile owns the surface.
 - Dialog, AlertDialog and Drawer return focus to the element focused when they opened; a Dialog from a Menu item returns it to the menu trigger.
 - `useToast()` throws outside `ToastProvider`. Error toasts stay 8 s, others 5 s. Toast `action` is a callback, not a `Link`.
 - Use semantic token classes only (see [theme](theme.md)); no raw colors or radii.
