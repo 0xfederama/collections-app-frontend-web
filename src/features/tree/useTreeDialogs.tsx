@@ -180,6 +180,7 @@ export function useTreeDialogs({
           submitLabel="Create"
           noun={dialog.kind}
           kind={isFolder ? undefined : { initial: 'generic' }}
+          listIcon={!isFolder}
           // Only a list can be aimed at a folder from the dialog; a folder keeps its opener's parent.
           path={
             isFolder
@@ -194,7 +195,7 @@ export function useTreeDialogs({
             event.preventDefault()
             focusCreated(id)
           }}
-          onSubmit={async (name, kind, folderId) => {
+          onSubmit={async (name, kind, folderId, icon) => {
             if (isFolder) {
               const folder = await createFolder.mutateAsync({ name, parentId: dialog.parentId })
               created.current = folder.id
@@ -202,7 +203,7 @@ export function useTreeDialogs({
               onCreatedFolder?.(dialog.parentId)
               toast({ kind: 'success', title: `Folder “${name}” created` })
             } else {
-              const list = await createList.mutateAsync({ name, kind, folderId })
+              const list = await createList.mutateAsync({ name, kind, folderId, icon })
               created.current = list.id
               onCreated?.(list.id)
               // The next "New list" opens on the folder this one went into (session only).

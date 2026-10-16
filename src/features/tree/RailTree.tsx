@@ -1,6 +1,7 @@
 import { Link, useMatch } from 'react-router'
 import { Tooltip } from '../../components/ui'
-import { Folder, List } from '../../components/ui/icons'
+import { Folder } from '../../components/ui/icons'
+import { ListIconMark } from '../lists/ListIconMark'
 import { cx } from '../../lib/cx'
 import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 import { useTreeIndex } from './api'
@@ -61,7 +62,13 @@ export function RailTree({ onOpenFolder }: { onOpenFolder: () => void }) {
                 aria-current={current ? 'page' : undefined}
                 className={itemClass}
               >
-                <List aria-hidden className="size-5" />
+                <ListIconMark
+                  icon={node.list.icon}
+                  iconColor={node.list.icon_color}
+                  kind={node.list.kind}
+                  className="size-7"
+                  iconClassName="size-4"
+                />
               </Link>
             </Tooltip>
           </li>

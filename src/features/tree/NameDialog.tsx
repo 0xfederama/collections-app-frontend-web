@@ -12,6 +12,9 @@ import { cx } from '../../lib/cx'
 import { destinationId, destinationKey } from './MoveDialog'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
+import { ListIconPicker } from '../lists/ListIconPicker'
+import { ListIconMark } from '../lists/ListIconMark'
+import type { IconChoice } from '../lists/iconModel'
 
 export interface NameDialogProps {
   title: string
@@ -26,8 +29,15 @@ export interface NameDialogProps {
    * and the folder dialog have none, and never move anything.
    */
   path?: { options: SelectOption[]; initial: string | null }
+  /** Create list only: enables an optional icon choice. */
+  listIcon?: boolean
   /** `folderId` is the chosen path on create (`null` = top level); rename ignores it. */
-  onSubmit: (name: string, kind: ItemKind, folderId: string | null) => Promise<unknown>
+  onSubmit: (
+    name: string,
+    kind: ItemKind,
+    folderId: string | null,
+    icon: IconChoice,
+  ) => Promise<unknown>
   onClose: () => void
   /** Refetches the tree and returns the latest name (`undefined` if the item is gone). Rename only. */
   onReload?: () => Promise<string | undefined>
@@ -51,6 +61,7 @@ export function NameDialog({
   initialName = '',
   kind,
   path,
+  listIcon,
   onSubmit,
   onClose,
   onReload,
@@ -58,6 +69,8 @@ export function NameDialog({
 }: NameDialogProps) {
   const [name, setName] = useState(initialName)
   const [chosenKind, setChosenKind] = useState<ItemKind>(kind?.initial ?? 'generic')
+  const [iconChoice, setIconChoice] = useState<IconChoice>({ icon: null, icon_color: null })
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
   // The remembered folder may be gone (deleted, or from an older tree), and then there is no
   // option to preselect: the top level does, so the picker is never left with nothing chosen.
   const [chosenPath, setChosenPath] = useState<string | undefined>(() => {
@@ -78,7 +91,7 @@ export function NameDialog({
     if (trimmed.length > MAX_LENGTH) return setFieldError(`Use at most ${MAX_LENGTH} characters.`)
     setFieldError(undefined)
     const folderId = path ? destinationId(chosenPath ?? destinationKey(null)) : null
-    if (await run(() => onSubmit(trimmed, chosenKind, folderId))) onClose()
+    if (await run(() => onSubmit(trimmed, chosenKind, folderId, iconChoice))) onClose()
   }
 
   const reload = async () => {
@@ -157,6 +170,23 @@ export function NameDialog({
             )}
           </div>
         )}
+        {listIcon && (
+          <div className="flex items-center justify-between rounded-md border border-border p-3">
+            <span className="flex items-center gap-2 text-sm text-text-muted">
+              <ListIconMark
+                icon={iconChoice.icon}
+                iconColor={iconChoice.icon_color}
+                kind={chosenKind}
+                className="size-9"
+                iconClassName="size-5"
+              />
+              List icon
+            </span>
+            <Button type="button" variant="secondary" onClick={() => setIconPickerOpen(true)}>
+              Choose icon
+            </Button>
+          </div>
+        )}
         {error && !serverField && (
           <FormError
             error={error}
@@ -166,6 +196,14 @@ export function NameDialog({
           />
         )}
       </form>
+      {iconPickerOpen && (
+        <ListIconPicker
+          value={iconChoice}
+          kind={chosenKind}
+          onChange={setIconChoice}
+          onClose={() => setIconPickerOpen(false)}
+        />
+      )}
     </Dialog>
   )
 }

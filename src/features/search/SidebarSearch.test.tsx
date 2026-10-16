@@ -32,9 +32,9 @@ function makeResult(n: number, title = `Result ${n}`) {
       updated_at: '2026-10-14T09:31:00Z',
     },
     path: [
-      { type: 'folder' as const, id: uuid(1), name: 'Media' },
-      { type: 'folder' as const, id: uuid(2), name: 'Movies' },
-      { type: 'list' as const, id: LIST_ID, name: 'Watchlist' },
+      { type: 'folder' as const, id: uuid(1), name: 'Media', icon: null, icon_color: null },
+      { type: 'folder' as const, id: uuid(2), name: 'Movies', icon: null, icon_color: null },
+      { type: 'list' as const, id: LIST_ID, name: 'Watchlist', icon: null, icon_color: null },
     ],
   }
 }
