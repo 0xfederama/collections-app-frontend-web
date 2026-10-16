@@ -9,7 +9,7 @@ import letterboxd from '../assets/services/letterboxd.webp'
 import reddit from '../assets/services/reddit.webp'
 import google from '../assets/services/google.svg'
 import imdb from '../assets/services/imdb.svg'
-import { firstLetter } from '../features/lists/ItemThumb'
+import { firstLetter } from '../lib/text'
 import { cx } from '../lib/cx'
 import { Globe } from './ui/icons'
 

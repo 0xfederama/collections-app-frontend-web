@@ -1,15 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { ItemThumb, firstLetter } from './ItemThumb'
+import { ItemThumb } from './ItemThumb'
 
 describe('F008-W13 item initials', () => {
-  it('uses the first grapheme of the title, upper case', () => {
-    expect(firstLetter('  matrix')).toBe('M')
-    expect(firstLetter('éclair')).toBe('É')
-    expect(firstLetter('👨‍👩‍👧 family')).toBe('👨‍👩‍👧')
-    expect(firstLetter('')).toBe('?')
-  })
-
   it('draws the same letter tile for every kind, with no kind symbol', () => {
     const { container } = render(
       <>

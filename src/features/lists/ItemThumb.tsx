@@ -1,14 +1,7 @@
 import { useState } from 'react'
 import { cx } from '../../lib/cx'
+import { firstLetter } from '../../lib/text'
 import type { ItemSummary } from './api'
-
-const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
-
-/** First grapheme of the title, upper case (`?` for an empty title). */
-export const firstLetter = (title: string) => {
-  const first = graphemes.segment(title.trim())[Symbol.iterator]().next()
-  return first.done ? '?' : first.value.segment.toLocaleUpperCase()
-}
 
 /**
  * The one placeholder of an item without an image (F008-W13): a soft tile with the title's first
