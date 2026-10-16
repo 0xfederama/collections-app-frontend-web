@@ -141,11 +141,7 @@ export function NameDialog({
       }
     >
       <form id="tree-name-form" onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <div
-          className={cx(
-            listIcon && 'grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3',
-          )}
-        >
+        <div className={cx(listIcon && 'grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3')}>
           <div className="min-w-0">
             <TextField
               label="Name"
