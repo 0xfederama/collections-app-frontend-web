@@ -14,7 +14,7 @@ import {
 } from './api'
 import type { ItemKind } from '../items/api'
 import { ItemEntry } from './ItemEntry'
-import type { PinnedSlots } from './pinned'
+import type { PinnedKeys } from './pinned'
 import {
   SortableProvider,
   arrayMove,
@@ -69,7 +69,7 @@ export interface ItemsViewProps {
   listId: string
   mode: DisplayMode
   kind: ItemKind
-  pinned: PinnedSlots
+  pinned: PinnedKeys
   /** e.g. `12 items` or `3 of 12 items`; shown after the items. */
   countLabel: string
   items: ItemSummary[]
@@ -266,7 +266,7 @@ function SortableEntry({
   size: number
   mode: DisplayMode
   kind: ItemKind
-  pinned: PinnedSlots
+  pinned: PinnedKeys
   search: string
   onOpen: () => void
   onMoveBy: (delta: -1 | 1) => void

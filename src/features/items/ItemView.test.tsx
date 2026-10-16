@@ -223,13 +223,31 @@ describe('item view: kinds', () => {
   })
 
   it('F007-W8 a single price reads € 1,200, a range € 1,000–1,400, no price shows nothing', async () => {
-    await renderOverride({ price: { min: '1200.00', max: '1200.00', currency: 'EUR' } })
+    // Price exists on motorcycle, car and camera only (D-085).
+    await renderOverride({
+      kind: 'car',
+      metadata: {},
+      price: { min: '1200.00', max: '1200.00', currency: 'EUR' },
+    })
     expect(await screen.findByText(/^€\s?1,200$/)).toBeInTheDocument()
   })
 
   it('F007-W8 a range shows both bounds, each with the currency', async () => {
-    await renderOverride({ price: { min: '1000.00', max: '1400.00', currency: 'EUR' } })
+    await renderOverride({
+      kind: 'car',
+      metadata: {},
+      price: { min: '1000.00', max: '1400.00', currency: 'EUR' },
+    })
     expect(await screen.findByText(/^€\s1,000–1,400$/)).toBeInTheDocument()
+  })
+
+  it('F009-W2 a movie offers no Price field, a car does', async () => {
+    const user = userEvent.setup()
+    await renderOverride({ title: 'Heat', kind: 'movie', metadata: {} })
+    await screen.findByRole('heading', { name: 'Description' })
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    expect(await screen.findByRole('menuitem', { name: 'Website' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Price' })).not.toBeInTheDocument()
   })
 
   it('F007-W8 an item without a price shows no price', async () => {

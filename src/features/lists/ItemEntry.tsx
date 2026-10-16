@@ -5,7 +5,7 @@ import { ArrowDown, ArrowUp, Ellipsis } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { DisplayMode, ItemSummary } from './api'
 import { ItemThumb } from './ItemThumb'
-import { pinnedTexts, streamingOf, type PinnedSlots } from './pinned'
+import { pinnedPlacements, pinnedTexts, streamingOf, type PinnedKeys } from './pinned'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import type { ItemKind } from '../items/api'
 
@@ -28,8 +28,8 @@ export interface ItemEntryProps {
   /** Called on click, before navigating (the list saves its scroll position). */
   onOpen: () => void
   reorder?: EntryReorder
-  /** Fields shown under the title and on the right (the list's, else the kind default). */
-  pinned: PinnedSlots
+  /** The fields shown beside the title and in the corner (the list's, else the kind default). */
+  pinned: PinnedKeys
   kind: ItemKind
 }
 
@@ -40,7 +40,7 @@ const linkClass =
 const surface =
   'border border-border bg-surface shadow-sm transition-shadow hover:shadow-md hover:bg-surface-raised has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-focus-ring'
 
-/** One slot of pinned fields: text pieces joined with ` · `, streaming as service icons, in slot order. */
+/** One placement of the pinned fields: text pieces joined with ` · `, streaming as service icons. */
 function PinnedSlot({
   keys,
   item,
@@ -93,6 +93,8 @@ function PinnedSlot({
 export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }: ItemEntryProps) {
   const to = { pathname: `/lists/${item.list_id}/items/${item.id}`, search }
   const slots = { item: item, kind }
+  // F009-W3: the first pinned field reads next to the title, the second in the right corner.
+  const { first, second } = pinnedPlacements(pinned)
 
   const title = (
     <Link
@@ -122,13 +124,13 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
         <div className="flex min-w-0 flex-1 items-baseline gap-3">
           <span className="min-w-0 shrink-0 truncate sm:max-w-[60%]">{title}</span>
           <PinnedSlot
-            keys={pinned.under}
+            keys={first}
             {...slots}
             iconSize={20}
             className="hidden min-w-0 text-sm text-text-muted sm:flex"
           />
         </div>
-        <PinnedSlot keys={pinned.right} {...slots} iconSize={22} className="shrink-0 text-sm" />
+        <PinnedSlot keys={second} {...slots} iconSize={22} className="shrink-0 text-sm" />
         {controls?.menu}
       </li>
     )
@@ -146,16 +148,16 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
           decorative
           className="aspect-square w-14 shrink-0 rounded-[12px] sm:w-16"
         />
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          {title}
+        <div className="flex min-w-0 flex-1 items-baseline gap-3">
+          <span className="min-w-0 truncate">{title}</span>
           <PinnedSlot
-            keys={pinned.under}
+            keys={first}
             {...slots}
             iconSize={20}
-            className="text-sm text-text-muted"
+            className="shrink-0 text-sm text-text-muted"
           />
         </div>
-        <PinnedSlot keys={pinned.right} {...slots} iconSize={26} className="shrink-0 text-sm" />
+        <PinnedSlot keys={second} {...slots} iconSize={26} className="shrink-0 text-sm" />
         {controls?.menu}
       </li>
     )
@@ -170,13 +172,9 @@ export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }:
       <ItemThumb item={item} decorative className="aspect-4/3 w-full rounded-[13px]" />
       <div className="flex flex-1 flex-col gap-1 px-2 pt-2.5">
         {title}
-        <PinnedSlot
-          keys={pinned.under}
-          {...slots}
-          iconSize={20}
-          className="text-xs text-text-muted"
-        />
-        <PinnedSlot keys={pinned.right} {...slots} iconSize={20} className="text-sm" />
+        <PinnedSlot keys={first} {...slots} iconSize={20} className="text-xs text-text-muted" />
+        {/* The corner placement ends the card's text block. */}
+        <PinnedSlot keys={second} {...slots} iconSize={20} className="self-end text-sm" />
       </div>
       {controls && <div className="absolute top-2.5 right-2.5">{controls.menu}</div>}
     </li>

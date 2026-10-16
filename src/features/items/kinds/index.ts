@@ -32,6 +32,18 @@ export function sortKeyLabel(kind: ItemKind): string | undefined {
   return sortKeyLabels[kind]
 }
 
+/** The kinds whose items can carry a price (D-085): the API rejects `price` on any other kind. */
+export const kindsWithPrice: ReadonlySet<ItemKind> = new Set<ItemKind>([
+  'motorcycle',
+  'car',
+  'camera',
+])
+
+/** Whether the kind defines a price, so it offers price in the sort menu and the pinned fields. */
+export function hasPrice(kind: ItemKind): boolean {
+  return kindsWithPrice.has(kind)
+}
+
 export interface KindRow {
   key: string
   label: string

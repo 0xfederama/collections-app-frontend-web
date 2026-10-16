@@ -131,6 +131,13 @@ function renderList(path: string) {
   return router
 }
 
+/** The sidebar tree with the test list's kind replaced (the header reads the kind from there). */
+function treeWithKind(kind: List['kind']) {
+  const tree = { ...(exampleResponses.getTree.body as components['schemas']['Tree']) }
+  tree.lists = tree.lists.map((list) => (list.id === LIST ? { ...list, kind } : list))
+  server.use(http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json(tree)))
+}
+
 const at = (query = '') => `/lists/${LIST}${query}`
 const itemsList = () => screen.findByRole('list', { name: 'Items' })
 const titles = () =>
@@ -149,7 +156,7 @@ describe('W-06 display modes', () => {
   const rich = [
     makeItem(1, {
       title: 'The Matrix',
-      kind: 'movie',
+      kind: 'car',
       price: { min: '1200', max: '1500', currency: 'EUR' },
     }),
   ]
@@ -157,13 +164,14 @@ describe('W-06 display modes', () => {
   it.each(['compact', 'thumbnail', 'grid'] as const)(
     '%s renders title link and price, no kind label, status or summary (F007-W4, W7)',
     async (mode) => {
-      useBackend({ list: { display_mode: mode }, items: rich })
+      // A car list pins price by default, so the row shows it.
+      useBackend({ list: { display_mode: mode, kind: 'car', pinned_fields: null }, items: rich })
       renderList(at())
       const ul = await itemsList()
       const link = within(ul).getByRole('link', { name: 'The Matrix' })
       expect(link).toHaveAttribute('href', `/lists/${LIST}/items/${rich[0]!.id}`)
       expect(within(ul).getByText(/1,200.*1,500/)).toBeInTheDocument()
-      expect(within(ul).queryByText('Movie')).not.toBeInTheDocument()
+      expect(within(ul).queryByText('Car')).not.toBeInTheDocument()
       expect(screen.getByRole('radio', { name: radioName[mode] })).toBeChecked()
     },
   )
@@ -306,8 +314,9 @@ describe('W-06 URL state: sort and filter', () => {
     )
   })
 
-  it('F002 the sort menu offers "Price" and picking it sets ?sort=price', async () => {
-    const backend = useBackend()
+  it('F002 a car list offers "Price" and picking it sets ?sort=price', async () => {
+    treeWithKind('car')
+    const backend = useBackend({ list: { kind: 'car' } })
     const user = userEvent.setup()
     const router = renderList(at())
     await itemsList()
@@ -317,14 +326,34 @@ describe('W-06 URL state: sort and filter', () => {
     await waitFor(() => expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('price'))
   })
 
+  it('F009-W2 a movie list has no Price in its sort menu and ignores ?sort=price', async () => {
+    treeWithKind('movie')
+    const backend = useBackend({ list: { kind: 'movie' } })
+    const user = userEvent.setup()
+    renderList(at('?sort=price'))
+    await itemsList()
+    // A stale bookmark cannot put the list in a sort the server rejects.
+    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
+    await user.click(sortSelect())
+    expect(screen.queryByRole('option', { name: 'Price' })).not.toBeInTheDocument()
+    // The rest of the kind's sort keys are still there.
+    expect(screen.getByRole('option', { name: 'Release year' })).toBeInTheDocument()
+  })
+
+  it('F009-W2 a movie list cannot pin price, a car list can', async () => {
+    treeWithKind('movie')
+    useBackend({ list: { kind: 'movie' } })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await user.click(await screen.findByRole('button', { name: /Pinned fields/ }))
+    const menu = await screen.findByRole('menu')
+    expect(within(menu).queryByRole('menuitemcheckbox', { name: 'Price' })).not.toBeInTheDocument()
+  })
+
   it('F007-W9 ?sort=kind_key is ignored on a generic list', async () => {
-    const genericTree = {
-      ...(exampleResponses.getTree.body as components['schemas']['Tree']),
-    }
-    genericTree.lists = genericTree.lists.map((l) =>
-      l.id === LIST ? { ...l, kind: 'generic' as const } : l,
-    )
-    server.use(http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json(genericTree)))
+    treeWithKind('generic')
     const backend = useBackend({ list: { kind: 'generic' } })
     renderList(at('?sort=kind_key'))
     await itemsList()
@@ -333,13 +362,7 @@ describe('W-06 URL state: sort and filter', () => {
   })
 
   it('F008-W14 ?sort=price is ignored on a generic list, whose sort menu has no Price', async () => {
-    const genericTree = {
-      ...(exampleResponses.getTree.body as components['schemas']['Tree']),
-    }
-    genericTree.lists = genericTree.lists.map((l) =>
-      l.id === LIST ? { ...l, kind: 'generic' as const } : l,
-    )
-    server.use(http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json(genericTree)))
+    treeWithKind('generic')
     const backend = useBackend({ list: { kind: 'generic' } })
     const user = userEvent.setup()
     renderList(at('?sort=price'))
@@ -414,15 +437,20 @@ describe('W-06 URL state: sort and filter', () => {
 describe('F002-W2 pinned fields', () => {
   const movie = makeItem(1, {
     title: 'Alien',
-    price: { min: '1200', max: '1500', currency: 'EUR' },
     metadata: {
       runtime_minutes: 117,
       streaming: { platforms: ['Netflix'], paid_platforms: ['Netflix'] },
     },
   })
+  const car = makeItem(2, {
+    title: 'Miata',
+    kind: 'car',
+    price: { min: '1200', max: '1500', currency: 'EUR' },
+    metadata: { model_year: 1999 },
+  })
 
   it.each(['compact', 'thumbnail', 'grid'] as const)(
-    '%s shows the kind default: runtime under the title, streaming icon with the paid badge',
+    '%s shows the kind default: runtime next to the title, streaming icon with the paid badge',
     async (mode) => {
       useBackend({
         list: { display_mode: mode, kind: 'movie', pinned_fields: null },
@@ -432,8 +460,6 @@ describe('F002-W2 pinned fields', () => {
       const ul = await itemsList()
       expect(within(ul).getByText('117 min')).toBeInTheDocument()
       expect(within(ul).getByRole('img', { name: 'Netflix, paid' })).toBeInTheDocument()
-      // Price is not pinned on a movie by default.
-      expect(within(ul).queryByText(/€/)).not.toBeInTheDocument()
     },
   )
 
@@ -446,20 +472,20 @@ describe('F002-W2 pinned fields', () => {
     expect(icon).toHaveTextContent('$')
   })
 
-  it('shows the list selection instead of the default, and {} pins nothing', async () => {
+  it('shows the list selection instead of the default, in its order, and [] pins nothing', async () => {
     useBackend({
-      list: { kind: 'movie', pinned_fields: { under: ['price'], right: [] } },
-      items: [movie],
+      list: { kind: 'car', pinned_fields: ['price'] },
+      items: [car],
     })
     renderList(at())
     const ul = await itemsList()
     expect(within(ul).getByText(/€\s1,200–1,500/)).toBeInTheDocument()
-    expect(within(ul).queryByText('117 min')).not.toBeInTheDocument()
+    expect(within(ul).queryByText('1999')).not.toBeInTheDocument()
   })
 
-  it('the menu shows the effective selection, ticking a field PATCHes both slots with If-Match', async () => {
+  it('the menu shows the effective selection, ticking a field appends it with If-Match', async () => {
     const backend = useBackend({
-      list: { kind: 'movie', pinned_fields: null, version: 4 },
+      list: { kind: 'movie', pinned_fields: ['runtime_minutes'], version: 4 },
       items: [movie],
     })
     const user = userEvent.setup()
@@ -467,22 +493,19 @@ describe('F002-W2 pinned fields', () => {
     await itemsList()
     await user.click(await screen.findByRole('button', { name: /Pinned fields/ }))
     const menu = await screen.findByRole('menu')
-    const boxes = within(menu).getAllByRole('menuitemcheckbox', { name: 'Runtime' })
-    expect(boxes[0]).toBeChecked() // under the title
-    expect(boxes[1]).not.toBeChecked() // on the right
-    // Moving it to the right slot takes it out of the first.
-    await user.click(boxes[1]!)
+    expect(within(menu).getByRole('menuitemcheckbox', { name: 'Runtime' })).toBeChecked()
+    await user.click(within(menu).getByRole('menuitemcheckbox', { name: 'Release year' }))
     await waitFor(() => expect(backend.patches).toHaveLength(1))
     expect(backend.patches[0]).toEqual({
       ifMatch: '"l-4"',
-      body: { pinned_fields: { under: [], right: ['streaming', 'runtime_minutes'] } },
+      body: { pinned_fields: ['runtime_minutes', 'release_year'] },
     })
   })
 
   it('Reset to default PATCHes pinned_fields null', async () => {
     const backend = useBackend({
-      list: { kind: 'movie', pinned_fields: { under: [], right: ['price'] }, version: 2 },
-      items: [movie],
+      list: { kind: 'car', pinned_fields: ['price'], version: 2 },
+      items: [car],
     })
     const user = userEvent.setup()
     renderList(at())

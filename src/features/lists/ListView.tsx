@@ -16,6 +16,7 @@ import {
   type SortMode,
 } from './api'
 import { NEW_ITEM_ID } from '../items/newItem'
+import { hasPrice } from '../items/kinds'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { resolvePinned } from './pinned'
@@ -44,10 +45,12 @@ export function ListView({ treeList }: { treeList: List }) {
 
   const listQuery = useList(listId)
   const list = listQuery.data
-  // `kind_key` is not valid on a generic list: a URL asking for it falls back to the list's mode.
-  // `price` is not valid on a generic list either (F008-W14).
+  // A sort the list's kind does not define falls back to the list's mode, so a stale bookmark (or a
+  // kind change) cannot put the list in a sort the server rejects: `kind_key` on a generic list
+  // (F007-W9), `price` where the kind has no price (D-085).
   const sortOverride =
-    treeList.kind === 'generic' && (parsedSort === 'kind_key' || parsedSort === 'price')
+    (parsedSort === 'kind_key' && treeList.kind === 'generic') ||
+    (parsedSort === 'price' && !hasPrice(treeList.kind))
       ? null
       : parsedSort
   // The tree is the source of truth for renames, moves and description edits (W-05 refetches it

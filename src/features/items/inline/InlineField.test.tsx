@@ -174,7 +174,17 @@ describe('F002-W3 "+ Add field" and price', () => {
   }
 
   it('lists only the fields that are not set, and opens that field’s editor', async () => {
-    const { user } = await openItem()
+    // A car, whose kind fields are all set: only price and website are left to add (D-085).
+    const { user } = await openItem({
+      kind: 'car',
+      metadata: {
+        make: 'Volkswagen',
+        model: 'Golf',
+        model_year: 2021,
+        fuel_type: 'petrol',
+        power_hp: 111,
+      },
+    })
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     const menu = await screen.findByRole('menu')
     expect(
@@ -201,7 +211,7 @@ describe('F002-W3 "+ Add field" and price', () => {
 
   it('Price: a single price is { amount, currency }; a range is { min, max, currency }', async () => {
     const calls = mockPatch()
-    const { user } = await openItem()
+    const { user } = await openItem({ kind: 'car', metadata: {} })
     await addField(user, 'Price')
     await user.type(await screen.findByRole('textbox', { name: 'Price' }), '1200{Enter}')
     await waitFor(() => expect(calls).toHaveLength(1))
@@ -210,7 +220,7 @@ describe('F002-W3 "+ Add field" and price', () => {
 
   it('F008-W12 Add range reveals a second amount in the same field; Remove range goes back to single', async () => {
     const calls = mockPatch()
-    const { user } = await openItem()
+    const { user } = await openItem({ kind: 'car', metadata: {} })
     await addField(user, 'Price')
     await user.type(await screen.findByRole('textbox', { name: 'Price' }), '900')
     await user.click(screen.getByRole('button', { name: 'Add range' }))
@@ -229,6 +239,7 @@ describe('F002-W3 "+ Add field" and price', () => {
   it('Price: the saved price reads without cents, and Remove price sends null', async () => {
     const calls = mockPatch()
     const { user } = await openItem({
+      kind: 'car',
       price: { min: '1200.50', max: '1200.50', currency: 'EUR' },
     })
     expect(await screen.findByText(/^€\s?1,201$/)).toBeVisible()
