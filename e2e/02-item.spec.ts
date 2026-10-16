@@ -66,12 +66,13 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
     await page.getByRole('button', { name: 'Add field' }).click()
     await page.getByRole('menuitem', { name: 'Release year' }).click()
 
-    const label = page.getByText('Release year', { exact: true })
+    const label = page.locator('dt').getByText('Release year', { exact: true })
     const input = page.getByRole('textbox', { name: 'Release year' })
     const save = page.getByRole('button', { name: 'Save release year' })
     const cancel = page.getByRole('button', { name: 'Cancel editing release year' })
     for (const width of [375, 1440]) {
       await page.setViewportSize({ width, height: 900 })
+      await expect(input).toBeVisible()
       const [labelBox, inputBox, saveBox, cancelBox] = await Promise.all([
         label.boundingBox(),
         input.boundingBox(),
