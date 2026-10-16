@@ -386,8 +386,8 @@ function FieldEditor({
   const stacked = STACKED.includes(spec.id)
   return (
     <div ref={box} onKeyDown={onKeyDown} className={cx('flex flex-col gap-2', className)}>
-      <div className={stacked ? 'flex flex-col gap-3' : 'flex flex-wrap items-start gap-2'}>
-        <div className={cx('min-w-0', !stacked && 'flex-1 basis-40')}>
+      <div className={stacked ? 'flex flex-col gap-3' : 'flex flex-nowrap items-center gap-2'}>
+        <div className={cx('min-w-0', !stacked && 'flex-1')}>
           <FieldInputs spec={spec} form={form} canRemovePrice={item.price !== null} />
         </div>
         <EditorButtons
