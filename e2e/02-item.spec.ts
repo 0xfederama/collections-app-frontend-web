@@ -83,9 +83,10 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
       expect(inputBox).not.toBeNull()
       expect(saveBox).not.toBeNull()
       expect(cancelBox).not.toBeNull()
-      expect(Math.abs(labelBox!.y - inputBox!.y)).toBeLessThan(8)
-      expect(Math.abs(inputBox!.y - saveBox!.y)).toBeLessThan(8)
-      expect(Math.abs(saveBox!.y - cancelBox!.y)).toBeLessThan(8)
+      const centerY = (box: NonNullable<typeof inputBox>) => box.y + box.height / 2
+      expect(Math.abs(centerY(labelBox!) - centerY(inputBox!))).toBeLessThan(4)
+      expect(Math.abs(centerY(inputBox!) - centerY(saveBox!))).toBeLessThan(4)
+      expect(Math.abs(centerY(saveBox!) - centerY(cancelBox!))).toBeLessThan(4)
       expect(inputBox!.x).toBeGreaterThan(labelBox!.x)
       expect(saveBox!.x).toBeGreaterThan(inputBox!.x)
       expect(cancelBox!.x).toBeGreaterThan(saveBox!.x)
