@@ -56,6 +56,7 @@ export interface paths {
         /**
          * Update workspace settings
          * @description Requires `If-Match` (`"s-N"`). Lowering `markdown_history_limit` prunes on the next save per item, not immediately.
+         *     `trash_retention_days` (F012-B3): absent = unchanged, `null` = off, otherwise 1 to 365. Setting it does not purge at once; the daily job does.
          */
         patch: operations["updateSettings"];
         trace?: never;
@@ -188,7 +189,7 @@ export interface paths {
          * @description Appended to the end of its siblings. `folder_id` absent or `null` creates it at the root. A missing or trashed folder returns
          *     `409 destination_unavailable`. `kind` is required: every item of the list has that kind. `description` is Markdown (up to 64 KiB).
          *     `sort_mode: kind_key` and `sort_mode: price` are rejected (`422 validation_failed`) on a `generic` list, and `sort_mode: price`
-         *     also on `movie` and `tv_show` lists (F009-B1: only the kinds with a price can sort by it).
+         *     also on `movie` and `tv_show` lists (F009-B1: only the kinds with a price can sort by it). `icon` and `icon_color` are optional (F012-B1).
          */
         post: operations["createList"];
         delete?: never;
@@ -253,6 +254,9 @@ export interface paths {
          *     kind is `generic`, the request is rejected with `422 validation_failed`. A kind change also resets `pinned_fields` to `null` (unless
          *     the same request sets it, which is then validated against the new kind). Send `pinned_fields: null` to reset it to the kind default;
          *     absent leaves it unchanged.
+         *
+         *     `icon` and `icon_color` (F012-B1): send `icon: null` to reset the icon to the default. Changing the icon to an emoji or to `null`
+         *     clears `icon_color`, so a PATCH that sends a colour with an emoji icon is rejected (`422 validation_failed`). A PATCH that changes only `icon_color` on a built-in icon is fine.
          */
         patch: operations["updateList"];
         trace?: never;
@@ -626,7 +630,12 @@ export interface paths {
         get: operations["listTrash"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Empty the trash
+         * @description Permanently deletes every trash batch and their files, the same as purging each batch. No `If-Match`.
+         *     Idempotent: an empty trash also answers 204.
+         */
+        delete: operations["emptyTrash"];
         options?: never;
         head?: never;
         patch?: never;
@@ -729,6 +738,16 @@ export interface components {
             id: string;
             name: string;
         };
+        /** @description An ancestor of a search result (F012-B1). `icon` and `icon_color` are the list's own (list segments); both are `null` on folder segments. */
+        SearchPathSegment: {
+            /** @enum {string} */
+            type: "folder" | "list";
+            /** Format: uuid */
+            id: string;
+            name: string;
+            icon: components["schemas"]["ListIcon"];
+            icon_color: components["schemas"]["ListIconColor"];
+        };
         /**
          * @description A price in responses: always `min`, `max` and `currency`. A single price has `min` equal to `max`. Money is a decimal string
          *     (D-062). An open range (only one bound) can exist for prices created before 0.3.0.
@@ -796,12 +815,14 @@ export interface components {
             workspace_name: string;
             streaming_country_code: string;
             markdown_history_limit: number;
+            trash_retention_days: number | null;
             version: number;
         };
         UpdateSettingsRequest: {
             workspace_name?: string;
             streaming_country_code?: string;
             markdown_history_limit?: number;
+            trash_retention_days?: number | null;
         };
         Tree: {
             folders: components["schemas"]["Folder"][];
@@ -866,6 +887,19 @@ export interface components {
          *     ]
          */
         PinnedFields: string[] | null;
+        /**
+         * @description The icon of a list (F012-B1): an emoji (one grapheme) or `i:<name>` for a built-in icon key. `null` is the default icon.
+         *     Lists only. The service checks the value: `422 validation_failed` on `icon` for anything else.
+         * @example i:film
+         */
+        ListIcon: string | null;
+        /**
+         * @description The colour of a built-in icon, one of ten palette names (F012-B1). `null` is the normal text colour. Allowed only when `icon`
+         *     is a built-in icon: `422 validation_failed` on `icon_color` otherwise. It is cleared when the icon changes to an emoji or to `null`.
+         * @example indigo
+         * @enum {string|null}
+         */
+        ListIconColor: "red" | "orange" | "amber" | "green" | "teal" | "blue" | "indigo" | "purple" | "pink" | "gray" | null;
         List: {
             /** Format: uuid */
             id: string;
@@ -878,6 +912,8 @@ export interface components {
             display_mode: components["schemas"]["DisplayMode"];
             sort_mode: components["schemas"]["SortMode"];
             pinned_fields: components["schemas"]["PinnedFields"];
+            icon: components["schemas"]["ListIcon"];
+            icon_color: components["schemas"]["ListIconColor"];
             sort_order: number;
             /** @description Number of active items. */
             item_count: number;
@@ -899,6 +935,8 @@ export interface components {
             display_mode?: components["schemas"]["DisplayMode"];
             sort_mode?: components["schemas"]["SortMode"];
             pinned_fields?: components["schemas"]["PinnedFields"];
+            icon?: components["schemas"]["ListIcon"];
+            icon_color?: components["schemas"]["ListIconColor"];
         };
         UpdateListRequest: {
             name?: string;
@@ -908,6 +946,8 @@ export interface components {
             display_mode?: components["schemas"]["DisplayMode"];
             sort_mode?: components["schemas"]["SortMode"];
             pinned_fields?: components["schemas"]["PinnedFields"];
+            icon?: components["schemas"]["ListIcon"];
+            icon_color?: components["schemas"]["ListIconColor"];
         };
         MoveListRequest: {
             /**
@@ -1048,7 +1088,7 @@ export interface components {
         };
         SearchResult: {
             item: components["schemas"]["ItemSummary"];
-            path: components["schemas"]["PathSegment"][];
+            path: components["schemas"]["SearchPathSegment"][];
         };
         SearchPage: {
             data: components["schemas"]["SearchResult"][];
@@ -2538,6 +2578,25 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    emptyTrash: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trash emptied */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             500: components["responses"]["InternalError"];
         };
     };
