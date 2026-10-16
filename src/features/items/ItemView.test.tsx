@@ -55,6 +55,24 @@ async function reveal(user: ReturnType<typeof userEvent.setup>, label: string) {
 }
 
 describe('AT-13 item view: the example movie', () => {
+  it('F012-W2 does not open image upload behind a destructive confirmation', async () => {
+    const user = userEvent.setup()
+    await renderItem()
+    const footer = within(screen.getByRole('contentinfo'))
+    await user.click(footer.getByRole('button', { name: 'Delete' }))
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument()
+
+    const file = new File(['image'], 'paste.png', { type: 'image/png' })
+    fireEvent.paste(window, {
+      clipboardData: {
+        items: [{ kind: 'file', type: 'image/png', getAsFile: () => file }],
+      } as unknown as DataTransfer,
+    })
+
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('shows the title and Google, Letterboxd, IMDb for a movie, with a kind label but no status or summary (F007-W7, W8)', async () => {
     await renderItem()
     // F-002: a quiet kind label above the title.

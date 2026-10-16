@@ -8,6 +8,8 @@ test.describe('AT-06 item image', () => {
     const item = await createItem(request, list.id, title)
     await page.goto(itemUrl(list.id, item.id))
     const panel = itemPanel(page)
+    await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
+    await expect(panel.getByRole('button', { name: 'Add image' })).toBeVisible()
 
     await page.evaluate(async () => {
       const canvas = document.createElement('canvas')

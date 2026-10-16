@@ -31,17 +31,18 @@ export function ItemHero({ item }: { item: Item }) {
           (element) =>
             element instanceof Element &&
             element.closest(
-              'input, textarea, select, [contenteditable="true"], [role="textbox"], [role="dialog"]',
+              'input, textarea, select, [contenteditable="true"], [role="textbox"], [role="dialog"], [role="alertdialog"]',
             ),
         )
       ) {
         return
       }
       if (document.querySelector('[role="dialog"]')) return
-      const file = Array.from(event.clipboardData?.items ?? [])
+      const files = Array.from(event.clipboardData?.items ?? [])
         .filter((entry) => entry.kind === 'file')
-        .map((entry) => entry.getAsFile())
-        .find((entry): entry is File => entry !== null)
+        .map((entry) => ({ file: entry.getAsFile(), type: entry.type }))
+        .filter((entry): entry is { file: File; type: string } => entry.file !== null)
+      const file = files.find((entry) => entry.type.startsWith('image/'))?.file ?? files[0]?.file
       if (!file) return
       event.preventDefault()
       setPastedFile(file)
