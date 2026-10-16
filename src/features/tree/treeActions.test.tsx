@@ -88,7 +88,7 @@ describe('AT-03 tree CRUD (web): create', () => {
       within(picker).getByRole('textbox', { name: 'Search icons and emoji' }),
       'camer',
     )
-    await user.click(within(picker).getByRole('button', { name: 'camera', exact: true }))
+    await user.click(within(picker).getByRole('button', { name: 'camera' }))
     await user.click(within(picker).getByRole('button', { name: 'Teal' }))
     await user.click(within(picker).getByRole('button', { name: 'Done' }))
     await user.click(within(create).getByRole('button', { name: 'Create' }))

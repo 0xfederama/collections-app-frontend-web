@@ -43,7 +43,7 @@ describe('F012-W1 list icon picker', () => {
 
     const search = screen.getByRole('textbox', { name: 'Search icons and emoji' })
     await user.type(search, 'camer')
-    await user.click(screen.getByRole('button', { name: 'camera', exact: true }))
+    await user.click(screen.getByRole('button', { name: 'camera' }))
     expect(onChange).toHaveBeenLastCalledWith({ icon: 'i:camera', icon_color: null })
 
     await user.click(screen.getByRole('button', { name: 'Indigo' }))
@@ -62,7 +62,7 @@ describe('F012-W1 list icon picker', () => {
   it('uses token classes and touch-sized, visibly focusable icon and color controls', async () => {
     const user = userEvent.setup()
     render(<Harness onChange={vi.fn()} />)
-    const camera = screen.getByRole('button', { name: 'camera', exact: true })
+    const camera = screen.getByRole('button', { name: 'camera' })
     expect(camera).toHaveClass('pointer-coarse:size-11', 'focus-visible:outline-focus-ring')
     expect(camera).not.toHaveAttribute('style')
     await user.click(camera)
