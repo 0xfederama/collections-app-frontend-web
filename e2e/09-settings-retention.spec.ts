@@ -8,7 +8,7 @@ test('F012-W4 saves trash retention immediately', async ({ page, request }) => {
   await expect(retention).toHaveText('Off')
   await retention.click()
   await page.getByRole('option', { name: '7 days' }).click()
-  await expect(page.getByText('Trash retention saved')).toBeVisible()
+  await expect(page.getByText('Trash retention saved', { exact: true })).toBeVisible()
   await expect(retention).toHaveText('7 days')
 
   const response = await request.get('/api/v1/settings')
@@ -16,5 +16,8 @@ test('F012-W4 saves trash retention immediately', async ({ page, request }) => {
 
   await retention.click()
   await page.getByRole('option', { name: 'Off' }).click()
-  await expect(page.getByText('Trash retention saved')).toBeVisible()
+  await expect(retention).toHaveText('Off')
+  await expect
+    .poll(async () => (await (await request.get('/api/v1/settings')).json()).trash_retention_days)
+    .toBeNull()
 })
