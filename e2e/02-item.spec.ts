@@ -131,7 +131,8 @@ test.describe('F009-W3 pinned fields: up to two, in order', () => {
     })
 
     await page.goto(`/lists/${list.id}`)
-    await page.getByRole('radio', { name: 'Thumbnail rows' }).click()
+    // The segmented control's radios are sr-only inside their label, so check it directly.
+    await page.getByRole('radio', { name: 'Thumbnail rows' }).check({ force: true })
     const row = page.getByRole('list', { name: 'Items' }).getByRole('listitem').filter({
       hasText: title,
     })
