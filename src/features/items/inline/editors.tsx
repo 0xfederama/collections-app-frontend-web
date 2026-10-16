@@ -1,7 +1,8 @@
 import { Button, Select, TextField } from '../../../components/ui'
 import { Plus, X } from '../../../components/ui/icons'
-import { CountrySelect, CurrencySelect } from '../../../components/ui/IsoSelects'
+import { CurrencySelect } from '../../../components/ui/IsoSelects'
 import { cx } from '../../../lib/cx'
+import { StreamingPlatforms } from './StreamingPlatforms'
 import {
   INITIAL_CURRENCY,
   inputId,
@@ -132,9 +133,9 @@ function PriceInputs({ form, canRemove }: { form: FieldForm; canRemove: boolean 
   )
 }
 
-/** Country, the comma-separated platforms, and a toggle per platform for "paid per title". */
+/** The platforms (a multi-choice dropdown), and a toggle per platform for "paid per title". */
 function StreamingInputs({ form }: { form: FieldForm }) {
-  const { draft, errors, defaults, set } = form
+  const { draft, errors, set } = form
   const platforms = parsePlatforms(draft.streamingPlatforms)
   const isPaid = (name: string) =>
     draft.streamingPaid.some((paid) => paid.toLowerCase() === name.toLowerCase())
@@ -148,26 +149,21 @@ function StreamingInputs({ form }: { form: FieldForm }) {
     )
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-1 gap-3">
-        <CountrySelect
-          id={inputId('metadata.streaming.country')}
-          label="Streaming country"
-          placeholder={defaults.country || 'Country'}
-          value={draft.streamingCountry}
-          onValueChange={(value) => set('streamingCountry', value, 'metadata.streaming.country')}
-          error={errors['metadata.streaming.country']}
-        />
-        <TextField
-          id={inputId('metadata.streaming.platforms')}
-          label="Streaming platforms"
-          autoComplete="off"
-          hint="Separate with commas."
-          value={draft.streamingPlatforms}
-          onChange={(event) =>
-            set('streamingPlatforms', event.target.value, 'metadata.streaming.platforms')
+      {/* F011-W1: the country is not asked here. The contract still requires it on every streaming
+          object, so the draft sends the item's own country, or the one from Settings when it has
+          none (`toFields`). */}
+      <div>
+        <p className="mb-1.5 text-sm text-text">Streaming platforms</p>
+        <StreamingPlatforms
+          value={platforms}
+          onChange={(next) =>
+            set('streamingPlatforms', next.join(', '), 'metadata.streaming.platforms')
           }
           error={errors['metadata.streaming.platforms']}
         />
+        {errors['metadata.streaming.country'] && (
+          <p className="mt-1.5 text-xs text-danger-text">{errors['metadata.streaming.country']}</p>
+        )}
       </div>
       {platforms.length > 0 && (
         <div role="group" aria-label="Paid platforms" className="flex flex-col gap-1.5">

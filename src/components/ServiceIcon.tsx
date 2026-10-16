@@ -64,6 +64,21 @@ const linkEntries: Record<string, Entry> = {
 const normalize = (name: string) => name.toLowerCase().replace(/[^a-z0-9+]/g, '')
 
 /**
+ * The streaming services offered in the item's picker, in display order. These are the ones with a
+ * logo in `src/assets/services/`; any other service is still allowed (it gets the letter tile), but
+ * it has to be typed rather than ticked.
+ */
+export const STREAMING_SERVICES = [
+  netflixEntry,
+  primeEntry,
+  disneyEntry,
+  appleEntry,
+  youtubeEntry,
+  timEntry,
+  infinityEntry,
+].map((entry) => entry.label)
+
+/**
  * F009-W5: one tile geometry for every link and streaming icon. A square with the `rounded-md`
  * radius, a hairline border and the neutral `fill` surface (a translucent ink in light, a
  * translucent white in dark, both from `tokens.css`). `size` is the only thing that varies: a

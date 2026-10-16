@@ -352,7 +352,9 @@ export function validate(draft: Draft, defaults: Defaults): ErrorMap {
     const platforms = parsePlatforms(draft.streamingPlatforms)
     const country = draft.streamingCountry.trim().toUpperCase() || defaults.country.toUpperCase()
     if ((platforms.length > 0 || draft.streamingCountry.trim()) && !/^[A-Z]{2}$/.test(country)) {
-      errors['metadata.streaming.country'] = 'Enter a two-letter country code, e.g. IT.'
+      // F011-W1: the country is no longer asked on the item (it comes from Settings), so this only
+      // fires when Settings has none either, and the message has to say where to fix it.
+      errors['metadata.streaming.country'] = 'Pick a streaming country in Settings first.'
     }
     if (platforms.length > MAX_PLATFORMS) {
       errors['metadata.streaming.platforms'] = `List at most ${MAX_PLATFORMS} platforms.`
