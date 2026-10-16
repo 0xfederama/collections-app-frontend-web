@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useMatch, useNavigate } from 'react-router'
 import { useToast } from '../../components/ui'
 import { arrayMove, type SortableMove } from '../../components/ui/sortable'
+import { readSession, STORAGE_KEYS, writeSession } from '../../lib/storage'
 import { treeKeys, useTreeIndex, type TreeData, type TreeNode } from './api'
 import { DeleteDialog } from './DeleteDialog'
 import {
@@ -16,7 +17,7 @@ import {
   useReorderSiblings,
   useUpdateList,
 } from './mutations'
-import { MoveDialog } from './MoveDialog'
+import { MoveDialog, listPathOptions } from './MoveDialog'
 import { NameDialog } from './NameDialog'
 import { countsText } from '../trash/model'
 import { buildSortable, canDropInto, subtreeCounts } from './order'
@@ -43,6 +44,17 @@ export interface TreeActions {
 }
 
 const nameOf = (node: TreeNode) => (node.kind === 'folder' ? node.folder.name : node.list.name)
+
+/**
+ * The folder the last created list went into, so the next "New list" opens there. Session
+ * storage: gone when the tab closes, never sent anywhere. `null` means the top level.
+ */
+const lastListFolder = () =>
+  readSession<string | null>(
+    STORAGE_KEYS.listFolder,
+    (raw) => (raw === null || typeof raw === 'string' ? raw : undefined),
+    null,
+  )
 
 /**
  * All the tree's write flows: create, rename, move, delete, move up/down and drag
@@ -168,6 +180,12 @@ export function useTreeDialogs({
           submitLabel="Create"
           noun={dialog.kind}
           kind={isFolder ? undefined : { initial: 'generic' }}
+          // Only a list can be aimed at a folder from the dialog; a folder keeps its opener's parent.
+          path={
+            isFolder
+              ? undefined
+              : { options: listPathOptions(index), initial: dialog.parentId ?? lastListFolder() }
+          }
           onClose={close}
           onCloseAutoFocus={(event) => {
             const id = created.current
@@ -176,7 +194,7 @@ export function useTreeDialogs({
             event.preventDefault()
             focusCreated(id)
           }}
-          onSubmit={async (name, kind) => {
+          onSubmit={async (name, kind, folderId) => {
             if (isFolder) {
               const folder = await createFolder.mutateAsync({ name, parentId: dialog.parentId })
               created.current = folder.id
@@ -184,9 +202,11 @@ export function useTreeDialogs({
               onCreatedFolder?.(dialog.parentId)
               toast({ kind: 'success', title: `Folder “${name}” created` })
             } else {
-              const list = await createList.mutateAsync({ name, kind, folderId: dialog.parentId })
+              const list = await createList.mutateAsync({ name, kind, folderId })
               created.current = list.id
               onCreated?.(list.id)
+              // The next "New list" opens on the folder this one went into (session only).
+              writeSession(STORAGE_KEYS.listFolder, folderId)
               toast({ kind: 'success', title: `List “${name}” created` })
               void navigate(`/lists/${list.id}`)
             }

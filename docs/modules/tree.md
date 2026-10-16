@@ -11,7 +11,7 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `useExpandedFolders.ts`: persisted expanded folder ids.
 - `mutations.ts`: folder and list write hooks, `useReorderSiblings`.
 - `useTreeDialogs.tsx`: all write flows; returns `{ actions, dialogs }`.
-- `NameDialog.tsx`: create and rename (a kind picker only on create).
+- `NameDialog.tsx`: create and rename (a kind picker, and a folder picker for a new list, only on create).
 - `MoveDialog.tsx`, `DeleteDialog.tsx`, `DestinationPicker.tsx`, `FormError.tsx`, `useAction.ts`: dialogs.
 - `NodeMenu.tsx`, `ListActionsMenu.tsx`, `TreeActionsContext.tsx`, `slots.tsx`: row menu, list header menu, "+" menu.
 - `order.ts` (sibling order, `canDropInto`), `errors.ts`, `ListGate.tsx`: error classes, list-id gate.
@@ -24,6 +24,7 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 - `useCreateFolder()`, `useCreateList()`, `useRenameFolder()`, `useUpdateList()`, `useMoveFolder()`, `useMoveList()`, `useDeleteFolder()`, `useDeleteList()`: `If-Match` from `version`; success calls `invalidateContent`.
 - `useReorderSiblings()`: `mutate({ kind, parentId, ids })`; optimistic, rolled back on error.
 - `useTreeDialogs({ onCreatedFolder? })`: `{ actions, dialogs }`; actions: create, rename, move, remove, applyMove.
+- `listPathOptions(index)`, `ROOT_KEY`, `destinationKey(id)`, `destinationId(key)` (`MoveDialog.tsx`): the folders a new list can go into, and the top-level key of `DestinationPicker`.
 - `ListActionsMenu({ list })`: list header "…" menu (Kind, rename, move, delete) with its own dialogs.
 - `useChangeKind(list)` (`useChangeKind.tsx`): `{ pick(kind), dialog }`; the confirm clears item kind fields.
 - `canDropInto(index, sourceId, folderId)`: `order.ts`.
@@ -32,6 +33,9 @@ The sidebar folder and list tree: the `GET /api/v1/tree` query and index, expand
 ## Gotchas
 
 - Create, move and reorder bodies always send the parent field (`parent_folder_id` / `folder_id`); `null` is root (D-060).
+- F010-W1: the "New list" dialog also picks the folder. Default = the opener's folder if the menu said "New list inside X", else the folder the last created list went into, else the top level. That memory is `sessionStorage` (`collection:list-folder`, `null` = top level), written only after a list is really created, and a stale id falls back to the top level. Frontend only: `folder_id` was already part of `POST /lists`. Only lists get it; a folder dialog has none.
+- F011-W6 (2026-10-16): the folder is a **`Select` dropdown beside the Kind one** (`sm:grid-cols-2`), not a list of radios — `DestinationPicker` is now only used by the Move and Restore dialogs. Options come from `listPathOptions` as `SelectOption`s, labelled with the full path (`Films › Watchlist`) because a dropdown cannot show the move picker's indentation. The dialog description still follows the choice.
+- F011-W4 (2026-10-16): a tree row's "…" button paints **no hover fill of its own** (`hover:bg-transparent hover:text-text`); inside a hovered row it drew a second box as big as the row. The row keeps its one full-width pill. `+ New` uses an inset focus ring (`focus-visible:-outline-offset-2` + `focus-visible:bg-fill-hover`): the outer one was clipped by the scroll container.
 - A 412 keeps the draft and offers "Reload latest"; success and 404/409 call `invalidateContent`, 412 does not.
 - Reorder moves same-kind siblings under one parent only, by dragging the row. Cross-parent moves use the Move dialog.
 - A pointer drag (mouse, touch, pen) can also drop a row onto a folder row (`acceptsDrop` = `canDropInto`: not itself, not a descendant, not its current parent). Keyboard drags only reorder.

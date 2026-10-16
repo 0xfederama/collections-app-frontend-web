@@ -38,6 +38,22 @@ async function renderOverride(over: Partial<Item>) {
 
 const links = () => within(screen.getByRole('group', { name: 'External links' }))
 
+/** F009-W1: a kind field is added on demand with "+ Add field". */
+async function addField(user: ReturnType<typeof userEvent.setup>, label: string) {
+  await user.click(screen.getByRole('button', { name: 'Add field' }))
+  await user.click(await screen.findByRole('menuitem', { name: label }))
+}
+
+/**
+ * Adds a field so its saved value reads in the row. An empty one opens its editor, which is
+ * closed again; a field that already had a value is only revealed, so nothing is opened.
+ */
+async function reveal(user: ReturnType<typeof userEvent.setup>, label: string) {
+  await addField(user, label)
+  const cancel = screen.queryByRole('button', { name: `Cancel editing ${label.toLowerCase()}` })
+  if (cancel) await user.click(cancel)
+}
+
 describe('AT-13 item view: the example movie', () => {
   it('shows the title and Google, Letterboxd, IMDb for a movie, with a kind label but no status or summary (F007-W7, W8)', async () => {
     await renderItem()
@@ -64,38 +80,94 @@ describe('AT-13 item view: the example movie', () => {
     expect(links().queryByRole('button', { name: 'Add website' })).not.toBeInTheDocument()
   })
 
-  it('shows the kind section with units and streaming icons, and no IMDb row (F-002)', async () => {
+  it('F009-W1 shows only title, links and description: no kind row and no price before "+"', async () => {
     await renderItem()
+    // The example movie has a year, a runtime and streaming: none of them is shown by default.
+    expect(await screen.findByRole('heading', { name: 'Description' })).toBeVisible()
+    expect(screen.queryByRole('heading', { name: 'Details' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Streaming', level: 2 })).not.toBeInTheDocument()
+    expect(screen.queryByRole('term')).not.toBeInTheDocument()
+    expect(screen.queryByText('136 min')).not.toBeInTheDocument()
+    expect(screen.queryByText('1999')).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Platforms' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add field' })).toBeVisible()
+  })
+
+  it('F009-W1 adds a saved kind field with "+" and shows its value read-only, with no IMDb row (F-002)', async () => {
+    const user = userEvent.setup()
+    await renderItem()
+    await reveal(user, 'Runtime')
     const details = (await screen.findByRole('heading', { name: 'Details' })).closest('section')!
-    expect(within(details).getByText('136 min')).toBeInTheDocument()
-    expect(within(details).getByText('1999')).toBeInTheDocument()
+    expect(within(details).getByText('136 min')).toBeVisible()
+    expect(within(details).getByText('Runtime')).toBeVisible()
+    // F-002: the IMDb code only feeds the IMDb link button, it is never a row.
     expect(within(details).queryByText('IMDb')).not.toBeInTheDocument()
     expect(within(details).queryByRole('link', { name: /IMDb/ })).not.toBeInTheDocument()
-    // Streaming is its own section; its heading carries the country (F-002 finish review).
-    const streaming = screen.getByRole('heading', { name: 'Streaming · Italy' }).closest('section')!
-    expect(within(details).queryByRole('list', { name: 'Platforms' })).not.toBeInTheDocument()
-    expect(screen.queryByText(/Streaming in /)).not.toBeInTheDocument()
+    // Once shown it leaves the menu; the other kind fields are still offered.
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    const menu = await screen.findByRole('menu')
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((i) => i.textContent),
+    ).toEqual(['Release year', 'Streaming', 'Website'])
+    // Revealing a field that already has a value does not drop the user into an editor.
+    await user.click(within(menu).getByRole('menuitem', { name: 'Streaming' }))
+    expect(screen.queryByRole('textbox', { name: /Streaming/ })).not.toBeInTheDocument()
+  })
+
+  it('F009-W1 a saved website stays visible by default', async () => {
+    await renderOverride({ kind: 'generic', website: 'https://www.thematrix.com/' })
+    await screen.findByRole('heading', { name: 'Description' })
+    expect(screen.getByText('https://www.thematrix.com/')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Edit website' })).toBeVisible()
+  })
+
+  it('F009-W6 the streaming row reads "Streaming", with the platforms centred, and the country is in Settings', async () => {
+    const user = userEvent.setup()
+    await renderItem()
+    await reveal(user, 'Streaming')
+    const heading = await screen.findByRole('heading', { name: 'Streaming', level: 2 })
+    const streaming = heading.closest('section')!
+    // The country is not repeated in the label; it comes from Settings.
+    expect(heading).toHaveTextContent('Streaming')
     const platforms = within(streaming).getByRole('list', { name: 'Platforms' })
+    expect(platforms).toHaveClass('justify-center')
+    expect(within(platforms).getAllByRole('listitem')[0]).toHaveClass('items-center')
     expect(within(platforms).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
     expect(within(platforms).getByRole('img', { name: 'Prime Video, paid' })).toBeInTheDocument()
     expect(within(streaming).queryByRole('note')).not.toBeInTheDocument()
   })
 
+  it('F009-W6 the streaming hover bar is taller with even padding (min-h-10 py-1)', async () => {
+    const user = userEvent.setup()
+    await renderItem()
+    await reveal(user, 'Streaming')
+    const list = await screen.findByRole('list', { name: 'Platforms' })
+    const bar = list.closest('div.cursor-text')
+    expect(bar).toHaveClass('min-h-10', 'py-1')
+  })
+
   it('warns when the streaming country differs from the settings country', async () => {
+    const user = userEvent.setup()
     overrideItem({
       metadata: { ...matrix.metadata, streaming: { country: 'US', platforms: ['Hulu'] } },
     })
     await renderItem()
+    await reveal(user, 'Streaming')
     const note = await screen.findByRole('note')
     expect(note).toHaveTextContent(/Italy/)
     expect(note).toHaveTextContent(/United States/)
-    expect(screen.getByRole('heading', { name: 'Streaming · United States' })).toBeInTheDocument()
+    // The heading stays plain; the mismatch note is where the country is named.
+    expect(screen.getByRole('heading', { name: 'Streaming', level: 2 })).toBeInTheDocument()
   })
 
   it('shows no warning while the settings are unknown', async () => {
+    const user = userEvent.setup()
     server.use(http.get(settingsUrl, () => problemResponse(500, 'internal_error')))
     await renderItem()
-    await screen.findByRole('heading', { name: 'Streaming · Italy' })
+    await reveal(user, 'Streaming')
+    await screen.findByRole('heading', { name: 'Streaming', level: 2 })
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
   })
 
@@ -115,14 +187,56 @@ describe('AT-13 item view: the example movie', () => {
     expect(within(footer).getByText(/^Updated/)).toBeInTheDocument()
   })
 
-  it('F-002 the "…" menu has Move and Delete too', async () => {
-    await renderItem()
+  it('F009-W4 the "…" menu is gone: no Item actions button, Delete opens its confirmation from the footer', async () => {
     const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Item actions' }))
-    const menu = await screen.findByRole('menu')
-    expect(within(menu).getByRole('menuitem', { name: 'Move' })).toBeInTheDocument()
-    await user.click(within(menu).getByRole('menuitem', { name: 'Delete' }))
-    expect(await screen.findByRole('alertdialog')).toHaveTextContent('Delete “The Matrix”?')
+    await renderItem()
+    expect(screen.queryByRole('button', { name: 'Item actions' })).not.toBeInTheDocument()
+    const footer = screen.getByRole('contentinfo')
+
+    await user.click(within(footer).getByRole('button', { name: 'Delete' }))
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('Delete “The Matrix”?')
+    // Cancel keeps us on the page, with the footer still there.
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    const after = screen.getByRole('contentinfo')
+    expect(within(after).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    expect(within(after).getByRole('button', { name: 'Move' })).toBeInTheDocument()
+  })
+
+  it('F009-W4 the footer Move and Delete are keyboard reachable', async () => {
+    const user = userEvent.setup()
+    await renderItem()
+    const remove = within(screen.getByRole('contentinfo')).getByRole('button', { name: 'Delete' })
+    // A real <button>: it takes focus and answers Enter, no pointer needed.
+    remove.focus()
+    expect(remove).toHaveFocus()
+    await user.keyboard('{Enter}')
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+
+    const move = within(screen.getByRole('contentinfo')).getByRole('button', { name: 'Move' })
+    move.focus()
+    expect(move).toHaveFocus()
+    await user.keyboard('{Enter}')
+    expect(await screen.findByRole('dialog', { name: /Move “The Matrix”/ })).toBeInTheDocument()
+  })
+
+  it('F009-W4 the full page ends with Move, Delete and Updated', async () => {
+    mockViewport(1100)
+    renderAt(PATH)
+    await screen.findByRole('heading', { name: 'The Matrix', level: 1 })
+    const article = screen.getByRole('article')
+    const footer = screen.getByRole('contentinfo')
+    // The footer is the last thing of the item: below it there is nothing but the page itself.
+    expect(article.lastElementChild).toBe(footer)
+    expect(
+      within(footer)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Move', 'Delete'])
+    expect(within(footer).getByText(/^Updated/)).toBeInTheDocument()
   })
 
   it('has a Back link to the list on a full page', async () => {
@@ -136,11 +250,14 @@ describe('AT-13 item view: the example movie', () => {
 
 describe('item view: kinds', () => {
   it('tv show: ongoing run reads 2019–present', async () => {
+    const user = userEvent.setup()
     await renderOverride({
       title: 'Severance',
       kind: 'tv_show',
       metadata: { first_air_year: 2019, seasons: 2 },
     })
+    await reveal(user, 'Years')
+    await reveal(user, 'Seasons')
     expect(await screen.findByText('2019–present')).toBeInTheDocument()
     expect(screen.getByText('Years')).toBeInTheDocument()
     expect(screen.getByText('Seasons').nextElementSibling).toHaveTextContent('2')
@@ -152,11 +269,13 @@ describe('item view: kinds', () => {
   })
 
   it('tv show: finished run reads 2019–2023', async () => {
+    const user = userEvent.setup()
     await renderOverride({
       title: 'Severance',
       kind: 'tv_show',
       metadata: { first_air_year: 2019, end_year: 2023 },
     })
+    await reveal(user, 'Years')
     expect(await screen.findByText('2019–2023')).toBeInTheDocument()
   })
 
@@ -177,32 +296,42 @@ describe('item view: kinds', () => {
   })
 
   it('motorcycle shows its units', async () => {
+    const user = userEvent.setup()
     await renderOverride({
       title: 'Ducati Monster',
       kind: 'motorcycle',
       metadata: { displacement_cc: 937, power_hp: 111, license_class: 'A' },
     })
+    await reveal(user, 'Displacement')
+    await reveal(user, 'Power')
     expect(await screen.findByText('937 cc')).toBeInTheDocument()
     expect(screen.getByText('111 hp')).toBeInTheDocument()
   })
 
   it('car shows units and enum labels', async () => {
+    const user = userEvent.setup()
     await renderOverride({
       title: 'Golf',
       kind: 'car',
       metadata: { power_hp: 111, fuel_type: 'plugin_hybrid', model_year: 2021 },
     })
+    await reveal(user, 'Fuel')
+    await reveal(user, 'Power')
+    await reveal(user, 'Model year')
     expect(await screen.findByText('111 hp')).toBeInTheDocument()
     expect(screen.getByText('Plug-in hybrid')).toBeInTheDocument()
     expect(screen.getByText('2021')).toBeInTheDocument()
   })
 
   it('camera shows megapixels', async () => {
+    const user = userEvent.setup()
     await renderOverride({
       title: 'Alpha',
       kind: 'camera',
       metadata: { megapixels: 24.2, sensor_format: 'full_frame' },
     })
+    await reveal(user, 'Sensor')
+    await reveal(user, 'Resolution')
     expect(await screen.findByText('24.2 MP')).toBeInTheDocument()
     expect(screen.getByText('Full frame')).toBeInTheDocument()
   })
@@ -223,13 +352,43 @@ describe('item view: kinds', () => {
   })
 
   it('F007-W8 a single price reads € 1,200, a range € 1,000–1,400, no price shows nothing', async () => {
-    await renderOverride({ price: { min: '1200.00', max: '1200.00', currency: 'EUR' } })
+    // Price exists on motorcycle, car and camera only (D-085), and is added on demand (F009-W1).
+    const user = userEvent.setup()
+    await renderOverride({
+      kind: 'car',
+      metadata: {},
+      price: { min: '1200.00', max: '1200.00', currency: 'EUR' },
+    })
+    await reveal(user, 'Price')
     expect(await screen.findByText(/^€\s?1,200$/)).toBeInTheDocument()
   })
 
   it('F007-W8 a range shows both bounds, each with the currency', async () => {
-    await renderOverride({ price: { min: '1000.00', max: '1400.00', currency: 'EUR' } })
+    const user = userEvent.setup()
+    await renderOverride({
+      kind: 'car',
+      metadata: {},
+      price: { min: '1000.00', max: '1400.00', currency: 'EUR' },
+    })
+    await reveal(user, 'Price')
     expect(await screen.findByText(/^€\s1,000–1,400$/)).toBeInTheDocument()
+  })
+
+  it('F009-W2 a movie offers no Price field', async () => {
+    const user = userEvent.setup()
+    await renderOverride({ title: 'Heat', kind: 'movie', metadata: {} })
+    await screen.findByRole('heading', { name: 'Description' })
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    expect(await screen.findByRole('menuitem', { name: 'Website' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Price' })).not.toBeInTheDocument()
+  })
+
+  it('F009-W2 a car offers Price', async () => {
+    const user = userEvent.setup()
+    await renderOverride({ title: 'Miata', kind: 'car', metadata: {} })
+    await screen.findByRole('heading', { name: 'Description' })
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    expect(await screen.findByRole('menuitem', { name: 'Price' })).toBeInTheDocument()
   })
 
   it('F007-W8 an item without a price shows no price', async () => {

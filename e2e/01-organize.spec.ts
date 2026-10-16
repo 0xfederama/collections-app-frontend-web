@@ -14,6 +14,63 @@ async function orderOf(page: Page, names: string[]) {
     .filter((n): n is string => n !== undefined)
 }
 
+test.describe('F010-W1 the folder path of a new list', () => {
+  test('choose the folder in the dialog; the next list remembers it for the session', async ({
+    page,
+  }) => {
+    const folderName = uniqueName('Shelf')
+    await page.goto('/')
+    await createViaSidebar(page, 'folder', folderName)
+    await expect(row(page, folderName)).toBeVisible()
+
+    const first = uniqueName('Vinyl')
+    // F011-W6: the folder is a dropdown beside the Kind one, opening on the top level.
+    const newList = () => page.getByRole('dialog', { name: 'New list' })
+    const folderSelect = () => newList().getByRole('combobox', { name: 'Folder' })
+    await page.getByRole('button', { name: 'New', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'List', exact: true }).click()
+    await expect(folderSelect()).toHaveText('Top level')
+    await expect(newList().getByText('It will be created at the top level.')).toBeVisible()
+
+    // Pick the folder: the description follows the choice and the list lands there.
+    await folderSelect().click()
+    await page.getByRole('option', { name: folderName, exact: true }).click()
+    await expect(newList().getByText(`It will be created inside “${folderName}”.`)).toBeVisible()
+    await newList().getByRole('textbox', { name: 'Name' }).fill(first)
+    await newList().getByRole('button', { name: 'Create' }).click()
+    await expect(newList()).toBeHidden()
+    await expect(row(page, first)).toHaveAttribute('aria-level', '2')
+
+    // The next list in the same session opens on the same folder.
+    const second = uniqueName('Cassettes')
+    await page.getByRole('button', { name: 'New', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'List', exact: true }).click()
+    await expect(folderSelect()).toHaveText(folderName)
+    await newList().getByRole('textbox', { name: 'Name' }).fill(second)
+    await newList().getByRole('button', { name: 'Create' }).click()
+    await expect(newList()).toBeHidden()
+    await expect(row(page, second)).toHaveAttribute('aria-level', '2')
+
+    // It is remembered in sessionStorage only: a new session starts at the top level again.
+    const stored = await page.evaluate(() => sessionStorage.getItem('collection:list-folder'))
+    expect(stored).not.toBeNull()
+    expect(await page.evaluate(() => localStorage.getItem('collection:list-folder'))).toBeNull()
+
+    await page.reload()
+    await page.getByRole('button', { name: 'New', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'List', exact: true }).click()
+    await expect(folderSelect()).toHaveText(folderName)
+
+    // Picking "Top level" again is remembered too.
+    await folderSelect().click()
+    await page.getByRole('option', { name: 'Top level' }).click()
+    await newList().getByRole('textbox', { name: 'Name' }).fill(uniqueName('Loose'))
+    await newList().getByRole('button', { name: 'Create' }).click()
+    await expect(newList()).toBeHidden()
+    expect(await page.evaluate(() => sessionStorage.getItem('collection:list-folder'))).toBe('null')
+  })
+})
+
 test.describe('AT-03 organize folders and lists', () => {
   test('create a folder and a Movie list, move the list root -> folder -> root', async ({
     page,

@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
 import { devTree, devTreeState } from './devData'
+import { hasPrice } from '../features/items/kinds'
 import { problemResponse } from './problems'
 
 type Tree = components['schemas']['Tree']
@@ -76,7 +77,7 @@ function makeItems(list: List, count: number): ItemSummary[] {
       kind,
       image,
       price:
-        priced === 0 || kind === 'generic'
+        priced === 0 || !hasPrice(kind)
           ? null
           : priced === 1
             ? { min: String(500 + i * 25), max: String(500 + i * 25), currency: 'EUR' }
@@ -149,7 +150,10 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
       if (!all || !list) return problemResponse(404, 'not_found')
       const query = new URL(request.url).searchParams
       const sort = (query.get('sort') as SortMode | null) ?? list.sort_mode
-      if ((sort === 'kind_key' || sort === 'price') && list.kind === 'generic') {
+      if (
+        (sort === 'kind_key' && list.kind === 'generic') ||
+        (sort === 'price' && !hasPrice(list.kind))
+      ) {
         return problemResponse(400, 'invalid_parameter')
       }
       const q = (query.get('q') ?? '').toLowerCase()

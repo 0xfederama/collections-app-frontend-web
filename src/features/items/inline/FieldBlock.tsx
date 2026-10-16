@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { ServiceIcon } from '../../../components/ServiceIcon'
 import { Button, Menu, type MenuItem } from '../../../components/ui'
 import { Plus, TriangleAlert } from '../../../components/ui/icons'
 import { useSettings } from '../../settings/api'
+import { hasPrice } from '../kinds'
 import type { Draft } from '../form/draft'
 import type { Item } from '../api'
 import { InlineField } from './InlineField'
@@ -28,9 +29,9 @@ function StreamingValue({ item }: { item: Item }) {
   return (
     <div className="flex flex-col gap-1.5">
       {streaming.platforms?.length ? (
-        <ul aria-label="Platforms" className="flex flex-wrap items-center gap-2">
+        <ul aria-label="Platforms" className="flex flex-wrap items-center justify-center gap-2">
           {streaming.platforms.map((name) => (
-            <li key={name}>
+            <li key={name} className="flex items-center justify-center">
               <ServiceIcon name={name} paid={paid.has(name.toLowerCase())} />
             </li>
           ))}
@@ -67,8 +68,9 @@ interface Adding {
 }
 
 /**
- * The detail rows: the kind's fields, then price and website. Set ones show their label and value
- * and are edited in place; unset ones are hidden and offered by "+ Add field".
+ * The detail rows. F009-W1: the calm default is title, image, website and description; every kind
+ * field (price included) is added with "+ Add field", which offers exactly the fields this kind
+ * defines. A row is edited in place; adding one is local state, never a saved setting.
  */
 export function FieldBlock({
   item,
@@ -79,9 +81,11 @@ export function FieldBlock({
   addWebsiteRequest?: number
 }) {
   const kind = kindSpecs(item.kind)
-  // A generic item has no price and no kind fields (F008-W14).
-  const isGeneric = item.kind === 'generic'
-  const specs = isGeneric ? [websiteSpec] : [...kind, priceSpec, websiteSpec]
+  // A generic item has no kind fields, and only the kinds with a price get the price field (D-085).
+  const price = hasPrice(item.kind) ? [priceSpec] : []
+  const specs = [...kind, ...price, websiteSpec]
+  /** Ids the user added with "+ Add field"; they stay shown until the page is left. */
+  const [added, setAdded] = useState<string[]>([])
   const [adding, setAdding] = useState<Adding[]>([])
   const [handledRequest, setHandledRequest] = useState(addWebsiteRequest)
   if (addWebsiteRequest !== handledRequest) {
@@ -89,78 +93,92 @@ export function FieldBlock({
     if (!websiteSpec.isSet(item) && !adding.some((entry) => entry.id === websiteSpec.id))
       setAdding([...adding, { id: websiteSpec.id }])
   }
-  const open = (entry: Adding) => setAdding((current) => [...current, entry])
+  /**
+   * "+ Add field" on a field that already has a value only reveals it: the user asked to read it.
+   * A field still empty opens its editor straight away, since that is what they are there to do.
+   */
+  const reveal = (spec: FieldSpec, initialDraft?: Partial<Draft>) => {
+    setAdded((current) => (current.includes(spec.id) ? current : [...current, spec.id]))
+    if (spec.isSet(item)) return
+    setAdding((current) => [...current, { id: spec.id, initialDraft }])
+  }
   const closed = (id: string) => setAdding((current) => current.filter((entry) => entry.id !== id))
   const isAdding = (spec: FieldSpec) => adding.some((entry) => entry.id === spec.id)
+  // Website belongs to the calm default, so a saved one shows without asking; a kind field shows
+  // only once it has been added (or while its editor is open).
+  const isShown = (spec: FieldSpec) =>
+    spec.id === websiteSpec.id
+      ? spec.isSet(item) || isAdding(spec)
+      : added.includes(spec.id) || isAdding(spec)
 
   const streamingSpec = specs.find((spec) => spec.id === STREAMING_ID)
-  const streamingData = (item.metadata as Record<string, unknown>).streaming as
-    Streaming | undefined
-  const shown = specs.filter(
-    (spec) => spec.id !== STREAMING_ID && (spec.isSet(item) || isAdding(spec)),
-  )
-  const showStreaming = streamingSpec && (streamingSpec.isSet(item) || isAdding(streamingSpec))
-  const missing = (list: FieldSpec[]) => list.filter((spec) => !spec.isSet(item) && !isAdding(spec))
+  const showStreaming = streamingSpec !== undefined && isShown(streamingSpec)
+  const rows = specs.filter((spec) => spec.id !== STREAMING_ID && isShown(spec))
+  /** Every field of the kind that is not shown yet, set or not: "+ Add field" offers them all. */
+  const offerable = (list: FieldSpec[]) => list.filter((spec) => !isShown(spec))
   const entries = (list: FieldSpec[]): MenuItem[] =>
-    missing(list).flatMap((spec) =>
-      spec.id === priceSpec.id
-        ? [{ label: spec.label, onSelect: () => open({ id: spec.id, initialDraft: newPrice() }) }]
-        : [{ label: spec.label, onSelect: () => open({ id: spec.id }) }],
-    )
+    offerable(list).map((spec) => ({
+      label: spec.label,
+      onSelect: () => reveal(spec, spec.id === priceSpec.id ? newPrice() : undefined),
+    }))
   const kindEntries = entries(kind)
-  const anyEntries = entries(isGeneric ? [websiteSpec] : [priceSpec, websiteSpec])
+  const anyEntries = entries([...price, websiteSpec])
   const menu: MenuItem[] = [
     ...kindEntries,
     ...(kindEntries.length > 0 && anyEntries.length > 0 ? [{ type: 'separator' as const }] : []),
     ...anyEntries,
   ]
 
-  if (shown.length === 0 && menu.length === 0 && !showStreaming) return null
+  if (rows.length === 0 && menu.length === 0 && !showStreaming) return null
+  const editor = (spec: FieldSpec, children: ReactNode, barClassName?: string) => (
+    <InlineField
+      item={item}
+      spec={spec}
+      startOpen={isAdding(spec)}
+      initialDraft={adding.find((entry) => entry.id === spec.id)?.initialDraft}
+      onClose={() => closed(spec.id)}
+      barClassName={barClassName}
+    >
+      {children}
+    </InlineField>
+  )
   return (
     <>
-      {showStreaming && (
+      {showStreaming && streamingSpec && (
         <section aria-labelledby="item-streaming" className="flex flex-col gap-2 text-sm">
+          {/* W6: the country lives in Settings, so the heading does not repeat it; it is only named
+              when the item's country differs (the note under the platforms). */}
           <h2 id="item-streaming" className="text-sm font-semibold text-text-muted">
-            Streaming{streamingData?.country ? ` · ${countryName(streamingData.country)}` : ''}
+            Streaming
           </h2>
-          <InlineField
-            item={item}
-            spec={streamingSpec}
-            startOpen={isAdding(streamingSpec)}
-            initialDraft={adding.find((entry) => entry.id === streamingSpec.id)?.initialDraft}
-            onClose={() => closed(streamingSpec.id)}
-          >
-            <StreamingValue item={item} />
-          </InlineField>
+          {/* W6: a taller hover bar with even padding around the tiles. */}
+          {editor(streamingSpec, <StreamingValue item={item} />, 'min-h-10 py-1')}
         </section>
       )}
-      {(shown.length > 0 || menu.length > 0) && (
-        <section aria-labelledby="item-details" className="flex flex-col gap-3">
-          <h2 id="item-details" className="text-sm font-semibold text-text-muted">
-            Details
-          </h2>
-          {shown.length > 0 && (
-            <dl className="flex flex-col gap-1.5 text-sm">
-              {shown.map((spec) => (
-                <div
-                  key={spec.id}
-                  className="grid grid-cols-[minmax(0,1fr)] gap-x-6 gap-y-1 sm:grid-cols-[8rem_minmax(0,1fr)]"
-                >
-                  <dt className="text-text-muted">{spec.label}</dt>
-                  <dd className="min-w-0">
-                    <InlineField
-                      item={item}
-                      spec={spec}
-                      startOpen={isAdding(spec)}
-                      initialDraft={adding.find((entry) => entry.id === spec.id)?.initialDraft}
-                      onClose={() => closed(spec.id)}
-                    >
-                      <Value item={item} spec={spec} />
-                    </InlineField>
-                  </dd>
-                </div>
-              ))}
-            </dl>
+      {(rows.length > 0 || menu.length > 0) && (
+        <section
+          aria-labelledby={rows.length > 0 ? 'item-details' : undefined}
+          className="flex flex-col gap-3"
+        >
+          {rows.length > 0 && (
+            <>
+              <h2 id="item-details" className="text-sm font-semibold text-text-muted">
+                Details
+              </h2>
+              <dl className="flex flex-col gap-1.5 text-sm">
+                {rows.map((spec) => (
+                  <div
+                    key={spec.id}
+                    className="grid grid-cols-[minmax(0,1fr)] items-center gap-x-6 gap-y-1 sm:grid-cols-[8rem_minmax(0,1fr)]"
+                  >
+                    {/* F011-W5: the label takes the same height as the value row, so the name and
+                        its value sit on one line instead of drifting apart. */}
+                    <dt className="flex min-h-8 items-center text-text-muted">{spec.label}</dt>
+                    <dd className="min-w-0">{editor(spec, <Value item={item} spec={spec} />)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
           )}
           {menu.length > 0 && (
             <div>

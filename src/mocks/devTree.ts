@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
+import { hasPrice } from '../features/items/kinds'
 import { problemResponse } from './problems'
 
 type Folder = components['schemas']['Folder']
@@ -244,8 +245,8 @@ export function createTreeBackend(initial: Tree) {
       if (nextSort === 'kind_key' && nextKind === 'generic') {
         return invalid('sort_mode', 'Sorting by the kind key is not available on a generic list.')
       }
-      if (nextSort === 'price' && nextKind === 'generic') {
-        return invalid('sort_mode', 'Sorting by price is not available on a generic list.')
+      if (nextSort === 'price' && !hasPrice(nextKind)) {
+        return invalid('sort_mode', 'Sorting by price is not available on this kind.')
       }
       if (body.display_mode !== undefined) {
         if (!DISPLAY_MODES.includes(body.display_mode as DisplayMode)) {
@@ -277,8 +278,7 @@ export function createTreeBackend(initial: Tree) {
       }
       if (body.pinned_fields !== undefined) {
         const pins = body.pinned_fields
-        list.pinned_fields =
-          pins === null ? null : { under: pins.under ?? [], right: pins.right ?? [] }
+        list.pinned_fields = pins === null ? null : [...pins]
         changed = true
       }
       if (body.description !== undefined) {

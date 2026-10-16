@@ -38,5 +38,7 @@ afterEach(() => {
   server.resetHandlers()
   resetViewport()
   localStorage.clear()
+  // Session-scoped preferences (the folder a new list goes into) must not leak between tests.
+  sessionStorage.clear()
 })
 afterAll(() => server.close())

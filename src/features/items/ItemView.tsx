@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { kindIcons, kindLabels } from '../../components/ui'
 import { cx } from '../../lib/cx'
-import { useItemActions, ItemActions, ItemMenu } from './ItemActions'
+import { useItemActions, ItemActions } from './ItemActions'
 import type { Item } from './api'
 import { DescriptionField } from './content/DescriptionField'
 import { ExternalLinks } from './ExternalLinks'
@@ -19,7 +19,7 @@ const formatDate = (iso: string) =>
  * An item (UI_SPEC §4), top to bottom. Nothing here is a form: every field, the description and
  * the image are edited where they are shown (F-002), each with its own save. In the side sheet
  * (`pinned`) the body scrolls and Move / Delete / Updated stay at the bottom; on the full page
- * they follow the content.
+ * they follow the content. F009-W4: there is no "…" menu, the footer is where the page ends.
  */
 export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolean }) {
   const actions = useItemActions(item)
@@ -35,23 +35,20 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
         )}
       >
         <ItemHero item={item} />
-        {/* One title block (F008-W10): kind label above, then the title with its "…" menu on the
-            same row, then the links with "+" at the end of their line. */}
+        {/* One title block (F008-W10): kind label above, then the title, then the links with "+" at
+            the end of their line. Move and Delete are not here: they close the page (F009-W4). */}
         <header className="flex flex-col gap-2">
           <div className="flex min-w-0 flex-col gap-1">
             <p className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
               <KindIcon aria-hidden className="size-3.5" />
               {kindLabels[item.kind]}
             </p>
-            <div className="flex items-start gap-2">
-              <div className="min-w-0 flex-1">
-                <InlineField item={item} spec={titleSpec}>
-                  <h1 className="text-2xl leading-tight font-bold tracking-tight break-words sm:text-3xl">
-                    {item.title}
-                  </h1>
-                </InlineField>
-              </div>
-              <ItemMenu actions={actions} />
+            <div className="min-w-0">
+              <InlineField item={item} spec={titleSpec}>
+                <h1 className="text-2xl leading-tight font-bold tracking-tight break-words sm:text-3xl">
+                  {item.title}
+                </h1>
+              </InlineField>
             </div>
           </div>
           <ExternalLinks item={item} onAddWebsite={() => setWebsiteRequest((n) => n + 1)} />

@@ -10,8 +10,8 @@ The list screen at `/lists/:listId`: header (title alone, in-place Markdown desc
 - `ListHeader.tsx`: title, "New item" (hidden on an empty list), toolbar; `sortOptionsFor(kind)`; embeds `ListActionsMenu`.
 - `toolbarStyles.ts`: `toolbarControl` class (36 px, `rounded-md`, fill background).
 - `ListDescription.tsx`: in-place Markdown description (lazy editor, 64 KiB).
-- `pinned.ts`, `PinnedMenu.tsx`: pinned-field defaults per kind, slot resolution, the "Pinned fields" menu.
-- `ItemsView.tsx`, `ItemEntry.tsx`, `ItemThumb.tsx`: states, reorder rules, rows; `ItemThumb` falls back to `ItemInitial` (first letter).
+- `pinned.ts`, `PinnedMenu.tsx`: pinned-field defaults per kind, resolution of the ordered selection, the "Pinned fields" menu.
+- `ItemsView.tsx`, `ItemEntry.tsx`, `ItemThumb.tsx`: states, reorder rules, rows; `ItemThumb` falls back to `ItemInitial` (first letter, `firstLetter` in `src/lib/text.ts`, see [ui](ui.md)).
 - `price.ts`: `formatPrice`. `scrollRestore.ts`: scroll restore for `main`.
 - `api.ts`: `listKeys`, `useList`, `useListItems`, `useUpdateList`, `useReorderItems`.
 - `src/routes/ListRoute.tsx`: route; `ListGate` wraps `ListView`. `src/mocks/devItems.ts`: dev fake.
@@ -22,7 +22,7 @@ The list screen at `/lists/:listId`: header (title alone, in-place Markdown desc
 - `useListItems(listId, { sort, q })`, `flattenItems`, `listKeys`, `ITEMS_PAGE_SIZE` (200).
 - `useUpdateList(listId)`: PATCH `display_mode`, `sort_mode` or `pinned_fields` (`null` = kind default); optimistic.
 - `useReorderItems(listId)`: PUT of all item ids, optimistic.
-- `resolvePinned(list)`, `defaultPinned(kind)`, `pinnableFields(kind)`, `MAX_PINNED_PER_SLOT` (6): `pinned.ts`.
+- `resolvePinned(list)`, `defaultPinned(kind)`, `pinnableFields(kind)`, `pinnedPlacements(pinned)`, `MAX_PINNED` (2): `pinned.ts`.
 - `formatPrice(price)`: `€ 1,200–1,500`, `from € 1,200`, `up to € 1,500` (no cents), or `null`.
 - `ItemInitial({ title, className? })`: the no-image tile (first letter, container-query sized).
 - `useScrollRestore(anchor, ready)`: returns `remember`, called before navigating to an item.
@@ -30,8 +30,9 @@ The list screen at `/lists/:listId`: header (title alone, in-place Markdown desc
 ## Gotchas
 
 - Display modes: compact, thumbnail, grid (default). The mode is saved on the list.
-- Pinned fields: two slots, `under` and `right`, each up to 6 keys; the kind default applies until the list saves its own (`null` resets). Generic lists pin nothing and have no pinnable fields.
-- Sort options: Manual, Title, Recently updated, Price, and the kind's key. Generic lists have neither Price nor the kind key. `?sort=` overrides the saved `sort_mode`; "Make this the default" saves it.
+- Pinned fields (`pinned_fields`): an ordered array of at most 2 keys (`api-v0.7.0`, D-085), the first read beside the title and the second at the right end of the row; the kind default applies until the list saves its own (`null` resets, `[]` pins nothing). A TV show's seasons and episodes read as one `5×7` in the first placement. Generic lists pin nothing and have no pinnable fields.
+- `PinnedMenu` is one checklist with no left/right choice: ticking appends, unticking removes (so the second becomes the first), each row shows its position, and "Reset to default" sends `null`.
+- Sort options: Manual, Title, Recently updated, Price (motorcycle, car and camera only, `hasPrice` in `features/items/kinds`), and the kind's key. Generic lists have neither Price nor the kind key. `?sort=` overrides the saved `sort_mode` (an override the kind does not define is ignored); "Make this the default" saves it.
 - Kind is changed from the "…" menu (`ListActionsMenu`, see [tree](tree.md)), not from the header.
 - Drag reorder works on the whole row in Manual sort, with no filter, all items loaded and more than one item; otherwise a hint says why. Keyboard: Space picks up, arrows move.
 - Each row has an "Actions for …" menu; the row itself is the drag handle (no grip).

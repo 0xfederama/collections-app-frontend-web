@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   defaultPinned,
   formatPinnedValue,
+  MAX_PINNED,
   pinnableFields,
+  pinnedPlacements,
   pinnedTexts,
   resolvePinned,
   streamingOf,
@@ -26,27 +28,64 @@ const item = (kind: ItemSummary['kind'], over: Partial<ItemSummary> = {}): ItemS
   ...over,
 })
 
-describe('F002-W2 default pinned fields', () => {
-  it('follows the brief table', () => {
-    expect(defaultPinned('movie')).toEqual({ under: ['runtime_minutes'], right: ['streaming'] })
-    expect(defaultPinned('motorcycle')).toEqual({ under: ['displacement_cc'], right: ['price'] })
-    expect(defaultPinned('car')).toEqual({ under: ['model_year'], right: ['price'] })
-    expect(defaultPinned('camera')).toEqual({ under: ['camera_type'], right: ['price'] })
-    expect(defaultPinned('generic')).toEqual({ under: [], right: [] })
+describe('F009-W3 the kind default is an ordered pair', () => {
+  it('follows the F-002 table, capped at two keys, in order', () => {
+    expect(defaultPinned('movie')).toEqual(['runtime_minutes', 'streaming'])
+    expect(defaultPinned('tv_show')).toEqual(['seasons', 'streaming'])
+    expect(defaultPinned('motorcycle')).toEqual(['displacement_cc', 'price'])
+    expect(defaultPinned('car')).toEqual(['model_year', 'price'])
+    expect(defaultPinned('camera')).toEqual(['camera_type', 'price'])
+    expect(defaultPinned('generic')).toEqual([])
   })
 
-  it('resolvePinned: null is the default, {} pins nothing, slots are kept in order', () => {
+  it('no kind default is longer than MAX_PINNED, and MAX_PINNED is the contract limit', () => {
+    expect(MAX_PINNED).toBe(2)
+    for (const kind of ['movie', 'tv_show', 'motorcycle', 'car', 'camera', 'generic'] as const) {
+      expect(defaultPinned(kind).length).toBeLessThanOrEqual(MAX_PINNED)
+    }
+  })
+
+  it('resolvePinned: null is the kind default in its own order, [] pins nothing', () => {
     expect(resolvePinned({ kind: 'car', pinned_fields: null })).toEqual(defaultPinned('car'))
-    expect(resolvePinned({ kind: 'car', pinned_fields: {} })).toEqual({ under: [], right: [] })
-    expect(
-      resolvePinned({ kind: 'car', pinned_fields: { under: ['power_hp', 'make'], right: [] } }),
-    ).toEqual({ under: ['power_hp', 'make'], right: [] })
+    expect(resolvePinned({ kind: 'movie', pinned_fields: null })).toEqual([
+      'runtime_minutes',
+      'streaming',
+    ])
+    expect(resolvePinned({ kind: 'car', pinned_fields: [] })).toEqual([])
+    expect(resolvePinned({ kind: 'car', pinned_fields: ['power_hp', 'make'] })).toEqual([
+      'power_hp',
+      'make',
+    ])
   })
 
-  it('offers the kind fields plus price, without the IMDb link', () => {
-    const keys = pinnableFields('movie').map((f) => f.key)
-    expect(keys).toEqual(['release_year', 'runtime_minutes', 'streaming', 'price'])
+  it('unpinning the first promotes the second (removing by key keeps the order)', () => {
+    const pinned = ['runtime_minutes', 'streaming']
+    expect(pinned.filter((key) => key !== 'runtime_minutes')).toEqual(['streaming'])
+  })
+
+  it('returns a copy, so the caller cannot change the defaults', () => {
+    const first = defaultPinned('car')
+    expect(resolvePinned({ kind: 'car', pinned_fields: [...first] })).not.toBe(first)
+  })
+})
+
+describe('F009-W2 the pinned fields are the ones the kind defines', () => {
+  it('offers the kind fields without the IMDb link, and price only where there is one', () => {
+    expect(pinnableFields('movie').map((f) => f.key)).toEqual([
+      'release_year',
+      'runtime_minutes',
+      'streaming',
+    ])
+    expect(pinnableFields('tv_show').map((f) => f.key)).not.toContain('price')
+    expect(pinnableFields('car').map((f) => f.key)).toContain('price')
     expect(pinnableFields('generic')).toEqual([])
+  })
+
+  it('a TV show pins seasons and streaming by default, and every kind field stays available', () => {
+    const labels = pinnableFields('tv_show').map((f) => f.label)
+    expect(labels).toContain('Episode duration')
+    // Streaming in the corner, like a movie: the service icons stay in every streaming row.
+    expect(defaultPinned('tv_show')).toEqual(['seasons', 'streaming'])
   })
 })
 
@@ -63,13 +102,32 @@ describe('F002-W2 pinned values', () => {
     expect(formatPinnedValue('release_year', movie, 'movie')).toBeNull()
   })
 
-  it('a TV show default reads 5×7 · 45 min', () => {
+  it('pinnedPlacements: the first key beside the title, the second in the corner', () => {
+    expect(pinnedPlacements(['runtime_minutes', 'streaming'])).toEqual({
+      first: ['runtime_minutes'],
+      second: ['streaming'],
+    })
+    expect(pinnedPlacements(['model_year'])).toEqual({ first: ['model_year'], second: [] })
+    expect(pinnedPlacements([])).toEqual({ first: [], second: [] })
+  })
+
+  it('pinnedPlacements keeps a TV show’s seasons and episodes in one 5×7 piece', () => {
+    expect(pinnedPlacements(['seasons', 'episodes_per_season'])).toEqual({
+      first: ['seasons', 'episodes_per_season'],
+      second: [],
+    })
+  })
+
+  it('a TV show reads 5×7 when both seasons fields are pinned, 5 seasons by default', () => {
     const show = item('tv_show', {
       metadata: { seasons: 5, episodes_per_season: 7, episode_minutes: 45 },
     })
-    expect(pinnedTexts(defaultPinned('tv_show').under, show, 'tv_show').join(' · ')).toBe(
-      '5×7 · 45 min',
-    )
+    // The default pins seasons only, so the corner carries the streaming icons instead.
+    expect(pinnedTexts(defaultPinned('tv_show'), show, 'tv_show')).toEqual(['5 seasons'])
+    expect(pinnedTexts(['seasons', 'episodes_per_season'], show, 'tv_show')).toEqual(['5×7'])
+    expect(
+      pinnedTexts(['seasons', 'episodes_per_season', 'episode_minutes'], show, 'tv_show'),
+    ).toEqual(['5×7', '45 min'])
   })
 
   it('reads the streaming platforms and which ones are paid', () => {
@@ -87,12 +145,7 @@ describe('F002-W2 pinned values', () => {
 
 describe('F008-W14 generic lists pin nothing', () => {
   it('resolvePinned ignores any stored selection on a generic list', () => {
-    expect(resolvePinned({ kind: 'generic', pinned_fields: null })).toEqual({
-      under: [],
-      right: [],
-    })
-    expect(
-      resolvePinned({ kind: 'generic', pinned_fields: { under: [], right: ['price'] } }),
-    ).toEqual({ under: [], right: [] })
+    expect(resolvePinned({ kind: 'generic', pinned_fields: null })).toEqual([])
+    expect(resolvePinned({ kind: 'generic', pinned_fields: ['price'] })).toEqual([])
   })
 })

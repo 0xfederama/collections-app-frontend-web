@@ -20,7 +20,7 @@ import {
 import type { List as TreeList } from '../tree/api'
 import { ListActionsMenu } from '../tree/ListActionsMenu'
 import type { ItemKind } from '../items/api'
-import { sortKeyLabel } from '../items/kinds'
+import { hasPrice, sortKeyLabel } from '../items/kinds'
 import type { DisplayMode, List, PinnedFields, SortMode } from './api'
 import { ListDescription } from './ListDescription'
 import { PinnedMenu } from './PinnedMenu'
@@ -39,12 +39,15 @@ const baseSortOptions: SelectOption[] = [
   { value: 'price', label: 'Price' },
 ]
 
-/** Manual, Title, Recently updated, Price, and the kind's sort key when the kind has one (not generic). */
+/** Manual, Title, Recently updated, Price (when the kind defines one), and the kind's sort key. */
 export function sortOptionsFor(kind: ItemKind): SelectOption[] {
+  // Price exists on motorcycle, car and camera only (D-085), and generic has no kind key either.
+  const options = hasPrice(kind)
+    ? baseSortOptions
+    : baseSortOptions.filter((option) => option.value !== 'price')
   const label = sortKeyLabel(kind)
-  // Generic has no price and no kind key (F008-W14).
-  if (kind === 'generic') return baseSortOptions.filter((option) => option.value !== 'price')
-  return label ? [...baseSortOptions, { value: 'kind_key', label }] : baseSortOptions
+  if (kind === 'generic') return options
+  return label ? [...options, { value: 'kind_key', label }] : options
 }
 
 export interface ListHeaderProps {

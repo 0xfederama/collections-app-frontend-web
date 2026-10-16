@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Vendors the backend OpenAPI contract at a pinned tag (currently `api-v0.5.0`, see `api/openapi.lock.json`), generates its TypeScript types and examples, and provides the only client for server calls (`src/lib/api`), the TanStack Query defaults and the MSW mocks. Contract rules: [API.md](/Users/federico/Developer/collections-app/design-docs/API.md).
+Vendors the backend OpenAPI contract at a pinned tag (currently `api-v0.7.0`, see `api/openapi.lock.json`), generates its TypeScript types and examples, and provides the only client for server calls (`src/lib/api`), the TanStack Query defaults and the MSW mocks. Contract rules: [API.md](/Users/federico/Developer/collections-app/design-docs/API.md).
 
 ## Key files
 
@@ -31,7 +31,8 @@ Vendors the backend OpenAPI contract at a pinned tag (currently `api-v0.5.0`, se
 ## Gotchas
 
 - Never edit `api/openapi.yaml` or `src/generated/`; `api:check` fails on any byte change. Restore with `api:sync -- <tag>`.
-- Contract 0.5.0 adds list `pinned_fields` (PATCH; `null` resets), item `paid_platforms`, and kind fields such as `camera_type` and episodes.
+- Contract 0.5.0 added list `pinned_fields` (PATCH; `null` resets), item `paid_platforms`, and kind fields such as `camera_type` and episodes.
+- Contract 0.7.0 (2026-10-16, breaking) replaces the `pinned_fields` `{ under, right }` object with an ordered array of at most 2 unique keys (`string[] | null`), and makes `price` (item field and `sort_mode`) valid only on `motorcycle`, `car` and `camera`.
 - Non-2xx responses throw `ApiError`; a failed fetch throws `NetworkError`; aborts pass through unwrapped.
 - Retries: one retry only for `NetworkError` or 5xx. 4xx (including 412) is never retried.
 - `ifMatch` has no way to send `*`. The 412 `currentVersion` is exposed on `ApiError` for the conflict UI.

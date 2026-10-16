@@ -113,6 +113,94 @@ describe('AT-03 tree CRUD (web): create', () => {
     expect(await treeRow(/^Lenses/)).toBeInTheDocument()
   })
 
+  it('F010-W1 the "New list" dialog offers a folder path, top level by default', async () => {
+    const { user, backend } = await openTree()
+    await pickHeaderAction(user, 'List')
+    const dlg = await dialog()
+    // F011-W6: a dropdown beside the Kind picker, not a list of radios.
+    const folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    expect(folders).toHaveTextContent('Top level')
+    expect(within(dlg).getByText('It will be created at the top level.')).toBeInTheDocument()
+
+    // Every folder of the tree is offered, nested ones by their path.
+    await user.click(folders)
+    expect(await screen.findByRole('option', { name: 'Top level' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Gear' })).toBeInTheDocument()
+    await user.click(screen.getByRole('option', { name: 'Gear' }))
+
+    // The description follows the choice.
+    expect(within(dlg).getByText('It will be created inside “Gear”.')).toBeInTheDocument()
+    await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Lenses')
+    await user.click(within(dlg).getByRole('button', { name: 'Create' }))
+
+    await waitFor(() => expect(backend.writes('POST', '/api/v1/lists')).toHaveLength(1))
+    expect(backend.writes('POST', '/api/v1/lists')[0]?.body).toEqual({
+      name: 'Lenses',
+      kind: 'generic',
+      folder_id: ID.gear,
+    })
+  })
+
+  it('F010-W1 a folder dialog has no path picker', async () => {
+    const { user } = await openTree()
+    await pickHeaderAction(user, 'Folder')
+    const dlg = await dialog()
+    expect(within(dlg).queryByRole('combobox', { name: 'Folder' })).not.toBeInTheDocument()
+  })
+
+  it('F010-W1 "New list inside" preselects that folder, and it wins over the remembered one', async () => {
+    const { user } = await openTree()
+    // Remember "Vehicles" from an earlier list in this session.
+    await pickHeaderAction(user, 'List')
+    let dlg = await dialog()
+    let folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    await user.click(folders)
+    await user.click(await screen.findByRole('option', { name: 'Vehicles' }))
+    await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Bikes')
+    await user.click(within(dlg).getByRole('button', { name: 'Create' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    // The next "New list" opens on the folder the last one went into.
+    await pickHeaderAction(user, 'List')
+    dlg = await dialog()
+    folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    expect(folders).toHaveTextContent('Vehicles')
+    await user.click(within(dlg).getByRole('button', { name: 'Cancel' }))
+
+    // A menu that names its own folder is an explicit choice and still wins.
+    await pickRowAction(user, 'Gear', 'New list inside')
+    dlg = await dialog()
+    folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    expect(folders).toHaveTextContent('Gear')
+  })
+
+  it('F010-W1 the remembered folder is forgotten with the session, never written to localStorage', async () => {
+    const { user } = await openTree()
+    await pickHeaderAction(user, 'List')
+    const dlg = await dialog()
+    const folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    await user.click(folders)
+    await user.click(await screen.findByRole('option', { name: 'Gear' }))
+    // Nothing is remembered until a list is really created there.
+    expect(sessionStorage.getItem('collection:list-folder')).toBeNull()
+    await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Lenses')
+    await user.click(within(dlg).getByRole('button', { name: 'Create' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(sessionStorage.getItem('collection:list-folder')).toBe(JSON.stringify(ID.gear))
+    expect(localStorage.getItem('collection:list-folder')).toBeNull()
+  })
+
+  it('F010-W1 a remembered folder that is gone falls back to the top level', async () => {
+    const { user } = await openTree()
+    // Left over from an earlier session entry, now a folder that does not exist.
+    sessionStorage.setItem('collection:list-folder', JSON.stringify('folder-that-is-gone'))
+    await pickHeaderAction(user, 'List')
+    const dlg = await dialog()
+    const folders = within(dlg).getByRole('combobox', { name: 'Folder' })
+    expect(folders).toHaveTextContent('Top level')
+    expect(within(dlg).getByText('It will be created at the top level.')).toBeInTheDocument()
+  })
+
   it('trims the name before sending it', async () => {
     const { user, backend } = await openTree()
     await pickHeaderAction(user, 'Folder')

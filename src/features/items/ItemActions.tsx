@@ -1,16 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import {
-  AlertDialog,
-  Button,
-  Combobox,
-  Dialog,
-  IconButton,
-  Menu,
-  useToast,
-} from '../../components/ui'
-import { Ellipsis, FolderInput, Trash2 } from '../../components/ui/icons'
+import { AlertDialog, Button, Combobox, Dialog, useToast } from '../../components/ui'
+import { FolderInput, Trash2 } from '../../components/ui/icons'
 import { treeKeys, useTreeIndex, type TreeIndex, type TreeNode } from '../tree/api'
 import { countsText } from '../trash/model'
 import { itemKeys, useDeleteItem, useMoveItem, type Item, type ItemKind } from './api'
@@ -56,7 +48,7 @@ interface ItemActionsState {
   dialogs: ReactNode
 }
 
-/** Move and Delete share their dialogs between the footer buttons and the header "…" menu. */
+/** Move and Delete share their dialogs with the footer buttons of `ItemView`. */
 export function useItemActions(item: Item): ItemActionsState {
   const [dialog, setDialog] = useState<'move' | 'delete' | null>(null)
   return {
@@ -72,7 +64,8 @@ export function useItemActions(item: Item): ItemActionsState {
 }
 
 /**
- * Move and Delete (footer), with the dialogs of `useItemActions`. Errors follow UI_SPEC §9: 412
+ * Move and Delete at the bottom of the item page (F009-W4, superseding F-008 W10's "…" menu),
+ * with the dialogs of `useItemActions`. Errors follow UI_SPEC §9: 412
  * loads the latest item and asks to try again, 404 says the item is gone and goes back to the
  * list, 409 asks for another destination, a network failure keeps the dialog open to retry.
  */
@@ -88,24 +81,6 @@ export function ItemActions({ actions }: { actions: ItemActionsState }) {
         Delete
       </Button>
     </div>
-  )
-}
-
-/** The "…" menu of the item header: the same two actions as the footer. */
-export function ItemMenu({ actions }: { actions: ItemActionsState }) {
-  return (
-    <Menu
-      trigger={
-        <IconButton aria-label="Item actions" title="Item actions" className="size-9">
-          <Ellipsis aria-hidden />
-        </IconButton>
-      }
-      items={[
-        { label: 'Move', icon: <FolderInput />, onSelect: actions.move },
-        { type: 'separator' },
-        { label: 'Delete', icon: <Trash2 />, destructive: true, onSelect: actions.remove },
-      ]}
-    />
   )
 }
 

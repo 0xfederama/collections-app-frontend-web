@@ -1,44 +1,42 @@
 import type { components } from '../../generated/schema'
 import type { ItemKind } from '../items/api'
 import type { PinnedFields } from './api'
-import { formatField, kindFields } from '../items/kinds'
+import { formatField, hasPrice, kindFields } from '../items/kinds'
 import { formatPrice } from './price'
 
 type ItemSummary = components['schemas']['ItemSummary']
 
-/** The two slots of a list's row layout, by field key, in display order. */
-export interface PinnedSlots {
-  under: string[]
-  right: string[]
+/**
+ * The fields a list pins, by key, in order: the first reads next to the title, the second in the
+ * right corner. At most {@link MAX_PINNED} keys (the contract's limit, D-085).
+ */
+export type PinnedKeys = readonly string[]
+
+/** Most keys a list may pin, in order (the contract's limit). */
+export const MAX_PINNED = 2
+
+const DEFAULTS: Record<ItemKind, PinnedKeys> = {
+  // Streaming in the corner on both streaming kinds, so the service icons stay in every movie and
+  // TV row (F-002). Pinning `seasons` and `episodes_per_season` together still reads `5×7`.
+  movie: ['runtime_minutes', 'streaming'],
+  tv_show: ['seasons', 'streaming'],
+  motorcycle: ['displacement_cc', 'price'],
+  car: ['model_year', 'price'],
+  camera: ['camera_type', 'price'],
+  generic: [],
 }
 
-/** Most keys one slot may hold (the contract's limit). */
-export const MAX_PINNED_PER_SLOT = 6
-
-const DEFAULTS: Record<ItemKind, PinnedSlots> = {
-  movie: { under: ['runtime_minutes'], right: ['streaming'] },
-  tv_show: { under: ['seasons', 'episodes_per_season', 'episode_minutes'], right: ['streaming'] },
-  motorcycle: { under: ['displacement_cc'], right: ['price'] },
-  car: { under: ['model_year'], right: ['price'] },
-  camera: { under: ['camera_type'], right: ['price'] },
-  generic: { under: [], right: [] },
+/** The kind default (F-002 "Pinned fields" table, capped at two in F009-W3). The web owns it; the API stores `null` for it. */
+export function defaultPinned(kind: ItemKind): PinnedKeys {
+  return [...DEFAULTS[kind]]
 }
 
-/** The kind default (F-002 "Pinned fields" table). The web owns it; the API stores `null` for it. */
-export function defaultPinned(kind: ItemKind): PinnedSlots {
-  const slots = DEFAULTS[kind]
-  return { under: [...slots.under], right: [...slots.right] }
-}
-
-/** What the list shows: its own selection, else the kind default. `{}` pins nothing. */
-export function resolvePinned(list: { kind: ItemKind; pinned_fields: PinnedFields }): PinnedSlots {
+/** What the list shows: its own selection, else the kind default. `[]` pins nothing. */
+export function resolvePinned(list: { kind: ItemKind; pinned_fields: PinnedFields }): PinnedKeys {
   // A generic list has no fields at all (F008-W14): nothing is pinned, whatever was stored.
-  if (list.kind === 'generic') return { under: [], right: [] }
+  if (list.kind === 'generic') return []
   if (!list.pinned_fields) return defaultPinned(list.kind)
-  return {
-    under: [...(list.pinned_fields.under ?? [])],
-    right: [...(list.pinned_fields.right ?? [])],
-  }
+  return [...list.pinned_fields]
 }
 
 export interface PinnableField {
@@ -46,7 +44,10 @@ export interface PinnableField {
   label: string
 }
 
-/** Fields a list of this kind can pin: its kind fields (not the IMDb link), then price. */
+/**
+ * Fields a list of this kind can pin: its kind fields (not the IMDb link), then price when the
+ * kind defines one (D-085).
+ */
 export function pinnableFields(kind: ItemKind): PinnableField[] {
   if (kind === 'generic') return []
   const fields = kindFields[kind]
@@ -55,7 +56,7 @@ export function pinnableFields(kind: ItemKind): PinnableField[] {
       key,
       label: key === 'episode_minutes' ? 'Episode duration' : label,
     }))
-  return [...fields, { key: 'price', label: 'Price' }]
+  return hasPrice(kind) ? [...fields, { key: 'price', label: 'Price' }] : fields
 }
 
 const num = (value: unknown) => (typeof value === 'number' ? value : null)
@@ -79,7 +80,21 @@ export function formatPinnedValue(key: string, item: ItemSummary, kind: ItemKind
   return field ? formatField(field, value) : null
 }
 
-/** The text pieces of a slot, in order, ready to join with ` · `. Streaming is left to the caller. */
+/**
+ * The keys each placement of a row reads (F009-W3): the first pinned field next to the title, the
+ * second in the right corner. A TV show's seasons and episodes read as one `5×7`, so they stay
+ * together in the first placement and leave the corner empty.
+ */
+export function pinnedPlacements(pinned: PinnedKeys): { first: string[]; second: string[] } {
+  const [lead, second] = pinned
+  if (!lead) return { first: [], second: [] }
+  if (lead === 'seasons' && second === 'episodes_per_season') {
+    return { first: [lead, second], second: [] }
+  }
+  return { first: [lead], second: second ? [second] : [] }
+}
+
+/** The text pieces of a run of fields, in order, ready to join with ` · `. Streaming is left to the caller. */
 export function pinnedTexts(keys: readonly string[], item: ItemSummary, kind: ItemKind): string[] {
   const texts: string[] = []
   const meta = item.metadata

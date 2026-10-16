@@ -1,11 +1,12 @@
-import { LinkIcon } from '../../components/ServiceIcon'
+import { LinkIcon, TILE_SIZE } from '../../components/ServiceIcon'
 import { Plus } from '../../components/ui/icons'
 import type { Item } from './api'
 import { buildExternalLinks } from './links'
 
-// Every link is the same icon tile (F008-W11): 36 px, the tile's own radius and border.
-// The visible name is the tile's tooltip; the accessible name is the sr-only text.
-const SIZE = 36
+// Every link is the same icon tile as the streaming row (F009-W5), one shared size, and the empty
+// "+" slot is the same square. The visible name is the tile's tooltip; the accessible name is the
+// sr-only text.
+const SIZE = TILE_SIZE
 const control =
   'inline-flex shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring'
 
