@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { AlertDialog, Button, Dialog } from '../../components/ui'
+import { AlertDialog, Button, Dialog, kindLabels, useToast } from '../../components/ui'
 import { api, unwrap } from '../../lib/api'
 import { builtinListIcon, parseListIcon } from '../lists/iconModel'
 import type { IconChoice, ListIconColor } from '../lists/iconModel'
 import { ListIconPicker } from '../lists/ListIconPicker'
+import { ListIconMark } from '../lists/ListIconMark'
 import { useUpdateListIcon } from './mutations'
 import { treeKeys, type List } from './api'
 import { FormError } from './FormError'
@@ -44,20 +45,20 @@ export function ListIconDialog({
   const update = useUpdateListIcon()
   const queryClient = useQueryClient()
   const action = useAction('list')
+  const toast = useToast()
 
   const reload = async () => {
     setReloading(true)
     setReloadFailed(false)
     try {
-      const latest = unwrap(
-        await api.GET('/api/v1/lists/{id}', {
+      const latest = await unwrap(
+        api.GET('/api/v1/lists/{id}', {
           params: { path: { id: snapshot.id } },
-          throwOnError: true,
         }),
       )
       setSnapshot(latest)
       setChoice({ icon: latest.icon, icon_color: latest.icon_color })
-      queryClient.invalidateQueries({ queryKey: treeKeys.tree })
+      void queryClient.invalidateQueries({ queryKey: treeKeys.tree })
       action.clearError()
       setConfirmReload(false)
     } catch {
@@ -73,12 +74,13 @@ export function ListIconDialog({
     ? (builtinListIcon(parsedChoice.builtin)?.name ?? 'Built-in icon')
     : parsedChoice.emoji
       ? `Emoji ${parsedChoice.emoji}`
-      : `Default ${snapshot.kind} icon`
+      : `Default ${kindLabels[snapshot.kind]} icon`
   const draftText = `Icon: ${choiceLabel}\nColor: ${choice.icon_color ? COLOR_LABELS[choice.icon_color] : 'None'}`
 
   const copyDraft = async () => {
     try {
       await navigator.clipboard.writeText(draftText)
+      toast({ kind: 'success', title: 'Draft copied to the clipboard' })
     } catch {
       setCopyFallback(draftText)
     }
@@ -111,6 +113,13 @@ export function ListIconDialog({
             <Button variant="secondary" onClick={() => setPickerOpen(true)}>
               Choose icon
             </Button>
+            <ListIconMark
+              icon={choice.icon}
+              iconColor={choice.icon_color}
+              kind={snapshot.kind}
+              className="size-9"
+              iconClassName="size-5"
+            />
             <span className="text-sm text-text-muted">{choiceLabel}</span>
           </div>
           {action.error && (

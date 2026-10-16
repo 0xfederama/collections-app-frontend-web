@@ -65,10 +65,7 @@ export function useUpdateListIcon() {
           body: { icon: icon.icon, icon_color: icon.icon_color },
         }),
       ),
-    onSuccess: (_updated, { list }) => {
-      void invalidateContent(queryClient)
-      void queryClient.invalidateQueries({ queryKey: ['lists', list.id, 'detail'] })
-    },
+    onSuccess: () => invalidateContent(queryClient),
   })
 }
 
