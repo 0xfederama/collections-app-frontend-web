@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { uniqueName } from './helpers'
+import { createList, uniqueName } from './helpers'
 
 async function expectNoSeriousIssues(page: Page) {
   const { violations } = await new AxeBuilder({ page }).analyze()
@@ -129,5 +129,52 @@ test.describe('F012-W1 list icons', () => {
       body = (await response.json()) as { icon: string | null; icon_color: string | null }
       expect(body).toMatchObject({ icon: null, icon_color: null })
     })
+  }
+
+  for (const theme of ['light', 'dark'] as const) {
+    for (const width of [375, 1440] as const) {
+      test(`${theme} at ${width}px: picker is responsive, touch-sized, and accessible`, async ({
+        browser,
+        request,
+      }) => {
+        const name = uniqueName('Responsive icon list')
+        const created = await createList(request, name)
+        const context = await browser.newContext({
+          viewport: { width, height: 900 },
+          hasTouch: width === 375,
+        })
+        const page = await context.newPage()
+        await page.addInitScript((value) => localStorage.setItem('collection:theme', value), theme)
+        const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:5183'
+        await page.goto(new URL(`/lists/${created.id}`, baseUrl).toString())
+        await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+        await page
+          .getByRole('main')
+          .getByRole('button', { name: `More actions for ${name}`, exact: true })
+          .click()
+        await page.getByRole('menuitem', { name: 'List icon…' }).click()
+        const picker = await openIconPicker(page)
+        const iconGrid = picker.locator('section[aria-label="Built-in icons"] > div')
+        const columnCount = await iconGrid.evaluate(
+          (element) => getComputedStyle(element).gridTemplateColumns.split(' ').length,
+        )
+        expect(columnCount).toBe(width === 375 ? 4 : 8)
+        await expectNoSeriousIssues(page)
+
+        if (width === 375) {
+          const camera = picker.getByRole('button', { name: 'camera', exact: true })
+          await expect
+            .poll(async () => (await camera.boundingBox())?.width ?? 0)
+            .toBeGreaterThanOrEqual(44)
+          await camera.click()
+          const swatch = picker.getByRole('button', { name: 'Indigo' })
+          await expect
+            .poll(async () => (await swatch.boundingBox())?.width ?? 0)
+            .toBeGreaterThanOrEqual(44)
+        }
+
+        await context.close()
+      })
+    }
   }
 })

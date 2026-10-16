@@ -95,7 +95,7 @@ export function ListIconPicker({
         />
         <section aria-label="Built-in icons">
           <h3 className="mb-2 text-sm font-medium">Icons</h3>
-          <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
             {matches.builtins.map(({ key, name, Icon }) => (
               <button
                 key={key}
@@ -104,7 +104,7 @@ export function ListIconPicker({
                 aria-pressed={selected === key}
                 onClick={() => chooseBuiltin(key)}
                 className={cx(
-                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-text-muted hover:bg-fill-hover aria-pressed:border-accent aria-pressed:text-accent-text focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2',
+                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-text-muted hover:bg-fill-hover aria-pressed:border-accent aria-pressed:text-accent-text focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2',
                 )}
               >
                 <Icon aria-hidden className="size-5" />
@@ -117,7 +117,7 @@ export function ListIconPicker({
         </section>
         <section aria-label="Emoji">
           <h3 className="mb-2 text-sm font-medium">Emoji</h3>
-          <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
             {matches.emoji.map(([emoji, keywords]) => (
               <button
                 key={emoji}
@@ -126,7 +126,7 @@ export function ListIconPicker({
                 aria-pressed={emojiSelected === emoji}
                 onClick={() => onChange({ icon: emoji, icon_color: null })}
                 className={cx(
-                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-2xl hover:bg-fill-hover aria-pressed:border-accent focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2',
+                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-2xl hover:bg-fill-hover aria-pressed:border-accent focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2',
                 )}
               >
                 {emoji}
@@ -175,7 +175,7 @@ export function ListIconPicker({
                 aria-label="None"
                 aria-pressed={!value.icon_color}
                 onClick={() => onChange({ ...value, icon_color: null })}
-                className="size-8 pointer-coarse:size-11 rounded-md border border-border bg-surface text-xs text-text-muted aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2"
+                className="size-8 pointer-coarse:size-11 rounded-md border border-border bg-surface text-xs text-text-muted aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2"
               >
                 —
               </button>
@@ -187,7 +187,7 @@ export function ListIconPicker({
                   aria-pressed={value.icon_color === color}
                   onClick={() => onChange({ icon: value.icon, icon_color: color })}
                   className={cx(
-                    'size-8 pointer-coarse:size-11 rounded-md border border-border aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2',
+                    'size-8 pointer-coarse:size-11 rounded-md border border-border aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2',
                     COLOR_SWATCH_CLASSES[color],
                   )}
                 />
