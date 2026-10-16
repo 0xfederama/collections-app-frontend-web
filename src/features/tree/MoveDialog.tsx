@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { Button, Dialog } from '../../components/ui'
 import type { TreeIndex, TreeNode } from './api'
-import { DestinationPicker } from './DestinationPicker'
+import { DestinationPicker, type DestinationOption } from './DestinationPicker'
 import { FormError } from './FormError'
 import { flattenFolders, parentIdOf } from './order'
 import { useAction } from './useAction'
-
-const ROOT = 'root'
 
 interface Destination {
   /** Folder id, or `null` for the top level. */
@@ -44,6 +42,30 @@ export function destinationsFor(node: TreeNode, index: TreeIndex): Destination[]
     out.push({ id: folder.id, name: folder.name, depth: depth + 1, reason })
   }
   return out
+}
+
+/** The key {@link DestinationPicker} uses for the top level, which has no folder id. */
+export const ROOT_KEY = 'root'
+
+/** Turns a destination folder id into the picker's key (`null` is the top level). */
+export const destinationKey = (folderId: string | null) => folderId ?? ROOT_KEY
+
+/** And back. */
+export const destinationId = (key: string) => (key === ROOT_KEY ? null : key)
+
+/**
+ * Every folder a **new list** can go into, in tree order, with the top level first. Nothing is
+ * invalid here (unlike a move), so there are no reasons to show.
+ */
+export function listPathOptions(index: TreeIndex): DestinationOption[] {
+  return [
+    { key: ROOT_KEY, name: 'Top level', depth: 0 },
+    ...flattenFolders(index).map(({ folder, depth }) => ({
+      key: folder.id,
+      name: folder.name,
+      depth: depth + 1,
+    })),
+  ]
 }
 
 export interface MoveDialogProps {
@@ -88,9 +110,9 @@ export function MoveDialog({ node, index, onSubmit, onClose, onReload }: MoveDia
       }
     >
       <DestinationPicker
-        options={destinations.map((d) => ({ ...d, key: d.id ?? ROOT }))}
-        value={choice ? (choice.id ?? ROOT) : undefined}
-        onChange={(key) => setChosen(key === ROOT ? null : key)}
+        options={destinations.map((d) => ({ ...d, key: destinationKey(d.id) }))}
+        value={choice ? destinationKey(choice.id) : undefined}
+        onChange={(key) => setChosen(destinationId(key))}
       />
       {error && (
         <FormError
