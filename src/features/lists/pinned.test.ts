@@ -31,7 +31,7 @@ const item = (kind: ItemSummary['kind'], over: Partial<ItemSummary> = {}): ItemS
 describe('F009-W3 the kind default is an ordered pair', () => {
   it('follows the F-002 table, capped at two keys, in order', () => {
     expect(defaultPinned('movie')).toEqual(['runtime_minutes', 'streaming'])
-    expect(defaultPinned('tv_show')).toEqual(['seasons', 'episodes_per_season'])
+    expect(defaultPinned('tv_show')).toEqual(['seasons', 'streaming'])
     expect(defaultPinned('motorcycle')).toEqual(['displacement_cc', 'price'])
     expect(defaultPinned('car')).toEqual(['model_year', 'price'])
     expect(defaultPinned('camera')).toEqual(['camera_type', 'price'])
@@ -81,10 +81,11 @@ describe('F009-W2 the pinned fields are the ones the kind defines', () => {
     expect(pinnableFields('generic')).toEqual([])
   })
 
-  it('a TV show pins its seasons and episodes together, and the episode duration stays available', () => {
+  it('a TV show pins seasons and streaming by default, and every kind field stays available', () => {
     const labels = pinnableFields('tv_show').map((f) => f.label)
     expect(labels).toContain('Episode duration')
-    expect(defaultPinned('tv_show')).toEqual(['seasons', 'episodes_per_season'])
+    // Streaming in the corner, like a movie: the service icons stay in every streaming row.
+    expect(defaultPinned('tv_show')).toEqual(['seasons', 'streaming'])
   })
 })
 
@@ -117,15 +118,16 @@ describe('F002-W2 pinned values', () => {
     })
   })
 
-  it('a TV show default reads 5×7', () => {
+  it('a TV show reads 5×7 when both seasons fields are pinned, 5 seasons by default', () => {
     const show = item('tv_show', {
       metadata: { seasons: 5, episodes_per_season: 7, episode_minutes: 45 },
     })
-    expect(pinnedTexts(defaultPinned('tv_show'), show, 'tv_show').join(' · ')).toBe('5×7')
-    expect(pinnedTexts([...defaultPinned('tv_show'), 'episode_minutes'], show, 'tv_show')).toEqual([
-      '5×7',
-      '45 min',
-    ])
+    // The default pins seasons only, so the corner carries the streaming icons instead.
+    expect(pinnedTexts(defaultPinned('tv_show'), show, 'tv_show')).toEqual(['5 seasons'])
+    expect(pinnedTexts(['seasons', 'episodes_per_season'], show, 'tv_show')).toEqual(['5×7'])
+    expect(
+      pinnedTexts(['seasons', 'episodes_per_season', 'episode_minutes'], show, 'tv_show'),
+    ).toEqual(['5×7', '45 min'])
   })
 
   it('reads the streaming platforms and which ones are paid', () => {

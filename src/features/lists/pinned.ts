@@ -16,9 +16,10 @@ export type PinnedKeys = readonly string[]
 export const MAX_PINNED = 2
 
 const DEFAULTS: Record<ItemKind, PinnedKeys> = {
+  // Streaming in the corner on both streaming kinds, so the service icons stay in every movie and
+  // TV row (F-002). Pinning `seasons` and `episodes_per_season` together still reads `5×7`.
   movie: ['runtime_minutes', 'streaming'],
-  // Seasons and episodes stay together, so the row reads `5×7` (D-085 migration order).
-  tv_show: ['seasons', 'episodes_per_season'],
+  tv_show: ['seasons', 'streaming'],
   motorcycle: ['displacement_cc', 'price'],
   car: ['model_year', 'price'],
   camera: ['camera_type', 'price'],
