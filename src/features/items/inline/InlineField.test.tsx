@@ -67,6 +67,18 @@ function mockPatch(respond?: (call: PatchCall, n: number) => Response | Promise<
 const pen = (label: string) => screen.getByRole('button', { name: `Edit ${label}` })
 const save = (label: string) => screen.getByRole('button', { name: `Save ${label}` })
 
+/** F009-W1: a kind field is hidden until "+ Add field" reveals it and opens its editor. */
+async function addField(user: User, entry: string) {
+  await user.click(screen.getByRole('button', { name: 'Add field' }))
+  await user.click(await screen.findByRole('menuitem', { name: entry }))
+}
+
+/** Adds a field and closes the editor it opened, so its saved value reads in the row. */
+async function reveal(user: User, entry: string) {
+  await addField(user, entry)
+  await user.click(screen.getByRole('button', { name: `Cancel editing ${entry.toLowerCase()}` }))
+}
+
 async function retype(user: User, input: HTMLElement, text: string) {
   await user.clear(input)
   if (text) await user.type(input, text)
@@ -114,7 +126,7 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
   it('a kind field sends the metadata object with that field changed', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
-    await user.click(pen('runtime'))
+    await addField(user, 'Runtime')
     await retype(user, screen.getByRole('textbox', { name: 'Runtime' }), '140')
     await user.click(save('runtime'))
     await waitFor(() => expect(calls).toHaveLength(1))
@@ -137,7 +149,7 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
   it('streaming: a platform can be marked paid, and paid stays within platforms', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
-    await user.click(pen('streaming'))
+    await addField(user, 'Streaming')
     const paid = screen.getByRole('group', { name: 'Paid platforms' })
     expect(within(paid).getByRole('button', { name: /Prime Video/ })).toHaveAttribute(
       'aria-pressed',
@@ -156,7 +168,7 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
   it('streaming: removing a platform from the text drops it from paid_platforms', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
-    await user.click(pen('streaming'))
+    await addField(user, 'Streaming')
     await retype(user, screen.getByRole('textbox', { name: 'Streaming platforms' }), 'Netflix')
     await user.click(save('streaming'))
     await waitFor(() => expect(calls).toHaveLength(1))
@@ -168,13 +180,8 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
 })
 
 describe('F002-W3 "+ Add field" and price', () => {
-  const addField = async (user: User, entry: string) => {
-    await user.click(screen.getByRole('button', { name: 'Add field' }))
-    await user.click(await screen.findByRole('menuitem', { name: entry }))
-  }
-
-  it('lists only the fields that are not set, and opens that field’s editor', async () => {
-    // A car, whose kind fields are all set: only price and website are left to add (D-085).
+  it('F009-W1 offers every field the kind defines, even one that already has a value', async () => {
+    // A car whose kind fields are all set: they are hidden, so all of them are addable (D-085).
     const { user } = await openItem({
       kind: 'car',
       metadata: {
@@ -191,8 +198,33 @@ describe('F002-W3 "+ Add field" and price', () => {
       within(menu)
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
-    ).toEqual(['Price', 'Website'])
-    await user.click(within(menu).getByRole('menuitem', { name: 'Website' }))
+    ).toEqual(['Make', 'Model', 'Model year', 'Fuel', 'Power', 'Price', 'Website'])
+    // Adding one reveals it and drops it from the menu; the value it already had is there.
+    await user.click(within(menu).getByRole('menuitem', { name: 'Make' }))
+    expect(await screen.findByDisplayValue('Volkswagen')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    const next = await screen.findByRole('menu')
+    expect(
+      within(next)
+        .getAllByRole('menuitem')
+        .map((i) => i.textContent),
+    ).toEqual(['Model', 'Model year', 'Fuel', 'Power', 'Price', 'Website'])
+  })
+
+  it('F009-W1 a movie offers no Price, a car does', async () => {
+    const { user } = await openItem()
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    const menu = await screen.findByRole('menu')
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((i) => i.textContent),
+    ).toEqual(['Release year', 'Runtime', 'Streaming', 'Website'])
+  })
+
+  it('opens the website editor from the menu', async () => {
+    const { user } = await openItem()
+    await addField(user, 'Website')
     expect(await screen.findByRole('textbox', { name: 'Website' })).toBeVisible()
   })
 
@@ -237,16 +269,25 @@ describe('F002-W3 "+ Add field" and price', () => {
   })
 
   it('Price: the saved price reads without cents, and Remove price sends null', async () => {
-    const calls = mockPatch()
+    // The default responder answers with the example (a movie), so keep the kind of this car.
+    const calls = mockPatch((call) =>
+      HttpResponse.json({ ...matrix, kind: 'car', ...call.body, version: 4 }),
+    )
     const { user } = await openItem({
       kind: 'car',
       price: { min: '1200.50', max: '1200.50', currency: 'EUR' },
     })
+    // F009-W1: the saved price is hidden until it is added, and it stays shown afterwards.
+    expect(screen.queryByText(/^€\s?1,201$/)).not.toBeInTheDocument()
+    await reveal(user, 'Price')
     expect(await screen.findByText(/^€\s?1,201$/)).toBeVisible()
     await user.click(pen('price'))
     await user.click(screen.getByRole('button', { name: 'Remove price' }))
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0]?.body).toEqual({ price: null })
+    // The row stays (it was added), the value is gone.
+    expect(screen.queryByText(/^€\s?1,201$/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit price' })).toBeVisible()
   })
 })
 
@@ -258,7 +299,7 @@ describe('AT-05 in-place fields: server errors', () => {
       }),
     )
     const { user } = await openItem()
-    await user.click(pen('runtime'))
+    await addField(user, 'Runtime')
     await retype(user, screen.getByRole('textbox', { name: 'Runtime' }), '140{Enter}')
     expect(await screen.findByText('Runtime is not plausible.')).toBeVisible()
     const input = screen.getByRole('textbox', { name: 'Runtime' })
@@ -272,6 +313,9 @@ describe('AT-09 If-Match comes from the version the editor opened on', () => {
   it('another client changes the item after the editor opened: the save sends the old version, gets 412 and keeps the draft', async () => {
     const calls = mockPatch(() => problemResponse(412, 'version_conflict', { current_version: 7 }))
     const { user } = await openItem()
+    await addField(user, 'Runtime')
+    // Close the editor "+ Add field" opened, so the row shows its saved value again.
+    await user.click(screen.getByRole('button', { name: 'Cancel editing runtime' }))
     await user.click(pen('title'))
     await retype(user, screen.getByRole('textbox', { name: /Title/ }), 'My title')
     // The other person edits the runtime (version 7); a focus refetch brings it in.
@@ -295,9 +339,9 @@ describe('AT-09 If-Match comes from the version the editor opened on', () => {
   it('our own save of another field while this editor is open moves its version forward', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
+    await addField(user, 'Runtime')
     await user.click(pen('title'))
     await retype(user, screen.getByRole('textbox', { name: /Title/ }), 'Reloaded')
-    await user.click(pen('runtime'))
     await retype(user, screen.getByRole('textbox', { name: 'Runtime' }), '140{Enter}')
     await waitFor(() => expect(calls).toHaveLength(1))
     await screen.findByText('140 min')

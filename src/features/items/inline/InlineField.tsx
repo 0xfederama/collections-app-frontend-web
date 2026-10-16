@@ -130,6 +130,11 @@ interface InlineFieldProps {
   /** The editor closed (saved or cancelled). */
   onClose?: () => void
   className?: string
+  /**
+   * Extra classes for the hover/focus bar itself, for a row that is taller than one line (W6: the
+   * streaming tiles want even padding around them). The other rows keep the default.
+   */
+  barClassName?: string
 }
 
 /**
@@ -145,6 +150,7 @@ export function InlineField({
   startOpen = false,
   onClose,
   className,
+  barClassName,
 }: InlineFieldProps) {
   const [open, setOpen] = useState(startOpen)
   const pen = useRef<HTMLButtonElement>(null)
@@ -180,7 +186,10 @@ export function InlineField({
     <div className={cx('group/field relative', className)}>
       <div
         onClick={onClick}
-        className="grid min-h-8 cursor-text content-center rounded-sm pr-9 transition-colors hover:bg-fill/60 pointer-coarse:min-h-11 pointer-coarse:pr-12"
+        className={cx(
+          'grid min-h-8 cursor-text content-center rounded-sm pr-9 transition-colors hover:bg-fill/60 pointer-coarse:min-h-11 pointer-coarse:pr-12',
+          barClassName,
+        )}
       >
         {children}
       </div>

@@ -35,6 +35,13 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
     await page.reload()
     const item = itemPanel(page)
     await expect(item.getByRole('heading', { level: 1, name: title })).toBeVisible()
+    // F009-W1: the item page is calm by default. The website shows, the kind field does not.
+    await expect(item.getByText(website)).toBeVisible()
+    await expect(item.getByText('2005', { exact: true })).toBeHidden()
+    // Adding it back with "+ Add field" shows the saved value.
+    await item.getByRole('button', { name: 'Add field' }).click()
+    await page.getByRole('menuitem', { name: 'Release year' }).click()
+    await item.getByRole('button', { name: 'Cancel editing release year' }).click()
     await expect(item.getByText('2005', { exact: true })).toBeVisible()
     // A movie has no Website link button (F-002); the saved value reads in the Details row.
     await expect(item.getByText(website)).toBeVisible()
@@ -74,12 +81,18 @@ test.describe('D-085 price only on the kinds that have one', () => {
     await page.reload()
     const item = itemPanel(page)
     await expect(item.getByRole('heading', { level: 1, name: title })).toBeVisible()
+    // F009-W1: the price is hidden until it is added with "+ Add field", then it reads.
+    await expect(item.getByRole('button', { name: 'Edit price' })).toBeHidden()
+    await item.getByRole('button', { name: 'Add field' }).click()
+    await page.getByRole('menuitem', { name: 'Price', exact: true }).click()
+    await item.getByRole('button', { name: 'Cancel editing price' }).click()
     await expect(item.getByText(/10\D+20/)).toBeVisible()
 
-    // Remove the price, reload: it is gone.
+    // Remove the price: the row stays (it was added), the value is gone.
     await item.getByRole('button', { name: 'Edit price' }).click()
     await item.getByRole('button', { name: 'Remove price' }).click()
-    await expect(item.getByRole('button', { name: 'Edit price' })).toBeHidden()
+    await expect(item.getByText(/10\D+20/)).toBeHidden()
+    // After a reload it is not there at all.
     await page.reload()
     await expect(itemPanel(page).getByRole('heading', { level: 1, name: title })).toBeVisible()
     await expect(itemPanel(page).getByRole('button', { name: 'Edit price' })).toBeHidden()
