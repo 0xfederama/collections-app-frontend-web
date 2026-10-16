@@ -111,19 +111,22 @@ export function ImageSection({
     )
   }
 
+  // A paste is a one-time upload from the item snapshot that opened this dialog.
+  const initialPaste = useRef({ file: initialFile, upload })
   useEffect(() => {
-    if (!initialFile || pastedUploadStarted.current) return
+    const { file, upload: uploadPasted } = initialPaste.current
+    if (!file || pastedUploadStarted.current) return
     let cancelled = false
     queueMicrotask(() => {
       if (cancelled || pastedUploadStarted.current) return
       pastedUploadStarted.current = true
-      upload(initialFile)
+      uploadPasted(file)
     })
     // Defer until effects settle so Strict Mode's rehearsal cleanup cancels the first attempt.
     return () => {
       cancelled = true
     }
-  }, [initialFile, upload])
+  }, [])
 
   const pickFiles = (files: FileList | null | undefined) => {
     const first = files?.[0]

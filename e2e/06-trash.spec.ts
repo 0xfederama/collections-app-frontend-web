@@ -44,12 +44,12 @@ test.describe('AT-11 trash', () => {
     const before = await request.get('/api/v1/trash?limit=200&offset=0')
     const beforePage = await before.json()
     const previousEntries = beforePage.page.total as number
-    const allPrevious = [...(beforePage.data as { counts: { items: number }[] })]
+    const allPrevious = [...(beforePage.data as { counts: { items: number } }[])]
     let offset = allPrevious.length
     while (offset < previousEntries) {
       const next = await request.get(`/api/v1/trash?limit=200&offset=${offset}`)
       const nextPage = await next.json()
-      allPrevious.push(...(nextPage.data as { counts: { items: number }[] }))
+      allPrevious.push(...(nextPage.data as { counts: { items: number } }[]))
       offset += nextPage.data.length
     }
     const previousItems = allPrevious.reduce((total, entry) => total + entry.counts.items, 0)
