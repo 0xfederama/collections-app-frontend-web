@@ -26,6 +26,19 @@ const COLOR_LABELS: Record<ListIconColor, string> = {
   gray: 'Gray',
 }
 
+const COLOR_SWATCH_CLASSES: Record<ListIconColor, string> = {
+  red: 'bg-list-icon-red',
+  orange: 'bg-list-icon-orange',
+  amber: 'bg-list-icon-amber',
+  green: 'bg-list-icon-green',
+  teal: 'bg-list-icon-teal',
+  blue: 'bg-list-icon-blue',
+  indigo: 'bg-list-icon-indigo',
+  purple: 'bg-list-icon-purple',
+  pink: 'bg-list-icon-pink',
+  gray: 'bg-list-icon-gray',
+}
+
 export function isSingleEmoji(value: string) {
   const normalized = value.trim()
   if (
@@ -91,7 +104,7 @@ export function ListIconPicker({
                 aria-pressed={selected === key}
                 onClick={() => chooseBuiltin(key)}
                 className={cx(
-                  'grid size-10 place-items-center rounded-md border border-border bg-fill text-text-muted hover:bg-fill-hover aria-pressed:border-accent aria-pressed:text-accent-text focus-visible:outline-2 focus-visible:outline-focus-ring',
+                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-text-muted hover:bg-fill-hover aria-pressed:border-accent aria-pressed:text-accent-text focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2',
                 )}
               >
                 <Icon aria-hidden className="size-5" />
@@ -113,7 +126,7 @@ export function ListIconPicker({
                 aria-pressed={emojiSelected === emoji}
                 onClick={() => onChange({ icon: emoji, icon_color: null })}
                 className={cx(
-                  'grid size-10 place-items-center rounded-md border border-border bg-fill text-2xl hover:bg-fill-hover aria-pressed:border-accent focus-visible:outline-2 focus-visible:outline-focus-ring',
+                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-2xl hover:bg-fill-hover aria-pressed:border-accent focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2',
                 )}
               >
                 {emoji}
@@ -162,7 +175,7 @@ export function ListIconPicker({
                 aria-label="None"
                 aria-pressed={!value.icon_color}
                 onClick={() => onChange({ ...value, icon_color: null })}
-                className="size-8 rounded-md border border-border bg-surface text-xs text-text-muted aria-pressed:outline-2 aria-pressed:outline-focus-ring"
+                className="size-8 pointer-coarse:size-11 rounded-md border border-border bg-surface text-xs text-text-muted aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2"
               >
                 —
               </button>
@@ -174,9 +187,9 @@ export function ListIconPicker({
                   aria-pressed={value.icon_color === color}
                   onClick={() => onChange({ icon: value.icon, icon_color: color })}
                   className={cx(
-                    'size-8 rounded-md border border-border aria-pressed:outline-2 aria-pressed:outline-focus-ring',
+                    'size-8 pointer-coarse:size-11 rounded-md border border-border aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2',
+                    COLOR_SWATCH_CLASSES[color],
                   )}
-                  style={{ backgroundColor: `var(--list-icon-${color})` }}
                 />
               ))}
             </div>

@@ -26,7 +26,9 @@ test.describe('F012-W1 list icons', () => {
       await page.goto('/')
       await expect(page.getByRole('heading', { level: 1, name: 'Home' })).toBeVisible()
       const sidebarNew = page.getByRole('button', { name: 'New', exact: true })
-      const firstList = page.getByRole('main').getByRole('button', { name: 'New list', exact: true })
+      const firstList = page
+        .getByRole('main')
+        .getByRole('button', { name: 'New list', exact: true })
       await expect(sidebarNew.or(firstList).first()).toBeVisible()
       if (await sidebarNew.isVisible()) {
         await sidebarNew.click()
@@ -70,11 +72,38 @@ test.describe('F012-W1 list icons', () => {
       await settings.getByRole('button', { name: 'Save' }).click()
       await expect(settings.getByRole('button', { name: 'Reload latest' })).toBeVisible()
       await settings.getByRole('button', { name: 'Reload latest' }).click()
+      const reloadConfirmation = page.getByRole('alertdialog', {
+        name: 'Replace your unsaved changes with the latest list icon?',
+      })
+      await expect(reloadConfirmation).toBeVisible()
+      await reloadConfirmation.getByRole('button', { name: 'Keep my draft' }).click()
+      await expect(settings.getByRole('button', { name: 'Copy my draft' })).toBeVisible()
+      await settings.getByRole('button', { name: 'Reload latest' }).click()
+      await page
+        .getByRole('alertdialog', {
+          name: 'Replace your unsaved changes with the latest list icon?',
+        })
+        .getByRole('button', { name: 'Reload latest' })
+        .click()
+      await expect(settings.getByText('camera', { exact: true })).toBeVisible()
       await settings.getByRole('button', { name: 'Save' }).click()
       await expect(settings).toBeHidden()
       currentName = externalName
       let response = await request.get(`/api/v1/lists/${saved.id}`)
       let body = (await response.json()) as { icon: string | null; icon_color: string | null }
+      expect(body).toMatchObject({ icon: 'i:camera', icon_color: 'indigo' })
+
+      await page.getByRole('button', { name: `More actions for ${currentName}` }).click()
+      await page.getByRole('menuitem', { name: 'List icon…' }).click()
+      const emojiSettings = page.getByRole('dialog', { name: `List icon · ${currentName}` })
+      const emojiPicker = await openIconPicker(page)
+      await emojiPicker.getByRole('textbox', { name: 'Use an emoji' }).fill('🪿')
+      await emojiPicker.getByRole('button', { name: 'Use emoji' }).click()
+      await emojiPicker.getByRole('button', { name: 'Done' }).click()
+      await emojiSettings.getByRole('button', { name: 'Save' }).click()
+      await expect(emojiSettings).toBeHidden()
+      response = await request.get(`/api/v1/lists/${saved.id}`)
+      body = (await response.json()) as { icon: string | null; icon_color: string | null }
       expect(body).toMatchObject({ icon: '🪿', icon_color: null })
 
       await page.getByRole('button', { name: `More actions for ${currentName}` }).click()

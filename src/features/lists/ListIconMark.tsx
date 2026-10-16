@@ -1,9 +1,21 @@
-import type { CSSProperties } from 'react'
 import { List as ListIcon } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
-import { builtinListIcon, defaultListIcon, listIconColors, parseListIcon } from './iconModel'
+import { builtinListIcon, defaultListIcon, parseListIcon } from './iconModel'
 import type { ListIconColor } from './iconModel'
 import type { ItemKind } from '../items/api'
+
+const ICON_COLOR_CLASSES: Record<ListIconColor, string> = {
+  red: 'text-list-icon-red',
+  orange: 'text-list-icon-orange',
+  amber: 'text-list-icon-amber',
+  green: 'text-list-icon-green',
+  teal: 'text-list-icon-teal',
+  blue: 'text-list-icon-blue',
+  indigo: 'text-list-icon-indigo',
+  purple: 'text-list-icon-purple',
+  pink: 'text-list-icon-pink',
+  gray: 'text-list-icon-gray',
+}
 
 export function ListIconMark({
   icon,
@@ -24,10 +36,11 @@ export function ListIconMark({
   return (
     <span
       aria-hidden="true"
-      className={cx('grid shrink-0 place-items-center rounded-md bg-fill', className)}
-      style={
-        iconColor && Builtin ? ({ color: listIconColors[iconColor] } as CSSProperties) : undefined
-      }
+      className={cx(
+        'grid shrink-0 place-items-center rounded-md bg-fill',
+        iconColor && Builtin && ICON_COLOR_CLASSES[iconColor],
+        className,
+      )}
     >
       {parsed.emoji ? (
         <span className={iconClassName}>{parsed.emoji}</span>

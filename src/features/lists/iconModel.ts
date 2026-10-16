@@ -79,19 +79,6 @@ export const LIST_ICON_COLORS = [
 ] as const
 export type ListIconColor = Exclude<components['schemas']['ListIconColor'], null>
 
-export const listIconColors: Record<ListIconColor, string> = {
-  red: 'var(--list-icon-red)',
-  orange: 'var(--list-icon-orange)',
-  amber: 'var(--list-icon-amber)',
-  green: 'var(--list-icon-green)',
-  teal: 'var(--list-icon-teal)',
-  blue: 'var(--list-icon-blue)',
-  indigo: 'var(--list-icon-indigo)',
-  purple: 'var(--list-icon-purple)',
-  pink: 'var(--list-icon-pink)',
-  gray: 'var(--list-icon-gray)',
-}
-
 type BuiltinIcon = { key: string; name: string; keywords: string[]; Icon: LucideIcon }
 const iconRows: [string, LucideIcon, ...string[]][] = [
   ['aperture', Aperture, 'camera', 'photo'],

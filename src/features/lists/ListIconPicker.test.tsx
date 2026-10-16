@@ -58,4 +58,20 @@ describe('F012-W1 list icon picker', () => {
     await user.click(screen.getByRole('button', { name: 'Use default' }))
     expect(onChange).toHaveBeenLastCalledWith({ icon: null, icon_color: null })
   })
+
+  it('uses token classes and touch-sized, visibly focusable icon and color controls', async () => {
+    const user = userEvent.setup()
+    render(<Harness onChange={vi.fn()} />)
+    const camera = screen.getByRole('button', { name: 'camera', exact: true })
+    expect(camera).toHaveClass('pointer-coarse:size-11', 'focus-visible:outline-focus-ring')
+    expect(camera).not.toHaveAttribute('style')
+    await user.click(camera)
+    const indigo = screen.getByRole('button', { name: 'Indigo' })
+    expect(indigo).toHaveClass(
+      'bg-list-icon-indigo',
+      'pointer-coarse:size-11',
+      'focus-visible:outline-focus-ring',
+    )
+    expect(indigo).not.toHaveAttribute('style')
+  })
 })

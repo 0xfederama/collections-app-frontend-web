@@ -40,6 +40,16 @@
   --color-danger-hover: var(--danger-hover);
   --color-danger-fg: var(--danger-fg);
   --color-overlay: var(--overlay);
+  --color-list-icon-red: var(--list-icon-red);
+  --color-list-icon-orange: var(--list-icon-orange);
+  --color-list-icon-amber: var(--list-icon-amber);
+  --color-list-icon-green: var(--list-icon-green);
+  --color-list-icon-teal: var(--list-icon-teal);
+  --color-list-icon-blue: var(--list-icon-blue);
+  --color-list-icon-indigo: var(--list-icon-indigo);
+  --color-list-icon-purple: var(--list-icon-purple);
+  --color-list-icon-pink: var(--list-icon-pink);
+  --color-list-icon-gray: var(--list-icon-gray);
 
   --shadow-*: initial;
 
