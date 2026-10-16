@@ -114,6 +114,11 @@ export function isFormDirty(base: Settings, draft: SettingsDraft): boolean {
   )
 }
 
+export function isRetentionDirty(base: Settings, draft: SettingsDraft): boolean {
+  const value = normalized(draft)
+  return value.trash_retention_days !== base.trash_retention_days
+}
+
 const isField = (name: string): name is SettingsField => name in FIELD_LABELS
 
 /** Server field errors onto inputs; anything that matches no input is returned as plain messages. */

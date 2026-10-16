@@ -15,6 +15,7 @@ import {
   inputId,
   isFormDirty,
   isDirty,
+  isRetentionDirty,
   mapServerErrors,
   validate,
   type ErrorMap,
@@ -52,6 +53,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
 
   const dirty = isDirty(base, draft)
   const formDirty = isFormDirty(base, draft)
+  const retentionDirty = isRetentionDirty(base, draft)
 
   // Block leaving the page with unsaved changes (router navigation and closing the tab).
   const blocker = useBlocker(({ currentLocation, nextLocation }) => {
@@ -108,6 +110,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   const save = async (event?: FormEvent) => {
     retryAction.current = () => void save()
     event?.preventDefault()
+    if (retentionDirty) return
     setFailure(null)
     setOtherErrors([])
     const found = validate(draft)
@@ -266,6 +269,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         hint="Automatically and permanently delete trashed items after the selected number of days. This runs daily; it doesn’t empty the trash immediately."
         value={draft.trash_retention_days}
         onValueChange={(value) => void saveRetention(value)}
+        error={errors.trash_retention_days}
         disabled={update.isPending}
         options={[
           { value: 'off', label: 'Off' },
@@ -297,7 +301,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         <Button
           type="submit"
           pending={update.isPending}
-          disabled={!formDirty || failure?.kind === 'conflict'}
+          disabled={!formDirty || retentionDirty || failure?.kind === 'conflict'}
         >
           Save settings
         </Button>

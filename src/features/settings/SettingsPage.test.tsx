@@ -133,12 +133,29 @@ describe('W-13 settings: saving', () => {
       '30 days',
     )
     expect(field('Workspace name')).toHaveValue('Unsubmitted name')
+    expect(save()).toBeDisabled()
     fail = false
     await user.click(within(alert).getByRole('button', { name: 'Retry' }))
     await screen.findByText('Trash retention saved')
     expect(calls).toBe(2)
     expect(patches).toEqual([{ ifMatch: '"s-1"', body: { trash_retention_days: 30 } }])
     expect(save()).toBeEnabled()
+  })
+
+  it('shows retention validation errors on the retention choice', async () => {
+    mountBackend()
+    server.use(
+      http.patch(settingsUrl, () =>
+        problemResponse(422, 'validation_failed', {
+          errors: [{ field: 'trash_retention_days', message: 'server says no' }],
+        }),
+      ),
+    )
+    const user = await openSettings()
+    await user.click(screen.getByRole('combobox', { name: 'Delete trash automatically' }))
+    await user.click(await screen.findByRole('option', { name: '7 days' }))
+    expect(await screen.findByText('server says no')).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toBeInvalid()
   })
 
   it('PATCHes only the changed field with If-Match "s-4", then shows the toast and updates the sidebar', async () => {

@@ -32,6 +32,33 @@ describe('F012-W3 empty trash', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Empty trash' })).toBeDisabled())
   })
 
+  it('keeps confirmation closed when a later page fails, then retries loading the full count', async () => {
+    const entries = Array.from({ length: 60 }, (_, index) => entry(index))
+    const { user } = await openTrash(entries)
+    let failSecondPage = true
+    server.use(
+      http.get(emptyUrl(), ({ request }) => {
+        if (new URL(request.url).searchParams.get('offset') === '50' && failSecondPage) {
+          failSecondPage = false
+          return problemResponse(500, 'internal_error')
+        }
+        return undefined
+      }),
+    )
+    await user.click(await screen.findByRole('button', { name: 'Empty trash' }))
+    const loadError = await screen.findByText('All trash entries could not be loaded. Try again.')
+    expect(
+      screen.queryByRole('alertdialog', { name: 'Empty trash permanently?' }),
+    ).not.toBeInTheDocument()
+
+    await user.click(
+      within(loadError.closest('[role="alert"]')!).getByRole('button', { name: 'Retry' }),
+    )
+    expect(
+      await screen.findByRole('alertdialog', { name: 'Empty trash permanently?' }),
+    ).toHaveTextContent('60 trash entries and 60 items')
+  })
+
   it('keeps the confirmation open after a server error and retries with one request', async () => {
     const { user, trash } = await openTrash()
     await user.click(await screen.findByRole('button', { name: 'Empty trash' }))

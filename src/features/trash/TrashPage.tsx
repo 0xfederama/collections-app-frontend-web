@@ -74,7 +74,11 @@ export function TrashPage() {
     setEmptyLoadFailed(false)
     try {
       let result = await query.fetchNextPage()
-      while (result.hasNextPage) result = await query.fetchNextPage()
+      if (result.isError) throw result.error ?? new Error('Trash page could not be loaded')
+      while (result.hasNextPage) {
+        result = await query.fetchNextPage()
+        if (result.isError) throw result.error ?? new Error('Trash page could not be loaded')
+      }
       const allEntries = result.data.pages.flatMap((page) => page.data)
       setEmptyCount(allEntries.reduce((total, entry) => total + entry.counts.items, 0))
     } catch {
