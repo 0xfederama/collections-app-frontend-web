@@ -94,14 +94,10 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "description": "Films to watch",
           "display_mode": "thumbnail",
           "sort_mode": "manual",
-          "pinned_fields": {
-            "under": [
-              "release_year"
-            ],
-            "right": [
-              "price"
-            ]
-          },
+          "pinned_fields": [
+            "release_year",
+            "runtime_minutes"
+          ],
           "sort_order": 0,
           "item_count": 2,
           "version": 1,
@@ -211,14 +207,10 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
-      "pinned_fields": {
-        "under": [
-          "release_year"
-        ],
-        "right": [
-          "price"
-        ]
-      },
+      "pinned_fields": [
+        "release_year",
+        "runtime_minutes"
+      ],
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -245,14 +237,10 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
-      "pinned_fields": {
-        "under": [
-          "release_year"
-        ],
-        "right": [
-          "price"
-        ]
-      },
+      "pinned_fields": [
+        "release_year",
+        "runtime_minutes"
+      ],
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -285,14 +273,10 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
-      "pinned_fields": {
-        "under": [
-          "release_year"
-        ],
-        "right": [
-          "price"
-        ]
-      },
+      "pinned_fields": [
+        "release_year",
+        "runtime_minutes"
+      ],
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
@@ -319,14 +303,10 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
-      "pinned_fields": {
-        "under": [
-          "release_year"
-        ],
-        "right": [
-          "price"
-        ]
-      },
+      "pinned_fields": [
+        "release_year",
+        "runtime_minutes"
+      ],
       "sort_order": 0,
       "item_count": 2,
       "version": 1,
