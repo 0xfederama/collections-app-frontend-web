@@ -55,7 +55,10 @@ test.describe('F012-W1 list icons', () => {
       expect(saved).toMatchObject({ icon: 'i:camera', icon_color: 'indigo' })
       if (!saved) throw new Error('The created list is missing from the tree.')
 
-      await page.getByRole('button', { name: `More actions for ${currentName}` }).click()
+      await page
+        .getByRole('main')
+        .getByRole('button', { name: `More actions for ${currentName}`, exact: true })
+        .click()
       await page.getByRole('menuitem', { name: 'List icon…' }).click()
       const settings = page.getByRole('dialog', { name: `List icon · ${currentName}` })
       const editPicker = await openIconPicker(page)
@@ -85,15 +88,19 @@ test.describe('F012-W1 list icons', () => {
         })
         .getByRole('button', { name: 'Reload latest' })
         .click()
-      await expect(settings.getByText('camera', { exact: true })).toBeVisible()
-      await settings.getByRole('button', { name: 'Save' }).click()
-      await expect(settings).toBeHidden()
       currentName = externalName
+      const latestSettings = page.getByRole('dialog', { name: `List icon · ${currentName}` })
+      await expect(latestSettings.getByText('camera', { exact: true })).toBeVisible()
+      await latestSettings.getByRole('button', { name: 'Save' }).click()
+      await expect(latestSettings).toBeHidden()
       let response = await request.get(`/api/v1/lists/${saved.id}`)
       let body = (await response.json()) as { icon: string | null; icon_color: string | null }
       expect(body).toMatchObject({ icon: 'i:camera', icon_color: 'indigo' })
 
-      await page.getByRole('button', { name: `More actions for ${currentName}` }).click()
+      await page
+        .getByRole('main')
+        .getByRole('button', { name: `More actions for ${currentName}`, exact: true })
+        .click()
       await page.getByRole('menuitem', { name: 'List icon…' }).click()
       const emojiSettings = page.getByRole('dialog', { name: `List icon · ${currentName}` })
       const emojiPicker = await openIconPicker(page)
@@ -106,7 +113,10 @@ test.describe('F012-W1 list icons', () => {
       body = (await response.json()) as { icon: string | null; icon_color: string | null }
       expect(body).toMatchObject({ icon: '🪿', icon_color: null })
 
-      await page.getByRole('button', { name: `More actions for ${currentName}` }).click()
+      await page
+        .getByRole('main')
+        .getByRole('button', { name: `More actions for ${currentName}`, exact: true })
+        .click()
       await page.getByRole('menuitem', { name: 'List icon…' }).click()
       const reset = page.getByRole('dialog', { name: `List icon · ${currentName}` })
       await openIconPicker(page)
