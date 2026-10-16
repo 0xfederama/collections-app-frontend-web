@@ -11,6 +11,7 @@ const initial = (): Settings => ({
   workspace_name: 'Our Collection',
   streaming_country_code: 'IT',
   markdown_history_limit: 20,
+  trash_retention_days: null,
   version: 1,
 })
 
@@ -29,6 +30,14 @@ function validationError(body: UpdateSettingsRequest) {
   const limit = body.markdown_history_limit
   if (limit !== undefined && (!Number.isInteger(limit) || limit < 0 || limit > 200)) {
     return invalid('markdown_history_limit', 'must be between 0 and 200')
+  }
+  const retention = body.trash_retention_days
+  if (
+    retention !== undefined &&
+    retention !== null &&
+    (!Number.isInteger(retention) || retention < 1 || retention > 365)
+  ) {
+    return invalid('trash_retention_days', 'must be between 1 and 365')
   }
   return null
 }

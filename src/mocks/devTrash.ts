@@ -77,6 +77,11 @@ export function createTrashBackend(initial: readonly TrashEntry[]) {
       )
       return new HttpResponse(null, { status: 204 })
     }),
+
+    http.delete(url('/api/v1/trash'), () => {
+      state.entries = []
+      return new HttpResponse(null, { status: 204 })
+    }),
   ]
 
   return { handlers, state }

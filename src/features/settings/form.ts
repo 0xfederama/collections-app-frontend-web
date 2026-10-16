@@ -10,6 +10,7 @@ export interface SettingsDraft {
   workspace_name: string
   streaming_country_code: string
   markdown_history_limit: string
+  trash_retention_days: string
 }
 
 export type SettingsField = keyof SettingsDraft
@@ -19,6 +20,7 @@ export type ErrorMap = Partial<Record<SettingsField, string>>
 export const FIELD_ORDER: SettingsField[] = [
   'workspace_name',
   'streaming_country_code',
+  'trash_retention_days',
   'markdown_history_limit',
 ]
 
@@ -27,6 +29,7 @@ export const inputId = (field: SettingsField) => `settings-${field.replaceAll('_
 export const FIELD_LABELS: Record<SettingsField, string> = {
   workspace_name: 'Workspace name',
   streaming_country_code: 'Streaming country',
+  trash_retention_days: 'Delete trash automatically',
   markdown_history_limit: 'Description history limit',
 }
 
@@ -35,6 +38,8 @@ export function draftFromSettings(settings: Settings): SettingsDraft {
     workspace_name: settings.workspace_name,
     streaming_country_code: settings.streaming_country_code,
     markdown_history_limit: String(settings.markdown_history_limit),
+    trash_retention_days:
+      settings.trash_retention_days === null ? 'off' : String(settings.trash_retention_days),
   }
 }
 
@@ -50,6 +55,8 @@ function normalized(draft: SettingsDraft) {
     workspace_name: draft.workspace_name.trim(),
     streaming_country_code: draft.streaming_country_code,
     markdown_history_limit: parseLimit(draft.markdown_history_limit),
+    trash_retention_days:
+      draft.trash_retention_days === 'off' ? null : Number(draft.trash_retention_days),
   }
 }
 
@@ -69,7 +76,7 @@ export function validate(draft: SettingsDraft): ErrorMap {
   return errors
 }
 
-/** Only the fields that differ from the stored settings (a no-op PATCH is avoided by `isDirty`). */
+/** Only the fields saved by the form; retention is saved immediately in its own PATCH. */
 export function buildPatch(base: Settings, draft: SettingsDraft): UpdateSettingsRequest {
   const value = normalized(draft)
   const patch: UpdateSettingsRequest = {}
@@ -88,6 +95,17 @@ export function buildPatch(base: Settings, draft: SettingsDraft): UpdateSettings
 
 /** True when the draft differs from the stored settings; an unparsable limit counts as a change. */
 export function isDirty(base: Settings, draft: SettingsDraft): boolean {
+  const value = normalized(draft)
+  return (
+    value.workspace_name !== base.workspace_name ||
+    value.streaming_country_code !== base.streaming_country_code ||
+    value.markdown_history_limit !== base.markdown_history_limit ||
+    value.trash_retention_days !== base.trash_retention_days
+  )
+}
+
+/** The Save settings button covers only the fields saved by that action. */
+export function isFormDirty(base: Settings, draft: SettingsDraft): boolean {
   const value = normalized(draft)
   return (
     value.workspace_name !== base.workspace_name ||
@@ -129,6 +147,11 @@ export function draftDump(base: Settings, draft: SettingsDraft): string {
   }
   if (draft.markdown_history_limit.trim() !== String(base.markdown_history_limit)) {
     lines.push(`${FIELD_LABELS.markdown_history_limit}: ${draft.markdown_history_limit.trim()}`)
+  }
+  if (value.trash_retention_days !== base.trash_retention_days) {
+    lines.push(
+      `${FIELD_LABELS.trash_retention_days}: ${value.trash_retention_days === null ? 'Off' : `${value.trash_retention_days} days`}`,
+    )
   }
   return lines.join('\n')
 }

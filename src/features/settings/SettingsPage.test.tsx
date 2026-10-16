@@ -56,7 +56,89 @@ describe('W-13 settings: saving', () => {
     expect(field('Workspace name')).toHaveValue('Our Collection')
     expect(field('Streaming country')).toHaveValue('Italy (IT)')
     expect(field('Description history limit')).toHaveValue('20')
+    expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toHaveTextContent(
+      'Off',
+    )
     expect(save()).toBeDisabled()
+  })
+
+  it('saves retention immediately from the settings snapshot and preserves other drafts', async () => {
+    const { patches } = mountBackend()
+    const user = await openSettings()
+    await retype(user, 'Workspace name', 'Still a draft')
+    await user.click(screen.getByRole('combobox', { name: 'Delete trash automatically' }))
+    await user.click(await screen.findByRole('option', { name: '7 days' }))
+    await screen.findByText('Trash retention saved')
+    expect(patches[0]).toEqual({ ifMatch: '"s-1"', body: { trash_retention_days: 7 } })
+    expect(field('Workspace name')).toHaveValue('Still a draft')
+    expect(save()).toBeEnabled()
+    await user.click(save())
+    await screen.findByText('Settings saved')
+    expect(patches[1]).toEqual({ ifMatch: '"s-2"', body: { workspace_name: 'Still a draft' } })
+  })
+
+  it('shows an externally configured retention value instead of displaying Off', async () => {
+    mountBackend({
+      workspace_name: 'Our Collection',
+      streaming_country_code: 'IT',
+      markdown_history_limit: 20,
+      trash_retention_days: 365,
+      version: 1,
+    })
+    await openSettings()
+    expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toHaveTextContent(
+      'Current: 365 days',
+    )
+  })
+
+  it('keeps a failed immediate retention draft and exposes the normal conflict recovery', async () => {
+    const { backend, patches } = mountBackend()
+    const user = await openSettings()
+    backend.bumpExternally({ trash_retention_days: 30 })
+    await user.click(screen.getByRole('combobox', { name: 'Delete trash automatically' }))
+    await user.click(await screen.findByRole('option', { name: '7 days' }))
+    const banner = await screen.findByRole('alert')
+    expect(banner).toHaveTextContent('Someone else changed the settings')
+    expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toHaveTextContent(
+      '7 days',
+    )
+    expect(patches).toEqual([{ ifMatch: '"s-1"', body: { trash_retention_days: 7 } }])
+    await user.click(within(banner).getByRole('button', { name: 'Reload latest' }))
+    const dialog = await screen.findByRole('alertdialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Reload latest' }))
+    await waitFor(() =>
+      expect(
+        screen.getByRole('combobox', { name: 'Delete trash automatically' }),
+      ).toHaveTextContent('30 days'),
+    )
+  })
+
+  it('retries an immediate retention save with the same snapshot and keeps unrelated drafts', async () => {
+    const { patches } = mountBackend()
+    let fail = true
+    let calls = 0
+    server.use(
+      http.patch(settingsUrl, () => {
+        calls += 1
+        if (fail) return HttpResponse.error()
+        return undefined
+      }),
+    )
+    const user = await openSettings()
+    await retype(user, 'Workspace name', 'Unsubmitted name')
+    await user.click(screen.getByRole('combobox', { name: 'Delete trash automatically' }))
+    await user.click(await screen.findByRole('option', { name: '30 days' }))
+    const alert = await screen.findByRole('alert')
+    expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toHaveTextContent(
+      '30 days',
+    )
+    expect(field('Workspace name')).toHaveValue('Unsubmitted name')
+    fail = false
+    await user.click(within(alert).getByRole('button', { name: 'Retry' }))
+    await screen.findByText('Trash retention saved')
+    expect(calls).toBe(2)
+    expect(patches).toEqual([{ ifMatch: '"s-1"', body: { trash_retention_days: 30 } }])
+    expect(save()).toBeEnabled()
   })
 
   it('PATCHes only the changed field with If-Match "s-4", then shows the toast and updates the sidebar', async () => {
@@ -64,6 +146,7 @@ describe('W-13 settings: saving', () => {
       workspace_name: 'Our Collection',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
+      trash_retention_days: null,
       version: 4,
     })
     const user = await openSettings()
@@ -90,6 +173,7 @@ describe('W-13 settings: saving', () => {
       workspace_name: 'A',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
+      trash_retention_days: null,
       version: 4,
     })
     const user = await openSettings()
