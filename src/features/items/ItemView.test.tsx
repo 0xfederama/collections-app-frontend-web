@@ -187,14 +187,56 @@ describe('AT-13 item view: the example movie', () => {
     expect(within(footer).getByText(/^Updated/)).toBeInTheDocument()
   })
 
-  it('F-002 the "…" menu has Move and Delete too', async () => {
-    await renderItem()
+  it('F009-W4 the "…" menu is gone: no Item actions button, Delete opens its confirmation from the footer', async () => {
     const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Item actions' }))
-    const menu = await screen.findByRole('menu')
-    expect(within(menu).getByRole('menuitem', { name: 'Move' })).toBeInTheDocument()
-    await user.click(within(menu).getByRole('menuitem', { name: 'Delete' }))
-    expect(await screen.findByRole('alertdialog')).toHaveTextContent('Delete “The Matrix”?')
+    await renderItem()
+    expect(screen.queryByRole('button', { name: 'Item actions' })).not.toBeInTheDocument()
+    const footer = screen.getByRole('contentinfo')
+
+    await user.click(within(footer).getByRole('button', { name: 'Delete' }))
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('Delete “The Matrix”?')
+    // Cancel keeps us on the page, with the footer still there.
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    const after = screen.getByRole('contentinfo')
+    expect(within(after).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    expect(within(after).getByRole('button', { name: 'Move' })).toBeInTheDocument()
+  })
+
+  it('F009-W4 the footer Move and Delete are keyboard reachable', async () => {
+    const user = userEvent.setup()
+    await renderItem()
+    const remove = within(screen.getByRole('contentinfo')).getByRole('button', { name: 'Delete' })
+    // A real <button>: it takes focus and answers Enter, no pointer needed.
+    remove.focus()
+    expect(remove).toHaveFocus()
+    await user.keyboard('{Enter}')
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+
+    const move = within(screen.getByRole('contentinfo')).getByRole('button', { name: 'Move' })
+    move.focus()
+    expect(move).toHaveFocus()
+    await user.keyboard('{Enter}')
+    expect(await screen.findByRole('dialog', { name: /Move “The Matrix”/ })).toBeInTheDocument()
+  })
+
+  it('F009-W4 the full page ends with Move, Delete and Updated', async () => {
+    mockViewport(1100)
+    renderAt(PATH)
+    await screen.findByRole('heading', { name: 'The Matrix', level: 1 })
+    const article = screen.getByRole('article')
+    const footer = screen.getByRole('contentinfo')
+    // The footer is the last thing of the item: below it there is nothing but the page itself.
+    expect(article.lastElementChild).toBe(footer)
+    expect(
+      within(footer)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Move', 'Delete'])
+    expect(within(footer).getByText(/^Updated/)).toBeInTheDocument()
   })
 
   it('has a Back link to the list on a full page', async () => {

@@ -92,6 +92,29 @@ async function openMove(path = PATH) {
 const confirmDelete = (user: ReturnType<typeof userEvent.setup>, dialog: HTMLElement) =>
   user.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
+describe('F009-W4 Move and Delete at the bottom of the item page', () => {
+  it('the "…" menu is gone and both buttons live in the footer', async () => {
+    renderRouter()
+    await screen.findByRole('heading', { name: 'The Matrix', level: 1 })
+    expect(screen.queryByRole('button', { name: 'Item actions' })).not.toBeInTheDocument()
+    const footer = screen.getByRole('contentinfo')
+    expect(within(footer).getByRole('button', { name: 'Move' })).toBeInTheDocument()
+    expect(within(footer).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    expect(within(footer).getByText(/^Updated/)).toBeInTheDocument()
+  })
+
+  it('Delete keeps its confirmation and is reachable from the keyboard alone', async () => {
+    renderRouter()
+    await screen.findByRole('heading', { name: 'The Matrix', level: 1 })
+    const remove = within(screen.getByRole('contentinfo')).getByRole('button', { name: 'Delete' })
+    remove.focus()
+    await userEvent.keyboard('{Enter}')
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('Delete “The Matrix”?')
+    expect(dialog).toHaveTextContent(/Trash/)
+  })
+})
+
 describe('AT-11 delete item (moves it to Trash)', () => {
   it('asks for confirmation and mentions Trash', async () => {
     const { dialog } = await openDelete()

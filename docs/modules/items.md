@@ -20,7 +20,7 @@ The item page at `/lists/:listId/items/:itemId`: title block, icon-only links, h
 
 ## Interfaces
 
-- `ItemPage()`: default export. `ItemView({ item })`, `ItemActions({ actions })`, `ItemMenu`, `useItemActions(item)`.
+- `ItemPage()`: default export. `ItemView({ item })`, `ItemActions({ actions })`, `useItemActions(item)`.
 - `InlineField`, `FieldBlock`, `EditGuardProvider`, `useEditGuard()`: in-place field editors and the unsaved guard.
 - `useItem`, `useItemContent`, `useUpdateItem`, `useCreateItem(listId)`, `useDeleteItem`, `useMoveItem`: `api.ts`.
 - `DescriptionField({ itemId, listId })`, `useSaveContent()`, `useRestoreContent()`: `content/`.
