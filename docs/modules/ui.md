@@ -10,7 +10,8 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `src/components/ui/icons.ts`: the only Lucide import site; named glyphs, `kindIcons`, `kindLabels`.
 - `src/components/ui/sortable.tsx`: the only `@dnd-kit` importer (pinned 0.5.0, D-061).
 - `src/components/ui/fieldStyles.ts`, `returnFocus.ts`: shared input chrome; focus return.
-- `src/components/ServiceIcon.tsx`: `ServiceIcon` (streaming) and `LinkIcon` (Google, Letterboxd, IMDb, Reddit) tiles.
+- `src/components/ServiceIcon.tsx`: `ServiceIcon` (streaming) and `LinkIcon` (Google, Letterboxd, IMDb, Reddit) tiles, `TILE_SIZE`.
+- `src/lib/text.ts`: `firstLetter`, shared by the letter tile and the item-cover placeholder.
 - `src/assets/services/*.webp|svg`, `README.md`: local favicons (96 px) and vendored Simple Icons SVGs (Google, IMDb), never fetched at runtime.
 - `src/dev/DevUiRoute.tsx`: `/dev/ui` gallery, dev builds only.
 
@@ -24,7 +25,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `ToastProvider` / `useToast()`: `(options: { kind?, title, description?, action? })`.
 - `Tree<T>`: `nodes`, `expanded`, `selected`, `renderRow`, `sortable(node)`, `onReorder(move)`, `acceptsDrop(target, sourceId)`.
 - `SortableProvider({ onMove })`, `useSortableRow(id, slot)`, `arrayMove`.
-- `ServiceIcon({ name, paid?, size? })`, `LinkIcon({ name, size? })`.
+- `ServiceIcon({ name, paid?, size? })`, `LinkIcon({ name, size? })`; both default to `TILE_SIZE` (36).
 
 ## Gotchas
 

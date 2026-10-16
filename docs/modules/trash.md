@@ -35,6 +35,7 @@ The `/trash` page: lists deleted batches (folders, lists, items), restores them 
 ## Gotchas
 
 - Layout: two-column rows from 768 px (`md`), a three-column table from 1280 px (`xl`), stacked cards below.
+- The empty Trash centres the shared `EmptyState` in the content area (`min-h-full` on the page section gives `items-center` room); `EmptyState` itself is unchanged (2026-10-16).
 - Opening the page always refetches (`staleTime: 0`, `refetchOnMount: 'always'`), since delete actions elsewhere do not update it.
 - `trash/api.test.ts` checks `LISTS_KEY_ROOT` and `ITEMS_KEY_ROOT` against the real keys.
 - A 404 or 409 refetches trash and tree. A 404 shows an "Already gone" toast and closes the dialog.
