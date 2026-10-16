@@ -108,9 +108,9 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   }
 
   const save = async (event?: FormEvent) => {
-    retryAction.current = () => void save()
     event?.preventDefault()
     if (retentionDirty) return
+    retryAction.current = () => void save()
     setFailure(null)
     setOtherErrors([])
     const found = validate(draft)
