@@ -79,6 +79,7 @@ export function TrashPage() {
         result = await query.fetchNextPage()
         if (result.isError) throw result.error ?? new Error('Trash page could not be loaded')
       }
+      if (!result.data) throw new Error('Trash entries could not be loaded')
       const allEntries = result.data.pages.flatMap((page) => page.data)
       setEmptyCount(allEntries.reduce((total, entry) => total + entry.counts.items, 0))
     } catch {
