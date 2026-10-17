@@ -27,3 +27,4 @@ Quick add (F-002): one dialog to create an item from anywhere: a title, destinat
 - Client checks (image type and size, length limits) run before the request.
 - No kind is chosen here: the item takes the list's kind.
 - For movie and TV destinations, title suggestions appear only when the server reports TMDB lookup is available; selecting a suggestion sends its TMDB id when creating the item.
+- If TMDB lookup becomes unavailable during creation, the dialog preserves the typed title and offers retrying lookup or creating without TMDB metadata.

@@ -1,6 +1,6 @@
 import { useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { kindIcons, kindLabels } from '../../components/ui'
+import { Button, kindIcons, kindLabels } from '../../components/ui'
 import { ApiError, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemKind } from './api'
 import { createLookupSelection, TmdbTitleField } from './TmdbTitleField'
@@ -33,6 +33,7 @@ export function NewItemDraft({
   const [title, setTitle] = useState('')
   const [error, setError] = useState<string>()
   const [failure, setFailure] = useState<string>()
+  const [lookupUnavailable, setLookupUnavailable] = useState(false)
   const [tmdbId, setTmdbId] = useState<number>()
   const box = useRef<HTMLDivElement>(null)
   const KindIcon = kindIcons[kind]
@@ -50,7 +51,7 @@ export function NewItemDraft({
   }
   const cancel = () => leave(`/lists/${listId}`)
 
-  const commit = async () => {
+  const commit = async (lookup?: boolean) => {
     if (create.isPending) return
     const trimmed = title.trim()
     setFailure(undefined)
@@ -60,13 +61,30 @@ export function NewItemDraft({
       const created = await create.mutateAsync({
         title: trimmed,
         ...createLookupSelection(kind, settings.data?.lookup_available === true, tmdbId),
+        ...(lookup === undefined ? {} : { lookup }),
       })
       leave(`/lists/${listId}/items/${created.id}`)
     } catch (caught) {
+      if (
+        caught instanceof ApiError &&
+        caught.status === 503 &&
+        (caught.code === 'upstream_unavailable' || caught.code === 'lookup_disabled')
+      ) {
+        setLookupUnavailable(true)
+        setFailure(undefined)
+      } else {
+        setLookupUnavailable(false)
+      }
       if (caught instanceof ApiError && caught.status === 422) {
         setError(caught.errors?.find((e) => e.field === 'title')?.message ?? caught.title)
       } else if (caught instanceof ApiError && caught.status === 409) {
         setFailure('This list no longer exists or is in Trash.')
+      } else if (
+        caught instanceof ApiError &&
+        caught.status === 503 &&
+        (caught.code === 'upstream_unavailable' || caught.code === 'lookup_disabled')
+      ) {
+        // Keep the draft in place so the user can retry lookup or save the typed title alone.
       } else if (
         caught instanceof NetworkError ||
         (caught instanceof ApiError && caught.status >= 500)
@@ -133,7 +151,32 @@ export function NewItemDraft({
           />
         </div>
       </header>
-      {failure && <MessageBanner>{failure}</MessageBanner>}
+      {lookupUnavailable ? (
+        <MessageBanner>
+          TMDB metadata is unavailable right now. Your title is still here; retry the lookup or add
+          it without TMDB metadata.
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void commit()}
+              pending={create.isPending}
+            >
+              Retry TMDB lookup
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void commit(false)}
+              pending={create.isPending}
+            >
+              Add without TMDB metadata
+            </Button>
+          </div>
+        </MessageBanner>
+      ) : (
+        failure && <MessageBanner>{failure}</MessageBanner>
+      )}
       <p className="text-sm text-text-muted">
         Press Enter to add it to {listName}, or Esc to discard it. The other fields and the
         description can be filled in once it is added.
