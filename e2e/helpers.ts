@@ -37,8 +37,8 @@ export const createItem = (
   request: APIRequestContext,
   listId: string,
   title: string,
-  extra: { website?: string; metadata?: object } = {},
-) => post(request, `/api/v1/lists/${listId}/items`, { title, ...extra })
+  extra: { website?: string; metadata?: object; lookup?: boolean; tmdb_id?: number } = {},
+) => post(request, `/api/v1/lists/${listId}/items`, { lookup: false, title, ...extra })
 
 /** Moves a folder (and everything in it) to Trash. */
 export async function trashFolder(request: APIRequestContext, folder: Created) {

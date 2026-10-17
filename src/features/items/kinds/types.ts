@@ -28,12 +28,16 @@ export interface Field<K extends string = string> {
 }
 
 /**
- * Builds the field list of one kind, checked against the generated metadata type `M`: a key that
- * is not in `M` is an error, and so is a key of `M` that has no entry. A renamed or added field in
- * the spec therefore breaks the build until its config is updated.
+ * Builds the user-editable field list checked against generated metadata `M`. Internal metadata
+ * keys such as provider IDs may be excluded; every other key must have a field entry.
  */
-export function defineFields<M>() {
-  return <const F extends readonly Field<keyof M & string>[]>(
-    fields: F & ([Exclude<keyof M & string, F[number]['key']>] extends [never] ? unknown : never),
+type ProviderBookkeeping = 'tmdb_id' | 'lookup_disabled'
+
+export function defineFields<M, Ignored extends keyof M = Extract<keyof M, ProviderBookkeeping>>() {
+  return <const F extends readonly Field<Exclude<keyof M, Ignored> & string>[]>(
+    fields: F &
+      ([Exclude<Exclude<keyof M, Ignored> & string, F[number]['key']>] extends [never]
+        ? unknown
+        : never),
   ): readonly Field[] => fields
 }

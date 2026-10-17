@@ -9,6 +9,7 @@ import { FieldBlock } from './inline/FieldBlock'
 import { titleSpec } from './inline/fields'
 import { InlineField } from './inline/InlineField'
 import { ItemHero } from './ItemHero'
+import { TmdbItemActions } from './TmdbItemActions'
 
 const formatDate = (iso: string) =>
   new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(
@@ -55,6 +56,7 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
         </header>
         <FieldBlock item={item} addWebsiteRequest={websiteRequest} />
         <DescriptionField itemId={item.id} listId={item.list_id} />
+        {(item.kind === 'movie' || item.kind === 'tv_show') && <TmdbItemActions item={item} />}
       </div>
       <footer
         className={cx(

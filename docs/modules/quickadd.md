@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Quick add (F-002): one dialog to create an item from anywhere: a title, a destination list and optionally a website, a Markdown description and an image. It replaced the old "Add item" dialog. Spec: `design-docs/features/F-002-ui-refresh.md`.
+Quick add (F-002): one dialog to create an item from anywhere: a title, destination list and optional TMDB match, website, Markdown description and image. It replaced the old "Add item" dialog. Spec: `design-docs/features/F-002-ui-refresh.md`.
 
 ## Key files
 
 - `src/features/quickadd/QuickAddProvider.tsx`: mounted once in `AppShell`; owns the dialog, the `N` shortcut and `open()`.
 - `QuickAddContext.tsx`: `QuickAddContext`, `useQuickAdd()`.
-- `QuickAddDialog.tsx`: the form, validation, create-then-attach submit and navigation to the new item.
+- `QuickAddDialog.tsx`: the form, TMDB title suggestions, validation, create-then-attach submit and navigation to the new item.
 - `QuickAdd.test.tsx`: shortcut and submit tests.
 
 ## Interfaces
@@ -26,3 +26,4 @@ Quick add (F-002): one dialog to create an item from anywhere: a title, a destin
 - Create errors: 422 maps to the title or website field; 409 means the list is gone or in Trash; network or 5xx says nothing was created.
 - Client checks (image type and size, length limits) run before the request.
 - No kind is chosen here: the item takes the list's kind.
+- For movie and TV destinations, title suggestions appear only when the server reports TMDB lookup is available; selecting a suggestion sends its TMDB id when creating the item.

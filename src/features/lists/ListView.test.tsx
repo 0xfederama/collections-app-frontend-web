@@ -94,7 +94,15 @@ function useBackend(options: Options = {}): Recorded {
       const url = new URL(request.url)
       state.itemRequests.push(url)
       const q = url.searchParams.get('q')?.toLowerCase()
-      let rows = q ? state.items.filter((i) => i.title.toLowerCase().includes(q)) : [...state.items]
+      let rows = q
+        ? state.items.filter(
+            (i) =>
+              i.title.toLowerCase().includes(q) ||
+              (i.kind === 'movie' &&
+                typeof i.metadata.director === 'string' &&
+                i.metadata.director.toLowerCase().includes(q)),
+          )
+        : [...state.items]
       if ((url.searchParams.get('sort') ?? state.list.sort_mode) === 'title') {
         rows = rows.sort((a, b) => a.title.localeCompare(b.title))
       }
@@ -144,7 +152,10 @@ const titles = () =>
   within(screen.getByRole('list', { name: 'Items' }))
     .getAllByRole('link')
     .map((a) => a.textContent)
-const filterField = () => screen.getByRole('searchbox', { name: 'Filter items by title' })
+const filterField = (kind: List['kind'] = 'movie') =>
+  screen.getByRole('searchbox', {
+    name: kind === 'movie' ? 'Filter items by title or director' : 'Filter items by title',
+  })
 const sortSelect = () => screen.getByRole('combobox', { name: /Sort/ })
 
 const radioName = { compact: 'Compact rows', thumbnail: 'Thumbnail rows', grid: 'Grid' } as const
@@ -314,6 +325,31 @@ describe('W-06 URL state: sort and filter', () => {
     )
   })
 
+  it('F013-W3 offers and requests the movie Director sort', async () => {
+    const backend = useBackend({ list: { kind: 'movie' } })
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(sortSelect())
+    await user.click(await screen.findByRole('option', { name: 'Director' }))
+    expect(router.state.location.search).toBe('?sort=director')
+    await waitFor(() =>
+      expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('director'),
+    )
+  })
+
+  it('F013-W3 ignores ?sort=director on non-movie lists', async () => {
+    treeWithKind('tv_show')
+    const backend = useBackend({ list: { kind: 'tv_show' } })
+    const user = userEvent.setup()
+    renderList(at('?sort=director'))
+    await itemsList()
+    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
+    await user.click(sortSelect())
+    expect(screen.queryByRole('option', { name: 'Director' })).not.toBeInTheDocument()
+  })
+
   it('F002 a car list offers "Price" and picking it sets ?sort=price', async () => {
     treeWithKind('car')
     const backend = useBackend({ list: { kind: 'car' } })
@@ -386,6 +422,23 @@ describe('W-06 URL state: sort and filter', () => {
     await waitFor(() => expect(backend.itemRequests.at(-1)!.searchParams.get('q')).toBe('Item 2'))
     expect(await screen.findByText('1 of 3 items')).toBeInTheDocument()
     expect(titles()).toEqual(['Item 2'])
+  })
+
+  it('F013-W3 movie filter matches director names through the q contract', async () => {
+    const backend = useBackend({
+      list: { kind: 'movie' },
+      items: [
+        makeItem(1, { title: 'Barbie', metadata: { director: 'Greta Gerwig' } }),
+        makeItem(2, { title: 'Alien', metadata: { director: 'Ridley Scott' } }),
+      ],
+    })
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.type(filterField(), 'greta')
+    await waitFor(() => expect(router.state.location.search).toBe('?q=greta'))
+    await waitFor(() => expect(backend.itemRequests.at(-1)!.searchParams.get('q')).toBe('greta'))
+    expect(titles()).toEqual(['Barbie'])
   })
 
   it('picking a different sort sets ?sort= and offers to make it the default', async () => {
@@ -967,7 +1020,7 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
 
     const panel = await screen.findByRole('complementary', { name: 'Item details' })
-    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
     await waitFor(() => expect(title).toHaveFocus())
     expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/new`)
     const rows = within(screen.getByRole('list', { name: 'Items' })).getAllByRole('listitem')
@@ -985,13 +1038,13 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await itemsList()
     await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
     const panel = await screen.findByRole('complementary', { name: 'Item details' })
-    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
     await user.keyboard('{Enter}')
     expect(await within(panel).findByText('Enter a title.')).toBeInTheDocument()
     expect(posts).toHaveLength(0)
 
     await user.type(title, '  Field notebook {Enter}')
-    await waitFor(() => expect(posts).toEqual([{ title: 'Field notebook' }]))
+    await waitFor(() => expect(posts).toEqual([{ title: 'Field notebook', lookup: true }]))
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
     )
@@ -1009,7 +1062,7 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await itemsList()
     await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
     const panel = await screen.findByRole('complementary', { name: 'Item details' })
-    await user.type(within(panel).getByRole('textbox', { name: 'Title' }), 'Half typed')
+    await user.type(within(panel).getByRole('combobox', { name: 'Title' }), 'Half typed')
     await user.keyboard('{Escape}')
 
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
@@ -1028,7 +1081,7 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await itemsList()
     await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
     const panel = await screen.findByRole('complementary', { name: 'Item details' })
-    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
     fireEvent.blur(title, { relatedTarget: document.body })
 
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
@@ -1044,7 +1097,7 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await itemsList()
     await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
     expect(await screen.findByRole('link', { name: /Back to/ })).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: 'Title' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Title' })).toBeInTheDocument()
     await user.keyboard('{Escape}')
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
   })

@@ -32,7 +32,10 @@ const field = (kind: ItemKind, key: string) => {
 describe('kind field config matches the vendored spec', () => {
   it.each(schemaOf)('%s: same property keys as %s', (kind, schema) => {
     const properties = spec.components.schemas[schema]!.properties
-    expect(new Set(kindFields[kind].map((f) => f.key))).toEqual(new Set(Object.keys(properties)))
+    const nonEditable = ['tmdb_id', 'lookup_disabled']
+    expect(new Set(kindFields[kind].map((f) => f.key))).toEqual(
+      new Set(Object.keys(properties).filter((key) => !nonEditable.includes(key))),
+    )
   })
 
   it.each(schemaOf)('%s: enum options equal the spec enum of %s', (kind, schema) => {
@@ -81,6 +84,7 @@ describe('formatField', () => {
 
   it('shows text as is', () => {
     expect(formatField(field('car', 'make'), 'Fiat')).toBe('Fiat')
+    expect(formatField(field('movie', 'director'), 'Ridley Scott')).toBe('Ridley Scott')
   })
 
   it.each([[undefined], [null]])('unset (%s) gives null', (value) => {
@@ -136,6 +140,12 @@ describe('kindRows', () => {
         streaming: { country: 'IT' },
       }),
     ).toEqual([])
+  })
+
+  it('shows the director as an ordinary movie field row', () => {
+    expect(kindRows('movie', { director: 'Ridley Scott' })).toEqual([
+      { key: 'director', label: 'Director', text: 'Ridley Scott' },
+    ])
   })
 
   it('tv_show yields one Years row and no separate year rows', () => {

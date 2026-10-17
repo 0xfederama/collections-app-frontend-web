@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { createSettingsBackend } from '../../mocks/devSettings'
+import type { Settings } from './api'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { mockViewport, renderAt } from '../../test-utils'
@@ -27,8 +28,17 @@ interface Patch {
 }
 
 /** Wraps a PATCH recorder in front of the stateful backend. */
-function mountBackend(start?: Parameters<typeof createSettingsBackend>[0]) {
-  const backend = createSettingsBackend(start)
+function mountBackend(start?: Partial<Settings>) {
+  const backend = createSettingsBackend({
+    workspace_name: 'Our Collection',
+    streaming_country_code: 'IT',
+    metadata_language: 'en-US',
+    lookup_available: false,
+    markdown_history_limit: 20,
+    trash_retention_days: null,
+    version: 1,
+    ...start,
+  })
   const patches: Patch[] = []
   server.use(
     http.patch(settingsUrl, async ({ request }) => {
@@ -212,6 +222,48 @@ describe('W-13 settings: saving', () => {
     await user.click(save())
     await screen.findByText('Settings saved')
     expect(patches[0]!.body).toEqual({ streaming_country_code: 'FR' })
+  })
+
+  it('saves the metadata language through the settings snapshot', async () => {
+    const { patches } = mountBackend({
+      workspace_name: 'Our Collection',
+      streaming_country_code: 'IT',
+      metadata_language: 'en-US',
+      lookup_available: true,
+      markdown_history_limit: 20,
+      trash_retention_days: null,
+      version: 4,
+    })
+    const user = await openSettings()
+    const language = screen.getByRole('combobox', { name: 'Metadata language' })
+    expect(language).toHaveTextContent('English (United States)')
+    await user.click(language)
+    await user.click(await screen.findByRole('option', { name: 'Italiano (Italia)' }))
+    await user.click(save())
+    await screen.findByText('Settings saved')
+    expect(patches).toEqual([{ ifMatch: '"s-4"', body: { metadata_language: 'it-IT' } }])
+  })
+
+  it('shows required TMDB and JustWatch attribution and external project links in About', async () => {
+    mountBackend()
+    await openSettings()
+    const about = screen.getByRole('region', { name: 'About' })
+    expect(within(about).getByRole('img', { name: 'TMDB' })).toBeInTheDocument()
+    expect(about).toHaveTextContent(
+      'This product uses the TMDB API but is not endorsed or certified by TMDB.',
+    )
+    expect(within(about).getByRole('link', { name: 'JustWatch' })).toHaveAttribute(
+      'href',
+      'https://www.justwatch.com/',
+    )
+    expect(within(about).getByRole('link', { name: 'GitHub repository' })).toHaveAttribute(
+      'href',
+      'https://github.com/0xfederama/collections-app',
+    )
+    expect(within(about).getByRole('link', { name: 'Author profile' })).toHaveAttribute(
+      'href',
+      'https://github.com/0xfederama',
+    )
   })
 
   it('reverting an edit disables Save again', async () => {

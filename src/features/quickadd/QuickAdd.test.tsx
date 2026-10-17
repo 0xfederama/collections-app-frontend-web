@@ -48,7 +48,7 @@ describe('F002-W4 quick add', () => {
       expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
     )
     expect(router.state.location.search).toBe('')
-    expect(posts).toEqual([{ title: 'Field notebook' }])
+    expect(posts).toEqual([{ title: 'Field notebook', lookup: true }])
     expect(screen.queryByRole('dialog', { name: 'Quick add' })).not.toBeInTheDocument()
   })
 })

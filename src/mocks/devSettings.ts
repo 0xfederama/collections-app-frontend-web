@@ -10,6 +10,8 @@ const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 const initial = (): Settings => ({
   workspace_name: 'Our Collection',
   streaming_country_code: 'IT',
+  metadata_language: 'en-US',
+  lookup_available: false,
   markdown_history_limit: 20,
   trash_retention_days: null,
   version: 1,
@@ -20,12 +22,22 @@ const invalid = (field: string, message: string) =>
 
 /** The first validation error of a PATCH body, in the shape of the backend's 422 (API.md). */
 function validationError(body: UpdateSettingsRequest) {
-  const { workspace_name: name, streaming_country_code: country } = body
+  const {
+    workspace_name: name,
+    streaming_country_code: country,
+    metadata_language: metadataLanguage,
+  } = body
   if (name !== undefined && (name.trim() === '' || name.trim().length > 200)) {
     return invalid('workspace_name', 'must be 1 to 200 characters')
   }
   if (country !== undefined && !/^[A-Z]{2}$/.test(country)) {
     return invalid('streaming_country_code', 'must be an ISO 3166-1 alpha-2 code')
+  }
+  if (metadataLanguage !== undefined && !/^[a-z]{2}(?:-[A-Z]{2})?$/.test(metadataLanguage)) {
+    return invalid(
+      'metadata_language',
+      'must be an ISO 639-1 language code with an optional region',
+    )
   }
   const limit = body.markdown_history_limit
   if (limit !== undefined && (!Number.isInteger(limit) || limit < 0 || limit > 200)) {

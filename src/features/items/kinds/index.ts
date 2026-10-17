@@ -28,6 +28,11 @@ const sortKeyLabels: Partial<Record<ItemKind, string>> = {
   camera: 'Megapixels',
 }
 
+/** Movie director has its own API sort mode rather than `kind_key`. */
+export function hasDirectorSort(kind: ItemKind): boolean {
+  return kind === 'movie'
+}
+
 export function sortKeyLabel(kind: ItemKind): string | undefined {
   return sortKeyLabels[kind]
 }

@@ -16,13 +16,13 @@ import {
   type SortMode,
 } from './api'
 import { NEW_ITEM_ID } from '../items/newItem'
-import { hasPrice } from '../items/kinds'
+import { hasDirectorSort, hasPrice } from '../items/kinds'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { resolvePinned } from './pinned'
 import { useScrollRestore } from './scrollRestore'
 
-const SORTS: readonly SortMode[] = ['manual', 'title', 'updated', 'price', 'kind_key']
+const SORTS: readonly SortMode[] = ['manual', 'title', 'updated', 'price', 'kind_key', 'director']
 const FILTER_DEBOUNCE_MS = 250
 
 function parseSort(value: string | null): SortMode | null {
@@ -47,10 +47,11 @@ export function ListView({ treeList }: { treeList: List }) {
   const list = listQuery.data
   // A sort the list's kind does not define falls back to the list's mode, so a stale bookmark (or a
   // kind change) cannot put the list in a sort the server rejects: `kind_key` on a generic list
-  // (F007-W9), `price` where the kind has no price (D-085).
+  // (F007-W9), `price` where the kind has no price (D-085), or `director` off movie lists (F013).
   const sortOverride =
     (parsedSort === 'kind_key' && treeList.kind === 'generic') ||
-    (parsedSort === 'price' && !hasPrice(treeList.kind))
+    (parsedSort === 'price' && !hasPrice(treeList.kind)) ||
+    (parsedSort === 'director' && !hasDirectorSort(treeList.kind))
       ? null
       : parsedSort
   // The tree is the source of truth for renames, moves and description edits (W-05 refetches it

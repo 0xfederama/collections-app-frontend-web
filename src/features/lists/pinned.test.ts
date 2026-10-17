@@ -74,6 +74,7 @@ describe('F009-W2 the pinned fields are the ones the kind defines', () => {
     expect(pinnableFields('movie').map((f) => f.key)).toEqual([
       'release_year',
       'runtime_minutes',
+      'director',
       'streaming',
     ])
     expect(pinnableFields('tv_show').map((f) => f.key)).not.toContain('price')
@@ -100,6 +101,13 @@ describe('F002-W2 pinned values', () => {
     const movie = item('movie', { metadata: { runtime_minutes: 124 } })
     expect(formatPinnedValue('runtime_minutes', movie, 'movie')).toBe('124 min')
     expect(formatPinnedValue('release_year', movie, 'movie')).toBeNull()
+    expect(
+      formatPinnedValue(
+        'director',
+        item('movie', { metadata: { director: 'Greta Gerwig' } }),
+        'movie',
+      ),
+    ).toBe('Greta Gerwig')
   })
 
   it('pinnedPlacements: the first key beside the title, the second in the corner', () => {

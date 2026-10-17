@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`/settings`: workspace settings, immediate trash-retention choice, and read-only Connection information.
+`/settings`: workspace settings, metadata language, immediate trash-retention choice, and read-only Connection and About information.
 
 ## Key files
 
@@ -10,12 +10,13 @@
 - `form.ts`: draft, validation and patch helpers.
 - `SettingsForm.tsx`: snapshot form, retention selector and conflict handling.
 - `ConnectionSection.tsx`: readiness and build information.
+- `AboutSection.tsx`, `src/assets/tmdb-logo.svg`: TMDB and JustWatch attribution.
 - `src/mocks/devSettings.ts`: dev worker fake.
 
 ## Interfaces
 
 - `useSettings()`, `useWorkspaceName()`, `useUpdateSettings()`.
-- `SettingsForm({ settings })`, `ConnectionSection()`, `SettingsRoute()`.
+- `SettingsForm({ settings })`, `ConnectionSection()`, `AboutSection()`, `SettingsRoute()`.
 - `validate`, `buildPatch`, `draftFromSettings`, `draftDump` (`form.ts`).
 
 ## Gotchas
@@ -25,3 +26,4 @@
 - Changing retention changes the automatic deletion policy; it does not immediately purge existing trash. The backend's scheduled job applies retention.
 - Network errors keep edits and offer retry; 422 errors map to fields.
 - Theme is per device and is not part of the settings PATCH. See [design docs](/Users/federico/Developer/collections-app/design-docs/).
+- Metadata language is saved with the workspace settings and controls the language used for TMDB-filled titles and details.

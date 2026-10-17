@@ -34,6 +34,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "body": {
       "workspace_name": "Our Collection",
       "streaming_country_code": "IT",
+      "metadata_language": "en-US",
+      "lookup_available": true,
       "markdown_history_limit": 20,
       "trash_retention_days": null,
       "version": 4
@@ -47,9 +49,30 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "body": {
       "workspace_name": "Our Collection",
       "streaming_country_code": "IT",
+      "metadata_language": "en-US",
+      "lookup_available": true,
       "markdown_history_limit": 20,
       "trash_retention_days": null,
       "version": 4
+    }
+  },
+  "listTmdbSuggestions": {
+    "method": "get",
+    "path": "/api/v1/tmdb/suggestions",
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "available": true,
+      "results": [
+        {
+          "tmdb_id": 603,
+          "title": "The Matrix",
+          "original_title": "The Matrix",
+          "year": 1999,
+          "poster_url": "https://image.tmdb.org/t/p/w342/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+          "overview": "A computer hacker learns the truth."
+        }
+      ]
     }
   },
   "getTree": {
@@ -530,6 +553,49 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "path": "/api/v1/items/{id}",
     "status": 204,
     "contentType": null
+  },
+  "lookupItemMetadata": {
+    "method": "post",
+    "path": "/api/v1/items/{id}/lookup",
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "id": "7c1e5a10-0000-4000-8000-000000000101",
+      "list_id": "7c1e5a10-0000-4000-8000-000000000011",
+      "title": "The Matrix",
+      "kind": "movie",
+      "image": {
+        "source": "upload",
+        "attachment_id": "7c1e5a10-0000-4000-8000-000000000201",
+        "url": "/api/v1/attachments/7c1e5a10-0000-4000-8000-000000000201/file",
+        "thumbnail_url": "/api/v1/attachments/7c1e5a10-0000-4000-8000-000000000201/thumbnail",
+        "width": 1000,
+        "height": 1500,
+        "original_filename": "matrix.jpg"
+      },
+      "price": null,
+      "website": "https://www.warnerbros.com/movies/matrix",
+      "metadata": {
+        "release_year": 1999,
+        "runtime_minutes": 136,
+        "imdb_url": "https://www.imdb.com/title/tt0133093/",
+        "streaming": {
+          "country": "IT",
+          "platforms": [
+            "Netflix",
+            "Prime Video"
+          ],
+          "paid_platforms": [
+            "Prime Video"
+          ]
+        }
+      },
+      "content_version": 2,
+      "sort_order": 0,
+      "version": 3,
+      "created_at": "2026-10-14T09:31:00Z",
+      "updated_at": "2026-10-14T10:00:00Z"
+    }
   },
   "moveItem": {
     "method": "post",

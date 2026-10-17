@@ -4,26 +4,25 @@ import { createItem, createList, itemPanel, itemUrl, uniqueName } from './helper
 test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
   test('create a movie item, fill it in, save, reload, values stick', async ({ page, request }) => {
     const listName = uniqueName('Films')
-    const title = uniqueName('Heat')
+    const title = '[mock] movie name'
     const older = uniqueName('Zodiac')
     const website = `https://example.com/${Date.now()}`
     const list = await createList(request, listName, 'movie')
-    // Created first, so it is first in manual order; its year (2020) is later than ours (2005).
+    // Created first, so it is first in manual order; its year (2020) is later than the lookup's 2001.
     await createItem(request, list.id, older, { metadata: { release_year: 2020 } })
 
     await page.goto(`/lists/${list.id}`)
     await page.getByRole('button', { name: 'New item' }).click()
     // F008-W9: "New item" in a list opens a draft in the side page; Enter on the title creates it.
     const panel = itemPanel(page)
-    await panel.getByRole('textbox', { name: 'Title' }).fill(title)
-    await panel.getByRole('textbox', { name: 'Title' }).press('Enter')
+    await panel.getByRole('combobox', { name: 'Title' }).fill(title)
+    await panel.getByRole('combobox', { name: 'Title' }).press('Enter')
     await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
 
-    // Each field is edited in place and saved on its own (pen, input, Enter or ✓).
+    // The deterministic lookup filled the release year; revealing it stays read-only.
     await panel.getByRole('button', { name: 'Add field' }).click()
     await page.getByRole('menuitem', { name: 'Release year' }).click()
-    await panel.getByRole('textbox', { name: 'Release year' }).fill('2005')
-    await panel.getByRole('button', { name: 'Save release year' }).click()
+    await expect(panel.getByText('2001', { exact: true })).toBeVisible()
     await expect(panel.getByRole('button', { name: 'Edit release year' })).toBeVisible()
 
     await panel.getByRole('button', { name: 'Add field' }).click()
@@ -37,16 +36,16 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
     await expect(item.getByRole('heading', { level: 1, name: title })).toBeVisible()
     // F009-W1: the item page is calm by default. The website shows, the kind field does not.
     await expect(item.getByText(website)).toBeVisible()
-    await expect(item.getByText('2005', { exact: true })).toBeHidden()
+    await expect(item.getByText('2001', { exact: true })).toBeHidden()
     // Adding it back with "+ Add field" shows the saved value, read-only: no editor opens.
     await item.getByRole('button', { name: 'Add field' }).click()
     await page.getByRole('menuitem', { name: 'Release year' }).click()
     await expect(item.getByRole('textbox', { name: 'Release year' })).toBeHidden()
-    await expect(item.getByText('2005', { exact: true })).toBeVisible()
+    await expect(item.getByText('2001', { exact: true })).toBeVisible()
     // A movie has no Website link button (F-002); the saved value reads in the Details row.
     await expect(item.getByText(website)).toBeVisible()
 
-    // Sort by the kind key (release year, ascending): 2005 before 2020.
+    // Sort by the kind key (release year, ascending): 2001 before 2020.
     await page.goto(`/lists/${list.id}`)
     const links = page.getByRole('list', { name: 'Items' }).getByRole('link')
     await expect(links).toHaveText([older, title])
@@ -199,8 +198,8 @@ test.describe('D-085 price only on the kinds that have one', () => {
     await page.goto(`/lists/${list.id}`)
     await page.getByRole('button', { name: 'New item' }).click()
     const panel = itemPanel(page)
-    await panel.getByRole('textbox', { name: 'Title' }).fill(uniqueName('Heat'))
-    await panel.getByRole('textbox', { name: 'Title' }).press('Enter')
+    await panel.getByRole('combobox', { name: 'Title' }).fill('[mock] movie name')
+    await panel.getByRole('combobox', { name: 'Title' }).press('Enter')
     await panel.getByRole('button', { name: 'Add field' }).click()
     await expect(page.getByRole('menuitem', { name: 'Website' })).toBeVisible()
     await expect(page.getByRole('menuitem', { name: 'Price', exact: true })).toBeHidden()

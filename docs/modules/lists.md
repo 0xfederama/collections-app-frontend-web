@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The list screen at `/lists/:listId`, its header and item rows, and list icon selection and display.
+The list screen at `/lists/:listId`, its header and item rows, including movie director filtering and sorting, and list icon selection and display.
 
 ## Key files
 
@@ -19,11 +19,12 @@ The list screen at `/lists/:listId`, its header and item rows, and list icon sel
 - `ListIconMark({ icon, iconColor, kind, className, iconClassName })`: list mark.
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
 - `useListItems`, `useUpdateList`, `useReorderItems`, `listKeys`: list API hooks and query keys.
-- `resolvePinned`, `defaultPinned`, `pinnableFields`, `formatPrice`: list display helpers.
+- `resolvePinned`, `defaultPinned`, `pinnableFields`, `formatPrice`, `sortOptionsFor`: list display helpers and valid sort choices.
 
 ## Gotchas
 
 - Icon choices are stored as `i:<name>` for built-in marks or as one emoji; the keyword aliases are vendored locally without an emoji dependency.
 - Ten named colors apply only to built-in icon marks; emoji and default marks remain uncolored. The neutral tile is shared across views.
 - List icon writes are owned by the tree feature and use the list version with `If-Match`.
+- Movie lists can filter by director and select the `director` sort; stale `?sort=director` values are ignored for other kinds.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.

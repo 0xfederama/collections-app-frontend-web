@@ -9,6 +9,7 @@ export const NAME_MAX = 200
 export interface SettingsDraft {
   workspace_name: string
   streaming_country_code: string
+  metadata_language: string
   markdown_history_limit: string
   trash_retention_days: string
 }
@@ -20,6 +21,7 @@ export type ErrorMap = Partial<Record<SettingsField, string>>
 export const FIELD_ORDER: SettingsField[] = [
   'workspace_name',
   'streaming_country_code',
+  'metadata_language',
   'trash_retention_days',
   'markdown_history_limit',
 ]
@@ -29,6 +31,7 @@ export const inputId = (field: SettingsField) => `settings-${field.replaceAll('_
 export const FIELD_LABELS: Record<SettingsField, string> = {
   workspace_name: 'Workspace name',
   streaming_country_code: 'Streaming country',
+  metadata_language: 'Metadata language',
   trash_retention_days: 'Delete trash automatically',
   markdown_history_limit: 'Description history limit',
 }
@@ -37,6 +40,7 @@ export function draftFromSettings(settings: Settings): SettingsDraft {
   return {
     workspace_name: settings.workspace_name,
     streaming_country_code: settings.streaming_country_code,
+    metadata_language: settings.metadata_language,
     markdown_history_limit: String(settings.markdown_history_limit),
     trash_retention_days:
       settings.trash_retention_days === null ? 'off' : String(settings.trash_retention_days),
@@ -54,6 +58,7 @@ function normalized(draft: SettingsDraft) {
   return {
     workspace_name: draft.workspace_name.trim(),
     streaming_country_code: draft.streaming_country_code,
+    metadata_language: draft.metadata_language,
     markdown_history_limit: parseLimit(draft.markdown_history_limit),
     trash_retention_days:
       draft.trash_retention_days === 'off' ? null : Number(draft.trash_retention_days),
@@ -70,6 +75,9 @@ export function validate(draft: SettingsDraft): ErrorMap {
   if (!/^[A-Z]{2}$/.test(value.streaming_country_code)) {
     errors.streaming_country_code = 'Choose a country.'
   }
+  if (!['en-US', 'it-IT', 'fr-FR', 'de-DE', 'es-ES'].includes(value.metadata_language)) {
+    errors.metadata_language = 'Choose a language.'
+  }
   if (value.markdown_history_limit === null || value.markdown_history_limit > HISTORY_LIMIT_MAX) {
     errors.markdown_history_limit = `Enter a whole number from 0 to ${HISTORY_LIMIT_MAX}.`
   }
@@ -83,6 +91,9 @@ export function buildPatch(base: Settings, draft: SettingsDraft): UpdateSettings
   if (value.workspace_name !== base.workspace_name) patch.workspace_name = value.workspace_name
   if (value.streaming_country_code !== base.streaming_country_code) {
     patch.streaming_country_code = value.streaming_country_code
+  }
+  if (value.metadata_language !== base.metadata_language) {
+    patch.metadata_language = value.metadata_language as UpdateSettingsRequest['metadata_language']
   }
   if (
     value.markdown_history_limit !== null &&
@@ -99,6 +110,7 @@ export function isDirty(base: Settings, draft: SettingsDraft): boolean {
   return (
     value.workspace_name !== base.workspace_name ||
     value.streaming_country_code !== base.streaming_country_code ||
+    value.metadata_language !== base.metadata_language ||
     value.markdown_history_limit !== base.markdown_history_limit ||
     value.trash_retention_days !== base.trash_retention_days
   )
@@ -110,6 +122,7 @@ export function isFormDirty(base: Settings, draft: SettingsDraft): boolean {
   return (
     value.workspace_name !== base.workspace_name ||
     value.streaming_country_code !== base.streaming_country_code ||
+    value.metadata_language !== base.metadata_language ||
     value.markdown_history_limit !== base.markdown_history_limit
   )
 }
@@ -149,6 +162,9 @@ export function draftDump(base: Settings, draft: SettingsDraft): string {
   }
   if (value.streaming_country_code !== base.streaming_country_code) {
     lines.push(`${FIELD_LABELS.streaming_country_code}: ${value.streaming_country_code}`)
+  }
+  if (value.metadata_language !== base.metadata_language) {
+    lines.push(`${FIELD_LABELS.metadata_language}: ${value.metadata_language}`)
   }
   if (draft.markdown_history_limit.trim() !== String(base.markdown_history_limit)) {
     lines.push(`${FIELD_LABELS.markdown_history_limit}: ${draft.markdown_history_limit.trim()}`)

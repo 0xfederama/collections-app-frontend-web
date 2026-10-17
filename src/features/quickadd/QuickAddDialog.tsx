@@ -13,6 +13,7 @@ import {
 import { ImagePlus, Plus, X } from '../../components/ui/icons'
 import { ApiError, NetworkError } from '../../lib/api'
 import { itemKeys, useCreateItem, type Item } from '../items/api'
+import { createLookupSelection, TmdbTitleField } from '../items/TmdbTitleField'
 import { MAX_CONTENT_BYTES, isTooLarge } from '../items/content/limits'
 import { useSaveContent } from '../items/content/api'
 import { LIMITS } from '../items/form/draft'
@@ -20,6 +21,7 @@ import { checkImageFile, ACCEPT } from '../items/image/checks'
 import { putImageFile } from '../items/image/upload'
 import { invalidateContent } from '../invalidateContent'
 import { useTree } from '../tree/api'
+import { useSettings } from '../settings/api'
 
 type Field = 'title' | 'website' | 'description' | 'image' | 'list'
 
@@ -48,6 +50,7 @@ export function QuickAddDialog({
   onClose: () => void
 }) {
   const { lists, loading } = useListChoices()
+  const settings = useSettings()
   const navigate = useNavigate()
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -58,6 +61,7 @@ export function QuickAddDialog({
     lists[0]?.id
 
   const [title, setTitle] = useState('')
+  const [tmdbId, setTmdbId] = useState<number>()
   const [website, setWebsite] = useState('')
   const [description, setDescription] = useState('')
   const [image, setImage] = useState<File>()
@@ -102,7 +106,12 @@ export function QuickAddDialog({
     setBusy(true)
     let created: Item
     try {
-      created = await create.mutateAsync({ title: trimmed, ...(site ? { website: site } : {}) })
+      const listKind = lists.find((list) => list.id === listId)?.kind ?? 'generic'
+      created = await create.mutateAsync({
+        title: trimmed,
+        ...createLookupSelection(listKind, settings.data?.lookup_available === true, tmdbId),
+        ...(site ? { website: site } : {}),
+      })
     } catch (caught) {
       setBusy(false)
       if (caught instanceof ApiError && caught.status === 422) {
@@ -208,26 +217,20 @@ export function QuickAddDialog({
         className="flex flex-col gap-4"
       >
         <div className="flex flex-col gap-1 pr-10">
-          <input
-            ref={titleRef}
-            type="text"
-            aria-label="Title"
-            aria-invalid={errors.title ? true : undefined}
-            aria-describedby={errors.title ? 'quick-add-title-error' : undefined}
-            autoComplete="off"
-            placeholder="Title"
-            value={title}
-            onChange={(event) => {
-              setTitle(event.target.value)
+          <TmdbTitleField
+            kind={lists.find((list) => list.id === listId)?.kind ?? 'generic'}
+            title={title}
+            onTitleChange={(value) => {
+              setTitle(value)
               dismiss('title')
             }}
-            className="w-full border-b border-transparent bg-transparent pb-1 text-[22px] leading-snug font-semibold tracking-tight text-text outline-none placeholder:text-text-muted focus-visible:border-accent"
+            onSelectionChange={setTmdbId}
+            inputRef={titleRef}
+            error={errors.title}
+            placeholder="Title"
+            className="w-full"
+            inputClassName="w-full border-b border-transparent bg-transparent pb-1 text-[22px] leading-snug font-semibold tracking-tight text-text outline-none placeholder:text-text-muted focus-visible:border-accent"
           />
-          {errors.title && (
-            <p id="quick-add-title-error" className="text-xs font-medium text-danger-text">
-              {errors.title}
-            </p>
-          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -241,7 +244,10 @@ export function QuickAddDialog({
                 placeholder={loading ? 'Loading lists…' : 'Select a list'}
                 options={lists.map((l) => ({ value: l.id, label: l.name }))}
                 value={listId}
-                onValueChange={setPickedList}
+                onValueChange={(value) => {
+                  setPickedList(value)
+                  setTmdbId(undefined)
+                }}
                 error={errors.list}
               />
             </div>
