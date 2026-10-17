@@ -63,6 +63,10 @@ describe('W-13 settings: saving', () => {
   it('shows the loaded values and keeps Save disabled when nothing changed', async () => {
     mountBackend()
     await openSettings()
+    const dialog = screen.getByRole('dialog', { name: 'Settings' })
+    expect(Array.from(dialog.querySelectorAll('h2')).map((heading) => heading.textContent)).toEqual(
+      ['Settings', 'Appearance', 'Collection', 'Movies & TV', 'Connection', 'About'],
+    )
     expect(field('Workspace name')).toHaveValue('Our Collection')
     expect(field('Streaming country')).toHaveValue('Italy (IT)')
     expect(field('Description history limit')).toHaveValue('20')

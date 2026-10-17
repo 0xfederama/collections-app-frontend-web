@@ -252,68 +252,79 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         )}
       </div>
 
-      <TextField
-        id={inputId('workspace_name')}
-        label="Workspace name"
-        required
-        autoComplete="off"
-        maxLength={NAME_MAX + 50}
-        value={draft.workspace_name}
-        onChange={(event) => set('workspace_name', event.target.value)}
-        error={errors.workspace_name}
-      />
-      <CountrySelect
-        id={inputId('streaming_country_code')}
-        label="Streaming country"
-        hint="Streaming platforms on a movie or TV show are for this country unless you pick another."
-        placeholder="Country"
-        value={draft.streaming_country_code}
-        onValueChange={(value) => set('streaming_country_code', value)}
-        error={errors.streaming_country_code}
-      />
-      <Select
-        id={inputId('metadata_language')}
-        label="Metadata language"
-        hint="Titles and other details filled from TMDB use this language."
-        value={draft.metadata_language}
-        onValueChange={(value) => set('metadata_language', value)}
-        error={errors.metadata_language}
-        disabled={update.isPending}
-        options={metadataLanguageOptions}
-      />
-      <Select
-        id={inputId('trash_retention_days')}
-        label="Delete trash automatically"
-        hint="Automatically and permanently delete trashed items after the selected number of days. This runs daily; it doesn’t empty the trash immediately."
-        value={draft.trash_retention_days}
-        onValueChange={(value) => void saveRetention(value)}
-        error={errors.trash_retention_days}
-        disabled={update.isPending}
-        options={[
-          { value: 'off', label: 'Off' },
-          { value: '7', label: '7 days' },
-          { value: '30', label: '30 days' },
-          { value: '90', label: '90 days' },
-          ...(!['off', '7', '30', '90'].includes(draft.trash_retention_days)
-            ? [
-                {
-                  value: draft.trash_retention_days,
-                  label: `Current: ${draft.trash_retention_days} days`,
-                },
-              ]
-            : []),
-        ]}
-      />
-      <TextField
-        id={inputId('markdown_history_limit')}
-        label="Description history limit"
-        inputMode="numeric"
-        autoComplete="off"
-        hint={`How many earlier versions of an item's description to keep, 0 to ${HISTORY_LIMIT_MAX}. Lowering it removes the extra versions the next time each description is saved.`}
-        value={draft.markdown_history_limit}
-        onChange={(event) => set('markdown_history_limit', event.target.value)}
-        error={errors.markdown_history_limit}
-      />
+      <section aria-labelledby="settings-collection" className="flex flex-col gap-4">
+        <h2 id="settings-collection" className="text-sm font-semibold text-text-muted">
+          Collection
+        </h2>
+        <TextField
+          id={inputId('workspace_name')}
+          label="Workspace name"
+          required
+          autoComplete="off"
+          maxLength={NAME_MAX + 50}
+          value={draft.workspace_name}
+          onChange={(event) => set('workspace_name', event.target.value)}
+          error={errors.workspace_name}
+        />
+        <Select
+          id={inputId('trash_retention_days')}
+          label="Delete trash automatically"
+          hint="Automatically and permanently delete trashed items after the selected number of days. This runs daily; it doesn’t empty the trash immediately."
+          value={draft.trash_retention_days}
+          onValueChange={(value) => void saveRetention(value)}
+          error={errors.trash_retention_days}
+          disabled={update.isPending}
+          options={[
+            { value: 'off', label: 'Off' },
+            { value: '7', label: '7 days' },
+            { value: '30', label: '30 days' },
+            { value: '90', label: '90 days' },
+            ...(!['off', '7', '30', '90'].includes(draft.trash_retention_days)
+              ? [
+                  {
+                    value: draft.trash_retention_days,
+                    label: `Current: ${draft.trash_retention_days} days`,
+                  },
+                ]
+              : []),
+          ]}
+        />
+        <TextField
+          id={inputId('markdown_history_limit')}
+          label="Description history limit"
+          inputMode="numeric"
+          autoComplete="off"
+          hint={`How many earlier versions of an item's description to keep, 0 to ${HISTORY_LIMIT_MAX}. Lowering it removes the extra versions the next time each description is saved.`}
+          value={draft.markdown_history_limit}
+          onChange={(event) => set('markdown_history_limit', event.target.value)}
+          error={errors.markdown_history_limit}
+        />
+      </section>
+
+      <section aria-labelledby="settings-movies-tv" className="flex flex-col gap-4">
+        <h2 id="settings-movies-tv" className="text-sm font-semibold">
+          Movies &amp; TV
+        </h2>
+        <CountrySelect
+          id={inputId('streaming_country_code')}
+          label="Streaming country"
+          hint="Streaming platforms on a movie or TV show are for this country unless you pick another."
+          placeholder="Country"
+          value={draft.streaming_country_code}
+          onValueChange={(value) => set('streaming_country_code', value)}
+          error={errors.streaming_country_code}
+        />
+        <Select
+          id={inputId('metadata_language')}
+          label="Metadata language"
+          hint="Titles and other details filled from TMDB use this language."
+          value={draft.metadata_language}
+          onValueChange={(value) => set('metadata_language', value)}
+          error={errors.metadata_language}
+          disabled={update.isPending}
+          options={metadataLanguageOptions}
+        />
+      </section>
 
       <div className="flex justify-end gap-2">
         <Button

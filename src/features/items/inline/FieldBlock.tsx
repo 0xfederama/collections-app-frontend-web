@@ -68,9 +68,8 @@ interface Adding {
 }
 
 /**
- * The detail rows. F009-W1: the calm default is title, image, website and description; every kind
- * field (price included) is added with "+ Add field", which offers exactly the fields this kind
- * defines. A row is edited in place; adding one is local state, never a saved setting.
+ * The detail rows. Populated fields are visible by default; empty fields are added from the menu.
+ * A row is edited in place; adding one is local state, never a saved setting.
  */
 export function FieldBlock({
   item,
@@ -104,12 +103,8 @@ export function FieldBlock({
   }
   const closed = (id: string) => setAdding((current) => current.filter((entry) => entry.id !== id))
   const isAdding = (spec: FieldSpec) => adding.some((entry) => entry.id === spec.id)
-  // Website belongs to the calm default, so a saved one shows without asking; a kind field shows
-  // only once it has been added (or while its editor is open).
-  const isShown = (spec: FieldSpec) =>
-    spec.id === websiteSpec.id
-      ? spec.isSet(item) || isAdding(spec)
-      : added.includes(spec.id) || isAdding(spec)
+  // A populated field is part of the item detail by default. Empty fields stay in the Add field menu.
+  const isShown = (spec: FieldSpec) => spec.isSet(item) || added.includes(spec.id) || isAdding(spec)
 
   const streamingSpec = specs.find((spec) => spec.id === STREAMING_ID)
   const showStreaming = streamingSpec !== undefined && isShown(streamingSpec)

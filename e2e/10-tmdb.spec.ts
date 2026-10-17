@@ -23,9 +23,9 @@ test.describe('F013 TMDB lookup fixture', () => {
     await title.press('Enter')
     await expect(panel.getByRole('heading', { level: 1, name: '[mock] movie name' })).toBeVisible()
 
-    await panel.getByRole('button', { name: 'Add field' }).click()
-    await page.getByRole('menuitem', { name: 'Director' }).click()
+    // The lookup-populated director is visible by default in expanded item details.
     await expect(panel.getByText('Mock Director', { exact: true })).toBeVisible()
+    await expect(panel.getByRole('button', { name: 'Edit director' })).toBeVisible()
   })
 })
 

@@ -67,26 +67,19 @@ function mockPatch(respond?: (call: PatchCall, n: number) => Response | Promise<
 const pen = (label: string) => screen.getByRole('button', { name: `Edit ${label}` })
 const save = (label: string) => screen.getByRole('button', { name: `Save ${label}` })
 
-/** F009-W1: a kind field is hidden until "+ Add field" reveals it. */
+/** Empty fields open their editor from "+ Add field". */
 async function addField(user: User, entry: string) {
   await user.click(screen.getByRole('button', { name: 'Add field' }))
   await user.click(await screen.findByRole('menuitem', { name: entry }))
 }
 
-/**
- * Adds a field so its value reads in the row. An empty one opens its editor, which is closed
- * again; a field that already had a value is only revealed, so nothing is opened.
- */
-async function reveal(user: User, entry: string) {
-  await addField(user, entry)
-  const cancel = screen.queryByRole('button', { name: `Cancel editing ${entry.toLowerCase()}` })
-  if (cancel) await user.click(cancel)
-}
-
-/** Reveals the row, then opens its editor with the pen (the saved value is already in it). */
+/** Uses the visible field pen for populated values; an empty field opens from Add field. */
 async function editField(user: User, entry: string) {
-  await reveal(user, entry)
-  await user.click(pen(entry.toLowerCase()))
+  if (screen.queryByRole('button', { name: `Edit ${entry.toLowerCase()}` })) {
+    await user.click(pen(entry.toLowerCase()))
+  } else {
+    await addField(user, entry)
+  }
 }
 
 async function retype(user: User, input: HTMLElement, text: string) {
@@ -220,8 +213,8 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
 })
 
 describe('F002-W3 "+ Add field" and price', () => {
-  it('F009-W1 offers every field the kind defines, even one that already has a value', async () => {
-    // A car whose kind fields are all set: they are hidden, so all of them are addable (D-085).
+  it('F009-W1 shows populated kind fields and offers only empty fields', async () => {
+    // A car whose kind fields are all set: they are visible and absent from Add field (D-085).
     const { user } = await openItem({
       kind: 'car',
       metadata: {
@@ -232,24 +225,18 @@ describe('F002-W3 "+ Add field" and price', () => {
         power_hp: 111,
       },
     })
+    expect(screen.getByText('Volkswagen')).toBeVisible()
+    expect(screen.getByText('Golf')).toBeVisible()
+    expect(screen.getByText('2021')).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     const menu = await screen.findByRole('menu')
     expect(
       within(menu)
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
-    ).toEqual(['Make', 'Model', 'Model year', 'Fuel', 'Power', 'Price', 'Website'])
-    // Adding one reveals it read-only with its saved value, and drops it from the menu.
-    await user.click(within(menu).getByRole('menuitem', { name: 'Make' }))
-    expect(await screen.findByText('Volkswagen')).toBeVisible()
-    expect(screen.queryByRole('textbox', { name: 'Make' })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Add field' }))
-    const next = await screen.findByRole('menu')
-    expect(
-      within(next)
-        .getAllByRole('menuitem')
-        .map((i) => i.textContent),
-    ).toEqual(['Model', 'Model year', 'Fuel', 'Power', 'Price', 'Website'])
+    ).toEqual(['Price', 'Website'])
+    await user.click(within(menu).getByRole('menuitem', { name: 'Price' }))
+    expect(await screen.findByRole('textbox', { name: 'Price' })).toBeVisible()
   })
 
   it('F009-W1 a movie offers no Price, a car does', async () => {
@@ -260,7 +247,7 @@ describe('F002-W3 "+ Add field" and price', () => {
       within(menu)
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
-    ).toEqual(['Release year', 'Runtime', 'Director', 'Streaming', 'Website'])
+    ).toEqual(['Director', 'Website'])
   })
 
   it('opens the website editor from the menu', async () => {
@@ -318,17 +305,16 @@ describe('F002-W3 "+ Add field" and price', () => {
       kind: 'car',
       price: { min: '1200.50', max: '1200.50', currency: 'EUR' },
     })
-    // F009-W1: the saved price is hidden until it is added, and it stays shown afterwards.
-    expect(screen.queryByText(/^€\s?1,201$/)).not.toBeInTheDocument()
-    await reveal(user, 'Price')
+    // A populated price is visible by default.
     expect(await screen.findByText(/^€\s?1,201$/)).toBeVisible()
     await user.click(pen('price'))
     await user.click(screen.getByRole('button', { name: 'Remove price' }))
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0]?.body).toEqual({ price: null })
-    // The row stays (it was added), the value is gone.
+    // The now-empty price leaves the details and is available to add again.
     expect(screen.queryByText(/^€\s?1,201$/)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit price' })).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    expect(await screen.findByRole('menuitem', { name: 'Price' })).toBeVisible()
   })
 })
 

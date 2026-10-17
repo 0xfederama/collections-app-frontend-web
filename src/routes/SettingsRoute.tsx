@@ -53,23 +53,25 @@ export function SettingsRoute() {
       title="Settings"
       className="max-h-[90dvh] w-[min(90vw,720px)]! max-w-none! gap-6"
     >
-      <Section id="settings-workspace" title="Workspace">
-        {settings.isPending ? (
+      <Section id="settings-appearance" title="Appearance">
+        <AppearanceSection />
+      </Section>
+      {settings.isPending ? (
+        <Section id="settings-collection" title="Collection">
           <WorkspaceSkeleton />
-        ) : settings.isError || !settings.data ? (
+        </Section>
+      ) : settings.isError || !settings.data ? (
+        <Section id="settings-collection" title="Collection">
           <div role="alert" className="flex flex-col items-start gap-2">
             <p>Couldn’t load the settings.</p>
             <Button variant="secondary" onClick={() => void settings.refetch()}>
               Retry
             </Button>
           </div>
-        ) : (
-          <SettingsForm settings={settings.data} />
-        )}
-      </Section>
-      <Section id="settings-appearance" title="Appearance">
-        <AppearanceSection />
-      </Section>
+        </Section>
+      ) : (
+        <SettingsForm settings={settings.data} />
+      )}
       <Section id="settings-connection" title="Connection">
         <ConnectionSection />
       </Section>
