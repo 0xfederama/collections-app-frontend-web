@@ -57,8 +57,31 @@ export interface paths {
          * Update workspace settings
          * @description Requires `If-Match` (`"s-N"`). Lowering `markdown_history_limit` prunes on the next save per item, not immediately.
          *     `trash_retention_days` (F012-B3): absent = unchanged, `null` = off, otherwise 1 to 365. Setting it does not purge at once; the daily job does.
+         *     `metadata_language` controls the locale used for TMDB suggestions and imported metadata.
          */
         patch: operations["updateSettings"];
+        trace?: never;
+    };
+    "/api/v1/tmdb/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suggest movie or TV matches
+         * @description Searches TMDB using the workspace's `metadata_language`. When the server has no TMDB key, returns
+         *     `{ "available": false, "results": [] }`; this endpoint does not fail merely because lookup is disabled.
+         *     Results retain TMDB's ranking. The returned poster URL is for suggestion display only and is not an item image.
+         */
+        get: operations["listTmdbSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/tree": {
@@ -297,11 +320,13 @@ export interface paths {
         };
         /**
          * List the items of a list
-         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title. `sort=kind_key` sorts by the kind's
+         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title and, on movie lists, director. `sort=kind_key` sorts by the kind's
          *     sort key ascending, empty values last (movie: `release_year`, tv_show: `first_air_year`, motorcycle: `displacement_cc`,
          *     car: `power_hp`, camera: `megapixels`); on a `generic` list it returns `400 invalid_parameter`.
          *     `sort=price` sorts by `price.min` ascending, items without a price last, ties by title then `id` (no currency conversion); on a list
          *     whose kind has no price (generic, movie, tv_show) it returns `400 invalid_parameter` (F009-B1).
+         *     `sort=director` is available only on movie lists, sorts case-insensitively with empty directors last, and returns
+         *     `400 invalid_parameter` on every other kind.
          */
         get: operations["listItems"];
         put?: never;
@@ -311,6 +336,10 @@ export interface paths {
          *     content are set through their own endpoints after creation. `metadata` is validated against the list's kind (see the `*Metadata` schemas).
          *     `price` is either `{amount, currency}` (single price) or `{min, max, currency}` (range). A `price` on an item of a kind without a price
          *     (`generic`, `movie` or `tv_show`; F009-B1) is rejected with `422 validation_failed` on `price` (`null` is fine).
+         *     For movie and TV lists, `lookup` defaults to `true`: the server searches by title and applies the first result. Send `tmdb_id` to
+         *     select a known suggestion. Send `lookup: false` to create the item exactly as supplied. Lookup fields are ignored on other kinds.
+         *     If automatic lookup finds no match, the item is still created unchanged. If lookup was explicitly requested but unavailable, the
+         *     request returns `503 lookup_disabled` or `503 upstream_unavailable` and no item is created.
          */
         post: operations["createItem"];
         delete?: never;
@@ -374,6 +403,39 @@ export interface paths {
          *     Image changes go through the image endpoints.
          */
         patch: operations["updateItem"];
+        trace?: never;
+    };
+    "/api/v1/items/{id}/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Resource ID. */
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fill or replace an item's TMDB metadata
+         * @description Requires `If-Match` (`"i-N"`) and is available only for movie and TV items. `fill` preserves every non-empty user value and
+         *     fills empty fields; `rematch` searches from the current title unless `tmdb_id` selects a suggestion, then replaces the title and
+         *     all fields fetched from TMDB; `refresh` uses the stored `metadata.tmdb_id` unless `tmdb_id` is supplied and likewise replaces fetched
+         *     fields. All modes preserve an existing item image. A poster is stored through the normal image pipeline only when the item has no image.
+         *     The default mode is `fill`. When a search has no result, the operation returns the unchanged item and its current ETag.
+         *     An explicit lookup while the integration is disabled or TMDB cannot be reached returns `503 lookup_disabled` or
+         *     `503 upstream_unavailable` respectively.
+         *     Imported fields and lookup-owned posters retain server-side provenance. Maintenance refreshes owned values after five calendar months;
+         *     at six months, a value that still cannot be refreshed is removed only when it still equals its imported snapshot. User edits and
+         *     user-supplied images are preserved. Poster age is tracked separately from metadata age. An item's `lookup_disabled` flag stops automatic
+         *     refresh and lets its owned values expire under the same rules.
+         */
+        post: operations["lookupItemMetadata"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/items/{id}/move": {
@@ -704,7 +766,7 @@ export interface components {
              * @description Stable machine-readable code.
              * @enum {string}
              */
-            code: "malformed_request" | "unknown_field" | "invalid_parameter" | "not_found" | "cycle_detected" | "parent_in_trash" | "destination_unavailable" | "kind_mismatch" | "order_stale" | "version_conflict" | "payload_too_large" | "unsupported_media_type" | "validation_failed" | "precondition_required" | "internal";
+            code: "malformed_request" | "unknown_field" | "invalid_parameter" | "not_found" | "cycle_detected" | "parent_in_trash" | "destination_unavailable" | "kind_mismatch" | "order_stale" | "version_conflict" | "payload_too_large" | "unsupported_media_type" | "validation_failed" | "lookup_disabled" | "upstream_unavailable" | "precondition_required" | "internal";
             /** @description Only on `internal` problems. Matches the `X-Request-Id` header. */
             request_id?: string;
         };
@@ -814,6 +876,9 @@ export interface components {
         Settings: {
             workspace_name: string;
             streaming_country_code: string;
+            metadata_language: components["schemas"]["MetadataLanguage"];
+            /** @description Whether this server has TMDB lookup configured. */
+            readonly lookup_available: boolean;
             markdown_history_limit: number;
             trash_retention_days: number | null;
             version: number;
@@ -821,9 +886,15 @@ export interface components {
         UpdateSettingsRequest: {
             workspace_name?: string;
             streaming_country_code?: string;
+            metadata_language?: components["schemas"]["MetadataLanguage"];
             markdown_history_limit?: number;
             trash_retention_days?: number | null;
         };
+        /**
+         * @description ISO 639-1 language (`xx`), optionally with an uppercase region (`xx-YY`), passed to TMDB.
+         * @example en-US
+         */
+        MetadataLanguage: string;
         Tree: {
             folders: components["schemas"]["Folder"][];
             lists: components["schemas"]["List"][];
@@ -872,15 +943,17 @@ export interface components {
          *     `price` is valid only on the kinds that have a price (motorcycle, car, camera; F009-B1), not on `generic`, `movie` or `tv_show`.
          *     It sorts by the lowest price (`price.min`) ascending, items without a price last, ties by title and then id. Currencies are not
          *     converted, so mixed currencies compare by amount only. The manual order is kept when the mode changes.
+         *     `director` is valid only on movie lists. It sorts the director text case-insensitively, empty values last, then title and id.
          * @enum {string}
          */
-        SortMode: "manual" | "title" | "updated" | "kind_key" | "price";
+        SortMode: "manual" | "title" | "updated" | "kind_key" | "price" | "director";
         /**
          * @description The fields a list shows in its rows, in order: the first is the primary field, the second the secondary (F009-B2; replaces the
          *     `{under, right}` slots of F-002). `null` means the kind default (the web app owns the defaults). `[]` pins nothing, which is different
          *     from `null`, and a single-element list is valid. Allowed keys: the keys of the kind's `metadata` fields, plus `price` **only** on the
          *     kinds that have one (motorcycle, car, camera; F009-B1). `generic` has no key at all, and `movie` and `tv_show` have no `price`. At most
-         *     2 unique keys (`422 validation_failed` on `pinned_fields[i]`), else `422`. Changing the list's `kind` resets it to `null`.
+         *     2 unique keys (`422 validation_failed` on `pinned_fields[i]`), else `422`. Provider bookkeeping fields (`tmdb_id`,
+         *     `lookup_disabled`) are never pinnable. Changing the list's `kind` resets it to `null`.
          * @example [
          *       "release_year",
          *       "runtime_minutes"
@@ -1099,6 +1172,13 @@ export interface components {
         };
         CreateItemRequest: {
             title: string;
+            /**
+             * @description For movie and TV lists, run TMDB lookup during creation. Ignored on other kinds.
+             * @default true
+             */
+            lookup: boolean;
+            /** @description Optional selected TMDB suggestion. Used only when lookup runs on a movie or TV item. */
+            tmdb_id?: number;
             price?: components["schemas"]["PriceInput"];
             website?: string | null;
             /** @description Free-form here because its shape depends on the list's kind. Validated against that kind: see the `*Metadata` schemas. */
@@ -1122,6 +1202,30 @@ export interface components {
         ReorderItemsRequest: {
             ids: string[];
         };
+        LookupItemRequest: {
+            /**
+             * @default fill
+             * @enum {string}
+             */
+            mode: "fill" | "rematch" | "refresh";
+            /** @description Selects a known TMDB match. Without it, fill/rematch searches by title and refresh uses stored metadata.tmdb_id. */
+            tmdb_id?: number;
+        };
+        /** @enum {string} */
+        TmdbKind: "movie" | "tv_show";
+        TmdbSuggestion: {
+            tmdb_id: number;
+            title: string;
+            original_title: string;
+            year: number | null;
+            /** Format: uri */
+            poster_url: string | null;
+            overview: string;
+        };
+        TmdbSuggestions: {
+            available: boolean;
+            results: components["schemas"]["TmdbSuggestion"][];
+        };
         Streaming: {
             /** @description ISO 3166-1 alpha-2. */
             country: string;
@@ -1135,8 +1239,14 @@ export interface components {
         MovieMetadata: {
             release_year?: number;
             runtime_minutes?: number;
+            /** @description Movie directors joined with a comma when TMDB returns several. */
+            director?: string;
             imdb_url?: string;
             streaming?: components["schemas"]["Streaming"];
+            /** @description Stored provider identity used by refresh. */
+            tmdb_id?: number;
+            /** @description Per-item opt-out from automatic TMDB lookup. */
+            lookup_disabled?: boolean;
         };
         TvShowMetadata: {
             first_air_year?: number;
@@ -1148,6 +1258,10 @@ export interface components {
             episode_minutes?: number;
             imdb_url?: string;
             streaming?: components["schemas"]["Streaming"];
+            /** @description Stored provider identity used by refresh. */
+            tmdb_id?: number;
+            /** @description Per-item opt-out from automatic TMDB lookup. */
+            lookup_disabled?: boolean;
         };
         MotorcycleMetadata: {
             model_year?: number;
@@ -1357,6 +1471,15 @@ export interface components {
                 "application/problem+json": components["schemas"]["ValidationProblem"];
             };
         };
+        /** @description An explicit TMDB lookup cannot run because lookup is disabled or the upstream service is unavailable */
+        LookupUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
         /** @description `If-Match` is missing (or `*`) */
         PreconditionRequired: {
             headers: {
@@ -1523,6 +1646,32 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
             500: components["responses"]["InternalError"];
+        };
+    };
+    listTmdbSuggestions: {
+        parameters: {
+            query: {
+                kind: components["schemas"]["TmdbKind"];
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ranked suggestions, or an unavailable result when no key is configured */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TmdbSuggestions"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["LookupUnavailable"];
         };
     };
     getTree: {
@@ -1959,7 +2108,7 @@ export interface operations {
             query?: {
                 /** @description Defaults to the list's `sort_mode`. */
                 sort?: components["schemas"]["SortMode"];
-                /** @description Case-insensitive title filter. */
+                /** @description Case-insensitive title filter; on movie lists it also matches `metadata.director`. */
                 q?: string;
                 /** @description Page size. */
                 limit?: components["parameters"]["Limit"];
@@ -2021,6 +2170,7 @@ export interface operations {
             413: components["responses"]["PayloadTooLarge"];
             422: components["responses"]["ValidationFailed"];
             500: components["responses"]["InternalError"];
+            503: components["responses"]["LookupUnavailable"];
         };
     };
     reorderListItems: {
@@ -2154,6 +2304,49 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
             500: components["responses"]["InternalError"];
+        };
+    };
+    lookupItemMetadata: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description **Required.** The typed ETag of the resource being changed (`"i-7"`, `"c-3"`, …). Declared optional only so the generated server
+                 *     does not answer 400 itself: a missing header (or `*`) returns `428 precondition_required`, a stale one `412 version_conflict`.
+                 * @example "i-7"
+                 */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description Resource ID. */
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LookupItemRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated item, or the unchanged item when no result matched */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            412: components["responses"]["VersionConflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["LookupUnavailable"];
         };
     };
     moveItem: {

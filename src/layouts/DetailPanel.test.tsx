@@ -36,7 +36,7 @@ describe('AT-14 detail panel keeps the list view state', () => {
     expect(router.state.location.search).toBe('?q=mat&sort=title')
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     const filter = await within(screen.getByRole('main')).findByRole('searchbox', {
-      name: 'Filter items by title',
+      name: 'Filter items by title or director',
     })
     expect(filter).toHaveValue('mat')
   })
@@ -46,7 +46,7 @@ describe('AT-14 detail panel keeps the list view state', () => {
     renderRouter(PATH)
     await screen.findByRole('complementary', { name: 'Item details' })
     const filter = await within(screen.getByRole('main')).findByRole('searchbox', {
-      name: 'Filter items by title',
+      name: 'Filter items by title or director',
     })
     expect(filter).toHaveValue('mat')
   })

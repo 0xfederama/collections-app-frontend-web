@@ -128,7 +128,7 @@ describe('AT-13 item view: the example movie', () => {
       within(menu)
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
-    ).toEqual(['Release year', 'Streaming', 'Website'])
+    ).toEqual(['Release year', 'Director', 'Streaming', 'Website'])
     // Revealing a field that already has a value does not drop the user into an editor.
     await user.click(within(menu).getByRole('menuitem', { name: 'Streaming' }))
     expect(screen.queryByRole('textbox', { name: /Streaming/ })).not.toBeInTheDocument()

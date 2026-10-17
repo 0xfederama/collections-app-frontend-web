@@ -28,6 +28,14 @@ type Failure = { kind: 'conflict' | 'network' } | { kind: 'other'; message: stri
 
 const bannerBase = 'flex flex-col gap-3 rounded-md border p-3 text-sm'
 
+const metadataLanguageOptions = [
+  { value: 'en-US', label: 'English (United States)' },
+  { value: 'it-IT', label: 'Italiano (Italia)' },
+  { value: 'fr-FR', label: 'Français (France)' },
+  { value: 'de-DE', label: 'Deutsch (Deutschland)' },
+  { value: 'es-ES', label: 'Español (España)' },
+]
+
 /**
  * The workspace settings form (UI_SPEC §8, §9). Like the item form it edits a snapshot taken when it
  * opened: `If-Match` comes from that snapshot, so a refetch in the background can never turn into a
@@ -262,6 +270,16 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         value={draft.streaming_country_code}
         onValueChange={(value) => set('streaming_country_code', value)}
         error={errors.streaming_country_code}
+      />
+      <Select
+        id={inputId('metadata_language')}
+        label="Metadata language"
+        hint="Titles and other details filled from TMDB use this language."
+        value={draft.metadata_language}
+        onValueChange={(value) => set('metadata_language', value)}
+        error={errors.metadata_language}
+        disabled={update.isPending}
+        options={metadataLanguageOptions}
       />
       <Select
         id={inputId('trash_retention_days')}

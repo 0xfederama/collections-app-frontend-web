@@ -1,0 +1,47 @@
+import tmdbLogo from '../../assets/tmdb-logo.svg'
+
+const externalLink =
+  'text-accent underline decoration-border-strong underline-offset-4 hover:text-accent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring'
+
+export function AboutSection() {
+  return (
+    <div className="flex flex-col gap-5 text-sm leading-6">
+      <div className="flex flex-col items-start gap-3">
+        <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">
+          <img src={tmdbLogo} alt="TMDB" className="h-10 w-auto" />
+        </a>
+        <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+      </div>
+      <p>
+        Streaming availability data is provided by{' '}
+        <a
+          className={externalLink}
+          href="https://www.justwatch.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          JustWatch
+        </a>
+        .
+      </p>
+      <div className="flex flex-wrap gap-x-5 gap-y-2">
+        <a
+          className={externalLink}
+          href="https://github.com/0xfederama/collections-app"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          GitHub repository
+        </a>
+        <a
+          className={externalLink}
+          href="https://github.com/0xfederama"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Author profile
+        </a>
+      </div>
+    </div>
+  )
+}

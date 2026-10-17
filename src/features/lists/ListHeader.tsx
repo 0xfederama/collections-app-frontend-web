@@ -20,7 +20,7 @@ import {
 import type { List as TreeList } from '../tree/api'
 import { ListActionsMenu } from '../tree/ListActionsMenu'
 import type { ItemKind } from '../items/api'
-import { hasPrice, sortKeyLabel } from '../items/kinds'
+import { hasDirectorSort, hasPrice, sortKeyLabel } from '../items/kinds'
 import type { DisplayMode, List, PinnedFields, SortMode } from './api'
 import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
@@ -40,7 +40,7 @@ const baseSortOptions: SelectOption[] = [
   { value: 'price', label: 'Price' },
 ]
 
-/** Manual, Title, Recently updated, Price (when the kind defines one), and the kind's sort key. */
+/** Sort choices supported for this kind by the API. */
 export function sortOptionsFor(kind: ItemKind): SelectOption[] {
   // Price exists on motorcycle, car and camera only (D-085), and generic has no kind key either.
   const options = hasPrice(kind)
@@ -48,7 +48,10 @@ export function sortOptionsFor(kind: ItemKind): SelectOption[] {
     : baseSortOptions.filter((option) => option.value !== 'price')
   const label = sortKeyLabel(kind)
   if (kind === 'generic') return options
-  return label ? [...options, { value: 'kind_key', label }] : options
+  const withKindKey = label ? [...options, { value: 'kind_key', label }] : options
+  return hasDirectorSort(kind)
+    ? [...withKindKey, { value: 'director', label: 'Director' }]
+    : withKindKey
 }
 
 export interface ListHeaderProps {
@@ -173,9 +176,15 @@ export function ListHeader(props: ListHeaderProps) {
             }
           >
             <TextField
-              label="Filter items by title"
+              label={
+                props.treeList.kind === 'movie'
+                  ? 'Filter items by title or director'
+                  : 'Filter items by title'
+              }
               type="search"
-              placeholder="Filter by title"
+              placeholder={
+                props.treeList.kind === 'movie' ? 'Filter by title or director' : 'Filter by title'
+              }
               value={props.filter}
               onChange={(event) => props.onFilter(event.target.value)}
               prefix={<Search aria-hidden className="size-4" />}

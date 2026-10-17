@@ -1,12 +1,14 @@
 import { useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { kindIcons, kindLabels, TextField } from '../../components/ui'
+import { kindIcons, kindLabels } from '../../components/ui'
 import { ApiError, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemKind } from './api'
+import { createLookupSelection, TmdbTitleField } from './TmdbTitleField'
 import { LIMITS } from './form/draft'
 import { MessageBanner } from './inline/Banners'
 import { useEditGuard } from './inline/guard'
 import { EditorButtons } from './inline/InlineField'
+import { useSettings } from '../settings/api'
 
 /**
  * The draft of a new item (F008-W9), shown by the item route at `/lists/:listId/items/new`.
@@ -26,10 +28,12 @@ export function NewItemDraft({
   const navigate = useNavigate()
   const { search } = useLocation()
   const create = useCreateItem(listId)
+  const settings = useSettings()
   const guard = useEditGuard()
   const [title, setTitle] = useState('')
   const [error, setError] = useState<string>()
   const [failure, setFailure] = useState<string>()
+  const [tmdbId, setTmdbId] = useState<number>()
   const box = useRef<HTMLDivElement>(null)
   const KindIcon = kindIcons[kind]
 
@@ -53,7 +57,10 @@ export function NewItemDraft({
     if (!trimmed) return setError('Enter a title.')
     if (trimmed.length > LIMITS.title) return setError(`Use at most ${LIMITS.title} characters.`)
     try {
-      const created = await create.mutateAsync({ title: trimmed })
+      const created = await create.mutateAsync({
+        title: trimmed,
+        ...createLookupSelection(kind, settings.data?.lookup_available === true, tmdbId),
+      })
       leave(`/lists/${listId}/items/${created.id}`)
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 422) {
@@ -106,17 +113,17 @@ export function NewItemDraft({
           onBlur={onBlur}
           className="flex flex-wrap items-start gap-2"
         >
-          <div className="min-w-0 flex-1 basis-40 [&_label]:sr-only">
-            <TextField
-              label="Title"
-              autoFocus
-              autoComplete="off"
-              placeholder="Title of the new item"
-              value={title}
-              onChange={(event) => changeTitle(event.target.value)}
-              error={error}
-            />
-          </div>
+          <TmdbTitleField
+            kind={kind}
+            title={title}
+            onTitleChange={changeTitle}
+            onSelectionChange={setTmdbId}
+            autoFocus
+            placeholder="Title of the new item"
+            error={error}
+            className="min-w-0 flex-1 basis-40 rounded-md border border-border bg-fill px-3 py-2 focus-within:border-accent"
+            inputClassName="w-full bg-transparent text-text outline-none placeholder:text-text-muted"
+          />
           <EditorButtons
             label="title"
             saveHint="Add item (Enter)"

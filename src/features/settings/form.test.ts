@@ -16,6 +16,8 @@ import {
 const base: Settings = {
   workspace_name: 'Our Collection',
   streaming_country_code: 'IT',
+  metadata_language: 'en-US',
+  lookup_available: true,
   markdown_history_limit: 20,
   trash_retention_days: null,
   version: 4,
@@ -30,6 +32,7 @@ describe('AT-14 settings form model', () => {
     expect(draftFromSettings(base)).toEqual({
       workspace_name: 'Our Collection',
       streaming_country_code: 'IT',
+      metadata_language: 'en-US',
       markdown_history_limit: '20',
       trash_retention_days: 'off',
     })
@@ -51,6 +54,9 @@ describe('AT-14 settings form model', () => {
     })
     expect(buildPatch(base, draftWith({ streaming_country_code: 'FR' }))).toEqual({
       streaming_country_code: 'FR',
+    })
+    expect(buildPatch(base, draftWith({ metadata_language: 'it-IT' }))).toEqual({
+      metadata_language: 'it-IT',
     })
   })
 

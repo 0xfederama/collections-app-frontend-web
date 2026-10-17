@@ -260,7 +260,7 @@ describe('F002-W3 "+ Add field" and price', () => {
       within(menu)
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
-    ).toEqual(['Release year', 'Runtime', 'Streaming', 'Website'])
+    ).toEqual(['Release year', 'Runtime', 'Director', 'Streaming', 'Website'])
   })
 
   it('opens the website editor from the menu', async () => {

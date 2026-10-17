@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button, Dialog, Skeleton } from '../components/ui'
+import { AboutSection } from '../features/settings/AboutSection'
 import { AppearanceSection } from '../features/settings/AppearanceSection'
 import { useSettings } from '../features/settings/api'
 import { ConnectionSection } from '../features/settings/ConnectionSection'
@@ -71,6 +72,9 @@ export function SettingsRoute() {
       </Section>
       <Section id="settings-connection" title="Connection">
         <ConnectionSection />
+      </Section>
+      <Section id="settings-about" title="About">
+        <AboutSection />
       </Section>
     </Dialog>
   )
