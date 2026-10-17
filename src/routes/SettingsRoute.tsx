@@ -1,11 +1,11 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button, Dialog, Skeleton } from '../components/ui'
 import { AboutSection } from '../features/settings/AboutSection'
 import { AppearanceSection } from '../features/settings/AppearanceSection'
 import { useSettings } from '../features/settings/api'
 import { ConnectionSection } from '../features/settings/ConnectionSection'
-import { SettingsForm } from '../features/settings/SettingsForm'
+import { SettingsForm, type SettingsCloseRequestRef } from '../features/settings/SettingsForm'
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
@@ -37,15 +37,20 @@ function WorkspaceSkeleton() {
 
 /**
  * `/settings` (UI_SPEC §8): a large pane over the page it was opened from (the shell renders that
- * page behind it). Closing goes back there, or to Home on a deep link. The form keeps its own
- * unsaved-changes guard, so closing with edits asks first.
+ * page behind it). Closing goes back there, or to Home on a deep link. The form validates and saves
+ * its draft before allowing the pane to close.
  */
 export function SettingsRoute() {
   const settings = useSettings()
   const navigate = useNavigate()
   const location = useLocation()
+  const closeRequestRef = useRef<SettingsCloseRequestRef['current']>(null)
   const hasBackground = Boolean((location.state as { background?: unknown } | null)?.background)
-  const close = () => void (hasBackground ? navigate(-1) : navigate('/', { replace: true }))
+  const closeNow = () => void (hasBackground ? navigate(-1) : navigate('/', { replace: true }))
+  const close = () => {
+    if (closeRequestRef.current) closeRequestRef.current(closeNow)
+    else closeNow()
+  }
   return (
     <Dialog
       open
@@ -70,7 +75,7 @@ export function SettingsRoute() {
           </div>
         </Section>
       ) : (
-        <SettingsForm settings={settings.data} />
+        <SettingsForm closeRequestRef={closeRequestRef} settings={settings.data} />
       )}
       <Section id="settings-connection" title="Connection">
         <ConnectionSection />

@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useBlocker } from 'react-router'
 import { AlertDialog, Button, Dialog, Select, TextField, useToast } from '../../components/ui'
 import { CountrySelect } from '../../components/ui/IsoSelects'
@@ -13,7 +13,6 @@ import {
   draftFromSettings,
   firstInvalid,
   inputId,
-  isFormDirty,
   isDirty,
   isRetentionDirty,
   mapServerErrors,
@@ -41,10 +40,19 @@ const metadataLanguageOptions = [
  * opened: `If-Match` comes from that snapshot, so a refetch in the background can never turn into a
  * silent overwrite. Whatever goes wrong, the draft stays.
  */
-export function SettingsForm({ settings }: { settings: Settings }) {
+export type SettingsCloseRequest = (onClosed: () => void) => void
+export type SettingsCloseRequestRef = { current: SettingsCloseRequest | null }
+
+export function SettingsForm({
+  settings,
+  closeRequestRef,
+}: {
+  settings: Settings
+  closeRequestRef: SettingsCloseRequestRef
+}) {
   const client = useQueryClient()
   const toast = useToast()
-  const update = useUpdateSettings()
+  const { isPending, mutateAsync } = useUpdateSettings()
 
   const [base, setBase] = useState(settings)
   const [draft, setDraft] = useState<SettingsDraft>(() => draftFromSettings(settings))
@@ -58,13 +66,18 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   const [focusRequest, setFocusRequest] = useState<{ id: string; n: number } | null>(null)
   const copyRef = useRef<HTMLTextAreaElement>(null)
   const retryAction = useRef<() => void>(() => undefined)
+  const saveRef = useRef<() => Promise<void>>(async () => undefined)
+  const closeAfterSave = useRef<(() => void) | null>(null)
+  const allowLeave = useRef(false)
+  const retentionSaveInFlight = useRef(false)
+  const retentionSaveSucceeded = useRef(false)
 
   const dirty = isDirty(base, draft)
-  const formDirty = isFormDirty(base, draft)
   const retentionDirty = isRetentionDirty(base, draft)
 
   // Block leaving the page with unsaved changes (router navigation and closing the tab).
   const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    if (allowLeave.current) return false
     if (!dirty) return false
     return (
       currentLocation.pathname !== nextLocation.pathname ||
@@ -74,6 +87,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   useEffect(() => {
     if (!dirty) return
     const warn = (event: BeforeUnloadEvent) => {
+      if (allowLeave.current) return
       event.preventDefault()
       event.returnValue = ''
     }
@@ -84,10 +98,10 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   useEffect(() => {
     if (focusRequest) document.getElementById(focusRequest.id)?.focus()
   }, [focusRequest])
-  const focusFirst = (found: ErrorMap) => {
+  const focusFirst = useCallback((found: ErrorMap) => {
     const field = firstInvalid(found)
     if (field) setFocusRequest((current) => ({ id: inputId(field), n: (current?.n ?? 0) + 1 }))
-  }
+  }, [])
 
   const set = (field: SettingsField, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }))
@@ -99,40 +113,106 @@ export function SettingsForm({ settings }: { settings: Settings }) {
     })
   }
 
-  const fail = (caught: unknown) => {
-    if (caught instanceof ApiError) {
-      if (caught.status === 412) return setFailure({ kind: 'conflict' })
-      if (caught.status === 422 && caught.errors?.length) {
-        const mapped = mapServerErrors(caught.errors)
-        setErrors(mapped.fields)
-        setOtherErrors(mapped.other)
-        return focusFirst(mapped.fields)
+  const fail = useCallback(
+    (caught: unknown) => {
+      if (caught instanceof ApiError) {
+        if (caught.status === 412) return setFailure({ kind: 'conflict' })
+        if (caught.status === 422 && caught.errors?.length) {
+          const mapped = mapServerErrors(caught.errors)
+          setErrors(mapped.fields)
+          setOtherErrors(mapped.other)
+          return focusFirst(mapped.fields)
+        }
+        if (caught.status >= 500) return setFailure({ kind: 'network' })
+        return setFailure({ kind: 'other', message: caught.detail ?? caught.title })
       }
-      if (caught.status >= 500) return setFailure({ kind: 'network' })
-      return setFailure({ kind: 'other', message: caught.detail ?? caught.title })
-    }
-    if (caught instanceof NetworkError) return setFailure({ kind: 'network' })
-    setFailure({ kind: 'other', message: 'Something went wrong. Your changes are kept.' })
-  }
+      if (caught instanceof NetworkError) return setFailure({ kind: 'network' })
+      setFailure({ kind: 'other', message: 'Something went wrong. Your changes are kept.' })
+    },
+    [focusFirst],
+  )
 
-  const save = async (event?: FormEvent) => {
-    event?.preventDefault()
+  const save = useCallback(async () => {
     if (retentionDirty) return
-    retryAction.current = () => void save()
+    retryAction.current = () => void saveRef.current()
     setFailure(null)
     setOtherErrors([])
     const found = validate(draft)
     setErrors(found)
-    if (Object.keys(found).length > 0) return focusFirst(found)
+    if (Object.keys(found).length > 0) {
+      closeAfterSave.current = null
+      return focusFirst(found)
+    }
     try {
-      const saved = await update.mutateAsync({ base, patch: buildPatch(base, draft) })
+      const saved = await mutateAsync({ base, patch: buildPatch(base, draft) })
       setBase(saved)
       setDraft(draftFromSettings(saved))
       toast({ kind: 'success', title: 'Settings saved' })
+      const onClosed = closeAfterSave.current
+      if (onClosed) {
+        closeAfterSave.current = null
+        allowLeave.current = true
+        onClosed()
+      }
     } catch (caught) {
       fail(caught)
+      if (
+        !(caught instanceof NetworkError) &&
+        !(caught instanceof ApiError && caught.status >= 500)
+      ) {
+        closeAfterSave.current = null
+      }
     }
-  }
+  }, [base, draft, fail, focusFirst, mutateAsync, retentionDirty, toast])
+
+  useEffect(() => {
+    saveRef.current = save
+  }, [save])
+
+  useEffect(() => {
+    const requestClose: SettingsCloseRequest = (onClosed) => {
+      if (!dirty) {
+        allowLeave.current = true
+        onClosed()
+        return
+      }
+      if (retentionDirty) {
+        if (retentionSaveInFlight.current || retentionSaveSucceeded.current) {
+          closeAfterSave.current = onClosed
+        }
+        return
+      }
+      closeAfterSave.current = onClosed
+      void save()
+    }
+    closeRequestRef.current = requestClose
+    return () => {
+      if (closeRequestRef.current === requestClose) closeRequestRef.current = null
+    }
+  }, [closeRequestRef, dirty, retentionDirty, save])
+
+  useEffect(() => {
+    if (
+      !closeAfterSave.current ||
+      !retentionSaveSucceeded.current ||
+      retentionSaveInFlight.current ||
+      isPending ||
+      retentionDirty
+    ) {
+      return
+    }
+
+    retentionSaveSucceeded.current = false
+    if (dirty) {
+      void Promise.resolve().then(save)
+      return
+    }
+
+    const onClosed = closeAfterSave.current
+    closeAfterSave.current = null
+    allowLeave.current = true
+    onClosed?.()
+  }, [dirty, isPending, retentionDirty, save])
 
   const saveRetention = async (value: string) => {
     const days = value === 'off' ? null : Number(value)
@@ -141,13 +221,24 @@ export function SettingsForm({ settings }: { settings: Settings }) {
     setErrors({})
     setOtherErrors([])
     retryAction.current = () => void saveRetention(value)
+    retentionSaveSucceeded.current = false
+    retentionSaveInFlight.current = true
     try {
-      const saved = await update.mutateAsync({ base, patch: { trash_retention_days: days } })
+      const saved = await mutateAsync({ base, patch: { trash_retention_days: days } })
       setBase(saved)
       setDraft((current) => ({ ...current, trash_retention_days: value }))
       toast({ kind: 'success', title: 'Trash retention saved' })
+      retentionSaveSucceeded.current = true
     } catch (caught) {
       fail(caught)
+      if (
+        !(caught instanceof NetworkError) &&
+        !(caught instanceof ApiError && caught.status >= 500)
+      ) {
+        closeAfterSave.current = null
+      }
+    } finally {
+      retentionSaveInFlight.current = false
     }
   }
 
@@ -187,7 +278,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   }
 
   return (
-    <form onSubmit={(event) => void save(event)} noValidate className="flex flex-col gap-4">
+    <form onSubmit={(event) => event.preventDefault()} noValidate className="flex flex-col gap-4">
       <div role="group" aria-label="Messages" className="flex flex-col gap-4 empty:hidden">
         {failure?.kind === 'conflict' && (
           <div
@@ -222,7 +313,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
                 size="sm"
                 variant="secondary"
                 onClick={() => retryAction.current()}
-                pending={update.isPending}
+                pending={isPending}
               >
                 Retry
               </Button>
@@ -276,7 +367,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
           value={draft.trash_retention_days}
           onValueChange={(value) => void saveRetention(value)}
           error={errors.trash_retention_days}
-          disabled={update.isPending}
+          disabled={isPending}
           options={[
             { value: 'off', label: 'Off' },
             { value: '7', label: '7 days' },
@@ -327,20 +418,10 @@ export function SettingsForm({ settings }: { settings: Settings }) {
           value={draft.metadata_language}
           onValueChange={(value) => set('metadata_language', value)}
           error={errors.metadata_language}
-          disabled={update.isPending}
+          disabled={isPending}
           options={metadataLanguageOptions}
         />
       </section>
-
-      <div className="flex justify-end gap-2">
-        <Button
-          type="submit"
-          pending={update.isPending}
-          disabled={!formDirty || retentionDirty || failure?.kind === 'conflict'}
-        >
-          Save settings
-        </Button>
-      </div>
 
       {blocker.state === 'blocked' && (
         <AlertDialog
