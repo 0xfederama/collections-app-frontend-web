@@ -11,14 +11,14 @@ import { mockViewport, renderAt } from '../../test-utils'
 const settingsUrl = `${location.origin}/api/v1/settings`
 
 const field = (name: string) => screen.getByLabelText(new RegExp(`^${name}( \\*)?$`))
-const save = () => screen.getByRole('button', { name: 'Save settings' })
+const closeSettings = () => screen.getByRole('button', { name: 'Close' })
 
 async function openSettings() {
   mockViewport(1280)
   const user = userEvent.setup()
   renderAt('/settings')
   await screen.findByRole('dialog', { name: 'Settings' })
-  await screen.findByRole('button', { name: 'Save settings' })
+  await screen.findByLabelText(/Workspace name/)
   return user
 }
 
@@ -60,7 +60,7 @@ async function retype(user: ReturnType<typeof userEvent.setup>, label: string, t
 }
 
 describe('W-13 settings: saving', () => {
-  it('shows the loaded values and keeps Save disabled when nothing changed', async () => {
+  it('shows the loaded values and has no manual save control', async () => {
     mountBackend()
     await openSettings()
     const dialog = screen.getByRole('dialog', { name: 'Settings' })
@@ -79,7 +79,7 @@ describe('W-13 settings: saving', () => {
     expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toHaveTextContent(
       'Off',
     )
-    expect(save()).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Save settings' })).not.toBeInTheDocument()
   })
 
   it('saves retention immediately from the settings snapshot and preserves other drafts', async () => {
@@ -91,10 +91,45 @@ describe('W-13 settings: saving', () => {
     await screen.findByText('Trash retention saved')
     expect(patches[0]).toEqual({ ifMatch: '"s-1"', body: { trash_retention_days: 7 } })
     expect(field('Workspace name')).toHaveValue('Still a draft')
-    expect(save()).toBeEnabled()
-    await user.click(save())
-    await screen.findByText('Settings saved')
+    await user.click(closeSettings())
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
     expect(patches[1]).toEqual({ ifMatch: '"s-2"', body: { workspace_name: 'Still a draft' } })
+  })
+
+  it('finishes a pending retention save before saving other drafts and closing', async () => {
+    const { patches } = mountBackend()
+    let started!: () => void
+    let release!: () => void
+    const retentionStarted = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    let delayRetention = true
+    server.use(
+      http.patch(settingsUrl, async () => {
+        if (!delayRetention) return undefined
+        delayRetention = false
+        started()
+        await new Promise<void>((resolve) => {
+          release = resolve
+        })
+        return undefined
+      }),
+    )
+    const user = await openSettings()
+    await retype(user, 'Workspace name', 'Saved after retention')
+    await user.click(screen.getByRole('combobox', { name: 'Delete trash automatically' }))
+    await user.click(await screen.findByRole('option', { name: '7 days' }))
+    await retentionStarted
+
+    await user.click(closeSettings())
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+
+    release()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
+    expect(patches).toEqual([
+      { ifMatch: '"s-1"', body: { trash_retention_days: 7 } },
+      { ifMatch: '"s-2"', body: { workspace_name: 'Saved after retention' } },
+    ])
   })
 
   it('shows an externally configured retention value instead of displaying Off', async () => {
@@ -153,13 +188,11 @@ describe('W-13 settings: saving', () => {
       '30 days',
     )
     expect(field('Workspace name')).toHaveValue('Unsubmitted name')
-    expect(save()).toBeDisabled()
     fail = false
     await user.click(within(alert).getByRole('button', { name: 'Retry' }))
     await screen.findByText('Trash retention saved')
     expect(calls).toBe(2)
     expect(patches).toEqual([{ ifMatch: '"s-1"', body: { trash_retention_days: 30 } }])
-    expect(save()).toBeEnabled()
   })
 
   it('shows retention validation errors on the retention choice', async () => {
@@ -178,7 +211,7 @@ describe('W-13 settings: saving', () => {
     expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toBeInvalid()
   })
 
-  it('PATCHes only the changed field with If-Match "s-4", then shows the toast and updates the sidebar', async () => {
+  it('saves changed settings on close with the snapshot If-Match', async () => {
     const { patches, backend } = mountBackend({
       workspace_name: 'Our Collection',
       streaming_country_code: 'IT',
@@ -187,25 +220,15 @@ describe('W-13 settings: saving', () => {
       version: 4,
     })
     const user = await openSettings()
-    const sidebar = screen.getByRole('navigation', { name: 'Library', hidden: true })
-    expect(
-      await within(sidebar).findByRole('link', { name: 'Our Collection', hidden: true }),
-    ).toBeInTheDocument()
-
     await retype(user, 'Workspace name', 'Casa')
-    expect(save()).toBeEnabled()
-    await user.click(save())
+    await user.click(closeSettings())
 
-    expect(await screen.findByText('Settings saved')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
     expect(patches).toEqual([{ ifMatch: '"s-4"', body: { workspace_name: 'Casa' } }])
     expect(backend.settings.version).toBe(5)
-    expect(
-      await within(sidebar).findByRole('link', { name: 'Casa', hidden: true }),
-    ).toBeInTheDocument()
-    expect(save()).toBeDisabled()
   })
 
-  it('a second save uses the new version', async () => {
+  it('saves all changed form fields in one patch on close', async () => {
     const { patches } = mountBackend({
       workspace_name: 'A',
       streaming_country_code: 'IT',
@@ -215,22 +238,20 @@ describe('W-13 settings: saving', () => {
     })
     const user = await openSettings()
     await retype(user, 'Description history limit', '0')
-    await user.click(save())
-    await waitFor(() => expect(patches).toHaveLength(1))
-    await waitFor(() => expect(save()).toBeDisabled())
-    await retype(user, 'Description history limit', '200')
-    await user.click(save())
-    await waitFor(() => expect(patches).toHaveLength(2))
-    expect(patches[0]).toEqual({ ifMatch: '"s-4"', body: { markdown_history_limit: 0 } })
-    expect(patches[1]).toEqual({ ifMatch: '"s-5"', body: { markdown_history_limit: 200 } })
+    await retype(user, 'Workspace name', 'B')
+    await user.click(closeSettings())
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
+    expect(patches).toEqual([
+      { ifMatch: '"s-4"', body: { workspace_name: 'B', markdown_history_limit: 0 } },
+    ])
   })
 
   it('changing the country through the picker sends the ISO code', async () => {
     const { patches } = mountBackend()
     const user = await openSettings()
     await user.type(field('Streaming country'), 'france{Enter}')
-    await user.click(save())
-    await screen.findByText('Settings saved')
+    await user.click(closeSettings())
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
     expect(patches[0]!.body).toEqual({ streaming_country_code: 'FR' })
   })
 
@@ -249,8 +270,8 @@ describe('W-13 settings: saving', () => {
     expect(language).toHaveTextContent('English (United States)')
     await user.click(language)
     await user.click(await screen.findByRole('option', { name: 'Italiano (Italia)' }))
-    await user.click(save())
-    await screen.findByText('Settings saved')
+    await user.click(closeSettings())
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
     expect(patches).toEqual([{ ifMatch: '"s-4"', body: { metadata_language: 'it-IT' } }])
   })
 
@@ -276,13 +297,14 @@ describe('W-13 settings: saving', () => {
     )
   })
 
-  it('reverting an edit disables Save again', async () => {
-    mountBackend()
+  it('reverting an edit closes without a request', async () => {
+    const { patches } = mountBackend()
     const user = await openSettings()
     await retype(user, 'Workspace name', 'X')
-    expect(save()).toBeEnabled()
     await retype(user, 'Workspace name', 'Our Collection')
-    expect(save()).toBeDisabled()
+    await user.click(closeSettings())
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
+    expect(patches).toEqual([])
   })
 })
 
@@ -291,7 +313,7 @@ describe('W-13 settings: history limit validation', () => {
     const { patches } = mountBackend()
     const user = await openSettings()
     await retype(user, 'Description history limit', text)
-    await user.click(save())
+    await user.click(closeSettings())
     expect(await screen.findByText(/whole number from 0 to 200/)).toBeInTheDocument()
     expect(field('Description history limit')).toHaveFocus()
     expect(field('Description history limit')).toBeInvalid()
@@ -305,8 +327,8 @@ describe('W-13 settings: history limit validation', () => {
     const { patches } = mountBackend()
     const user = await openSettings()
     await retype(user, 'Description history limit', text)
-    await user.click(save())
-    expect(await screen.findByText('Settings saved')).toBeInTheDocument()
+    await user.click(closeSettings())
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
     expect(patches[0]!.body).toEqual({ markdown_history_limit: expected })
   })
 
@@ -314,7 +336,7 @@ describe('W-13 settings: history limit validation', () => {
     const { patches } = mountBackend()
     const user = await openSettings()
     await retype(user, 'Workspace name', '   ')
-    await user.click(save())
+    await user.click(closeSettings())
     expect(await screen.findByText('Enter a name.')).toBeInTheDocument()
     expect(field('Workspace name')).toHaveFocus()
     expect(patches).toEqual([])
@@ -324,7 +346,7 @@ describe('W-13 settings: history limit validation', () => {
     mountBackend()
     const user = await openSettings()
     await retype(user, 'Description history limit', 'abc')
-    await user.click(save())
+    await user.click(closeSettings())
     await screen.findByText(/whole number/)
     await user.type(field('Description history limit'), '{Backspace}{Backspace}{Backspace}5')
     expect(screen.queryByText(/whole number/)).not.toBeInTheDocument()
@@ -347,7 +369,7 @@ describe('W-13 settings: server errors', () => {
     )
     const user = await openSettings()
     await retype(user, 'Workspace name', 'Changed')
-    await user.click(save())
+    await user.click(closeSettings())
     expect(await screen.findByText('server says no')).toBeInTheDocument()
     expect(field(label)).toHaveFocus()
     expect(field(label)).toBeInvalid()
@@ -365,7 +387,7 @@ describe('W-13 settings: server errors', () => {
     )
     const user = await openSettings()
     await retype(user, 'Workspace name', 'Changed')
-    await user.click(save())
+    await user.click(closeSettings())
     expect(await screen.findByText('mystery: odd')).toBeInTheDocument()
     expect(field('Workspace name')).toHaveValue('Changed')
   })
@@ -381,13 +403,13 @@ describe('W-13 settings: server errors', () => {
     )
     const user = await openSettings()
     await retype(user, 'Workspace name', 'Casa')
-    await user.click(save())
+    await user.click(closeSettings())
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent(/could not be reached/)
     expect(field('Workspace name')).toHaveValue('Casa')
     fail = false
     await user.click(within(alert).getByRole('button', { name: 'Retry' }))
-    expect(await screen.findByText('Settings saved')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
     expect(patches.at(-1)).toEqual({ ifMatch: '"s-1"', body: { workspace_name: 'Casa' } })
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
@@ -400,17 +422,16 @@ describe('W-13 settings: conflict (412)', () => {
     await retype(user, 'Workspace name', 'My name')
     await user.type(field('Description history limit'), '0')
     backend.bumpExternally({ workspace_name: 'Theirs', markdown_history_limit: 99 })
-    await user.click(save())
+    await user.click(closeSettings())
     const banner = await screen.findByRole('alert')
     return { user, banner, backend }
   }
 
-  it('keeps the draft, shows the banner, disables Save', async () => {
+  it('keeps the draft and shows the conflict recovery banner', async () => {
     const { banner } = await conflict()
     expect(banner).toHaveTextContent(/Someone else changed the settings/)
     expect(field('Workspace name')).toHaveValue('My name')
     expect(field('Description history limit')).toHaveValue('200')
-    expect(save()).toBeDisabled()
     expect(within(banner).getByRole('button', { name: 'Copy my draft' })).toBeInTheDocument()
   })
 
@@ -441,12 +462,11 @@ describe('W-13 settings: conflict (412)', () => {
     await waitFor(() => expect(field('Workspace name')).toHaveValue('Theirs'))
     expect(field('Description history limit')).toHaveValue('99')
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(save()).toBeDisabled()
 
     // The next save uses the reloaded version.
     await retype(user, 'Workspace name', 'Mine again')
-    await user.click(save())
-    expect(await screen.findByText('Settings saved')).toBeInTheDocument()
+    await user.click(closeSettings())
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
     expect(backend.settings.workspace_name).toBe('Mine again')
   })
 })
@@ -462,7 +482,7 @@ describe('W-13 settings: load failure', () => {
     expect(alert).toBeInTheDocument()
     fail = false
     await user.click(screen.getByRole('button', { name: 'Retry' }))
-    expect(await screen.findByRole('button', { name: 'Save settings' })).toBeInTheDocument()
+    expect(await screen.findByLabelText(/Workspace name/)).toBeInTheDocument()
   })
 })
 
@@ -492,43 +512,44 @@ describe('W-13 settings: pane', () => {
   })
 })
 
-describe('W-13 settings: unsaved changes guard', () => {
-  it('asks before leaving with a dirty form; Keep editing stays', async () => {
+describe('W-13 settings: close saves changes', () => {
+  it('keeps the pane open when the draft is invalid', async () => {
     mountBackend()
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Dirty')
-    await user.click(screen.getByRole('button', { name: 'Close' }))
-    const dialog = await screen.findByRole('alertdialog', { name: 'Discard changes?' })
-    await user.click(within(dialog).getByRole('button', { name: 'Keep editing' }))
+    await retype(user, 'Workspace name', '   ')
+    await user.click(closeSettings())
+    expect(await screen.findByText('Enter a name.')).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(field('Workspace name')).toHaveValue('Dirty')
+    expect(field('Workspace name')).toHaveValue('   ')
   })
 
-  it('Discard changes closes the pane and goes Home', async () => {
+  it('keeps the pane open after a network failure and closes after Retry succeeds', async () => {
     mountBackend()
+    let fail = true
+    server.use(http.patch(settingsUrl, () => (fail ? HttpResponse.error() : undefined)))
     const user = await openSettings()
     await retype(user, 'Workspace name', 'Dirty')
-    await user.click(screen.getByRole('button', { name: 'Close' }))
-    const dialog = await screen.findByRole('alertdialog', { name: 'Discard changes?' })
-    await user.click(within(dialog).getByRole('button', { name: 'Discard changes' }))
+    await user.click(closeSettings())
+    const alert = await screen.findByRole('alert')
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+    fail = false
+    await user.click(within(alert).getByRole('button', { name: 'Retry' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
   })
 
   it('does not ask when nothing changed', async () => {
     mountBackend()
     const user = await openSettings()
-    await user.click(screen.getByRole('button', { name: 'Close' }))
+    await user.click(closeSettings())
     expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 
-  it('does not ask after a successful save', async () => {
+  it('saves successfully before closing', async () => {
     mountBackend()
     const user = await openSettings()
     await retype(user, 'Workspace name', 'Saved')
-    await user.click(save())
-    await screen.findByText('Settings saved')
-    await user.click(screen.getByRole('button', { name: 'Close' }))
+    await user.click(closeSettings())
     expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
   })
 })
