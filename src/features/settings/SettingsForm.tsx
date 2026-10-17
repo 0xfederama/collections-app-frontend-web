@@ -252,7 +252,10 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         )}
       </div>
 
-      <section aria-labelledby="settings-collection" className="flex flex-col gap-4">
+      <section
+        aria-labelledby="settings-collection"
+        className="flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md"
+      >
         <h2 id="settings-collection" className="text-sm font-semibold text-text-muted">
           Collection
         </h2>
@@ -301,8 +304,11 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         />
       </section>
 
-      <section aria-labelledby="settings-movies-tv" className="flex flex-col gap-4">
-        <h2 id="settings-movies-tv" className="text-sm font-semibold">
+      <section
+        aria-labelledby="settings-movies-tv"
+        className="flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md"
+      >
+        <h2 id="settings-movies-tv" className="text-sm font-semibold text-text-muted">
           Movies &amp; TV
         </h2>
         <CountrySelect

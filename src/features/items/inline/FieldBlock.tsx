@@ -29,7 +29,7 @@ function StreamingValue({ item }: { item: Item }) {
   return (
     <div className="flex flex-col gap-1.5">
       {streaming.platforms?.length ? (
-        <ul aria-label="Platforms" className="flex flex-wrap items-center justify-center gap-2">
+        <ul aria-label="Platforms" className="flex flex-wrap items-center justify-start gap-2">
           {streaming.platforms.map((name) => (
             <li key={name} className="flex items-center justify-center">
               <ServiceIcon name={name} paid={paid.has(name.toLowerCase())} />
@@ -139,17 +139,6 @@ export function FieldBlock({
   )
   return (
     <>
-      {showStreaming && streamingSpec && (
-        <section aria-labelledby="item-streaming" className="flex flex-col gap-2 text-sm">
-          {/* W6: the country lives in Settings, so the heading does not repeat it; it is only named
-              when the item's country differs (the note under the platforms). */}
-          <h2 id="item-streaming" className="text-sm font-semibold text-text-muted">
-            Streaming
-          </h2>
-          {/* W6: a taller hover bar with even padding around the tiles. */}
-          {editor(streamingSpec, <StreamingValue item={item} />, 'min-h-10 py-1')}
-        </section>
-      )}
       {(rows.length > 0 || menu.length > 0) && (
         <section
           aria-labelledby={rows.length > 0 ? 'item-details' : undefined}
@@ -191,6 +180,17 @@ export function FieldBlock({
               />
             </div>
           )}
+        </section>
+      )}
+      {showStreaming && streamingSpec && (
+        <section aria-labelledby="item-streaming" className="flex flex-col gap-2 text-sm">
+          {/* W6: the country lives in Settings, so the heading does not repeat it; it is only named
+              when the item's country differs (the note under the platforms). */}
+          <h2 id="item-streaming" className="text-sm font-semibold text-text-muted">
+            Streaming
+          </h2>
+          {/* W6: a taller hover bar with even padding around the tiles. */}
+          {editor(streamingSpec, <StreamingValue item={item} />, 'min-h-10 py-1')}
         </section>
       )}
     </>

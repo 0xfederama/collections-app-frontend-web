@@ -67,6 +67,12 @@ describe('W-13 settings: saving', () => {
     expect(Array.from(dialog.querySelectorAll('h2')).map((heading) => heading.textContent)).toEqual(
       ['Settings', 'Appearance', 'Collection', 'Movies & TV', 'Connection', 'About'],
     )
+    const collection = within(dialog).getByRole('region', { name: 'Collection' })
+    const movies = within(dialog).getByRole('region', { name: 'Movies & TV' })
+    expect(within(collection).getByLabelText(/Workspace name/)).toBeInTheDocument()
+    expect(within(collection).getByLabelText(/Description history limit/)).toBeInTheDocument()
+    expect(within(movies).getByLabelText(/Streaming country/)).toBeInTheDocument()
+    expect(within(movies).getByLabelText(/Metadata language/)).toBeInTheDocument()
     expect(field('Workspace name')).toHaveValue('Our Collection')
     expect(field('Streaming country')).toHaveValue('Italy (IT)')
     expect(field('Description history limit')).toHaveValue('20')

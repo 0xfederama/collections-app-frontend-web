@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`/settings`: Appearance first, then Collection and Movies & TV settings, followed by read-only Connection and About information.
+`/settings`: Appearance first, then Collection and Movies & TV settings in separate section cards, followed by read-only Connection and About cards.
 
 ## Key files
 
