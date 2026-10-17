@@ -67,6 +67,7 @@ export function QuickAddDialog({
   const [image, setImage] = useState<File>()
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({})
   const [formError, setFormError] = useState<string>()
+  const [lookupUnavailable, setLookupUnavailable] = useState(false)
   const [busy, setBusy] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const websiteRef = useRef<HTMLInputElement>(null)
@@ -80,7 +81,7 @@ export function QuickAddDialog({
   const create = useCreateItem(listId ?? '')
   const saveContent = useSaveContent()
 
-  const submit = async (event?: FormEvent) => {
+  const submit = async (event?: FormEvent, lookup?: boolean) => {
     event?.preventDefault()
     if (busy) return
     const trimmed = title.trim()
@@ -110,10 +111,16 @@ export function QuickAddDialog({
       created = await create.mutateAsync({
         title: trimmed,
         ...createLookupSelection(listKind, settings.data?.lookup_available === true, tmdbId),
+        ...(lookup === undefined ? {} : { lookup }),
         ...(site ? { website: site } : {}),
       })
     } catch (caught) {
       setBusy(false)
+      const tmdbUnavailable =
+        caught instanceof ApiError &&
+        caught.status === 503 &&
+        (caught.code === 'upstream_unavailable' || caught.code === 'lookup_disabled')
+      setLookupUnavailable(tmdbUnavailable)
       if (caught instanceof ApiError && caught.status === 422) {
         const mapped: Partial<Record<Field, string>> = {}
         const rest: string[] = []
@@ -129,6 +136,8 @@ export function QuickAddDialog({
         }
       } else if (caught instanceof ApiError && caught.status === 409) {
         setFormError('This list no longer exists or is in Trash.')
+      } else if (tmdbUnavailable) {
+        setFormError(undefined)
       } else if (
         caught instanceof NetworkError ||
         (caught instanceof ApiError && caught.status >= 500)
@@ -384,13 +393,33 @@ export function QuickAddDialog({
             )}
           </div>
         )}
-        {formError && (
+        {lookupUnavailable ? (
           <div
             role="alert"
             className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
           >
-            {formError}
+            <p>
+              TMDB metadata is unavailable right now. Your title is still here; retry the lookup or
+              add it without TMDB metadata.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button size="sm" variant="secondary" onClick={() => void submit(undefined)}>
+                Retry TMDB lookup
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => void submit(undefined, false)}>
+                Add without TMDB metadata
+              </Button>
+            </div>
           </div>
+        ) : (
+          formError && (
+            <div
+              role="alert"
+              className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
+            >
+              {formError}
+            </div>
+          )
         )}
         <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
           <p className="text-xs text-text-muted max-sm:hidden [@media(hover:none)]:hidden">

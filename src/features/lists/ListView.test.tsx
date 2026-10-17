@@ -1053,6 +1053,53 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     ).toBeInTheDocument()
   })
 
+  it('keeps the typed title and can add without TMDB after lookup is unavailable', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts: unknown[] = []
+    let calls = 0
+    server.use(
+      http.post(createUrl, async ({ request }) => {
+        const body = (await request.json()) as { title: string; lookup: boolean }
+        posts.push(body)
+        calls += 1
+        if (calls === 1) return problemResponse(503, 'upstream_unavailable')
+        const created = {
+          ...(exampleResponses.getItem.body as object),
+          id: NEW_ID,
+          list_id: LIST,
+          title: body.title,
+          metadata: {},
+          version: 1,
+        }
+        server.use(
+          http.get(`${location.origin}/api/v1/items/${NEW_ID}`, () => HttpResponse.json(created)),
+        )
+        return HttpResponse.json(created, { status: 201 })
+      }),
+    )
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
+    await user.type(title, 'Field notebook')
+    await user.keyboard('{Enter}')
+
+    expect(await within(panel).findByText(/TMDB metadata is unavailable/)).toBeInTheDocument()
+    expect(title).toHaveValue('Field notebook')
+    await user.click(within(panel).getByRole('button', { name: 'Add without TMDB metadata' }))
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+    expect(posts).toEqual([
+      { title: 'Field notebook', lookup: true },
+      { title: 'Field notebook', lookup: false },
+    ])
+  })
+
   it('Esc removes the draft row and the side page without a request or a confirmation', async () => {
     mockViewport(1400)
     useBackend()
