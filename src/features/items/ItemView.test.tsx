@@ -90,8 +90,13 @@ describe('AT-13 item view: the example movie', () => {
   it('shows populated editable fields by default and leaves empty fields in Add field', async () => {
     await renderItem()
     expect(await screen.findByRole('heading', { name: 'Description' })).toBeVisible()
-    expect(screen.getByRole('heading', { name: 'Details' })).toBeVisible()
-    expect(screen.getByRole('heading', { name: 'Streaming', level: 2 })).toBeVisible()
+    const details = screen.getByRole('heading', { name: 'Details' })
+    const streaming = screen.getByRole('heading', { name: 'Streaming', level: 2 })
+    expect(details).toBeVisible()
+    expect(streaming).toBeVisible()
+    expect(
+      details.compareDocumentPosition(streaming) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
     expect(screen.getByText('136 min')).toBeVisible()
     expect(screen.getByText('1999')).toBeVisible()
     expect(screen.getByRole('list', { name: 'Platforms' })).toBeVisible()
@@ -123,14 +128,14 @@ describe('AT-13 item view: the example movie', () => {
     expect(screen.getByRole('button', { name: 'Edit website' })).toBeVisible()
   })
 
-  it('F009-W6 the streaming row reads "Streaming", with the platforms centred, and the country is in Settings', async () => {
+  it('F009-W6 the streaming row reads "Streaming", with the platforms left-aligned, and the country is in Settings', async () => {
     await renderItem()
     const heading = await screen.findByRole('heading', { name: 'Streaming', level: 2 })
     const streaming = heading.closest('section')!
     // The country is not repeated in the label; it comes from Settings.
     expect(heading).toHaveTextContent('Streaming')
     const platforms = within(streaming).getByRole('list', { name: 'Platforms' })
-    expect(platforms).toHaveClass('justify-center')
+    expect(platforms).toHaveClass('justify-start')
     expect(within(platforms).getAllByRole('listitem')[0]).toHaveClass('items-center')
     expect(within(platforms).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
     expect(within(platforms).getByRole('img', { name: 'Prime Video, paid' })).toBeInTheDocument()
