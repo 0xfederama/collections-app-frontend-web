@@ -19,9 +19,7 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
     await panel.getByRole('combobox', { name: 'Title' }).press('Enter')
     await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
 
-    // The deterministic lookup filled the release year; revealing it stays read-only.
-    await panel.getByRole('button', { name: 'Add field' }).click()
-    await page.getByRole('menuitem', { name: 'Release year' }).click()
+    // The deterministic lookup filled the release year; populated fields are visible by default.
     await expect(panel.getByText('2001', { exact: true })).toBeVisible()
     await expect(panel.getByRole('button', { name: 'Edit release year' })).toBeVisible()
 
@@ -34,14 +32,11 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
     await page.reload()
     const item = itemPanel(page)
     await expect(item.getByRole('heading', { level: 1, name: title })).toBeVisible()
-    // F009-W1: the item page is calm by default. The website shows, the kind field does not.
+    // Populated kind fields and the website remain visible after reload.
     await expect(item.getByText(website)).toBeVisible()
-    await expect(item.getByText('2001', { exact: true })).toBeHidden()
-    // Adding it back with "+ Add field" shows the saved value, read-only: no editor opens.
-    await item.getByRole('button', { name: 'Add field' }).click()
-    await page.getByRole('menuitem', { name: 'Release year' }).click()
-    await expect(item.getByRole('textbox', { name: 'Release year' })).toBeHidden()
     await expect(item.getByText('2001', { exact: true })).toBeVisible()
+    await expect(item.getByRole('textbox', { name: 'Release year' })).toBeHidden()
+    await expect(item.getByRole('button', { name: 'Edit release year' })).toBeVisible()
     // A movie has no Website link button (F-002); the saved value reads in the Details row.
     await expect(item.getByText(website)).toBeVisible()
 
@@ -127,9 +122,7 @@ test.describe('F011-W1/W2 streaming: no country, several platforms from a dropdo
     await page.reload()
     const shown = itemPanel(page)
     await expect(shown.getByRole('heading', { level: 1, name: title })).toBeVisible()
-    // F009-W1: it comes back read-only, as the three service tiles.
-    await shown.getByRole('button', { name: 'Add field' }).click()
-    await page.getByRole('menuitem', { name: 'Streaming' }).click()
+    // Populated streaming fields come back read-only as three service tiles.
     for (const service of ['Netflix', 'Disney+', 'Sky']) {
       await expect(shown.getByRole('img', { name: service })).toBeVisible()
     }
@@ -141,11 +134,10 @@ test.describe('F011-W1/W2 streaming: no country, several platforms from a dropdo
     await page.keyboard.press('Escape')
     await shown.getByRole('button', { name: 'Save streaming' }).click()
     await page.reload()
-    await itemPanel(page).getByRole('button', { name: 'Add field' }).click()
-    await page.getByRole('menuitem', { name: 'Streaming' }).click()
-    await expect(itemPanel(page).getByRole('img', { name: 'Netflix' })).toBeVisible()
-    await expect(itemPanel(page).getByRole('img', { name: 'Sky' })).toBeVisible()
-    await expect(itemPanel(page).getByRole('img', { name: 'Disney+' })).toHaveCount(0)
+    const updated = itemPanel(page)
+    await expect(updated.getByRole('img', { name: 'Netflix' })).toBeVisible()
+    await expect(updated.getByRole('img', { name: 'Sky' })).toBeVisible()
+    await expect(updated.getByRole('img', { name: 'Disney+' })).toHaveCount(0)
   })
 })
 
@@ -173,10 +165,8 @@ test.describe('D-085 price only on the kinds that have one', () => {
     await page.reload()
     const item = itemPanel(page)
     await expect(item.getByRole('heading', { level: 1, name: title })).toBeVisible()
-    // F009-W1: the price is hidden until it is added with "+ Add field", then it reads.
-    await expect(item.getByRole('button', { name: 'Edit price' })).toBeHidden()
-    await item.getByRole('button', { name: 'Add field' }).click()
-    await page.getByRole('menuitem', { name: 'Price', exact: true }).click()
+    // A populated price is visible by default and remains read-only.
+    await expect(item.getByRole('button', { name: 'Edit price' })).toBeVisible()
     await expect(item.getByRole('textbox', { name: 'Price', exact: true })).toBeHidden()
     await expect(item.getByText(/10\D+20/)).toBeVisible()
 
@@ -219,7 +209,7 @@ test.describe('F009-W3 pinned fields: up to two, in order', () => {
     const list = await createList(request, uniqueName('Films'), 'movie')
     const title = uniqueName('Heat')
     await createItem(request, list.id, title, {
-      metadata: { release_year: 2005, runtime_minutes: 117 },
+      metadata: { release_year: 2005, runtime_minutes: 117, director: 'Ada Auteur' },
     })
 
     await page.goto(`/lists/${list.id}`)
@@ -232,14 +222,13 @@ test.describe('F009-W3 pinned fields: up to two, in order', () => {
     const pinnedMenu = page.getByRole('button', { name: 'Pinned fields' })
     await pinnedMenu.click()
     const checkbox = (name: string) => page.getByRole('menuitemcheckbox', { name })
-    // The kind default is runtime + streaming; both are set on this item, so untick them to start
-    // from an empty selection.
+    // Clear the movie defaults (runtime + streaming) before selecting populated fields.
     await checkbox('Runtime').click()
     await checkbox('Streaming').click()
     // Two fields in a row, in the order they are ticked; a third cannot be added.
     await checkbox('Release year').click()
     await checkbox('Runtime').click()
-    await expect(checkbox('Streaming')).toBeDisabled()
+    await expect(checkbox('Director')).toBeDisabled()
     await page.keyboard.press('Escape')
 
     // The first pinned field reads next to the title, the second at the right end of the row.
@@ -252,8 +241,8 @@ test.describe('F009-W3 pinned fields: up to two, in order', () => {
     // Unpinning the first promotes the second to first: it moves back beside the title.
     await pinnedMenu.click()
     await checkbox('Release year').click()
-    // Only one field is pinned now, so the free ones are offered again.
-    await expect(checkbox('Release year')).toBeEnabled()
+    // Only one field is pinned now, so the populated director can be selected.
+    await expect(checkbox('Director')).toBeEnabled()
     await page.keyboard.press('Escape')
     const promoted = await row.getByText('117 min').boundingBox()
     expect(Math.abs(promoted!.y - titleBox!.y)).toBeLessThan(24)

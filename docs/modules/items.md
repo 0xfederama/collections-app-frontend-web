@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Item detail and inline editing at `/lists/:listId/items/:itemId`, including TMDB actions for movies and TV shows, image, description, fields, Move and Delete.
+Item detail and inline editing at `/lists/:listId/items/:itemId`, including image, description, fields, Move and Delete. TMDB lookup remains available when creating movie and TV items.
 
 ## Key files
 
@@ -10,14 +10,14 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including TMDB
 - `image/ImageDialog.tsx`, `ImageSection.tsx`, `api.ts`, `upload.ts`: image changes.
 - `inline/`, `form/draft.ts`: field edits and draft helpers.
 - `content/`: description editor and history.
-- `api.ts`, `TmdbTitleField.tsx`, `TmdbItemActions.tsx`, `NewItemDraft.tsx`, `links.ts`, `kinds/`: item data, TMDB lookup, inline creation, links and kind fields.
+- `api.ts`, `TmdbTitleField.tsx`, `NewItemDraft.tsx`, `links.ts`, `kinds/`: item data, TMDB lookup, inline creation, links and kind fields.
 
 ## Interfaces
 
 - `ItemPage()`, `ItemView({ item })`, `ItemHero`.
 - `ImageDialog({ item, onClose, initialFile? })`, `ImageSection({ item, initialFile?, onChanged, onStale })`.
 - `useItem`, `useUpdateItem`, `useCreateItem`, `useLookupItem`, `useDeleteItem`, `useMoveItem`.
-- `TmdbTitleField`, `createLookupSelection`, `TmdbItemActions`.
+- `TmdbTitleField`, `createLookupSelection`.
 - `DescriptionField({ itemId, listId })`, `InlineField`, `FieldBlock`.
 
 ## Gotchas
@@ -26,8 +26,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including TMDB
 - Image changes are individual requests using the item's `If-Match`; 412/404 keeps the dialog open with a reload action.
 - Field editors use the version snapshot captured when opened; a 412 keeps the draft and offers Copy draft and Reload latest.
 - Simple field editors keep the input immediately beside the row label, with ✓ / ✕ at the input's right on the same row; composite price, years and streaming editors retain their existing layouts.
-- The item page is calm by default; kind fields and price are revealed with "+ Add field".
+- Every populated editable field is shown by default; empty fields are available from "+ Add field".
 - Movie and TV title fields show TMDB suggestions only when lookup is available; choosing one preserves the typed title and supplies its TMDB id on creation.
 - If TMDB lookup is unavailable while the inline movie/TV draft is created, the draft keeps its typed title and offers retrying lookup or creating without TMDB metadata.
-- TMDB actions let movie and TV items re-match, refresh, or opt out of automatic updates; failed lookups leave the item unchanged.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for detailed field and image rules.

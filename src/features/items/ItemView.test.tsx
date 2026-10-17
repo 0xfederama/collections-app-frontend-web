@@ -38,22 +38,6 @@ async function renderOverride(over: Partial<Item>) {
 
 const links = () => within(screen.getByRole('group', { name: 'External links' }))
 
-/** F009-W1: a kind field is added on demand with "+ Add field". */
-async function addField(user: ReturnType<typeof userEvent.setup>, label: string) {
-  await user.click(screen.getByRole('button', { name: 'Add field' }))
-  await user.click(await screen.findByRole('menuitem', { name: label }))
-}
-
-/**
- * Adds a field so its saved value reads in the row. An empty one opens its editor, which is
- * closed again; a field that already had a value is only revealed, so nothing is opened.
- */
-async function reveal(user: ReturnType<typeof userEvent.setup>, label: string) {
-  await addField(user, label)
-  const cancel = screen.queryByRole('button', { name: `Cancel editing ${label.toLowerCase()}` })
-  if (cancel) await user.click(cancel)
-}
-
 describe('AT-13 item view: the example movie', () => {
   it('F012-W2 does not open image upload behind a destructive confirmation', async () => {
     const user = userEvent.setup()
@@ -75,6 +59,11 @@ describe('AT-13 item view: the example movie', () => {
 
   it('shows the title and Google, Letterboxd, IMDb for a movie, with a kind label but no status or summary (F007-W7, W8)', async () => {
     await renderItem()
+    expect(screen.queryByRole('region', { name: 'TMDB actions' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Wrong match?' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /automatic TMDB updates/i }),
+    ).not.toBeInTheDocument()
     // F-002: a quiet kind label above the title.
     expect(screen.getByText('Movie')).toBeInTheDocument()
     expect(screen.queryByText('Watched')).not.toBeInTheDocument()
@@ -98,40 +87,33 @@ describe('AT-13 item view: the example movie', () => {
     expect(links().queryByRole('button', { name: 'Add website' })).not.toBeInTheDocument()
   })
 
-  it('F009-W1 shows only title, links and description: no kind row and no price before "+"', async () => {
+  it('shows populated editable fields by default and leaves empty fields in Add field', async () => {
     await renderItem()
-    // The example movie has a year, a runtime and streaming: none of them is shown by default.
     expect(await screen.findByRole('heading', { name: 'Description' })).toBeVisible()
-    expect(screen.queryByRole('heading', { name: 'Details' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Streaming', level: 2 })).not.toBeInTheDocument()
-    expect(screen.queryByRole('term')).not.toBeInTheDocument()
-    expect(screen.queryByText('136 min')).not.toBeInTheDocument()
-    expect(screen.queryByText('1999')).not.toBeInTheDocument()
-    expect(screen.queryByRole('list', { name: 'Platforms' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Details' })).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Streaming', level: 2 })).toBeVisible()
+    expect(screen.getByText('136 min')).toBeVisible()
+    expect(screen.getByText('1999')).toBeVisible()
+    expect(screen.getByRole('list', { name: 'Platforms' })).toBeVisible()
+    expect(screen.queryByText('Director')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add field' })).toBeVisible()
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Director' }))
+    expect(screen.queryByRole('menuitem', { name: 'Streaming' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('textbox', { name: /Director/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Cancel editing director' }))
   })
 
-  it('F009-W1 adds a saved kind field with "+" and shows its value read-only, with no IMDb row (F-002)', async () => {
-    const user = userEvent.setup()
-    await renderItem()
-    await reveal(user, 'Runtime')
+  it('shows a populated movie Director by default and keeps IMDb out of the detail rows (F-002)', async () => {
+    await renderOverride({ metadata: { ...matrix.metadata, director: 'Lana Wachowski' } })
     const details = (await screen.findByRole('heading', { name: 'Details' })).closest('section')!
-    expect(within(details).getByText('136 min')).toBeVisible()
-    expect(within(details).getByText('Runtime')).toBeVisible()
+    expect(within(details).getByText('Lana Wachowski')).toBeVisible()
+    expect(within(details).getByText('Director')).toBeVisible()
     // F-002: the IMDb code only feeds the IMDb link button, it is never a row.
     expect(within(details).queryByText('IMDb')).not.toBeInTheDocument()
     expect(within(details).queryByRole('link', { name: /IMDb/ })).not.toBeInTheDocument()
-    // Once shown it leaves the menu; the other kind fields are still offered.
-    await user.click(screen.getByRole('button', { name: 'Add field' }))
-    const menu = await screen.findByRole('menu')
-    expect(
-      within(menu)
-        .getAllByRole('menuitem')
-        .map((i) => i.textContent),
-    ).toEqual(['Release year', 'Director', 'Streaming', 'Website'])
-    // Revealing a field that already has a value does not drop the user into an editor.
-    await user.click(within(menu).getByRole('menuitem', { name: 'Streaming' }))
-    expect(screen.queryByRole('textbox', { name: /Streaming/ })).not.toBeInTheDocument()
+    expect(within(details).queryByRole('menuitem', { name: 'Director' })).not.toBeInTheDocument()
   })
 
   it('F009-W1 a saved website stays visible by default', async () => {
@@ -142,9 +124,7 @@ describe('AT-13 item view: the example movie', () => {
   })
 
   it('F009-W6 the streaming row reads "Streaming", with the platforms centred, and the country is in Settings', async () => {
-    const user = userEvent.setup()
     await renderItem()
-    await reveal(user, 'Streaming')
     const heading = await screen.findByRole('heading', { name: 'Streaming', level: 2 })
     const streaming = heading.closest('section')!
     // The country is not repeated in the label; it comes from Settings.
@@ -158,21 +138,17 @@ describe('AT-13 item view: the example movie', () => {
   })
 
   it('F009-W6 the streaming hover bar is taller with even padding (min-h-10 py-1)', async () => {
-    const user = userEvent.setup()
     await renderItem()
-    await reveal(user, 'Streaming')
     const list = await screen.findByRole('list', { name: 'Platforms' })
     const bar = list.closest('div.cursor-text')
     expect(bar).toHaveClass('min-h-10', 'py-1')
   })
 
   it('warns when the streaming country differs from the settings country', async () => {
-    const user = userEvent.setup()
     overrideItem({
       metadata: { ...matrix.metadata, streaming: { country: 'US', platforms: ['Hulu'] } },
     })
     await renderItem()
-    await reveal(user, 'Streaming')
     const note = await screen.findByRole('note')
     expect(note).toHaveTextContent(/Italy/)
     expect(note).toHaveTextContent(/United States/)
@@ -181,10 +157,8 @@ describe('AT-13 item view: the example movie', () => {
   })
 
   it('shows no warning while the settings are unknown', async () => {
-    const user = userEvent.setup()
     server.use(http.get(settingsUrl, () => problemResponse(500, 'internal_error')))
     await renderItem()
-    await reveal(user, 'Streaming')
     await screen.findByRole('heading', { name: 'Streaming', level: 2 })
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
   })
@@ -268,14 +242,11 @@ describe('AT-13 item view: the example movie', () => {
 
 describe('item view: kinds', () => {
   it('tv show: ongoing run reads 2019–present', async () => {
-    const user = userEvent.setup()
     await renderOverride({
       title: 'Severance',
       kind: 'tv_show',
       metadata: { first_air_year: 2019, seasons: 2 },
     })
-    await reveal(user, 'Years')
-    await reveal(user, 'Seasons')
     expect(await screen.findByText('2019–present')).toBeInTheDocument()
     expect(screen.getByText('Years')).toBeInTheDocument()
     expect(screen.getByText('Seasons').nextElementSibling).toHaveTextContent('2')
@@ -287,13 +258,11 @@ describe('item view: kinds', () => {
   })
 
   it('tv show: finished run reads 2019–2023', async () => {
-    const user = userEvent.setup()
     await renderOverride({
       title: 'Severance',
       kind: 'tv_show',
       metadata: { first_air_year: 2019, end_year: 2023 },
     })
-    await reveal(user, 'Years')
     expect(await screen.findByText('2019–2023')).toBeInTheDocument()
   })
 
@@ -314,42 +283,32 @@ describe('item view: kinds', () => {
   })
 
   it('motorcycle shows its units', async () => {
-    const user = userEvent.setup()
     await renderOverride({
       title: 'Ducati Monster',
       kind: 'motorcycle',
       metadata: { displacement_cc: 937, power_hp: 111, license_class: 'A' },
     })
-    await reveal(user, 'Displacement')
-    await reveal(user, 'Power')
     expect(await screen.findByText('937 cc')).toBeInTheDocument()
     expect(screen.getByText('111 hp')).toBeInTheDocument()
   })
 
   it('car shows units and enum labels', async () => {
-    const user = userEvent.setup()
     await renderOverride({
       title: 'Golf',
       kind: 'car',
       metadata: { power_hp: 111, fuel_type: 'plugin_hybrid', model_year: 2021 },
     })
-    await reveal(user, 'Fuel')
-    await reveal(user, 'Power')
-    await reveal(user, 'Model year')
     expect(await screen.findByText('111 hp')).toBeInTheDocument()
     expect(screen.getByText('Plug-in hybrid')).toBeInTheDocument()
     expect(screen.getByText('2021')).toBeInTheDocument()
   })
 
   it('camera shows megapixels', async () => {
-    const user = userEvent.setup()
     await renderOverride({
       title: 'Alpha',
       kind: 'camera',
       metadata: { megapixels: 24.2, sensor_format: 'full_frame' },
     })
-    await reveal(user, 'Sensor')
-    await reveal(user, 'Resolution')
     expect(await screen.findByText('24.2 MP')).toBeInTheDocument()
     expect(screen.getByText('Full frame')).toBeInTheDocument()
   })
@@ -370,25 +329,21 @@ describe('item view: kinds', () => {
   })
 
   it('F007-W8 a single price reads € 1,200, a range € 1,000–1,400, no price shows nothing', async () => {
-    // Price exists on motorcycle, car and camera only (D-085), and is added on demand (F009-W1).
-    const user = userEvent.setup()
+    // Price exists on motorcycle, car and camera only (D-085), and populated prices show by default.
     await renderOverride({
       kind: 'car',
       metadata: {},
       price: { min: '1200.00', max: '1200.00', currency: 'EUR' },
     })
-    await reveal(user, 'Price')
     expect(await screen.findByText(/^€\s?1,200$/)).toBeInTheDocument()
   })
 
   it('F007-W8 a range shows both bounds, each with the currency', async () => {
-    const user = userEvent.setup()
     await renderOverride({
       kind: 'car',
       metadata: {},
       price: { min: '1000.00', max: '1400.00', currency: 'EUR' },
     })
-    await reveal(user, 'Price')
     expect(await screen.findByText(/^€\s1,000–1,400$/)).toBeInTheDocument()
   })
 

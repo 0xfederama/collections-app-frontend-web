@@ -1,5 +1,6 @@
 dist
 coverage
+.impeccable/hook.cache.json
 node_modules
 package-lock.json
 src/generated
