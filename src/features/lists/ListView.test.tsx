@@ -1053,6 +1053,44 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     ).toBeInTheDocument()
   })
 
+  it('selecting a TMDB suggestion immediately creates the selected title with its id', async () => {
+    mockViewport(1400)
+    useBackend({ list: { kind: 'movie' } })
+    treeWithKind('movie')
+    const posts: unknown[] = []
+    server.use(
+      http.post(createUrl, async ({ request }) => {
+        const body = (await request.json()) as { title: string }
+        posts.push(body)
+        const created = {
+          ...(exampleResponses.getItem.body as object),
+          id: NEW_ID,
+          list_id: LIST,
+          title: body.title,
+          metadata: {},
+          version: 1,
+        }
+        server.use(
+          http.get(`${location.origin}/api/v1/items/${NEW_ID}`, () => HttpResponse.json(created)),
+        )
+        return HttpResponse.json(created, { status: 201 })
+      }),
+    )
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
+    await user.type(title, 'The Mat')
+    await user.click(await screen.findByRole('option', { name: 'The Matrix (1999)' }))
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+    expect(posts).toEqual([{ title: 'The Matrix', lookup: true, tmdb_id: 603 }])
+  })
+
   it('keeps the typed title and can add without TMDB after lookup is unavailable', async () => {
     mockViewport(1400)
     useBackend()

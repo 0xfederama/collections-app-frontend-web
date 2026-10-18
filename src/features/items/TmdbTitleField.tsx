@@ -7,17 +7,19 @@ import type { ItemKind } from './api'
 
 type Suggestion = components['schemas']['TmdbSuggestion']
 type TmdbKind = components['schemas']['TmdbKind']
+export type TmdbTitleSelection = Pick<Suggestion, 'title' | 'tmdb_id'>
 
 const toTmdbKind = (kind: ItemKind): TmdbKind | undefined =>
   kind === 'movie' || kind === 'tv_show' ? kind : undefined
 
-/** Movie and TV title input with localized TMDB suggestions. Selection never replaces typed text. */
+/** Movie and TV title input with localized TMDB suggestions. */
 export function TmdbTitleField({
   kind,
   title,
   onTitleChange,
   inputRef,
   onSelectionChange,
+  onSuggestionSelect,
   error,
   className,
   inputClassName,
@@ -29,6 +31,7 @@ export function TmdbTitleField({
   onTitleChange: (title: string) => void
   inputRef?: Ref<HTMLInputElement>
   onSelectionChange: (id: number | undefined) => void
+  onSuggestionSelect?: (selection: TmdbTitleSelection) => void
   error?: string
   className?: string
   inputClassName?: string
@@ -63,8 +66,10 @@ export function TmdbTitleField({
   const showList = open && available && query === title.trim() && results.length > 0
 
   const select = (suggestion: Suggestion) => {
+    onTitleChange(suggestion.title)
     onSelectionChange(suggestion.tmdb_id)
     setOpen(false)
+    onSuggestionSelect?.({ title: suggestion.title, tmdb_id: suggestion.tmdb_id })
   }
   const change = (value: string) => {
     onSelectionChange(undefined)

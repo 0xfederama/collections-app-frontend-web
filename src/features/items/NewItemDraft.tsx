@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { Button, kindIcons, kindLabels } from '../../components/ui'
 import { ApiError, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemKind } from './api'
-import { createLookupSelection, TmdbTitleField } from './TmdbTitleField'
+import { createLookupSelection, TmdbTitleField, type TmdbTitleSelection } from './TmdbTitleField'
 import { LIMITS } from './form/draft'
 import { MessageBanner } from './inline/Banners'
 import { useEditGuard } from './inline/guard'
@@ -51,16 +51,20 @@ export function NewItemDraft({
   }
   const cancel = () => leave(`/lists/${listId}`)
 
-  const commit = async (lookup?: boolean) => {
+  const commit = async (lookup?: boolean, selection?: TmdbTitleSelection) => {
     if (create.isPending) return
-    const trimmed = title.trim()
+    const trimmed = (selection?.title ?? title).trim()
     setFailure(undefined)
     if (!trimmed) return setError('Enter a title.')
     if (trimmed.length > LIMITS.title) return setError(`Use at most ${LIMITS.title} characters.`)
     try {
       const created = await create.mutateAsync({
         title: trimmed,
-        ...createLookupSelection(kind, settings.data?.lookup_available === true, tmdbId),
+        ...createLookupSelection(
+          kind,
+          settings.data?.lookup_available === true,
+          selection?.tmdb_id ?? tmdbId,
+        ),
         ...(lookup === undefined ? {} : { lookup }),
       })
       leave(`/lists/${listId}/items/${created.id}`)
@@ -136,6 +140,10 @@ export function NewItemDraft({
             title={title}
             onTitleChange={changeTitle}
             onSelectionChange={setTmdbId}
+            onSuggestionSelect={(selection) => {
+              setTmdbId(selection.tmdb_id)
+              void commit(undefined, selection)
+            }}
             autoFocus
             placeholder="Title of the new item"
             error={error}
