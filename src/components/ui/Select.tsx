@@ -60,7 +60,9 @@ export function Select({
             className,
           )}
         >
-          <RadixSelect.Value placeholder={placeholder} />
+          <span className="min-w-0 flex-1 truncate whitespace-nowrap">
+            <RadixSelect.Value placeholder={placeholder} />
+          </span>
           <RadixSelect.Icon>
             <ChevronDown aria-hidden className="size-4 text-text-muted" />
           </RadixSelect.Icon>

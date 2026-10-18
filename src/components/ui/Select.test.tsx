@@ -45,6 +45,15 @@ describe('Select', () => {
     expect(screen.getByRole('combobox', { name: 'Country' })).toHaveTextContent('Germany')
   })
 
+  it('keeps a long selected label on one line and available to assistive technology', () => {
+    const longLabel = 'Federico’s very long movie collection'
+    render(<Select label="List" options={[{ value: 'movies', label: longLabel }]} value="movies" />)
+
+    const trigger = screen.getByRole('combobox', { name: 'List' })
+    expect(trigger).toHaveTextContent(longLabel)
+    expect(screen.getByText(longLabel).parentElement).toHaveClass('truncate', 'whitespace-nowrap')
+  })
+
   it('Escape closes the list without selecting', async () => {
     const user = userEvent.setup()
     const onValueChange = vi.fn()
