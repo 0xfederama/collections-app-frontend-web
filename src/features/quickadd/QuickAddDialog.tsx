@@ -259,7 +259,7 @@ export function QuickAddDialog({
             <span aria-hidden className="text-sm text-text-muted">
               In
             </span>
-            <div className="w-40 [&>div>label]:sr-only [&_button]:h-8 [&_button]:rounded-md">
+            <div className="w-52 min-w-0 [&>div>label]:sr-only [&_button]:h-8 [&_button]:rounded-md">
               <Select
                 label="List"
                 placeholder={loading ? 'Loading lists…' : 'Select a list'}
