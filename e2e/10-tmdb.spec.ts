@@ -17,9 +17,8 @@ test.describe('F013 TMDB lookup fixture', () => {
     await expect(suggestions.getByRole('option', { name: /\[mock\] movie name/ })).toBeVisible()
     await expect(suggestions).toContainText('2001')
 
-    // Enter selects the active suggestion; a second Enter commits the draft.
+    // Selecting the active suggestion immediately creates the item.
     await title.press('ArrowDown')
-    await title.press('Enter')
     await title.press('Enter')
     await expect(panel.getByRole('heading', { level: 1, name: '[mock] movie name' })).toBeVisible()
 

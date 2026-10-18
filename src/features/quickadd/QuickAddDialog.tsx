@@ -13,7 +13,11 @@ import {
 import { ImagePlus, Plus, X } from '../../components/ui/icons'
 import { ApiError, NetworkError } from '../../lib/api'
 import { itemKeys, useCreateItem, type Item } from '../items/api'
-import { createLookupSelection, TmdbTitleField } from '../items/TmdbTitleField'
+import {
+  createLookupSelection,
+  TmdbTitleField,
+  type TmdbTitleSelection,
+} from '../items/TmdbTitleField'
 import { MAX_CONTENT_BYTES, isTooLarge } from '../items/content/limits'
 import { useSaveContent } from '../items/content/api'
 import { LIMITS } from '../items/form/draft'
@@ -81,10 +85,10 @@ export function QuickAddDialog({
   const create = useCreateItem(listId ?? '')
   const saveContent = useSaveContent()
 
-  const submit = async (event?: FormEvent, lookup?: boolean) => {
+  const submit = async (event?: FormEvent, lookup?: boolean, selection?: TmdbTitleSelection) => {
     event?.preventDefault()
     if (busy) return
-    const trimmed = title.trim()
+    const trimmed = (selection?.title ?? title).trim()
     const site = website.trim()
     const next: Partial<Record<Field, string>> = {}
     if (!trimmed) next.title = 'Enter a title.'
@@ -110,7 +114,11 @@ export function QuickAddDialog({
       const listKind = lists.find((list) => list.id === listId)?.kind ?? 'generic'
       created = await create.mutateAsync({
         title: trimmed,
-        ...createLookupSelection(listKind, settings.data?.lookup_available === true, tmdbId),
+        ...createLookupSelection(
+          listKind,
+          settings.data?.lookup_available === true,
+          selection?.tmdb_id ?? tmdbId,
+        ),
         ...(lookup === undefined ? {} : { lookup }),
         ...(site ? { website: site } : {}),
       })
@@ -234,6 +242,10 @@ export function QuickAddDialog({
               dismiss('title')
             }}
             onSelectionChange={setTmdbId}
+            onSuggestionSelect={(selection) => {
+              setTmdbId(selection.tmdb_id)
+              void submit(undefined, undefined, selection)
+            }}
             inputRef={titleRef}
             error={errors.title}
             placeholder="Title"

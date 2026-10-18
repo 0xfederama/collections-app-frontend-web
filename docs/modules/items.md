@@ -28,6 +28,6 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - Simple field editors keep the input immediately beside the row label, with ✓ / ✕ at the input's right on the same row; composite price, years and streaming editors retain their existing layouts.
 - Every populated editable field is shown by default; empty fields are available from "+ Add field".
 - Populated streaming service tiles align to the left.
-- Movie and TV title fields show TMDB suggestions only when lookup is available; choosing one preserves the typed title and supplies its TMDB id on creation.
+- Movie and TV title fields show TMDB suggestions only when lookup is available; choosing one immediately creates the item with the suggested title and TMDB id. Typing a title and pressing Enter or ✓ still creates the typed title.
 - If TMDB lookup is unavailable while the inline movie/TV draft is created, the draft keeps its typed title and offers retrying lookup or creating without TMDB metadata.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for detailed field and image rules.
