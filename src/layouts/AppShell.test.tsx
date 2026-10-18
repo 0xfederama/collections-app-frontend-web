@@ -126,6 +126,28 @@ describe('AT-14 landmarks per breakpoint', () => {
   })
 })
 
+describe('AT-14 scroll containment', () => {
+  it('keeps the sidebar tree and main scrollable within the viewport frame', async () => {
+    mockViewport(1100)
+    renderAt('/')
+
+    const sidebarRegion = screen.getByRole('region', { name: 'Sidebar' })
+    expect(sidebarRegion).toHaveClass('min-h-0', 'overflow-hidden')
+
+    const sidebar = await within(sidebarRegion).findByRole('navigation', { name: 'Library' })
+    const tree = await within(sidebar).findByRole('tree')
+    const treeScroller = tree.closest('.overflow-y-auto')
+    expect(treeScroller).toHaveClass('min-h-0', 'flex-1')
+    expect(treeScroller).not.toContainElement(sidebar.querySelector('.border-t'))
+    expect(sidebar.querySelector('.border-t')).toHaveTextContent('Trash')
+    expect(sidebar.querySelector('.border-t')).toHaveTextContent('Settings')
+
+    const main = screen.getByRole('main')
+    expect(main).toHaveClass('min-h-0', 'overflow-y-auto')
+    expect(main.parentElement).toHaveClass('min-h-0', 'overflow-hidden')
+  })
+})
+
 describe('AT-14 mobile drawer', () => {
   it('opens from "Open menu" with the tree, and the menu button is labelled', async () => {
     mockViewport(375)
