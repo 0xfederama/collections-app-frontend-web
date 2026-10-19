@@ -28,6 +28,6 @@
 - `useTypes()` hides provider bookkeeping (`tmdb_id`, `lookup_disabled`, `openlibrary_id`), so they are never editable, pinnable, sortable or filterable.
 - Built-in types and fields (`is_locked`) are read-only; only custom fields can be renamed, reordered or deleted. Type and field writes use their own ETags (`"k-N"`, `"kf-N"`).
 - Deleting a type that active lists use lists them by name (from the tree) and asks for a target type first.
-- The About pane credits Open Library (metadata source for books).
+- The About pane shows logo tiles for TMDB and Open Library (metadata sources) and has no thank-you line.
 - Every type or field change invalidates types and content, since items and rows render from the definitions.
 - Theme is per device and is not part of the settings PATCH. See [design docs](/Users/federico/Developer/collections-app/design-docs/).

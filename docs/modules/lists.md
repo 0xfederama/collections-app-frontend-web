@@ -29,5 +29,6 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming and stores fields are not filterable, and stores fields are not sortable.
 - A sort the type does not define falls back to the list's `sort_mode`, so stale `?sort=` values are ignored.
 - Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally.
-- List icon writes are owned by the tree feature and use the list version with `If-Match`.
+- The header icon is a button that opens `ListIconDialog` (pen on hover, focus or touch). List icon writes are owned by the tree feature and use the list version with `If-Match`.
+- A list with no type shows the Lucide `List` glyph (`typeIconFor(null)`).
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.
