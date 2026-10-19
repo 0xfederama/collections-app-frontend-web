@@ -710,7 +710,7 @@ describe('F016-W1 book item detail', () => {
     })
 
     expect(screen.getByText('Frank Herbert')).toBeVisible()
-    expect(screen.getByText('412')).toBeVisible()
+    expect(screen.getByText('412 p.')).toBeVisible()
     const stores = within(await screen.findByRole('list', { name: 'Where to get it' }))
     // F016-W4: the display names, and a link only where the server stored one.
     expect(stores.getByRole('img', { name: 'Open Library' })).toBeInTheDocument()

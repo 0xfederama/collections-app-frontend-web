@@ -45,7 +45,7 @@ test.describe('F016-W2 book lookup fixture', () => {
 
     // Populated fields are part of the detail by default: writer, pages, ISBN and the store.
     await expect(panel.getByText('Mock Author', { exact: true })).toBeVisible()
-    await expect(panel.getByText('321', { exact: true })).toBeVisible()
+    await expect(panel.getByText('321 p.', { exact: true })).toBeVisible()
     await expect(panel.getByText('9780000000002', { exact: true })).toBeVisible()
     await expect(panel.getByRole('img', { name: 'Open Library' }).first()).toBeVisible()
     // The cover became the item image.
@@ -73,7 +73,7 @@ test.describe('F016-W3 book row layout', () => {
       await expect(row).toBeVisible()
 
       const titleBox = await row.getByRole('link', { name: title }).boundingBox()
-      const besideBox = await row.getByText('Ada Writer · 321', { exact: true }).boundingBox()
+      const besideBox = await row.getByText('Ada Writer · 321 p.', { exact: true }).boundingBox()
       const storeBox = await row.getByRole('img', { name: 'Kobo' }).boundingBox()
       const rowBox = await row.boundingBox()
       expect(Math.abs(besideBox!.y - titleBox!.y)).toBeLessThan(24)

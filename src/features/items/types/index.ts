@@ -71,6 +71,8 @@ const BUILTIN_NUMBER_FORMAT: Record<
   displacement_cc: { unit: 'cc', maximumFractionDigits: 0 },
   power_hp: { unit: 'hp', maximumFractionDigits: 1 },
   megapixels: { unit: 'MP', maximumFractionDigits: 1 },
+  // Catalogue convention for a page count: `321 p.` (`pp.` is for a page range).
+  pages: { unit: 'p.', maximumFractionDigits: 0 },
 }
 
 const BUILTIN_TEXT_LABELS: Record<string, Record<string, string>> = {

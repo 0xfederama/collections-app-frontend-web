@@ -1,7 +1,6 @@
 import { LinkIcon, TILE_SIZE } from '../../components/ServiceIcon'
 import { Plus } from '../../components/ui/icons'
 import type { Item } from './api'
-import { useSettings } from '../settings/api'
 import { buildExternalLinks } from './links'
 
 // Every link is the same icon tile as the streaming row (F009-W5), one shared size, and the empty
@@ -13,15 +12,14 @@ const control =
 
 /**
  * The external links (AT-13, F-002) on one line under the title: Google, Letterboxd, IMDb for
- * movies; Google, IMDb for TV shows; Google, Goodreads, Amazon for books; Google, Reddit, Website for the rest. They wrap only when
+ * movies; Google, IMDb for TV shows; Google, Goodreads, Open Library for books; Google, Reddit, Website for the rest. They wrap only when
  * there is no room. An empty website shows a "+" at the end of the row ("Add website"), which
  * asks the page to open that field's editor.
  */
 export function ExternalLinks({ item, onAddWebsite }: { item: Item; onAddWebsite?: () => void }) {
-  const settings = useSettings()
   return (
     <div role="group" aria-label="External links" className="flex flex-wrap items-center gap-2">
-      {buildExternalLinks(item, settings.data?.streaming_country_code).map((link) => {
+      {buildExternalLinks(item).map((link) => {
         if (link.href === null) {
           if (link.id !== 'website' || item.website || !onAddWebsite) return null
           return (

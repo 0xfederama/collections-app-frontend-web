@@ -431,7 +431,7 @@ export function SettingsForm({
         <CountrySelect
           id={inputId('streaming_country_code')}
           label="Country"
-          hint="Streaming platforms on a movie or TV show, and the Amazon link on a book, are for this country."
+          hint="Streaming platforms on a movie or TV show, and the book store links (Amazon and others), are for this country."
           placeholder="Country"
           value={draft.streaming_country_code}
           onValueChange={(value) => set('streaming_country_code', value)}

@@ -221,14 +221,16 @@ describe('F016 book links', () => {
     website: null,
     metadata: { isbn: '978-0-441-17271-9' },
   }
-  it('offers Google, Goodreads and Amazon for the Settings country', () => {
-    const links = buildExternalLinks(book, 'IT')
-    expect(links.map((l) => l.id)).toEqual(['google', 'goodreads', 'amazon'])
+  it('offers Google, Goodreads and Open Library, never a shop', () => {
+    const links = buildExternalLinks(book)
+    expect(links.map((l) => l.id)).toEqual(['google', 'goodreads', 'openlibrary'])
     expect(links[1]?.href).toBe('https://www.goodreads.com/search?q=9780441172719')
-    expect(links[2]?.href).toBe('https://www.amazon.it/s?k=9780441172719')
+    expect(links[2]?.href).toBe('https://openlibrary.org/isbn/9780441172719')
   })
-  it('falls back to amazon.com and to the title without an ISBN', () => {
-    const links = buildExternalLinks({ ...book, metadata: {} }, 'ZZ')
-    expect(links[2]?.href).toBe('https://www.amazon.com/s?k=Dune')
+  it('opens the Open Library work when the lookup found one, else searches the title', () => {
+    const found = buildExternalLinks({ ...book, metadata: { openlibrary_id: 'OL893415W' } })
+    expect(found[2]?.href).toBe('https://openlibrary.org/works/OL893415W')
+    const none = buildExternalLinks({ ...book, metadata: {} })
+    expect(none[2]?.href).toBe('https://openlibrary.org/search?q=Dune')
   })
 })

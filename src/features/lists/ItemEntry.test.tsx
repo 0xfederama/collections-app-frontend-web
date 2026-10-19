@@ -120,7 +120,7 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
       })
       const order = readOrder(row)
       expect(order.indexOf('Dune')).toBe(0)
-      expect(order.indexOf('Frank Herbert · 412')).toBe(1)
+      expect(order.indexOf('Frank Herbert · 412 p.')).toBe(1)
       // F016-W4: the tiles are named by the store's display name, once the provider list loads.
       expect(await within(row).findByRole('img', { name: 'Open Library' })).toBeInTheDocument()
       expect(within(row).getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
