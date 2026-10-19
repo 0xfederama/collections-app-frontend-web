@@ -127,6 +127,8 @@ Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-
 - 2026-10-14: A Radix `Dialog` opened from a Radix `Menu` item gets focus on its Close button, not on an `autoFocus` input. Pass `initialFocus` (ref) to `Dialog` for forms.
 - 2026-10-14: Under jsdom, abort errors from Node's fetch are not `instanceof DOMException`; match `error.name === 'AbortError'`.
 
+- 2026-10-20: `lazyRoute(load, { fallback: null })` for overlay routes (Settings): the default skeleton renders in the page flow, so over the background page it showed as grey bars under Home while the pane loaded.
+
 ## Working guidelines
 
 ### Shell

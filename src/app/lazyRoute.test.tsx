@@ -18,4 +18,16 @@ describe('lazyRoute', () => {
     expect(await screen.findByText('Loaded page')).toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
+
+  it('shows nothing while loading when the fallback is null (overlay routes)', async () => {
+    let resolve!: (component: () => React.ReactElement) => void
+    const loader = new Promise<() => React.ReactElement>((r) => (resolve = r))
+    const Route = lazyRoute(() => loader, { fallback: null })
+
+    render(<Route />)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+
+    await act(async () => resolve(() => <p>Loaded overlay</p>))
+    expect(await screen.findByText('Loaded overlay')).toBeInTheDocument()
+  })
 })
