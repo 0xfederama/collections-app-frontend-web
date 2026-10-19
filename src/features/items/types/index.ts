@@ -70,42 +70,17 @@ const BUILTIN_NUMBER_FORMAT: Record<
   episode_minutes: { unit: 'min', maximumFractionDigits: 0 },
   displacement_cc: { unit: 'cc', maximumFractionDigits: 0 },
   power_hp: { unit: 'hp', maximumFractionDigits: 1 },
-  megapixels: { unit: 'MP', maximumFractionDigits: 1 },
   // Catalogue convention for a page count: `321 p.` (`pp.` is for a page range).
   pages: { unit: 'p.', maximumFractionDigits: 0 },
 }
 
-const BUILTIN_TEXT_LABELS: Record<string, Record<string, string>> = {
-  fuel_type: {
-    petrol: 'Petrol',
-    diesel: 'Diesel',
-    hybrid: 'Hybrid',
-    plugin_hybrid: 'Plug-in hybrid',
-    electric: 'Electric',
-    lpg: 'LPG',
-    cng: 'CNG',
-    hydrogen: 'Hydrogen',
-    other: 'Other',
-  },
-  camera_type: { mirrorless: 'Mirrorless', dslr: 'DSLR', film: 'Film' },
-  sensor_format: {
-    full_frame: 'Full frame',
-    aps_c: 'APS-C',
-    micro_four_thirds: 'Micro Four Thirds',
-    one_inch: '1-inch',
-    medium_format: 'Medium format',
-    film_35mm: '35 mm film',
-    other: 'Other',
-  },
-}
-
-/** The text of one set field with its unit (`937 cc`, `24.2 MP`, `1999`), or `null` when unset or unusable. */
+/** The text of one set field with its unit (`937 cc`, `1999`), or `null` when unset or unusable. */
 export function formatField(field: TypeField, value: unknown): string | null {
   if (value === undefined || value === null) return null
   switch (field.type) {
     case 'text':
       if (typeof value !== 'string' || !value.trim()) return null
-      return BUILTIN_TEXT_LABELS[field.key]?.[value] ?? value
+      return value
     case 'link':
       return typeof value === 'string' && value.trim() ? value : null
     case 'number': {

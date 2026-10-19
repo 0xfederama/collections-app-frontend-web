@@ -38,25 +38,13 @@ const metadataFor = (summary: Pick<ItemSummary, 'id' | 'type'>): Record<string, 
         episode_minutes: 45,
         streaming: { country: 'IT', platforms: ['Disney+'] },
       }
-    case 'motorcycle':
+    case 'vehicle':
       return {
+        make: 'Ducati',
+        model: 'Monster',
         model_year: 2021,
         displacement_cc: 937,
         power_hp: 111,
-        license_class: 'A',
-      }
-    case 'car':
-      return {
-        model_year: 2022,
-        fuel_type: 'petrol',
-        power_hp: 184,
-      }
-    case 'camera':
-      return {
-        camera_type: 'mirrorless',
-        release_year: 2024,
-        sensor_format: 'aps_c',
-        megapixels: 40.2,
       }
     default:
       return {}

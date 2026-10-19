@@ -58,7 +58,7 @@ const CARS = '7c1e5a10-0000-4000-8000-000000000013'
 
 /**
  * The example tree has one list per type. The move picker only offers lists of the item's type
- * (F007-W7), so Motorbikes is served as a movie list here, next to a Cars list of another type.
+ * (F007-W7), so the Vehicles list is served as a movie list here, next to a Cars list of another type.
  */
 function serveMoveTree() {
   const tree = exampleResponses.getTree.body as {
@@ -73,7 +73,7 @@ function serveMoveTree() {
         lists: [
           ...tree.lists.filter((list) => list.id !== MOTORBIKES),
           { ...motorbikes, type: 'movie' },
-          { ...motorbikes, id: CARS, name: 'Cars', type: 'car', sort_order: 1 },
+          { ...motorbikes, id: CARS, name: 'Cars', type: 'wishlist', sort_order: 1 },
         ],
       }),
     ),
@@ -203,7 +203,7 @@ describe('move item (UI_SPEC §9 errors)', () => {
     const current = await screen.findByRole('option', { name: /\(current list\)/ })
     expect(current).toHaveTextContent('Watchlist (current list)')
     expect(current).toHaveAttribute('aria-disabled', 'true')
-    expect(screen.getByRole('option', { name: 'Vehicles › Motorbikes' })).not.toHaveAttribute(
+    expect(screen.getByRole('option', { name: 'Vehicles › Vehicles' })).not.toHaveAttribute(
       'aria-disabled',
       'true',
     )
@@ -215,7 +215,7 @@ describe('move item (UI_SPEC §9 errors)', () => {
     const submit = within(dialog).getByRole('button', { name: 'Move' })
     expect(submit).toBeDisabled()
     await user.click(within(dialog).getByRole('combobox', { name: 'Destination list' }))
-    await user.click(await screen.findByRole('option', { name: 'Vehicles › Motorbikes' }))
+    await user.click(await screen.findByRole('option', { name: 'Vehicles › Vehicles' }))
     expect(submit).toBeEnabled()
   })
 
@@ -228,7 +228,7 @@ describe('move item (UI_SPEC §9 errors)', () => {
 
   async function chooseMotorbikes(user: ReturnType<typeof userEvent.setup>, dialog: HTMLElement) {
     await user.click(within(dialog).getByRole('combobox', { name: 'Destination list' }))
-    await user.click(await screen.findByRole('option', { name: 'Vehicles › Motorbikes' }))
+    await user.click(await screen.findByRole('option', { name: 'Vehicles › Vehicles' }))
   }
 
   it('sends POST with If-Match "i-3" and {list_id}, then opens the item in its new list', async () => {
@@ -253,7 +253,7 @@ describe('move item (UI_SPEC §9 errors)', () => {
     )
     expect(seen).toEqual([{ ifMatch: '"i-3"', body: { list_id: MOTORBIKES } }])
     expect(await screen.findByText('Item moved')).toBeInTheDocument()
-    expect(await screen.findByRole('link', { name: /Back to Motorbikes/ })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /Back to Vehicles/ })).toBeInTheDocument()
   })
 
   it('409 says the list is gone and keeps the dialog open', async () => {

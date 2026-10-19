@@ -347,7 +347,9 @@ describe('AT-14 collapsible sidebar (icon rail)', () => {
     renderAt('/')
     await user.click(await within(nav()!).findByRole('button', { name: 'Vehicles' }))
     expect(await within(nav()!).findByRole('tree')).toBeInTheDocument()
-    expect(await within(nav()!).findByRole('treeitem', { name: /Motorbikes/ })).toBeInTheDocument()
+    expect(
+      await within(nav()!).findByRole('treeitem', { name: /^Vehicles\s*\d+\s*items?/ }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
   })
 

@@ -101,16 +101,7 @@ export {
   Wrench,
   X,
 } from 'lucide-react'
-import {
-  BookOpen as BookOpenIcon,
-  Camera,
-  Car,
-  Film,
-  List,
-  Motorbike,
-  Tv,
-  type LucideIcon,
-} from 'lucide-react'
+import { BookOpen as BookOpenIcon, Car, Film, List, Tag, Tv, type LucideIcon } from 'lucide-react'
 
 /** The type of a list or item: a workspace type key, or `null` for "no type". */
 export type ItemType = string | null
@@ -118,9 +109,8 @@ export type ItemType = string | null
 export const typeIcons: Record<string, LucideIcon> = {
   movie: Film,
   tv_show: Tv,
-  motorcycle: Motorbike,
-  car: Car,
-  camera: Camera,
+  vehicle: Car,
+  wishlist: Tag,
   book: BookOpenIcon,
 }
 
@@ -132,11 +122,11 @@ export const typeIconFor = (type: ItemType): LucideIcon =>
 export const NO_TYPE_LABEL = 'No type'
 
 export const typeLabels: Record<string, string> = {
-  movie: 'Movie',
-  tv_show: 'TV show',
-  motorcycle: 'Motorcycle',
-  car: 'Car',
-  camera: 'Camera',
+  book: 'Books',
+  vehicle: 'Vehicles',
+  movie: 'Movies',
+  tv_show: 'TV shows',
+  wishlist: 'Wishlist',
 }
 
 export type { LucideIcon }

@@ -76,19 +76,19 @@ describe('F009-W3 pinned fields are an ordered pair', () => {
   })
 
   it('F016-W3 a third field can be pinned while two are', async () => {
-    const { open, item } = renderMenu('car', ['model_year', 'price'])
+    const { open, item } = renderMenu('vehicle', ['model_year', 'power_hp'])
 
     await open()
-    expect(item('Power')).not.toHaveAttribute('aria-disabled')
+    expect(item('Make')).not.toHaveAttribute('aria-disabled')
   })
 
   it('F016-W3 a fourth field is disabled while three are pinned', async () => {
-    const { open, item } = renderMenu('car', ['model_year', 'price', 'power_hp'])
+    const { open, item } = renderMenu('vehicle', ['model_year', 'power_hp', 'make'])
 
     await open()
-    expect(item('Power')).toBeChecked()
-    expect(item('Power')).toHaveAccessibleDescription('Pinned 3 of 3')
-    expect(item('Fuel')).toHaveAttribute('aria-disabled', 'true')
+    expect(item('Make')).toBeChecked()
+    expect(item('Make')).toHaveAccessibleDescription('Pinned 3 of 3')
+    expect(item('Model')).toHaveAttribute('aria-disabled', 'true')
   })
 
   it('unpinning the first promotes the second to first', async () => {
@@ -129,8 +129,8 @@ describe('F009-W3 pinned fields are an ordered pair', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('F009-W2 offers price on a car list', async () => {
-    const { open, item } = renderMenu('car', [])
+  it('F009-W2 offers price on a wishlist', async () => {
+    const { open, item } = renderMenu('wishlist', [])
 
     await open()
     expect(item('Price')).toBeInTheDocument()

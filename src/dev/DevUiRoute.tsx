@@ -168,8 +168,8 @@ function Selection() {
           options={[
             { value: 'none', label: 'No type' },
             { separator: true },
-            { value: 'movie', label: 'Movie' },
-            { value: 'car', label: 'Car' },
+            { value: 'movie', label: 'Movies' },
+            { value: 'vehicle', label: 'Vehicles' },
             { separator: true },
             { value: 'new', label: '+ New type', action: true },
           ]}

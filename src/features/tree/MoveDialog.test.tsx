@@ -128,7 +128,7 @@ describe('AT-03 move between root and folders (web)', () => {
 
   it('moving a list to the top level appends it after the existing root lists', async () => {
     const { user, backend } = await openTree()
-    const dlg = await openMove(user, 'Cameras')
+    const dlg = await openMove(user, 'Gadgets')
     await user.click(radio(dlg, 'Top level'))
     await user.click(moveButton(dlg))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
@@ -137,7 +137,7 @@ describe('AT-03 move between root and folders (web)', () => {
       .filter((l) => l.folder_id === null)
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((l) => l.name)
-    expect(root).toEqual(['Wishlist', 'Ideas', 'Cameras'])
+    expect(root).toEqual(['Wishlist', 'Ideas', 'Gadgets'])
   })
 
   it('moves a folder into another folder with parent_folder_id and expands the destination', async () => {

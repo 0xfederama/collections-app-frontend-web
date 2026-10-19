@@ -9,7 +9,7 @@ import type { TypeDefinition } from './api'
 const typesUrl = `${location.origin}/api/v1/types`
 const movie: TypeDefinition = {
   key: 'movie',
-  name: 'Movie',
+  name: 'Movies',
   default_icon: null,
   allows_price: false,
   default_sort_field: 'title',
@@ -50,7 +50,7 @@ async function openPane(types: TypeDefinition[] = [movie, boardGame], lists: obj
 describe('F014-W2 Types & fields pane', () => {
   it('marks built in types and fields read only while allowing an added field', async () => {
     const user = await openPane()
-    await user.click(screen.getByRole('button', { name: /Movie.*Built in.*locked/ }))
+    await user.click(screen.getByRole('button', { name: /Movies.*Built in.*locked/ }))
     expect(
       screen.getByText('Built in fields are locked. You can add your own fields to this type.'),
     ).toBeInTheDocument()
@@ -95,6 +95,9 @@ describe('F014-W2 Types & fields pane', () => {
       }),
     )
     await user.click(screen.getByRole('button', { name: 'New type' }))
+    // F018-W3: the dialog nudges toward a plural name and keeps what is typed.
+    expect(screen.getByLabelText('Type name')).toHaveAttribute('placeholder', 'Board games')
+    expect(screen.getByText(/Suggest a plural name, like Board games/)).toBeInTheDocument()
     await user.type(screen.getByLabelText('Type name'), 'Tabletop')
     await user.click(screen.getByRole('checkbox', { name: 'Allows a price' }))
     await user.click(screen.getByRole('button', { name: 'Choose icon' }))
@@ -267,7 +270,7 @@ describe('F014-W2 Types & fields pane', () => {
       within(changeDialog).getByText(/permanently clears the old type's custom fields and price/),
     ).toBeInTheDocument()
     await user.click(within(changeDialog).getByRole('combobox', { name: 'Change listed lists to' }))
-    await user.click(await screen.findByRole('option', { name: 'Movie' }))
+    await user.click(await screen.findByRole('option', { name: 'Movies' }))
     await user.click(within(changeDialog).getByRole('button', { name: 'Change listed types' }))
     await waitFor(() => expect(listPatch).toEqual({ ifMatch: '"l-7"', body: { type: 'movie' } }))
     expect(typeDeleted).toBe(false)

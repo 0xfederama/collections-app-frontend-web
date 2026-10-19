@@ -112,7 +112,7 @@ describe('F016-W1 the book type', () => {
   const book = mockTypes.find((type) => type.key === 'book')!
 
   it('is offered in the type menus, from the types API definitions', () => {
-    expect(typeOptions(mockTypes)).toContainEqual({ value: 'book', label: 'Book' })
+    expect(typeOptions(mockTypes)).toContainEqual({ value: 'book', label: 'Books' })
   })
 
   it('draws store keys as tiles, never as text, and leaves them out of the text rows', () => {

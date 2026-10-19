@@ -246,10 +246,10 @@ describe('AT-11 restore to… destination picker', () => {
       .getAllByRole('radio')
       .map((r) => r.closest('label')?.textContent)
     expect([...names].sort()).toEqual([
-      'Cameras',
       'Cannes 2026',
       'Cars',
       'Currently watching',
+      'Gadgets',
       'Ideas',
       'Motorbikes',
       'Seen',

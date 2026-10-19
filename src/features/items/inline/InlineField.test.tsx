@@ -220,14 +220,14 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
 
 describe('F002-W3 "+ Add field" and price', () => {
   it('F009-W1 shows populated type fields and offers only empty fields', async () => {
-    // A car whose type fields are all set: they are visible and absent from Add field (D-085).
+    // A vehicle whose type fields are all set: they are visible and absent from Add field (D-085).
     const { user } = await openItem({
-      type: 'car',
+      type: 'vehicle',
       metadata: {
         make: 'Volkswagen',
         model: 'Golf',
         model_year: 2021,
-        fuel_type: 'petrol',
+        displacement_cc: 1498,
         power_hp: 111,
       },
     })
@@ -240,12 +240,18 @@ describe('F002-W3 "+ Add field" and price', () => {
       within(menu)
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
-    ).toEqual(['Price', 'Website'])
+    ).toEqual(['Website'])
+  })
+
+  it('F018-W3 a wishlist offers Price', async () => {
+    const { user } = await openItem({ type: 'wishlist', metadata: {} })
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    const menu = await screen.findByRole('menu')
     await user.click(within(menu).getByRole('menuitem', { name: 'Price' }))
     expect(await screen.findByRole('textbox', { name: 'Price' })).toBeVisible()
   })
 
-  it('F009-W1 a movie offers no Price, a car does', async () => {
+  it('F009-W1 a movie offers no Price', async () => {
     const { user } = await openItem()
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     const menu = await screen.findByRole('menu')
@@ -277,7 +283,7 @@ describe('F002-W3 "+ Add field" and price', () => {
 
   it('Price: a single price is { amount, currency }; a range is { min, max, currency }', async () => {
     const calls = mockPatch()
-    const { user } = await openItem({ type: 'car', metadata: {} })
+    const { user } = await openItem({ type: 'wishlist', metadata: {} })
     await addField(user, 'Price')
     await user.type(await screen.findByRole('textbox', { name: 'Price' }), '1200{Enter}')
     await waitFor(() => expect(calls).toHaveLength(1))
@@ -286,7 +292,7 @@ describe('F002-W3 "+ Add field" and price', () => {
 
   it('F008-W12 Add range reveals a second amount in the same field; Remove range goes back to single', async () => {
     const calls = mockPatch()
-    const { user } = await openItem({ type: 'car', metadata: {} })
+    const { user } = await openItem({ type: 'wishlist', metadata: {} })
     await addField(user, 'Price')
     await user.type(await screen.findByRole('textbox', { name: 'Price' }), '900')
     await user.click(screen.getByRole('button', { name: 'Add range' }))
@@ -303,12 +309,12 @@ describe('F002-W3 "+ Add field" and price', () => {
   })
 
   it('Price: the saved price reads without cents, and Remove price sends null', async () => {
-    // The default responder answers with the example (a movie), so keep the type of this car.
+    // The default responder answers with the example (a movie), so keep the type of this wishlist item.
     const calls = mockPatch((call) =>
-      HttpResponse.json({ ...matrix, type: 'car', ...call.body, version: 4 }),
+      HttpResponse.json({ ...matrix, type: 'wishlist', ...call.body, version: 4 }),
     )
     const { user } = await openItem({
-      type: 'car',
+      type: 'wishlist',
       price: { min: '1200.50', max: '1200.50', currency: 'EUR' },
     })
     // A populated price is visible by default.
@@ -466,14 +472,14 @@ describe('AT-22 leaving with an open field', () => {
 
   it('asks "Discard changes?", Keep editing stays with the draft, Discard leaves', async () => {
     const { router, user } = await openDirty()
-    await user.click(await within(sidebar()).findByRole('link', { name: /Motorbikes/ }))
+    await user.click(await within(sidebar()).findByRole('link', { name: /Vehicles/ }))
     const dialog = await screen.findByRole('alertdialog')
     expect(within(dialog).getByRole('heading', { name: 'Discard changes?' })).toBeVisible()
     await user.click(within(dialog).getByRole('button', { name: 'Keep editing' }))
     expect(screen.getByRole('textbox', { name: /Title/ })).toHaveValue('The Matrix edited')
     expect(router.state.location.pathname).toBe(PATH)
 
-    await user.click(within(sidebar()).getByRole('link', { name: /Motorbikes/ }))
+    await user.click(within(sidebar()).getByRole('link', { name: /Vehicles/ }))
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', {
         name: 'Discard changes',
@@ -490,7 +496,7 @@ describe('AT-22 leaving with an open field', () => {
     await user.type(screen.getByRole('textbox', { name: /Title/ }), '!{Enter}')
     await screen.findByRole('heading', { level: 1, name: 'The Matrix!' })
     await user.click(pen('title'))
-    await user.click(await within(sidebar()).findByRole('link', { name: /Motorbikes/ }))
+    await user.click(await within(sidebar()).findByRole('link', { name: /Vehicles/ }))
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${MOTORBIKES}`))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })

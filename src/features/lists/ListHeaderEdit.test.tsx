@@ -31,7 +31,7 @@ describe('F008-W5 list type in the "…" menu', () => {
     const { user, backend } = await openList(ID.watchlist)
 
     await openTypeMenu(user, /^Type: Movie/)
-    await pickType(user, 'Car')
+    await pickType(user, 'Vehicles')
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toHaveTextContent('permanently clears')
     expect(dialog).toHaveTextContent('12 items')
@@ -41,7 +41,7 @@ describe('F008-W5 list type in the "…" menu', () => {
     expect(backend.writes()).toHaveLength(0)
 
     await openTypeMenu(user, /^Type: Movie/)
-    await pickType(user, 'Car')
+    await pickType(user, 'Vehicles')
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', {
         name: 'Clear details and change',
@@ -51,16 +51,16 @@ describe('F008-W5 list type in the "…" menu', () => {
     const [patch] = backend.writes('PATCH')
     expect(patch?.path).toBe(`/api/v1/lists/${ID.watchlist}`)
     expect(patch?.ifMatch).toBe('"l-2"')
-    expect(patch?.body).toEqual({ type: 'car' })
+    expect(patch?.body).toEqual({ type: 'vehicle' })
     expect(backend.writes()).toHaveLength(1)
 
     // An empty list changes type at once, with no warning.
     await user.click(within(sidebar()).getByRole('treeitem', { name: /^Ideas/ }))
     await openTypeMenu(user, /^Type: No type/)
-    await pickType(user, 'Camera')
+    await pickType(user, 'Wishlist')
     await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(2))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(backend.writes('PATCH')[1]?.body).toEqual({ type: 'camera' })
+    expect(backend.writes('PATCH')[1]?.body).toEqual({ type: 'wishlist' })
   })
 
   it('the Rename dialog of a list only renames', async () => {

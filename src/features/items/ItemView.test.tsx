@@ -97,7 +97,7 @@ describe('AT-13 item view: the example movie', () => {
       screen.queryByRole('button', { name: /automatic TMDB updates/i }),
     ).not.toBeInTheDocument()
     // F-002: a quiet type label above the title.
-    expect(screen.getByText('Movie')).toBeInTheDocument()
+    expect(within(screen.getByRole('main')).getByText('Movies')).toBeInTheDocument()
     expect(screen.queryByText('Watched')).not.toBeInTheDocument()
 
     const google = links().getByRole('link', { name: /^Google/ })
@@ -357,35 +357,15 @@ describe('item view: types', () => {
     expect(screen.getByRole('button', { name: 'Add field' })).toBeInTheDocument()
   })
 
-  it('motorcycle shows its units', async () => {
+  it('vehicle shows its units', async () => {
     await renderOverride({
       title: 'Ducati Monster',
-      type: 'motorcycle',
-      metadata: { displacement_cc: 937, power_hp: 111, license_class: 'A' },
+      type: 'vehicle',
+      metadata: { displacement_cc: 937, power_hp: 111, model_year: 2021 },
     })
     expect(await screen.findByText('937 cc')).toBeInTheDocument()
     expect(screen.getByText('111 hp')).toBeInTheDocument()
-  })
-
-  it('car shows units and enum labels', async () => {
-    await renderOverride({
-      title: 'Golf',
-      type: 'car',
-      metadata: { power_hp: 111, fuel_type: 'plugin_hybrid', model_year: 2021 },
-    })
-    expect(await screen.findByText('111 hp')).toBeInTheDocument()
-    expect(screen.getByText('Plug-in hybrid')).toBeInTheDocument()
     expect(screen.getByText('2021')).toBeInTheDocument()
-  })
-
-  it('camera shows megapixels', async () => {
-    await renderOverride({
-      title: 'Alpha',
-      type: 'camera',
-      metadata: { megapixels: 24.2, sensor_format: 'full_frame' },
-    })
-    expect(await screen.findByText('24.2 MP')).toBeInTheDocument()
-    expect(screen.getByText('Full frame')).toBeInTheDocument()
   })
 
   it('an item with no type shows Google, Reddit and Website; an empty website offers "Add website", which opens the editor', async () => {
@@ -404,9 +384,9 @@ describe('item view: types', () => {
   })
 
   it('F007-W8 a single price reads € 1,200, a range € 1,000–1,400, no price shows nothing', async () => {
-    // Price exists on motorcycle, car and camera only (D-085), and populated prices show by default.
+    // Price exists on Wishlist only (D-085, F018), and populated prices show by default.
     await renderOverride({
-      type: 'car',
+      type: 'wishlist',
       metadata: {},
       price: { min: '1200.00', max: '1200.00', currency: 'EUR' },
     })
@@ -415,7 +395,7 @@ describe('item view: types', () => {
 
   it('F007-W8 a range shows both bounds, each with the currency', async () => {
     await renderOverride({
-      type: 'car',
+      type: 'wishlist',
       metadata: {},
       price: { min: '1000.00', max: '1400.00', currency: 'EUR' },
     })
@@ -431,9 +411,9 @@ describe('item view: types', () => {
     expect(screen.queryByRole('menuitem', { name: 'Price' })).not.toBeInTheDocument()
   })
 
-  it('F009-W2 a car offers Price', async () => {
+  it('F009-W2 a wishlist item offers Price', async () => {
     const user = userEvent.setup()
-    await renderOverride({ title: 'Miata', type: 'car', metadata: {} })
+    await renderOverride({ title: 'Miata', type: 'wishlist', metadata: {} })
     await screen.findByRole('heading', { name: 'Description' })
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     expect(await screen.findByRole('menuitem', { name: 'Price' })).toBeInTheDocument()
@@ -527,7 +507,7 @@ describe('item view: loading and errors', () => {
     overrideItem({ list_id: OTHER })
     mockViewport(1100)
     renderAt(PATH)
-    expect(await screen.findByRole('link', { name: /Back to Motorbikes/ })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /Back to Vehicles/ })).toBeInTheDocument()
   })
 })
 
