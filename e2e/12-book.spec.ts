@@ -5,7 +5,6 @@ import { createItem, createList, itemPanel, itemUrl, uniqueName } from './helper
 // The test stack serves one deterministic Open Library work for "[mock] book name" (D-090, D-096):
 // "Mock Book Title" by "Mock Author", 2002, 321 pages, ISBN 9780000000002, with a cover.
 const FIXTURE_QUERY = '[mock] book name'
-const FIXTURE_TITLE = 'Mock Book Title'
 
 async function expectNoSeriousIssues(page: Page) {
   const { violations } = await new AxeBuilder({ page }).analyze()
@@ -38,8 +37,8 @@ test.describe('F016-W2 book lookup fixture', () => {
     await title.press('Enter')
 
     // The server answers after the lookup, which can take a few seconds: wait generously. The
-    // backend replaces the typed title with the first result's title (the fixture's).
-    await expect(panel.getByRole('heading', { level: 1, name: FIXTURE_TITLE })).toBeVisible({
+    // backend keeps the typed title (the fill never overwrites it).
+    await expect(panel.getByRole('heading', { level: 1, name: FIXTURE_QUERY })).toBeVisible({
       timeout: 30_000,
     })
 
@@ -54,7 +53,7 @@ test.describe('F016-W2 book lookup fixture', () => {
       /openlibrary\.org/,
     )
     // The cover became the item image.
-    await expect(panel.getByRole('img', { name: FIXTURE_TITLE }).first()).toBeVisible()
+    await expect(panel.getByRole('img', { name: FIXTURE_QUERY }).first()).toBeVisible()
   })
 })
 
