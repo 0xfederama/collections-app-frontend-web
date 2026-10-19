@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { StoreChoices } from './StoreChoices'
 
 const providers = [
-  { key: 'openlibrary' as const, name: 'Open Library' },
+  { key: 'amazon' as const, name: 'Amazon' },
   { key: 'bookshop' as const, name: 'Bookshop.org' },
   { key: 'kobo' as const, name: 'Kobo' },
 ]
@@ -25,7 +25,7 @@ describe('F016-W4 stores multi-choice', () => {
     await user.click(trigger)
     const items = await screen.findAllByRole('menuitemcheckbox')
     expect(items.map((item) => item.textContent)).toEqual([
-      expect.stringContaining('Open Library'),
+      expect.stringContaining('Amazon'),
       expect.stringContaining('Bookshop.org'),
       expect.stringContaining('Kobo'),
     ])
@@ -43,8 +43,8 @@ describe('F016-W4 stores multi-choice', () => {
       />,
     )
     await user.click(screen.getByRole('button', { name: /Where to get it/ }))
-    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Open Library/ }))
-    expect(onChange).toHaveBeenLastCalledWith(['kobo', 'openlibrary'])
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Amazon/ }))
+    expect(onChange).toHaveBeenLastCalledWith(['kobo', 'amazon'])
     expect(screen.getByRole('menuitemcheckbox', { name: /Bookshop/ })).toBeInTheDocument()
   })
 

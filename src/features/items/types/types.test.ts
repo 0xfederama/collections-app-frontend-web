@@ -127,7 +127,7 @@ describe('F016-W1 the book type', () => {
         author: 'Frank Herbert',
         pages: 412,
         isbn: '9780441172719',
-        stores: ['openlibrary', 'kobo'],
+        stores: ['amazon', 'kobo'],
       }).map(({ key, text }) => [key, text]),
     ).toEqual([
       ['author', 'Frank Herbert'],

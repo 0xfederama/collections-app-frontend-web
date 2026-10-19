@@ -23,7 +23,7 @@
 ## Gotchas
 
 - Collection and Media validate and save from a snapshot (`If-Match: "s-N"`, changed fields only) when the dialog closes; there is no Save button. Errors, 412 conflicts and network failures keep the dialog open with the draft.
-- Collection holds workspace name, trash retention and description history; Media holds streaming country, metadata language and Preferred stores (`preferred_stores`, saved with the workspace settings). Server 422 errors map to fields.
+- Collection holds workspace name, trash retention and description history; Media holds streaming country, metadata language and a single-choice Default store (`preferred_store`, one provider from the API, saved with the workspace settings). Server 422 errors map to fields.
 - Trash retention is a separate immediate update: Off sends `null`; presets are 7, 30 and 90 days. It does not purge existing trash.
 - `useTypes()` hides provider bookkeeping (`tmdb_id`, `lookup_disabled`, `openlibrary_id`), so they are never editable, pinnable, sortable or filterable.
 - Built-in types and fields (`is_locked`) are read-only; only custom fields can be renamed, reordered or deleted. Type and field writes use their own ETags (`"k-N"`, `"kf-N"`).

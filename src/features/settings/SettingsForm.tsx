@@ -3,9 +3,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useBlocker } from 'react-router'
 import { AlertDialog, Button, Dialog, Select, TextField, useToast } from '../../components/ui'
 import { CountrySelect } from '../../components/ui/IsoSelects'
-import { StoreChoices } from '../stores/StoreChoices'
 import { useStoreProviders } from '../stores/api'
-import { joinStoreKeys, parseStoreKeys } from '../stores/providers'
 import { ApiError, NetworkError } from '../../lib/api'
 import { settingsKeys, useUpdateSettings, type Settings } from './api'
 import {
@@ -116,7 +114,7 @@ export function SettingsForm({
         onPaneChange(
           field === 'streaming_country_code' ||
             field === 'metadata_language' ||
-            field === 'preferred_stores'
+            field === 'preferred_store'
             ? 'Media'
             : 'General',
         )
@@ -450,13 +448,18 @@ export function SettingsForm({
         <h2 id="settings-books" className="pt-2 text-sm font-semibold text-text-muted">
           Books
         </h2>
-        <StoreChoices
-          label="Where to get it"
-          hint="New books start with these stores, in the order you pick them. Each store is a link that searches for the book there (in your country where the store has one), built from its ISBN or title. Each book can change its own list."
-          value={parseStoreKeys(draft.preferred_stores)}
-          onChange={(next) => set('preferred_stores', joinStoreKeys(next))}
-          providers={providers.data}
-          error={errors.preferred_stores}
+        <Select
+          id={inputId('preferred_store')}
+          label="Default store"
+          hint="New books start with this store. Each book can pick other stores. Store links are for your country."
+          value={draft.preferred_store}
+          onValueChange={(value) => set('preferred_store', value)}
+          error={errors.preferred_store}
+          disabled={isPending}
+          options={(providers.data ?? []).map((provider) => ({
+            value: provider.key,
+            label: provider.name,
+          }))}
         />
       </section>
 

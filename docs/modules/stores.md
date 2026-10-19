@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The fixed list of online stores (F-016) that a `stores` field (on books) and the Settings "Preferred stores" draw from. The list changes only with a deploy, so it is cached for a day.
+The fixed list of online stores (F-016) that a `stores` field (on books) and the Settings "Default store" draw from. Open Library is not a store (since `api-v0.13.0`); it is only a link under a book title. The list changes only with a deploy, so it is cached for a day.
 
 ## Key files
 
@@ -16,10 +16,10 @@ The fixed list of online stores (F-016) that a `stores` field (on books) and the
 - `useStoreProviders()`: `GET /api/v1/store-providers`, data is `StoreProvider[]`, `staleTime` 24 h.
 - `storeName(providers, key)`: display name, or the key as words before the list loads.
 - `parseStoreKeys(text)` / `joinStoreKeys(keys)`: comma-separated text of a `stores` value.
-- `StoreChoices`: ticked store picker used by the item editor and Settings.
+- `StoreChoices`: ticked store picker used by the item editor.
 
 ## Gotchas
 
 - Store tiles show the provider display name, not the raw key; an unknown key still renders a tile.
 - Stores are excluded from list sort and from list filters. A pinned stores field shows its store tiles in list rows.
-- Preferred stores (Settings > Media, `preferred_stores`) seed new books; each book can change its own list.
+- Default store (Settings > Media, `preferred_store`, one `StoreKey`, `amazon` by default, a single-choice Select) is what the server puts in `stores` of a new book; each book can change its own list.

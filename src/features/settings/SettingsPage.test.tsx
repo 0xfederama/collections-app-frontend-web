@@ -41,7 +41,7 @@ function mountBackend(start?: Partial<Settings>) {
     book_lookup_available: true,
     markdown_history_limit: 20,
     trash_retention_days: null,
-    preferred_stores: [],
+    preferred_store: 'amazon',
     version: 1,
     ...start,
   })
@@ -289,18 +289,14 @@ describe('W-13 settings: saving', () => {
     expect(patches).toEqual([{ ifMatch: '"s-4"', body: { metadata_language: 'it-IT' } }])
   })
 
-  it('F016-W4 saves the preferred stores in the order picked, through the settings snapshot', async () => {
+  it('F016 saves the default store, through the settings snapshot', async () => {
     const { patches } = mountBackend()
     const user = await openSettings('Media')
-    await user.click(screen.getByRole('button', { name: /Where to get it/ }))
-    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Kobo/ }))
-    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Open Library/ }))
-    await user.keyboard('{Escape}')
+    await user.click(screen.getByRole('combobox', { name: 'Default store' }))
+    await user.click(await screen.findByRole('option', { name: 'Kobo' }))
     await user.click(closeSettings())
     await screen.findByRole('heading', { level: 1, name: 'Home' })
-    expect(patches).toEqual([
-      { ifMatch: '"s-1"', body: { preferred_stores: ['kobo', 'openlibrary'] } },
-    ])
+    expect(patches).toEqual([{ ifMatch: '"s-1"', body: { preferred_store: 'kobo' } }])
   })
 
   it('F016-W1 credits Open Library for book details and covers in About', async () => {

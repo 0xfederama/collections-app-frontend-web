@@ -113,7 +113,6 @@ export const mockTypes: TypeDefinition[] = [
     fields: fields([
       ['author', 'Writer', 'text'],
       ['pages', 'Pages', 'number'],
-      ['first_publish_year', 'First publication year', 'number'],
       ['isbn', 'ISBN', 'text'],
       ['stores', 'Where to get it', 'stores'],
     ]),

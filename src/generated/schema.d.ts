@@ -156,7 +156,7 @@ export interface paths {
          * @description Requires `If-Match` (`"s-N"`). Lowering `markdown_history_limit` prunes on the next save per item, not immediately.
          *     `trash_retention_days` (F012-B3): absent = unchanged, `null` = off, otherwise 1 to 365. Setting it does not purge at once; the daily job does.
          *     `metadata_language` controls the locale used for lookup suggestions and imported metadata (TMDB; Open Library takes its language part as a preference).
-         *     `preferred_stores` (F-016) is the ordered list of stores offered on books: unique keys from `GET /api/v1/store-providers`, at most six.
+         *     `preferred_store` (F-016, 0.13.0) is the one default store of the workspace: a key from `GET /api/v1/store-providers`, never null, `amazon` by default. A new book gets `stores: [preferred_store]` when the request leaves `stores` unset, and book lookup sets it the same way when the item has no stores yet. An unknown key is `422 validation_failed` on `preferred_store`.
          */
         patch: operations["updateSettings"];
         trace?: never;
@@ -170,7 +170,7 @@ export interface paths {
         };
         /**
          * List the stores a `stores` field can name
-         * @description The fixed list of stores (F-016, D-096), in display order. It does not depend on the workspace.
+         * @description The fixed list of stores (F-016, D-096), in display order (Amazon first; Open Library is not a store since 0.13.0). It does not depend on the workspace.
          */
         get: operations["listStoreProviders"];
         put?: never;
@@ -481,7 +481,7 @@ export interface paths {
          *     For movie, TV and book lists, `lookup` defaults to `true`: the server searches by title and applies the first result. Send `tmdb_id`
          *     (movie and TV) or `source_id` (book) to select a known suggestion; the one that does not fit the list's type is ignored. Send
          *     `lookup: false` to create the item exactly as supplied. Lookup fields are ignored on other types. On a book, a matched work also
-         *     proposes the Open Library link in `stores` (plus the workspace's preferred stores) when the request leaves `stores` unset.
+         *     sets `stores` to `[preferred_store]` (the workspace default store) when the request leaves `stores` unset; an explicit value wins.
          *     If automatic lookup finds no match, the item is still created unchanged. If lookup was explicitly requested but unavailable, the
          *     request returns `503 lookup_disabled` or `503 upstream_unavailable` and no item is created.
          */
@@ -568,7 +568,7 @@ export interface paths {
          *     (movie and TV) or `source_id` (book) selects a suggestion, then replaces the title and all fields fetched from the provider;
          *     `refresh` uses the stored `metadata.tmdb_id` or `metadata.openlibrary_id` unless the id is supplied and likewise replaces fetched
          *     fields. All modes preserve an existing item image. A poster or cover is stored through the normal image pipeline only when the item
-         *     has no image. On a book, `fill` also adds the Open Library link to `stores` when `stores` is empty; no mode ever removes or replaces
+         *     has no image. On a book, `fill` also sets `stores` to `[preferred_store]` (the workspace default store) when `stores` is empty; no mode ever removes or replaces
          *     the user's store choices. The default mode is `fill`. When a search has no result, the operation returns the unchanged item and its
          *     current ETag. An explicit lookup while the integration is disabled or the provider cannot be reached returns `503 lookup_disabled` or
          *     `503 upstream_unavailable` respectively.
@@ -1079,7 +1079,7 @@ export interface components {
             readonly book_lookup_available: boolean;
             markdown_history_limit: number;
             trash_retention_days: number | null;
-            preferred_stores: components["schemas"]["PreferredStores"];
+            preferred_store: components["schemas"]["StoreKey"];
             version: number;
         };
         UpdateSettingsRequest: {
@@ -1088,7 +1088,7 @@ export interface components {
             metadata_language?: components["schemas"]["MetadataLanguage"];
             markdown_history_limit?: number;
             trash_retention_days?: number | null;
-            preferred_stores?: components["schemas"]["PreferredStores"];
+            preferred_store?: components["schemas"]["StoreKey"];
         };
         /**
          * @description ISO 639-1 language (`xx`), optionally with an uppercase region (`xx-YY`), passed to TMDB.
@@ -1096,12 +1096,10 @@ export interface components {
          */
         MetadataLanguage: string;
         /**
-         * @description A store a `stores` field or the preferred stores can name (F-016, D-096). Its display name comes from `GET /api/v1/store-providers`.
+         * @description A store a `stores` field or the `preferred_store` setting can name (F-016, D-096). Open Library is not a store since 0.13.0. Its display name comes from `GET /api/v1/store-providers`.
          * @enum {string}
          */
-        StoreKey: "openlibrary" | "bookshop" | "amazon" | "apple_books" | "google_play_books" | "kobo";
-        /** @description The stores new books are offered with, in the order chosen. Empty means none. Each key once. */
-        PreferredStores: components["schemas"]["StoreKey"][];
+        StoreKey: "amazon" | "bookshop" | "apple_books" | "google_play_books" | "kobo";
         StoreProvider: {
             key: components["schemas"]["StoreKey"];
             /** @description Display name. */
@@ -1297,7 +1295,7 @@ export interface components {
             readonly type: "camera";
             metadata: components["schemas"]["CameraMetadata"];
         };
-        /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. For a type with a `stores` field (F-016, D-096) the response `metadata` also carries a read-only `store_links` object: provider key to URL, one entry per selected store that has a link (built from the item's title, `isbn` and `openlibrary_id`, never stored). Links follow the workspace country (`streaming_country_code`): Amazon uses the country's storefront (amazon.it for `IT`, amazon.com for countries without one), Bookshop.org uses its UK site for `GB`, Google Play Books adds the country; other stores are global. Because links are computed on read, changing the country changes them. Sending `store_links` in `metadata` is rejected as an unknown field (`400 unknown_field`, path `metadata.store_links`). */
+        /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. For a type with a `stores` field (F-016, D-096) the response `metadata` also carries a read-only `store_links` object: provider key to URL, one entry per selected store that has a link (built from the item's title and `isbn`, never stored). Links follow the workspace country (`streaming_country_code`): Amazon uses the country's storefront (amazon.it for `IT`, amazon.com for countries without one), Bookshop.org uses its UK site for `GB`, Google Play Books adds the country; other stores are global. Because links are computed on read, changing the country changes them. Sending `store_links` in `metadata` is rejected as an unknown field (`400 unknown_field`, path `metadata.store_links`). A book item also carries the read-only `metadata.openlibrary_id`: it is set by lookup, used by refresh and by clients to build the Open Library link (`https://openlibrary.org/works/<id>`), and must not be edited. The built-in book type has no first publication year (removed in 0.13.0; a suggestion's `year` is display only). */
         Item: components["schemas"]["ItemBase"] & {
             /** @description `null` when the list has no type. */
             readonly type: string | null;
