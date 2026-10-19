@@ -100,7 +100,12 @@ function TypeRow({
         selected ? 'bg-accent/10 text-text' : 'hover:bg-fill',
       )}
     >
-      <ListIconMark icon={type.default_icon} className="size-9" iconClassName="size-4" />
+      <ListIconMark
+        icon={type.default_icon}
+        type={type.key}
+        className="size-9"
+        iconClassName="size-4"
+      />
       <span className="min-w-0 flex-1 text-sm font-medium break-words">{type.name}</span>
       {type.is_locked && (
         <>
