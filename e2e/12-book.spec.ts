@@ -84,6 +84,13 @@ test.describe('F016-W3 book row layout', () => {
       expect(storeBox!.x).toBeGreaterThan(besideBox!.x + besideBox!.width / 2)
       expect(rowBox!.x + rowBox!.width - (storeBox!.x + storeBox!.width)).toBeLessThan(40)
 
+      // F016: the store tile in the row is its own link (country storefront, searched by the title) and
+      // opens in a new tab without opening the item.
+      const amazon = row.getByRole('link', { name: 'Amazon (opens in a new tab)' })
+      await expect(amazon).toHaveAttribute('href', /^https:\/\/www\.amazon\.[a-z.]+\/s\?k=/)
+      expect(new URL((await amazon.getAttribute('href')) ?? '').searchParams.get('k')).toBe(title)
+      await expect(amazon).toHaveAttribute('target', '_blank')
+
       const overflow = await page
         .getByRole('main')
         .evaluate((main) => main.scrollWidth - main.clientWidth)

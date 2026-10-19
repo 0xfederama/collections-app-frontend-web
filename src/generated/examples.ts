@@ -497,7 +497,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
               ],
               "paid_platforms": [
                 "Prime Video"
-              ]
+              ],
+              "link": "https://www.justwatch.com/it/movie/the-matrix"
             }
           },
           "content_version": 2,
@@ -564,7 +565,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           ],
           "paid_platforms": [
             "Prime Video"
-          ]
+          ],
+          "link": "https://www.justwatch.com/it/movie/the-matrix"
         }
       },
       "content_version": 2,
@@ -605,7 +607,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           ],
           "paid_platforms": [
             "Prime Video"
-          ]
+          ],
+          "link": "https://www.justwatch.com/it/movie/the-matrix"
         }
       },
       "content_version": 2,
@@ -704,7 +707,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           ],
           "paid_platforms": [
             "Prime Video"
-          ]
+          ],
+          "link": "https://www.justwatch.com/it/movie/the-matrix"
         }
       },
       "content_version": 2,
@@ -780,7 +784,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           ],
           "paid_platforms": [
             "Prime Video"
-          ]
+          ],
+          "link": "https://www.justwatch.com/it/movie/the-matrix"
         }
       },
       "content_version": 2,
@@ -930,7 +935,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
                 ],
                 "paid_platforms": [
                   "Prime Video"
-                ]
+                ],
+                "link": "https://www.justwatch.com/it/movie/the-matrix"
               }
             },
             "content_version": 2,
@@ -999,7 +1005,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
                 ],
                 "paid_platforms": [
                   "Prime Video"
-                ]
+                ],
+                "link": "https://www.justwatch.com/it/movie/the-matrix"
               }
             },
             "content_version": 2,

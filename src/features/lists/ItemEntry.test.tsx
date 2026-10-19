@@ -143,3 +143,46 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
     expect(readOrder(row)).toEqual(['Alien', '5×7', '45 min'])
   })
 })
+
+describe('F016 row tiles open their page without opening the item', () => {
+  it('a store tile links to its store_links URL in a new tab, one without a link stays plain', async () => {
+    const row = entry(['author', 'pages', 'stores'], 'thumbnail', {
+      type: 'book',
+      title: 'Dune',
+      metadata: {
+        author: 'Frank Herbert',
+        stores: ['amazon', 'kobo'],
+        store_links: { amazon: 'https://www.amazon.it/s?k=Dune' },
+      },
+    })
+    const amazon = await within(row).findByRole('link', { name: 'Amazon (opens in a new tab)' })
+    expect(amazon).toHaveAttribute('href', 'https://www.amazon.it/s?k=Dune')
+    expect(amazon).toHaveAttribute('target', '_blank')
+    expect(amazon).toHaveAttribute('rel', 'noopener noreferrer')
+    expect(within(row).queryByRole('link', { name: /Kobo/ })).not.toBeInTheDocument()
+    expect(within(row).getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
+  })
+
+  it('streaming tiles link to the JustWatch page when the item has one, never to a bad URL', () => {
+    const row = entry(['release_year', 'streaming'], 'thumbnail', {
+      metadata: {
+        release_year: 1979,
+        streaming: {
+          platforms: ['Netflix'],
+          link: 'https://www.justwatch.com/it/movie/alien',
+        },
+      },
+    })
+    expect(
+      within(row).getByRole('link', { name: 'Netflix on JustWatch (opens in a new tab)' }),
+    ).toHaveAttribute('href', 'https://www.justwatch.com/it/movie/alien')
+  })
+
+  it('no streaming link, or a non-https one, leaves the plain tile', () => {
+    const row = entry(['release_year', 'streaming'], 'thumbnail', {
+      metadata: { streaming: { platforms: ['Netflix'], link: 'javascript:alert(1)' } },
+    })
+    expect(within(row).queryByRole('link', { name: /JustWatch/ })).not.toBeInTheDocument()
+    expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+  })
+})
