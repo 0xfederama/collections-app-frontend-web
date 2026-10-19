@@ -5,7 +5,8 @@ import {
   IconButton,
   Select,
   TextField,
-  type ItemKind,
+  type ItemType,
+  type SelectEntry,
   type SelectOption,
 } from '../../components/ui'
 import { cx } from '../../lib/cx'
@@ -15,7 +16,13 @@ import { useAction } from './useAction'
 import { ListIconPicker } from '../lists/ListIconPicker'
 import { ListIconMark } from '../lists/ListIconMark'
 import type { IconChoice } from '../lists/iconModel'
-import { useKinds } from '../settings/api'
+import { useTypes } from '../settings/api'
+import {
+  typeDefinition,
+  typeOptions as buildTypeOptions,
+  typeToValue,
+  valueToType,
+} from '../items/types'
 
 export interface NameDialogProps {
   title: string
@@ -23,8 +30,8 @@ export interface NameDialogProps {
   submitLabel: string
   noun: 'folder' | 'list'
   initialName?: string
-  /** Create list only: shows the kind picker, starting at `initial`. Renaming never changes the kind. */
-  kind?: { initial: ItemKind }
+  /** Create list only: shows the type picker, starting at `initial`. Renaming never changes the type. */
+  type?: { initial: ItemType }
   /**
    * Create list only: the folder the list goes into, as the shared destination picker. Renaming
    * and the folder dialog have none, and never move anything.
@@ -35,11 +42,13 @@ export interface NameDialogProps {
   /** `folderId` is the chosen path on create (`null` = top level); rename ignores it. */
   onSubmit: (
     name: string,
-    kind: ItemKind,
+    type: ItemType,
     folderId: string | null,
     icon: IconChoice,
   ) => Promise<unknown>
   onClose: () => void
+  /** Create list only: adds a "+ New type" entry to the type picker; the caller closes this dialog and opens Settings. */
+  onNewType?: () => void
   /** Refetches the tree and returns the latest name (`undefined` if the item is gone). Rename only. */
   onReload?: () => Promise<string | undefined>
   /** Where focus goes when the dialog closes; `preventDefault()` replaces the return to the opener. */
@@ -47,29 +56,33 @@ export interface NameDialogProps {
 }
 
 const MAX_LENGTH = 200
+const NEW_TYPE_VALUE = '__new_type__'
 
-/** Create and rename dialog: one name field, plus the kind and the folder on a new list. */
+/** Create and rename dialog: one name field, plus the type and the folder on a new list. */
 export function NameDialog({
   title,
   description,
   submitLabel,
   noun,
   initialName = '',
-  kind,
+  type,
   path,
   listIcon,
   onSubmit,
   onClose,
+  onNewType,
   onReload,
   onCloseAutoFocus,
 }: NameDialogProps) {
-  const definitions = useKinds()
-  const kindOptions = (definitions.data ?? []).map((definition) => ({
-    value: definition.key,
-    label: definition.name,
-  }))
+  const definitions = useTypes()
+  const typeOptions: SelectEntry[] = [
+    ...buildTypeOptions(definitions.data),
+    ...(onNewType
+      ? [{ separator: true as const }, { value: NEW_TYPE_VALUE, label: '+ New type', action: true }]
+      : []),
+  ]
   const [name, setName] = useState(initialName)
-  const [chosenKind, setChosenKind] = useState<ItemKind>(kind?.initial ?? 'generic')
+  const [chosenType, setChosenType] = useState<ItemType>(type?.initial ?? null)
   const [iconChoice, setIconChoice] = useState<IconChoice>({ icon: null, icon_color: null })
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
   // The remembered folder may be gone (deleted, or from an older tree), and then there is no
@@ -85,7 +98,7 @@ export function NameDialog({
   const { error, pending, run, clearError, setError } = useAction(noun)
 
   const selectedLabel = path?.options.find((option) => option.value === chosenPath)?.label
-  const selectedKind = definitions.data?.find((definition) => definition.key === chosenKind)
+  const selectedType = typeDefinition(definitions.data, chosenType)
 
   const submit = async (event?: FormEvent) => {
     event?.preventDefault()
@@ -94,7 +107,7 @@ export function NameDialog({
     if (trimmed.length > MAX_LENGTH) return setFieldError(`Use at most ${MAX_LENGTH} characters.`)
     setFieldError(undefined)
     const folderId = path ? destinationId(chosenPath ?? destinationKey(null)) : null
-    if (await run(() => onSubmit(trimmed, chosenKind, folderId, iconChoice))) onClose()
+    if (await run(() => onSubmit(trimmed, chosenType, folderId, iconChoice))) onClose()
   }
 
   const reload = async () => {
@@ -167,9 +180,9 @@ export function NameDialog({
                 onClick={() => setIconPickerOpen(true)}
               >
                 <ListIconMark
-                  icon={iconChoice.icon ?? selectedKind?.default_icon}
+                  icon={iconChoice.icon ?? selectedType?.default_icon}
                   iconColor={iconChoice.icon_color}
-                  kind={chosenKind}
+                  type={chosenType}
                   className="size-8"
                   iconClassName="size-4"
                 />
@@ -177,16 +190,19 @@ export function NameDialog({
             </div>
           )}
         </div>
-        {/* F011-W6: Kind and Folder sit side by side, the folder as a dropdown on the right. */}
-        {(kind || path) && (
-          <div className={cx('grid gap-4', kind && path && 'sm:grid-cols-2')}>
-            {kind && (
+        {/* F011-W6: Type and Folder sit side by side, the folder as a dropdown on the right. */}
+        {(type || path) && (
+          <div className={cx('grid gap-4', type && path && 'sm:grid-cols-2')}>
+            {type && (
               <Select
-                label="Kind"
-                hint="Every item in the list has this kind."
-                options={kindOptions}
-                value={chosenKind}
-                onValueChange={(value) => setChosenKind(value as ItemKind)}
+                label="Type"
+                hint="Every item in the list has this type."
+                options={typeOptions}
+                value={typeToValue(chosenType)}
+                onValueChange={(value) => {
+                  if (value === NEW_TYPE_VALUE) onNewType?.()
+                  else setChosenType(valueToType(value))
+                }}
               />
             )}
             {path && (
@@ -211,7 +227,7 @@ export function NameDialog({
       {iconPickerOpen && (
         <ListIconPicker
           value={iconChoice}
-          kind={chosenKind}
+          type={chosenType}
           onChange={setIconChoice}
           onClose={() => setIconPickerOpen(false)}
         />

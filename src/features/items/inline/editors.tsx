@@ -197,7 +197,7 @@ function StreamingInputs({ form }: { form: FieldForm }) {
   )
 }
 
-/** The inputs of one field; the widget of a kind field follows its config (`kinds/*.ts`). */
+/** The inputs of one field; the widget of a type field follows its config (`types/*.ts`). */
 export function FieldInputs({
   spec,
   form,

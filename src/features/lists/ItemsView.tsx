@@ -12,8 +12,8 @@ import {
   type ItemsParams,
   type SortMode,
 } from './api'
-import type { ItemKind } from '../items/api'
-import type { KindDefinition } from '../items/kinds'
+import type { ItemType } from '../items/api'
+import type { TypeDefinition } from '../items/types'
 import { ItemEntry } from './ItemEntry'
 import type { PinnedKeys } from './pinned'
 import {
@@ -69,8 +69,8 @@ export function ItemsSkeleton({ mode }: { mode: DisplayMode }) {
 export interface ItemsViewProps {
   listId: string
   mode: DisplayMode
-  kind: ItemKind
-  definition: KindDefinition
+  type: ItemType
+  definition: TypeDefinition
   pinned: PinnedKeys
   /** e.g. `12 items` or `3 of 12 items`; shown after the items. */
   countLabel: string
@@ -97,7 +97,7 @@ export function ItemsView(props: ItemsViewProps) {
   const {
     listId,
     mode,
-    kind,
+    type,
     definition,
     pinned,
     items,
@@ -192,7 +192,7 @@ export function ItemsView(props: ItemsViewProps) {
         index={index}
         size={items.length}
         mode={mode}
-        kind={kind}
+        type={type}
         definition={definition}
         pinned={pinned}
         search={search}
@@ -204,7 +204,7 @@ export function ItemsView(props: ItemsViewProps) {
         key={item.id}
         item={item}
         mode={mode}
-        kind={kind}
+        type={type}
         definition={definition}
         pinned={pinned}
         search={search}
@@ -275,7 +275,7 @@ function SortableEntry({
   index,
   size,
   mode,
-  kind,
+  type,
   definition,
   pinned,
   search,
@@ -286,8 +286,8 @@ function SortableEntry({
   index: number
   size: number
   mode: DisplayMode
-  kind: ItemKind
-  definition: KindDefinition
+  type: ItemType
+  definition: TypeDefinition
   pinned: PinnedKeys
   search: string
   onOpen: () => void
@@ -303,7 +303,7 @@ function SortableEntry({
     <ItemEntry
       item={item}
       mode={mode}
-      kind={kind}
+      type={type}
       definition={definition}
       pinned={pinned}
       search={search}

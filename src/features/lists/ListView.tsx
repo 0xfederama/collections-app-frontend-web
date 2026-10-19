@@ -16,8 +16,8 @@ import {
   type SortMode,
 } from './api'
 import { NEW_ITEM_ID } from '../items/newItem'
-import { kindDefinition } from '../items/kinds'
-import { useKinds } from '../settings/api'
+import { typeDefinition } from '../items/types'
+import { useTypes } from '../settings/api'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { resolvePinned } from './pinned'
@@ -40,8 +40,8 @@ export function ListView({ treeList }: { treeList: List }) {
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const parsedSort = parseSort(searchParams.get('sort'))
-  const definitions = useKinds()
-  const definition = kindDefinition(definitions.data, treeList.kind)
+  const definitions = useTypes()
+  const definition = typeDefinition(definitions.data, treeList.type)
   const q = (searchParams.get('q') ?? '').trim()
   const fieldFilter = parseFieldFilter(searchParams, definition?.fields ?? [])
   const activeFieldFilter =
@@ -53,9 +53,9 @@ export function ListView({ treeList }: { treeList: List }) {
 
   const listQuery = useList(listId)
   const list = listQuery.data
-  // A sort the list's kind does not define falls back to the list's mode, so a stale bookmark (or a
-  // kind change) cannot put the list in a sort the server rejects: `kind_key` on a generic list
-  // (F007-W9), `price` where the kind has no price (D-085), or `director` off movie lists (F013).
+  // A sort the list's type does not define falls back to the list's mode, so a stale bookmark (or a
+  // type change) cannot put the list in a sort the server rejects: a type field on a list with no type
+  // (F007-W9), `price` where the type has no price (D-085), or `director` off movie lists (F013).
   const supportedSorts = definition
     ? new Set([
         'manual',
@@ -250,7 +250,7 @@ export function ListView({ treeList }: { treeList: List }) {
     if (definitions.isPending) return <ItemsSkeleton mode={list?.display_mode ?? 'grid'} />
     return (
       <div role="alert" className="flex flex-col items-start gap-2">
-        <p>Couldn’t load this list’s kind definition.</p>
+        <p>Couldn’t load this list’s type definition.</p>
         <Button variant="secondary" onClick={() => void definitions.refetch()}>
           Retry
         </Button>
@@ -296,7 +296,7 @@ export function ListView({ treeList }: { treeList: List }) {
         <ItemsView
           listId={listId}
           mode={mode}
-          kind={list.kind}
+          type={list.type}
           definition={definition}
           pinned={resolvePinned(list, definition)}
           countLabel={countLabel}

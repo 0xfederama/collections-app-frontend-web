@@ -18,7 +18,7 @@ export type MenuItem =
       type: 'radio-submenu'
       label: string
       value: string
-      options: { value: string; label: string }[]
+      options: ({ value: string; label: string } | { separator: true })[]
       onValueChange: (value: string) => void
       icon?: ReactNode
     }
@@ -65,21 +65,28 @@ export function Menu({ trigger, items, align = 'end' }: MenuProps) {
                     className="bg-surface-raised z-50 min-w-40 rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
                   >
                     <DropdownMenu.RadioGroup value={item.value} onValueChange={item.onValueChange}>
-                      {item.options.map((option) => (
-                        <DropdownMenu.RadioItem
-                          key={option.value}
-                          value={option.value}
-                          onSelect={() => rememberMenuTrigger(opener.current)}
-                          className={itemClass}
-                        >
-                          <span aria-hidden className="grid size-4 shrink-0 place-items-center">
-                            <DropdownMenu.ItemIndicator>
-                              <Check />
-                            </DropdownMenu.ItemIndicator>
-                          </span>
-                          {option.label}
-                        </DropdownMenu.RadioItem>
-                      ))}
+                      {item.options.map((option, optionIndex) =>
+                        'separator' in option ? (
+                          <DropdownMenu.Separator
+                            key={`sep-${optionIndex}`}
+                            className="my-1 h-px bg-border"
+                          />
+                        ) : (
+                          <DropdownMenu.RadioItem
+                            key={option.value}
+                            value={option.value}
+                            onSelect={() => rememberMenuTrigger(opener.current)}
+                            className={itemClass}
+                          >
+                            <span aria-hidden className="grid size-4 shrink-0 place-items-center">
+                              <DropdownMenu.ItemIndicator>
+                                <Check />
+                              </DropdownMenu.ItemIndicator>
+                            </span>
+                            {option.label}
+                          </DropdownMenu.RadioItem>
+                        ),
+                      )}
                     </DropdownMenu.RadioGroup>
                   </DropdownMenu.SubContent>
                 </DropdownMenu.Portal>

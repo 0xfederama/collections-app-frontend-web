@@ -3,7 +3,7 @@ import { createItem, createList, itemPanel, itemUrl, uniqueName } from './helper
 
 test.describe('AT-06 item image', () => {
   test('F012-W2 pastes a screenshot into the open item', async ({ page, request }) => {
-    const list = await createList(request, uniqueName('Paste'), 'generic')
+    const list = await createList(request, uniqueName('Paste'), null)
     const title = uniqueName('Clipboard image')
     const item = await createItem(request, list.id, title)
     await page.goto(itemUrl(list.id, item.id))
@@ -37,7 +37,7 @@ test.describe('AT-06 item image', () => {
     page,
     request,
   }) => {
-    const list = await createList(request, uniqueName('Pics'), 'generic')
+    const list = await createList(request, uniqueName('Pics'), null)
     const title = uniqueName('Photo')
     const item = await createItem(request, list.id, title)
     await page.goto(itemUrl(list.id, item.id))

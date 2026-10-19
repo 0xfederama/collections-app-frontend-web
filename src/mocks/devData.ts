@@ -21,7 +21,7 @@ const folder = (n: number, name: string, parent: number | null, sortOrder: numbe
 const list = (
   n: number,
   name: string,
-  kind: List['kind'],
+  type: List['type'],
   parent: number | null,
   sortOrder: number,
   itemCount: number,
@@ -29,7 +29,7 @@ const list = (
   id: id(n),
   folder_id: parent === null ? null : id(parent),
   name,
-  kind,
+  type,
   description: null,
   display_mode: 'grid',
   sort_mode: 'manual',
@@ -62,8 +62,8 @@ export const devTree: Tree = {
     list(15, 'Motorbikes', 'motorcycle', 5, 0, 7),
     list(16, 'Cars', 'car', 5, 1, 2),
     list(17, 'Cameras', 'camera', 6, 0, 5),
-    list(18, 'Wishlist', 'generic', null, 0, 21),
-    list(19, 'Ideas', 'generic', null, 1, 0),
+    list(18, 'Wishlist', null, null, 0, 21),
+    list(19, 'Ideas', null, null, 1, 0),
   ],
 }
 

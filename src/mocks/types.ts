@@ -1,10 +1,10 @@
 import type { components } from '../generated/schema'
 import { http, HttpResponse } from 'msw/http'
 
-type KindDefinition = components['schemas']['KindDefinition']
-type KindField = components['schemas']['KindField']
+type TypeDefinition = components['schemas']['TypeDefinition']
+type TypeField = components['schemas']['TypeField']
 
-const fields = (entries: Array<[string, string, KindField['type']]>): KindField[] =>
+const fields = (entries: Array<[string, string, TypeField['type']]>): TypeField[] =>
   entries.map(([key, label, type], position) => ({
     key,
     label,
@@ -15,18 +15,7 @@ const fields = (entries: Array<[string, string, KindField['type']]>): KindField[
   }))
 
 /** Stable built-in definitions for MSW tests and the standalone mock worker. */
-export const mockKinds: KindDefinition[] = [
-  {
-    key: 'generic',
-    name: 'Item',
-    default_icon: 'i:tag',
-    allows_price: false,
-    default_sort_field: null,
-    default_pinned_fields: [],
-    is_locked: true,
-    version: 1,
-    fields: [],
-  },
+export const mockTypes: TypeDefinition[] = [
   {
     key: 'movie',
     name: 'Movie',
@@ -114,6 +103,6 @@ export const mockKinds: KindDefinition[] = [
   },
 ]
 
-export const kindHandlers = [
-  http.get(`${globalThis.location?.origin ?? ''}/api/v1/kinds`, () => HttpResponse.json(mockKinds)),
+export const typeHandlers = [
+  http.get(`${globalThis.location?.origin ?? ''}/api/v1/types`, () => HttpResponse.json(mockTypes)),
 ]

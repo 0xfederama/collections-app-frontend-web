@@ -13,16 +13,16 @@ const settingsUrl = `${location.origin}/api/v1/settings`
 const field = (name: string) => screen.getByLabelText(new RegExp(`^${name}( \\*)?$`))
 const closeSettings = () => screen.getByRole('button', { name: 'Close' })
 
-async function openSettings(pane = 'Collection') {
+async function openSettings(pane = 'General') {
   mockViewport(1280)
   const user = userEvent.setup()
   renderAt('/settings')
   await screen.findByRole('dialog', { name: 'Settings' })
   await screen.findByLabelText(/Workspace name/)
-  if (pane !== 'Collection') await user.click(screen.getByRole('button', { name: pane }))
+  if (pane !== 'General') await user.click(screen.getByRole('button', { name: pane }))
   if (pane === 'Media') await screen.findByLabelText(/Streaming country/)
   if (pane === 'About') await screen.findByRole('region', { name: 'About' })
-  if (pane === 'Kinds & fields') await screen.findByRole('region', { name: 'Kinds & fields' })
+  if (pane === 'Types & fields') await screen.findByRole('region', { name: 'Types & fields' })
   return user
 }
 
@@ -69,15 +69,7 @@ describe('W-13 settings: saving', () => {
     const user = await openSettings()
     const dialog = screen.getByRole('dialog', { name: 'Settings' })
     expect(Array.from(dialog.querySelectorAll('h2')).map((heading) => heading.textContent)).toEqual(
-      [
-        'Settings',
-        'Appearance',
-        'Collection',
-        'Movies & TV',
-        'Kinds & fields',
-        'Connection',
-        'About',
-      ],
+      ['Settings', 'General', 'Movies & TV', 'Types & fields', 'Connection', 'About'],
     )
     expect(dialog.querySelector('#settings-movies-tv')?.parentElement).toHaveAttribute('hidden')
     expect(screen.getByLabelText(/Workspace name/)).toBeInTheDocument()
@@ -319,13 +311,13 @@ describe('W-13 settings: saving', () => {
     expect(patches).toEqual([])
   })
 
-  it('offers keyboard reachable panes and the Kinds & fields pane', async () => {
+  it('offers keyboard reachable panes and the Types & fields pane', async () => {
     mountBackend()
     const user = await openSettings()
     await user.tab()
-    expect(screen.getByRole('button', { name: 'Appearance' })).toHaveFocus()
-    await user.click(screen.getByRole('button', { name: 'Kinds & fields' }))
-    expect(await screen.findByRole('list', { name: 'Kinds' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'General' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Types & fields' }))
+    expect(await screen.findByRole('list', { name: 'Types' })).toBeInTheDocument()
   })
 })
 

@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { Badge } from './Badge'
-import { kindLabels, type ItemKind } from './icons'
+import { typeLabels, type ItemType } from './icons'
 
-const kinds: [ItemKind, string][] = [
-  ['generic', 'Item'],
+const types: [ItemType, string][] = [
+  [null, 'No type'],
   ['movie', 'Movie'],
   ['tv_show', 'TV show'],
   ['motorcycle', 'Motorcycle'],
@@ -13,13 +13,13 @@ const kinds: [ItemKind, string][] = [
 ]
 
 describe('Badge', () => {
-  it.each(kinds)('shows the label for kind %s', (kind, label) => {
-    const { container } = render(<Badge kind={kind} />)
+  it.each(types)('shows the label for type %s', (type, label) => {
+    const { container } = render(<Badge type={type} />)
     expect(screen.getByText(label)).toBeInTheDocument()
     expect(container.querySelector('svg[aria-hidden="true"]')).toBeInTheDocument()
   })
 
-  it('covers all six kinds', () => {
-    expect(Object.keys(kindLabels)).toHaveLength(6)
+  it('covers the five built-in types', () => {
+    expect(Object.keys(typeLabels)).toHaveLength(5)
   })
 })

@@ -5,7 +5,7 @@ import type { ItemSummary } from './api'
 
 /**
  * The one placeholder of an item without an image (F008-W13): a soft tile with the title's first
- * letter, no kind symbol. The letter scales with the tile's width (container query units), so every
+ * letter, no type symbol. The letter scales with the tile's width (container query units), so every
  * display mode (compact, thumbnail, grid, search, hero) shows the same tile and type.
  */
 export function ItemInitial({ title, className }: { title: string; className?: string }) {
@@ -39,7 +39,7 @@ export function ItemThumb({
   className,
   decorative,
 }: {
-  item: Pick<ItemSummary, 'title' | 'kind' | 'image'>
+  item: Pick<ItemSummary, 'title' | 'type' | 'image'>
   className?: string
   /** The title is written right next to the cover: an empty `alt` avoids reading it twice (axe `image-redundant-alt`). */
   decorative?: boolean

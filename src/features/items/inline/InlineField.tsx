@@ -29,7 +29,7 @@ import { FieldInputs, type FieldForm } from './editors'
 import type { FieldSpec } from './fields'
 import { useEditGuard } from './guard'
 import { useSettings } from '../../settings/api'
-import type { KindDefinition } from '../kinds'
+import type { TypeDefinition } from '../types'
 
 /** Pen, ✓ and ✕ are the same on the description, so they are shared. */
 export const focusRing =
@@ -124,7 +124,7 @@ type Failure =
 
 interface InlineFieldProps {
   item: Item
-  definition: KindDefinition
+  definition: TypeDefinition
   spec: FieldSpec
   /** The saved value as read-only content. */
   children: ReactNode
@@ -222,7 +222,7 @@ function FieldEditor({
   onDone,
 }: {
   item: Item
-  definition: KindDefinition
+  definition: TypeDefinition
   spec: FieldSpec
   initialDraft?: Partial<Draft>
   focusDelay: boolean

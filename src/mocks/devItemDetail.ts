@@ -13,11 +13,11 @@ const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 /** Stable small number from an id, to vary the sample data without randomness. */
 const seed = (id: string) => [...id].reduce((sum, ch) => (sum * 31 + ch.charCodeAt(0)) % 9973, 7)
 
-const metadataFor = (summary: Pick<ItemSummary, 'id' | 'kind'>): Record<string, unknown> => {
+const metadataFor = (summary: Pick<ItemSummary, 'id' | 'type'>): Record<string, unknown> => {
   const n = seed(summary.id)
-  const sparse = n % 5 === 0 // every fifth item has no kind details at all
+  const sparse = n % 5 === 0 // every fifth item has no type details at all
   if (sparse) return {}
-  switch (summary.kind) {
+  switch (summary.type) {
     case 'movie':
       return {
         release_year: 1990 + (n % 34),
@@ -78,10 +78,10 @@ Bought **second hand**, still in great shape. See the [official page](https://ex
 A broken link: [x](javascript:alert(1)). Raw HTML <script>alert(1)</script> is not rendered.
 `
 
-/** Kind details and website of items created or edited in this session (`kind`: the one the details belong to). */
+/** Type details and website of items created or edited in this session (`type`: the one the details belong to). */
 const extras = new Map<
   string,
-  { kind: string; metadata: Record<string, unknown>; website: string | null }
+  { type: string | null; metadata: Record<string, unknown>; website: string | null }
 >()
 
 type PriceInput = {
@@ -108,12 +108,12 @@ function fullItem(summary: ItemSummary): Item {
   }
   if (list) path.push({ type: 'list', id: list.id, name: list.name })
   const { image, ...rest } = summary
-  // An item's kind is its list's; details written for another kind were cleared by the kind change.
-  const kind = list?.kind ?? summary.kind
+  // An item's type is its list's; details written for another type were cleared by the type change.
+  const type = list?.type ?? summary.type
   const saved = extras.get(summary.id)
   return {
     ...rest,
-    kind,
+    type,
     image: image ? { source: 'url', url: image.url } : null,
     website:
       saved?.website !== undefined
@@ -123,10 +123,10 @@ function fullItem(summary: ItemSummary): Item {
           : null,
     content_version: 1,
     metadata: saved
-      ? saved.kind === kind
+      ? saved.type === type
         ? saved.metadata
         : {}
-      : metadataFor({ id: summary.id, kind }),
+      : metadataFor({ id: summary.id, type }),
     path,
   } as Item
 }
@@ -135,7 +135,7 @@ type FieldIssue = { field: string; message: string }
 type Body = Record<string, unknown>
 
 /** A light version of the server's rules (DATA_MODEL §2), enough to exercise the form's 422 paths. */
-function validateBody(body: Body, kind: string): FieldIssue[] {
+function validateBody(body: Body, type: string | null): FieldIssue[] {
   const issues: FieldIssue[] = []
   const add = (field: string, message: string) => issues.push({ field, message })
   if ('title' in body && (typeof body.title !== 'string' || !body.title.trim())) {
@@ -145,7 +145,7 @@ function validateBody(body: Body, kind: string): FieldIssue[] {
     | { amount?: string; min?: string | null; max?: string | null; currency?: string }
     | null
     | undefined
-  if (price && kind === 'generic') add('price', 'A generic list has no price.')
+  if (price && type === null) add('price', 'A list with no type has no price.')
   else if (price) {
     const hasRange = price.min !== undefined || price.max !== undefined
     if (price.amount !== undefined && hasRange) {
@@ -170,7 +170,7 @@ const ITEM_KEYS = ['title', 'price', 'website', 'metadata']
 
 /**
  * Dev fake of `GET`/`PATCH`/`DELETE /items/{id}`, `POST /items/{id}/move` and `GET …/content`, on top of
- * the item store of `devItems.ts` (`VITE_API_MOCKS=1` worker only). Every item has kind details
+ * the item store of `devItems.ts` (`VITE_API_MOCKS=1` worker only). Every item has type details
  * (except every fifth), no website except every third, and a short Markdown description.
  */
 export const devItemDetailHandlers = [
@@ -180,17 +180,17 @@ export const devItemDetailHandlers = [
     const body = (await request.json()) as Body
     const unknown = unknownKey(body, ITEM_KEYS)
     if (unknown) return problemResponse(400, 'unknown_field', { detail: unknown })
-    const kind = devTreeState.lists.find((l) => l.id === listId)?.kind ?? 'generic'
-    const issues = validateBody({ ...body, title: body.title ?? '' }, kind)
+    const type = devTreeState.lists.find((l) => l.id === listId)?.type ?? null
+    const issues = validateBody({ ...body, title: body.title ?? '' }, type)
     if (issues.length > 0) return problemResponse(422, 'validation_failed', { errors: issues })
     const now = new Date().toISOString()
     const created = {
       id: crypto.randomUUID(),
       list_id: listId,
       title: String(body.title).trim(),
-      kind,
+      type,
       image: null,
-      price: kind === 'generic' ? null : toPrice((body.price as PriceInput) ?? null),
+      price: type === null ? null : toPrice((body.price as PriceInput) ?? null),
       website: null,
       content_version: 0,
       sort_order: 0,
@@ -200,7 +200,7 @@ export const devItemDetailHandlers = [
     } as ItemSummary
     devItemStore.append(created)
     extras.set(created.id, {
-      kind,
+      type,
       metadata: (body.metadata as Body | undefined) ?? {},
       website: (body.website as string | null) ?? null,
     })
@@ -222,9 +222,9 @@ export const devItemDetailHandlers = [
     const unknown = unknownKey(body, ITEM_KEYS)
     if (unknown) return problemResponse(400, 'unknown_field', { detail: unknown })
     const current = fullItem(summary)
-    const kind = current.kind
+    const type = current.type
     const metadata = ('metadata' in body ? body.metadata : current.metadata) as Body
-    const issues = validateBody(body, kind)
+    const issues = validateBody(body, type)
     if (issues.length > 0) return problemResponse(422, 'validation_failed', { errors: issues })
     const { website, price, metadata: _ignored, ...summaryPatch } = body
     void _ignored
@@ -233,13 +233,13 @@ export const devItemDetailHandlers = [
       ...summary,
       ...summaryPatch,
       ...(price !== undefined && { price: toPrice(price as PriceInput) }),
-      kind,
+      type,
       version: changed ? summary.version + 1 : summary.version,
       updated_at: changed ? new Date().toISOString() : summary.updated_at,
     } as ItemSummary
     devItemStore.replace(next)
     extras.set(next.id, {
-      kind,
+      type,
       metadata,
       website: website === undefined ? current.website : (website as string | null),
     })
@@ -284,7 +284,7 @@ export const devItemDetailHandlers = [
     const { list_id } = (await request.json()) as { list_id: string }
     const destination = devTreeState.lists.find((l) => l.id === list_id)
     if (!destination) return problemResponse(409, 'destination_unavailable')
-    if (destination.kind !== fullItem(summary).kind) return problemResponse(409, 'kind_mismatch')
+    if (destination.type !== fullItem(summary).type) return problemResponse(409, 'type_mismatch')
     devItemStore.remove(summary.id)
     devItemStore.append({ ...summary, list_id, version: summary.version + 1 })
     return HttpResponse.json(fullItem({ ...summary, list_id, version: summary.version + 1 }))

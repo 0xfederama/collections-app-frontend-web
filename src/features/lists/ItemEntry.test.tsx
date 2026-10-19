@@ -3,13 +3,13 @@ import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { ItemEntry } from './ItemEntry'
 import type { ItemSummary } from './api'
-import { mockKinds } from '../../mocks/kinds'
+import { mockTypes } from '../../mocks/types'
 
 const item = (over: Partial<ItemSummary> = {}): ItemSummary => ({
   id: 'i1',
   list_id: 'l1',
   title: 'Alien',
-  kind: 'movie',
+  type: 'movie',
   image: null,
   price: null,
   website: null,
@@ -27,15 +27,15 @@ function entry(
   mode: 'compact' | 'thumbnail' | 'grid',
   over: Partial<ItemSummary> = {},
 ) {
-  const kind = over.kind ?? 'movie'
-  const definition = mockKinds.find((candidate) => candidate.key === kind)!
+  const type = over.type ?? 'movie'
+  const definition = mockTypes.find((candidate) => candidate.key === type)!
   render(
     <MemoryRouter>
       <ul>
         <ItemEntry
           item={item(over)}
           mode={mode}
-          kind={kind}
+          type={type}
           definition={definition}
           pinned={pinned}
           search=""
@@ -70,7 +70,7 @@ describe('F009-W3 the first pinned field reads next to the title, the second in 
 
   it('a TV show combines seasons and episodes into one 5×7 piece', () => {
     const row = entry(['seasons', 'episodes_per_season'], 'thumbnail', {
-      kind: 'tv_show',
+      type: 'tv_show',
       metadata: { seasons: 5, episodes_per_season: 7, episode_minutes: 45 },
     })
     expect(readOrder(row)).toEqual(['Alien', '5×7'])

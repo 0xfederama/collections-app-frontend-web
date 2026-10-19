@@ -6,7 +6,7 @@ test.describe('F003-W1 description: edit in place, save, history restore', () =>
     page,
     request,
   }) => {
-    const list = await createList(request, uniqueName('Notes'), 'generic')
+    const list = await createList(request, uniqueName('Notes'), null)
     const item = await createItem(request, list.id, uniqueName('Doc'))
     await page.goto(itemUrl(list.id, item.id))
 

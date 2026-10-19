@@ -2,13 +2,15 @@ import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
 import { devTree, devTreeState } from './devData'
 import { problemResponse } from './problems'
-import { mockKinds } from './kinds'
+import { mockTypes } from './types'
 
 type Tree = components['schemas']['Tree']
 type List = components['schemas']['List']
 type ItemSummary = components['schemas']['ItemSummary']
-type ItemKind = ItemSummary['kind']
-const PRICE_KINDS = new Set(mockKinds.filter((kind) => kind.allows_price).map((kind) => kind.key))
+type ItemType = ItemSummary['type']
+const PRICE_TYPES = new Set<string | null>(
+  mockTypes.filter((type) => type.allows_price).map((type) => type.key),
+)
 type SortMode = components['schemas']['SortMode']
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
@@ -22,17 +24,17 @@ const cover = (hue: number) =>
 // `.invalid` never resolves, so these exercise the fallback tile after a failed load.
 const BROKEN = 'https://images.example.invalid/missing.jpg'
 
-const TITLES: Record<ItemKind, string[]> = {
+const TITLES: Record<string, string[]> = {
   movie: ['Blade Runner 2049', 'Arrival', 'The Grand Budapest Hotel', 'Past Lives', 'Drive'],
   tv_show: ['Severance', 'The Bear', 'Slow Horses', 'Andor', 'Shōgun'],
   motorcycle: ['Ducati Monster', 'Triumph Speed 400', 'Yamaha MT-07', 'Honda CB650R'],
   car: ['Mazda MX-5 Miata', 'Volvo V60 Cross Country', 'Alpine A110'],
   camera: ['Fujifilm X100VI', 'Ricoh GR III', 'Leica Q3', 'Sony A7C II'],
-  generic: ['Standing desk', 'Noise-cancelling headphones', 'Espresso machine', 'Trail shoes'],
+  none: ['Standing desk', 'Noise-cancelling headphones', 'Espresso machine', 'Trail shoes'],
 }
-/** Kind fields for the pinned layout. The contract's summaries carry none yet, so the dev fake adds them. */
-function fakeMetadata(kind: ItemKind, i: number): Record<string, unknown> {
-  switch (kind) {
+/** Type fields for the pinned layout. The contract's summaries carry none yet, so the dev fake adds them. */
+function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
+  switch (type) {
     case 'movie':
       return {
         runtime_minutes: 90 + ((i * 13) % 80),
@@ -61,8 +63,8 @@ function fakeMetadata(kind: ItemKind, i: number): Record<string, unknown> {
 
 function makeItems(list: List, count: number): ItemSummary[] {
   return Array.from({ length: count }, (_, i) => {
-    const kind = list.kind
-    const pool = TITLES[kind] ?? TITLES.generic!
+    const type = list.type
+    const pool = (type === null ? TITLES.none : TITLES[type]) ?? TITLES.none!
     const title = `${pool[i % pool.length]}${i >= pool.length ? ` (${Math.floor(i / pool.length) + 1})` : ''}`
     const image =
       i % 7 === 3
@@ -75,10 +77,10 @@ function makeItems(list: List, count: number): ItemSummary[] {
       id: `7c1e5a10-0000-4000-a000-${list.id.slice(-4).padStart(4, '0')}${String(i).padStart(8, '0')}`,
       list_id: list.id,
       title,
-      kind,
+      type,
       image,
       price:
-        priced === 0 || !PRICE_KINDS.has(kind)
+        priced === 0 || !PRICE_TYPES.has(type)
           ? null
           : priced === 1
             ? { min: String(500 + i * 25), max: String(500 + i * 25), currency: 'EUR' }
@@ -93,7 +95,7 @@ function makeItems(list: List, count: number): ItemSummary[] {
       updated_at: new Date(
         Date.UTC(2026, 9, 14, 9, 0, 0) - ((i * 7919) % 5000) * 60_000,
       ).toISOString(),
-      metadata: fakeMetadata(kind, i),
+      metadata: fakeMetadata(type, i),
     } as ItemSummary
   })
 }
@@ -101,7 +103,7 @@ function makeItems(list: List, count: number): ItemSummary[] {
 /**
  * Stateful in-memory fake of the item endpoints of a list (`VITE_API_MOCKS=1` dev worker only):
  * `GET …/items` (sort, `q`, paging) and `PUT …/items/order` (with `order_stale`). A few items per
- * list, covering every kind, with and without images and with one image that fails to load.
+ * list, covering every type, with and without images and with one image that fails to load.
  * The list record itself (`GET`/`PATCH /lists/:id`, display and sort mode) belongs to the tree
  * backend (`devTree.ts`), so a rename and a display-mode change use the same version.
  */
@@ -151,11 +153,11 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
       if (!all || !list) return problemResponse(404, 'not_found')
       const query = new URL(request.url).searchParams
       const sort = (query.get('sort') as SortMode | null) ?? list.sort_mode
-      const definition = mockKinds.find((kind) => kind.key === list.kind)
+      const definition = mockTypes.find((type) => type.key === list.type)
       const validField = definition?.fields.some((field) => field.key === sort)
       if (
         !['manual', 'title', 'updated'].includes(sort) &&
-        !(sort === 'price' && PRICE_KINDS.has(list.kind)) &&
+        !(sort === 'price' && PRICE_TYPES.has(list.type)) &&
         !validField
       ) {
         return problemResponse(400, 'invalid_parameter')
@@ -163,10 +165,10 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
       const q = (query.get('q') ?? '').toLowerCase()
       const limit = Math.min(Number(query.get('limit') ?? 50), 200)
       const offset = Number(query.get('offset') ?? 0)
-      // The kind of an item is its list's (a kind change in the tree fake shows up here).
+      // The type of an item is its list's (a type change in the tree fake shows up here).
       const matching = all
         .filter((item) => item.title.toLowerCase().includes(q))
-        .map((item) => ({ ...item, kind: list.kind }))
+        .map((item) => ({ ...item, type: list.type }))
         .sort(bySort(sort))
       return HttpResponse.json({
         data: matching.slice(offset, offset + limit),

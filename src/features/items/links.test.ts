@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ItemKind } from './api'
+import type { ItemType } from './api'
 import { buildExternalLinks, safeImdbUrl } from './links'
 
 describe('F006-W5 safeImdbUrl', () => {
@@ -31,7 +31,7 @@ type Source = Parameters<typeof buildExternalLinks>[0]
 
 const make = (over: Partial<Source> = {}): Source => ({
   title: 'The Matrix',
-  kind: 'generic',
+  type: null,
   website: null,
   ...over,
 })
@@ -52,21 +52,21 @@ const queryOf = (href: string | null) => {
   return url.searchParams.get('q')
 }
 
-describe('AT-13 external links: shape per kind (F-002)', () => {
-  it.each<[ItemKind, string[]]>([
+describe('AT-13 external links: shape per type (F-002)', () => {
+  it.each<[ItemType, string[]]>([
     ['movie', ['google', 'letterboxd', 'imdb']],
     ['tv_show', ['google', 'imdb']],
-    ['generic', ['google', 'reddit', 'website']],
+    [null, ['google', 'reddit', 'website']],
     ['motorcycle', ['google', 'reddit', 'website']],
     ['car', ['google', 'reddit', 'website']],
     ['camera', ['google', 'reddit', 'website']],
-  ])('%s: %j', (kind, ids) => {
-    expect(buildExternalLinks(make({ kind })).map((l) => l.id)).toEqual(ids)
+  ])('%s: %j', (type, ids) => {
+    expect(buildExternalLinks(make({ type })).map((l) => l.id)).toEqual(ids)
   })
 
   it('labels are Google, Reddit, Website, Letterboxd, IMDb', () => {
     expect(buildExternalLinks(make()).map((l) => l.label)).toEqual(['Google', 'Reddit', 'Website'])
-    expect(buildExternalLinks(make({ kind: 'movie' })).map((l) => l.label)).toEqual([
+    expect(buildExternalLinks(make({ type: 'movie' })).map((l) => l.label)).toEqual([
       'Google',
       'Letterboxd',
       'IMDb',
@@ -82,14 +82,14 @@ describe('AT-13 external links: shape per kind (F-002)', () => {
 
 describe('F-002 Letterboxd and IMDb', () => {
   it('Letterboxd is a title search with the title encoded as a path segment', () => {
-    const href = byId(make({ kind: 'movie', title: 'Tom & Jerry/2 #1' }))('letterboxd').href
+    const href = byId(make({ type: 'movie', title: 'Tom & Jerry/2 #1' }))('letterboxd').href
     expect(href).toBe('https://letterboxd.com/search/Tom%20%26%20Jerry%2F2%20%231/')
   })
 
   it('IMDb opens the stored imdb_url when it is valid', () => {
     const url = 'https://www.imdb.com/title/tt0133093/'
-    for (const kind of ['movie', 'tv_show'] as const) {
-      expect(byId(make({ kind, metadata: { imdb_url: url } }))('imdb').href).toBe(url)
+    for (const type of ['movie', 'tv_show'] as const) {
+      expect(byId(make({ type, metadata: { imdb_url: url } }))('imdb').href).toBe(url)
     }
   })
 
@@ -99,7 +99,7 @@ describe('F-002 Letterboxd and IMDb', () => {
     ['not IMDb', { imdb_url: 'https://evil.example/title/tt0133093/' }],
     ['javascript:', { imdb_url: 'javascript:alert(1)' }],
   ])('IMDb falls back to a title search when imdb_url is %s', (_, metadata) => {
-    const href = byId(make({ kind: 'movie', title: 'A&B #1', metadata }))('imdb').href ?? ''
+    const href = byId(make({ type: 'movie', title: 'A&B #1', metadata }))('imdb').href ?? ''
     const url = new URL(href)
     expect(url.origin + url.pathname).toBe('https://www.imdb.com/find/')
     expect(url.searchParams.get('q')).toBe('A&B #1')
@@ -108,33 +108,33 @@ describe('F-002 Letterboxd and IMDb', () => {
   })
 })
 
-describe('AT-13 external links: search text per kind', () => {
+describe('AT-13 external links: search text per type', () => {
   it.each<[string, Source, string]>([
     [
       'movie with year',
-      make({ kind: 'movie', metadata: { release_year: 1999 } }),
+      make({ type: 'movie', metadata: { release_year: 1999 } }),
       'The Matrix 1999 film',
     ],
-    ['movie without year', make({ kind: 'movie', metadata: {} }), 'The Matrix film'],
-    ['movie without metadata', make({ kind: 'movie' }), 'The Matrix film'],
+    ['movie without year', make({ type: 'movie', metadata: {} }), 'The Matrix film'],
+    ['movie without metadata', make({ type: 'movie' }), 'The Matrix film'],
     [
       'movie with a non-numeric year',
-      make({ kind: 'movie', metadata: { release_year: '1999' } }),
+      make({ type: 'movie', metadata: { release_year: '1999' } }),
       'The Matrix film',
     ],
     [
       'tv_show',
-      make({ kind: 'tv_show', metadata: { first_air_year: 2019 } }),
+      make({ type: 'tv_show', metadata: { first_air_year: 2019 } }),
       'The Matrix TV series',
     ],
-    ['motorcycle', make({ kind: 'motorcycle', metadata: { model_year: 2024 } }), 'The Matrix'],
-    ['car', make({ kind: 'car' }), 'The Matrix'],
-    ['camera', make({ kind: 'camera' }), 'The Matrix'],
-    ['generic', make({ kind: 'generic' }), 'The Matrix'],
+    ['motorcycle', make({ type: 'motorcycle', metadata: { model_year: 2024 } }), 'The Matrix'],
+    ['car', make({ type: 'car' }), 'The Matrix'],
+    ['camera', make({ type: 'camera' }), 'The Matrix'],
+    ['no type', make({ type: null }), 'The Matrix'],
   ])('%s', (_, item, expected) => {
     const link = byId(item)
     expect(queryOf(link('google').href)).toBe(expected)
-    if (item.kind !== 'movie' && item.kind !== 'tv_show') {
+    if (item.type !== 'movie' && item.type !== 'tv_show') {
       expect(queryOf(link('reddit').href)).toBe(`${expected} site:reddit.com`)
     }
   })
@@ -152,11 +152,11 @@ describe('AT-13 external links: title encoding', () => {
     ['CJK', '千と千尋'],
     ['mixed', 'a&b=c#d "e" +f %g Ünï 千'],
   ])('%s survives a round trip through the URL', (_, title) => {
-    for (const kind of ['generic', 'movie', 'tv_show'] as const) {
-      const suffix = { generic: '', movie: ' film', tv_show: ' TV series' }[kind]
-      const link = byId(make({ title, kind }))
+    for (const type of [null, 'movie', 'tv_show'] as const) {
+      const suffix = { none: '', movie: ' film', tv_show: ' TV series' }[type ?? 'none']
+      const link = byId(make({ title, type }))
       expect(queryOf(link('google').href)).toBe(`${title}${suffix}`)
-      if (kind === 'generic') {
+      if (type === null) {
         expect(queryOf(link('reddit').href)).toBe(`${title}${suffix} site:reddit.com`)
       }
     }
@@ -172,7 +172,7 @@ describe('AT-13 external links: title encoding', () => {
   })
 
   it('movie year goes between the title and "film"', () => {
-    const link = byId(make({ title: 'Amélie', kind: 'movie', metadata: { release_year: 2001 } }))
+    const link = byId(make({ title: 'Amélie', type: 'movie', metadata: { release_year: 2001 } }))
     expect(queryOf(link('google').href)).toBe('Amélie 2001 film')
   })
 })
@@ -199,8 +199,8 @@ describe('AT-13 external links: website', () => {
   })
 
   it('movies and TV shows have no website link', () => {
-    for (const kind of ['movie', 'tv_show'] as const) {
-      const ids = buildExternalLinks(make({ kind, website: 'https://example.org/' })).map(
+    for (const type of ['movie', 'tv_show'] as const) {
+      const ids = buildExternalLinks(make({ type, website: 'https://example.org/' })).map(
         (l) => l.id,
       )
       expect(ids).not.toContain('website')

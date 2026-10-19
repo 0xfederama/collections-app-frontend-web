@@ -1,9 +1,10 @@
-import { kindIcons, List as ListIcon } from '../../components/ui/icons'
+import { Tag, typeIcons, List as ListIcon } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import { builtinListIcon, parseListIcon } from './iconModel'
 import type { ListIconColor } from './iconModel'
-import type { ItemKind } from '../items/api'
-import { useKinds } from '../settings/api'
+import type { ItemType } from '../items/api'
+import { typeDefinition } from '../items/types'
+import { useTypes } from '../settings/api'
 
 const ICON_COLOR_CLASSES: Record<ListIconColor, string> = {
   red: 'text-list-icon-red',
@@ -21,21 +22,21 @@ const ICON_COLOR_CLASSES: Record<ListIconColor, string> = {
 export function ListIconMark({
   icon,
   iconColor,
-  kind = 'generic',
+  type = null,
   className,
   iconClassName,
 }: {
   icon?: string | null
   iconColor?: ListIconColor | null
-  kind?: ItemKind
+  type?: ItemType
   className?: string
   iconClassName?: string
 }) {
-  const definitions = useKinds()
-  const defaultIcon = definitions.data?.find((definition) => definition.key === kind)?.default_icon
+  const definitions = useTypes()
+  const defaultIcon = typeDefinition(definitions.data, type)?.default_icon
   const parsed = parseListIcon(icon ?? defaultIcon)
   const Builtin = parsed.builtin ? builtinListIcon(parsed.builtin)?.Icon : undefined
-  const Glyph = Builtin ?? kindIcons[kind] ?? ListIcon
+  const Glyph = Builtin ?? (type === null ? Tag : typeIcons[type]) ?? ListIcon
   return (
     <span
       aria-hidden="true"

@@ -2,15 +2,15 @@ import { useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button } from '../../components/ui'
 import { ApiError, NetworkError } from '../../lib/api'
-import { useCreateItem, type ItemKind } from './api'
+import { useCreateItem, type ItemType } from './api'
 import { createLookupSelection, TmdbTitleField, type TmdbTitleSelection } from './TmdbTitleField'
 import { LIMITS } from './form/draft'
 import { MessageBanner } from './inline/Banners'
 import { useEditGuard } from './inline/guard'
 import { EditorButtons } from './inline/InlineField'
-import { useKinds, useSettings } from '../settings/api'
+import { useTypes, useSettings } from '../settings/api'
 import { ListIconMark } from '../lists/ListIconMark'
-import { kindDefinition, kindName } from './kinds'
+import { typeDefinition, typeName } from './types'
 
 /**
  * The draft of a new item (F008-W9), shown by the item route at `/lists/:listId/items/new`.
@@ -21,18 +21,18 @@ import { kindDefinition, kindName } from './kinds'
 export function NewItemDraft({
   listId,
   listName,
-  kind,
+  type,
 }: {
   listId: string
   listName: string
-  kind: ItemKind
+  type: ItemType
 }) {
   const navigate = useNavigate()
   const { search } = useLocation()
   const create = useCreateItem(listId)
   const settings = useSettings()
-  const definitions = useKinds()
-  const definition = kindDefinition(definitions.data, kind)
+  const definitions = useTypes()
+  const definition = typeDefinition(definitions.data, type)
   const guard = useEditGuard()
   const [title, setTitle] = useState('')
   const [error, setError] = useState<string>()
@@ -64,7 +64,7 @@ export function NewItemDraft({
       const created = await create.mutateAsync({
         title: trimmed,
         ...createLookupSelection(
-          kind,
+          type,
           settings.data?.lookup_available === true,
           selection?.tmdb_id ?? tmdbId,
         ),
@@ -131,11 +131,11 @@ export function NewItemDraft({
         <p className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
           <ListIconMark
             icon={definition?.default_icon}
-            kind={kind}
+            type={type}
             className="size-5 bg-transparent"
             iconClassName="size-3.5"
           />
-          {kindName(definition, kind)} · New item (draft)
+          {typeName(definition, type)} · New item (draft)
         </p>
         <div
           ref={box}
@@ -144,7 +144,7 @@ export function NewItemDraft({
           className="flex flex-wrap items-start gap-2"
         >
           <TmdbTitleField
-            kind={kind}
+            type={type}
             title={title}
             onTitleChange={changeTitle}
             onSelectionChange={setTmdbId}

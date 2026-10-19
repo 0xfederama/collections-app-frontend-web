@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Chip, kindIcons, useToast } from '../../components/ui'
+import { Button, Chip, typeIconFor, useToast } from '../../components/ui'
 import { Folder, List, TriangleAlert } from '../../components/ui/icons'
 import { useRestoreTrash, type RestoreResult, type TrashEntry } from './api'
 import { classifyTrashError, type TrashError } from './errors'
@@ -14,7 +14,7 @@ import {
 } from './model'
 import { TrashErrorMessage } from './TrashError'
 
-const rootIcons = { folder: Folder, list: List, item: kindIcons.generic! }
+const rootIcons = { folder: Folder, list: List, item: typeIconFor(null) }
 
 export interface TrashRowProps {
   entry: TrashEntry

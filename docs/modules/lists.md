@@ -16,8 +16,8 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 
 ## Interfaces
 
-- `ListIconPicker({ value, onChange, onClose, kind? })`: built-in icons, emoji, mark color and default.
-- `ListIconMark({ icon, iconColor, kind, className, iconClassName })`: list mark.
+- `ListIconPicker({ value, onChange, onClose, type? })`: built-in icons, emoji, mark color and default.
+- `ListIconMark({ icon, iconColor, type, className, iconClassName })`: list mark.
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
 - `FieldFilter({ fields, value, onChange })`, `parseFieldFilter(params, fields)`.
 - `useListItems`, `useUpdateList`, `useReorderItems`, `listKeys`: list API hooks and query keys.
@@ -25,9 +25,9 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 
 ## Gotchas
 
-- Pinned fields, sort and filter accept any field key of the list's kind (plus `price` where the kind allows it); at most two pins, `null` = kind default.
+- Pinned fields, sort and filter accept any field key of the list's type (plus `price` where the type allows it); at most two pins, `null` = type default.
 - Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming fields are not filterable.
-- A sort the kind does not define falls back to the list's `sort_mode`, so stale `?sort=` values are ignored.
+- A sort the type does not define falls back to the list's `sort_mode`, so stale `?sort=` values are ignored.
 - Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally.
 - List icon writes are owned by the tree feature and use the list version with `If-Match`.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.

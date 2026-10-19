@@ -19,10 +19,10 @@ import {
   ToastProvider,
   Tooltip,
   Tree,
-  kindIcons,
-  kindLabels,
+  typeIcons,
+  typeLabels,
   useToast,
-  type ItemKind,
+  type ItemType,
 } from '../components/ui'
 import {
   Ellipsis,
@@ -162,6 +162,18 @@ function Selection() {
           options={countries}
           placeholder="Choose…"
           error="Pick a currency."
+        />
+        <Select
+          label="Type (separators and an action)"
+          options={[
+            { value: 'none', label: 'No type' },
+            { separator: true },
+            { value: 'movie', label: 'Movie' },
+            { value: 'car', label: 'Car' },
+            { separator: true },
+            { value: 'new', label: '+ New type', action: true },
+          ]}
+          value="none"
         />
         <Select label="Disabled select" options={countries} disabled />
         <Combobox
@@ -344,9 +356,9 @@ function Feedback() {
 function Display() {
   return (
     <Section id="display" title="Badge, Card, EmptyState">
-      <Row label="Badge (kinds)">
-        {(Object.keys(kindIcons) as ItemKind[]).map((kind) => (
-          <Badge key={kind} kind={kind} />
+      <Row label="Badge (types)">
+        {([null, ...Object.keys(typeIcons)] as ItemType[]).map((type) => (
+          <Badge key={type ?? 'none'} type={type} />
         ))}
       </Row>
       <Row label="Card">
@@ -366,9 +378,7 @@ function Display() {
           action={<Button>Create list</Button>}
         />
       </Card>
-      <p className="text-sm text-text-muted">
-        Kinds: {(Object.keys(kindLabels) as ItemKind[]).map((k) => kindLabels[k]).join(', ')}
-      </p>
+      <p className="text-sm text-text-muted">Types: {Object.values(typeLabels).join(', ')}</p>
     </Section>
   )
 }

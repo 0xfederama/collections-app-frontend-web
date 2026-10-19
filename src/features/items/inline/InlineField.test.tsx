@@ -126,7 +126,7 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
     expect(calls).toHaveLength(0)
   })
 
-  it('a kind field sends the metadata object with that field changed', async () => {
+  it('a type field sends the metadata object with that field changed', async () => {
     const calls = mockPatch()
     const { user } = await openItem()
     await editField(user, 'Runtime')
@@ -213,10 +213,10 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
 })
 
 describe('F002-W3 "+ Add field" and price', () => {
-  it('F009-W1 shows populated kind fields and offers only empty fields', async () => {
-    // A car whose kind fields are all set: they are visible and absent from Add field (D-085).
+  it('F009-W1 shows populated type fields and offers only empty fields', async () => {
+    // A car whose type fields are all set: they are visible and absent from Add field (D-085).
     const { user } = await openItem({
-      kind: 'car',
+      type: 'car',
       metadata: {
         make: 'Volkswagen',
         model: 'Golf',
@@ -271,7 +271,7 @@ describe('F002-W3 "+ Add field" and price', () => {
 
   it('Price: a single price is { amount, currency }; a range is { min, max, currency }', async () => {
     const calls = mockPatch()
-    const { user } = await openItem({ kind: 'car', metadata: {} })
+    const { user } = await openItem({ type: 'car', metadata: {} })
     await addField(user, 'Price')
     await user.type(await screen.findByRole('textbox', { name: 'Price' }), '1200{Enter}')
     await waitFor(() => expect(calls).toHaveLength(1))
@@ -280,7 +280,7 @@ describe('F002-W3 "+ Add field" and price', () => {
 
   it('F008-W12 Add range reveals a second amount in the same field; Remove range goes back to single', async () => {
     const calls = mockPatch()
-    const { user } = await openItem({ kind: 'car', metadata: {} })
+    const { user } = await openItem({ type: 'car', metadata: {} })
     await addField(user, 'Price')
     await user.type(await screen.findByRole('textbox', { name: 'Price' }), '900')
     await user.click(screen.getByRole('button', { name: 'Add range' }))
@@ -297,12 +297,12 @@ describe('F002-W3 "+ Add field" and price', () => {
   })
 
   it('Price: the saved price reads without cents, and Remove price sends null', async () => {
-    // The default responder answers with the example (a movie), so keep the kind of this car.
+    // The default responder answers with the example (a movie), so keep the type of this car.
     const calls = mockPatch((call) =>
-      HttpResponse.json({ ...matrix, kind: 'car', ...call.body, version: 4 }),
+      HttpResponse.json({ ...matrix, type: 'car', ...call.body, version: 4 }),
     )
     const { user } = await openItem({
-      kind: 'car',
+      type: 'car',
       price: { min: '1200.50', max: '1200.50', currency: 'EUR' },
     })
     // A populated price is visible by default.

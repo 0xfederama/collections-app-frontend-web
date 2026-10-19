@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { KindField } from '../items/kinds'
+import type { TypeField } from '../items/types'
 import { parseFieldFilter } from './FieldFilter'
 
-const fields: KindField[] = [
+const fields: TypeField[] = [
   { key: 'name', label: 'Name', type: 'text', position: 0, is_locked: false, version: 1 },
   { key: 'url', label: 'Website', type: 'link', position: 1, is_locked: false, version: 1 },
   { key: 'rating', label: 'Rating', type: 'number', position: 2, is_locked: false, version: 1 },

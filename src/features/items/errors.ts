@@ -17,11 +17,11 @@ export function classifyItemError(error: unknown): ItemError {
           'Someone else changed this item. The latest version was loaded, please check it and try again.',
       }
     }
-    if (error.code === 'kind_mismatch') {
+    if (error.code === 'type_mismatch') {
       return {
         kind: 'unavailable',
         message:
-          'That list holds another kind of item. Items can only move to lists of the same kind.',
+          'That list holds another type of item. Items can only move to lists of the same type.',
       }
     }
     if (error.status === 409) {

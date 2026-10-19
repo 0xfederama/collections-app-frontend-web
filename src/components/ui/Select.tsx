@@ -10,10 +10,22 @@ export interface SelectOption {
   value: string
   label: string
   disabled?: boolean
+  /**
+   * An action rather than a choice (e.g. "+ New type"): picking it calls `onValueChange` with its
+   * value, and the parent must not store it as the selection.
+   */
+  action?: boolean
 }
 
+/** A thin horizontal line between groups of options. */
+export interface SelectSeparator {
+  separator: true
+}
+
+export type SelectEntry = SelectOption | SelectSeparator
+
 export interface SelectProps extends FieldChromeProps {
-  options: SelectOption[]
+  options: SelectEntry[]
   value?: string
   onValueChange?: (value: string) => void
   placeholder?: string
@@ -74,19 +86,25 @@ export function Select({
             className="z-50 max-h-72 min-w-(--radix-select-trigger-width) bg-surface-raised overflow-hidden rounded-lg text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
           >
             <RadixSelect.Viewport className="p-1.5">
-              {options.map((option) => (
-                <RadixSelect.Item
-                  key={option.value}
-                  value={option.value}
-                  disabled={option.disabled}
-                  className="relative flex h-9 cursor-pointer select-none items-center rounded-md pr-3 pl-8 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11"
-                >
-                  <RadixSelect.ItemIndicator className="absolute left-2">
-                    <Check aria-hidden className="size-4 text-accent-text" />
-                  </RadixSelect.ItemIndicator>
-                  <RadixSelect.ItemText>{option.label}</RadixSelect.ItemText>
-                </RadixSelect.Item>
-              ))}
+              {options.map((option, index) =>
+                'separator' in option ? (
+                  <RadixSelect.Separator key={`sep-${index}`} className="my-1 h-px bg-border" />
+                ) : (
+                  <RadixSelect.Item
+                    key={option.value}
+                    value={option.value}
+                    disabled={option.disabled}
+                    className="relative flex h-9 cursor-pointer select-none items-center rounded-md pr-3 pl-8 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11"
+                  >
+                    {!option.action && (
+                      <RadixSelect.ItemIndicator className="absolute left-2">
+                        <Check aria-hidden className="size-4 text-accent-text" />
+                      </RadixSelect.ItemIndicator>
+                    )}
+                    <RadixSelect.ItemText>{option.label}</RadixSelect.ItemText>
+                  </RadixSelect.Item>
+                ),
+              )}
             </RadixSelect.Viewport>
           </RadixSelect.Content>
         </RadixSelect.Portal>

@@ -6,9 +6,9 @@ import {
   formatTvYears,
   isHiddenTmdbField,
   isStreamingField,
-  type KindDefinition,
-  type KindField,
-} from '../kinds'
+  type TypeDefinition,
+  type TypeField,
+} from '../types'
 
 /**
  * What one in-place field is: which part of the form `Draft` it edits, which error keys belong to
@@ -28,8 +28,8 @@ export interface FieldSpec {
   isSet: (item: Item) => boolean
   /** Plain text of the saved value, for the read-only display (and the draft dump). */
   text?: (item: Item) => string | null
-  /** The API kind field behind it (the editor widget follows its type). */
-  field?: KindField
+  /** The API type field behind it (the editor widget follows its type). */
+  field?: TypeField
 }
 
 type Metadata = Record<string, unknown>
@@ -89,10 +89,10 @@ export const newPrice = (): Partial<Draft> => ({
 })
 
 /**
- * The detail rows of a kind, in config order: each kind field is one row, a TV show's two year
+ * The detail rows of a type, in config order: each type field is one row, a TV show's two year
  * fields are one `Years` row, and streaming is one row (country, platforms, which ones are paid).
  */
-export function kindSpecs(definition: KindDefinition): FieldSpec[] {
+export function typeSpecs(definition: TypeDefinition): FieldSpec[] {
   const specs: FieldSpec[] = []
   for (const field of definition.fields) {
     // The IMDb code only feeds the IMDb link button (F-002): no row, and the value is never touched.

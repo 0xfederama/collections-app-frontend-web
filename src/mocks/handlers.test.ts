@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { exampleResponses } from '../generated/examples'
-import { mockKinds } from './kinds'
+import { mockTypes } from './types'
 
 const UUID = '0b9f2b6e-6c1c-4d58-9a55-3f1d3a0e2a11'
 
 const fill = (path: string) => path.replace(/\{version\}/g, '2').replace(/\{(id|batch_id)\}/g, UUID)
 
 describe('default MSW handlers', () => {
-  it('listKinds answers with the built-in kind definitions (the spec has no example body)', async () => {
-    const res = await fetch(`${location.origin}${exampleResponses.listKinds.path}`)
-    expect(res.status).toBe(exampleResponses.listKinds.status)
-    expect(await res.json()).toEqual(mockKinds)
+  it('listTypes answers with the built-in type definitions (the spec has no example body)', async () => {
+    const res = await fetch(`${location.origin}${exampleResponses.listTypes.path}`)
+    expect(res.status).toBe(exampleResponses.listTypes.status)
+    expect(await res.json()).toEqual(mockTypes)
   })
 
-  it.each(Object.entries(exampleResponses).filter(([op]) => op !== 'listKinds'))(
+  it.each(Object.entries(exampleResponses).filter(([op]) => op !== 'listTypes'))(
     '%s answers with its documented example',
     async (_op, ex) => {
       const method = ex.method.toUpperCase()

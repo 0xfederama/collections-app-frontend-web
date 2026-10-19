@@ -1,25 +1,58 @@
-import type { KindDefinition, KindField } from '../../settings/api'
+import { NO_TYPE_LABEL, type ItemType, type SelectEntry } from '../../../components/ui'
+import type { TypeDefinition, TypeField } from '../../settings/api'
 
-export type { KindDefinition, KindField }
+export type { TypeDefinition, TypeField }
 
-export const kindDefinition = (
-  definitions: readonly KindDefinition[] | undefined,
-  key: string,
-): KindDefinition | undefined => definitions?.find((kind) => kind.key === key)
+/**
+ * What a list with no type (`null`) offers: no fields, no price, no pinned fields, only the built-in
+ * sorts. The API has no definition for it, so the client keeps this empty one and every screen can
+ * treat "no type" like any other definition.
+ */
+export const NO_TYPE_DEFINITION: TypeDefinition = {
+  key: '__no_type__',
+  name: NO_TYPE_LABEL,
+  default_icon: null,
+  allows_price: false,
+  default_sort_field: null,
+  default_pinned_fields: [],
+  is_locked: true,
+  version: 0,
+  fields: [],
+}
 
-export const kindName = (definition: KindDefinition | undefined, fallback: string) =>
-  definition?.name ?? fallback.replaceAll('_', ' ')
+/** The definition of a type key; `null` (no type) gets `NO_TYPE_DEFINITION`, an unknown key `undefined`. */
+export const typeDefinition = (
+  definitions: readonly TypeDefinition[] | undefined,
+  key: ItemType,
+): TypeDefinition | undefined =>
+  key === null ? NO_TYPE_DEFINITION : definitions?.find((type) => type.key === key)
+
+/** The display name of a type key: the definition's name, a prettified key while loading, "No type" for `null`. */
+export const typeName = (definition: TypeDefinition | undefined, fallback: ItemType) =>
+  fallback === null ? NO_TYPE_LABEL : (definition?.name ?? fallback.replaceAll('_', ' '))
+
+/** Select values are strings, so "No type" (`null`) travels as this sentinel. */
+export const NO_TYPE_VALUE = '__no_type__'
+export const typeToValue = (type: ItemType): string => type ?? NO_TYPE_VALUE
+export const valueToType = (value: string): ItemType => (value === NO_TYPE_VALUE ? null : value)
+
+/** Type choices for a list: "No type" first, a separator, then the workspace types in API order (built-in, then custom). */
+export const typeOptions = (definitions: readonly TypeDefinition[] | undefined): SelectEntry[] => [
+  { value: NO_TYPE_VALUE, label: NO_TYPE_LABEL },
+  ...((definitions?.length ?? 0) > 0 ? [{ separator: true as const }] : []),
+  ...(definitions ?? []).map((definition) => ({ value: definition.key, label: definition.name })),
+]
 
 /** IMDb is rendered as an external-link tile and streaming keeps its richer built-in editor. */
-export const isHiddenTmdbField = (field: KindField) => field.key === 'imdb_url'
-export const isStreamingField = (field: KindField) =>
+export const isHiddenTmdbField = (field: TypeField) => field.key === 'imdb_url'
+export const isStreamingField = (field: TypeField) =>
   field.key === 'streaming' && field.type === 'streaming'
 
 /** Whether this definition lets its items carry a price. */
-export const hasPrice = (definition: KindDefinition | undefined): boolean =>
+export const hasPrice = (definition: TypeDefinition | undefined): boolean =>
   definition?.allows_price === true
 
-export interface KindRow {
+export interface TypeRow {
   key: string
   label: string
   text: string
@@ -65,7 +98,7 @@ const BUILTIN_TEXT_LABELS: Record<string, Record<string, string>> = {
 }
 
 /** The text of one set field with its unit (`937 cc`, `24.2 MP`, `1999`), or `null` when unset or unusable. */
-export function formatField(field: KindField, value: unknown): string | null {
+export function formatField(field: TypeField, value: unknown): string | null {
   if (value === undefined || value === null) return null
   switch (field.type) {
     case 'text':
@@ -104,12 +137,12 @@ export function formatTvYears(first: number | undefined, end: number | undefined
 }
 
 /**
- * The definition grid of the kind section: one row per set field, in config order. IMDb and
+ * The definition grid of the type section: one row per set field, in config order. IMDb and
  * streaming are not rows (the movie / TV section renders them), and a TV show's two year fields
  * are one `Years` row. Empty when nothing is set, so the section is hidden.
  */
-export function kindRows(definition: KindDefinition, metadata: Record<string, unknown>): KindRow[] {
-  const rows: KindRow[] = []
+export function typeRows(definition: TypeDefinition, metadata: Record<string, unknown>): TypeRow[] {
+  const rows: TypeRow[] = []
   if (definition.key === 'tv_show') {
     const years = formatTvYears(
       metadata.first_air_year as number | undefined,

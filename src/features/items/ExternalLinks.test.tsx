@@ -8,7 +8,7 @@ import { ExternalLinks } from './ExternalLinks'
 const matrix = exampleResponses.getItem.body as Item
 const withSite = (url: string | null): Item => ({
   ...matrix,
-  kind: 'generic',
+  type: null,
   metadata: {},
   website: url,
 })
@@ -39,7 +39,7 @@ describe('AT-13 external links component', () => {
   })
 
   it('a TV show shows Google and IMDb only', () => {
-    render(<ExternalLinks item={{ ...matrix, kind: 'tv_show', metadata: {} }} />)
+    render(<ExternalLinks item={{ ...matrix, type: 'tv_show', metadata: {} }} />)
     expect(controls().map((c) => c.getAttribute('href')?.split('/')[2])).toEqual([
       'www.google.com',
       'www.imdb.com',

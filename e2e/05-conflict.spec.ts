@@ -8,7 +8,7 @@ test.describe('AT-09 concurrent edit', () => {
     baseURL,
     request,
   }) => {
-    const list = await createList(request, uniqueName('Shared'), 'generic')
+    const list = await createList(request, uniqueName('Shared'), null)
     const item = await createItem(request, list.id, uniqueName('Same item'))
     const url = itemUrl(list.id, item.id)
 

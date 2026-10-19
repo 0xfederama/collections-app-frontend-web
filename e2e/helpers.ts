@@ -6,7 +6,7 @@ export const uniqueId = () => `${Date.now().toString(36)}${Math.random().toStrin
 /** A readable unique name, e.g. `Movies k3j2x9ab`. */
 export const uniqueName = (label: string) => `${label} ${uniqueId()}`
 
-export type ItemKind = 'generic' | 'movie' | 'tv_show' | 'motorcycle' | 'car' | 'camera'
+export type ItemType = 'movie' | 'tv_show' | 'motorcycle' | 'car' | 'camera' | null
 
 interface Created {
   id: string
@@ -29,9 +29,9 @@ export const createFolder = (
 export const createList = (
   request: APIRequestContext,
   name: string,
-  kind: ItemKind = 'movie',
+  type: ItemType = 'movie',
   folderId: string | null = null,
-) => post(request, '/api/v1/lists', { name, kind, folder_id: folderId })
+) => post(request, '/api/v1/lists', { name, type, folder_id: folderId })
 
 export const createItem = (
   request: APIRequestContext,
@@ -61,7 +61,7 @@ export async function createViaSidebar(
   page: Page,
   what: 'folder' | 'list',
   name: string,
-  kind?: string,
+  type?: string,
   /** Create list only: the folder to put it in, by its exact name in the dialog's picker. */
   folder?: string,
 ) {
@@ -86,9 +86,9 @@ export async function createViaSidebar(
     await dialog.getByRole('combobox', { name: 'Folder' }).click()
     await page.getByRole('option', { name: folder, exact: true }).click()
   }
-  if (kind) {
-    await dialog.getByRole('combobox', { name: 'Kind' }).click()
-    await page.getByRole('option', { name: kind, exact: true }).click()
+  if (type) {
+    await dialog.getByRole('combobox', { name: 'Type' }).click()
+    await page.getByRole('option', { name: type, exact: true }).click()
   }
   await dialog.getByRole('button', { name: 'Create' }).click()
   await expect(dialog).toBeHidden()

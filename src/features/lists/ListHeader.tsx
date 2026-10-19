@@ -19,7 +19,7 @@ import {
 } from '../../components/ui/icons'
 import type { List as TreeList } from '../tree/api'
 import { ListActionsMenu } from '../tree/ListActionsMenu'
-import { hasPrice, type KindDefinition } from '../items/kinds'
+import { hasPrice, type TypeDefinition } from '../items/types'
 import type { DisplayMode, List, PinnedFields, SortMode } from './api'
 import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
@@ -39,8 +39,8 @@ const baseSortOptions: SelectOption[] = [
   { value: 'updated', label: 'Recently updated' },
 ]
 
-/** Sort choices supported for this kind by the API. */
-export function sortOptionsFor(definition: KindDefinition): SelectOption[] {
+/** Sort choices supported for this type by the API. */
+export function sortOptionsFor(definition: TypeDefinition): SelectOption[] {
   return [
     ...baseSortOptions,
     ...(hasPrice(definition) ? [{ value: 'price', label: 'Price' }] : []),
@@ -51,7 +51,7 @@ export function sortOptionsFor(definition: KindDefinition): SelectOption[] {
 export interface ListHeaderProps {
   /** The list as the sidebar tree has it: its name shows before the list loads, and feeds the actions menu. */
   treeList: TreeList
-  definition: KindDefinition
+  definition: TypeDefinition
   list: List | undefined
   /** The top-right "New item": hidden on an empty list, where the centered call to action is the only one. */
   showAddItem: boolean
@@ -87,7 +87,7 @@ export function ListHeader(props: ListHeaderProps) {
             <ListIconMark
               icon={props.treeList.icon ?? props.definition.default_icon}
               iconColor={props.treeList.icon_color}
-              kind={props.treeList.kind}
+              type={props.treeList.type}
               className="mr-3 inline-grid size-9 align-middle"
               iconClassName="size-5"
             />
@@ -179,13 +179,13 @@ export function ListHeader(props: ListHeaderProps) {
           >
             <TextField
               label={
-                props.treeList.kind === 'movie'
+                props.treeList.type === 'movie'
                   ? 'Filter items by title or director'
                   : 'Filter items by title'
               }
               type="search"
               placeholder={
-                props.treeList.kind === 'movie' ? 'Filter by title or director' : 'Filter by title'
+                props.treeList.type === 'movie' ? 'Filter by title or director' : 'Filter by title'
               }
               value={props.filter}
               onChange={(event) => props.onFilter(event.target.value)}

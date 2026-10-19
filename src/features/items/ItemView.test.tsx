@@ -7,7 +7,7 @@ import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { mockViewport, renderAt } from '../../test-utils'
 import type { Item } from './api'
-import type { KindDefinition } from '../settings/api'
+import type { TypeDefinition } from '../settings/api'
 import { createContentBackend } from './content/contentTestBackend'
 
 const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
@@ -19,7 +19,7 @@ const settingsUrl = `${location.origin}/api/v1/settings`
 
 const matrix = exampleResponses.getItem.body as Item
 
-const customKind: KindDefinition = {
+const customType: TypeDefinition = {
   key: 'board_game',
   name: 'Board game',
   default_icon: 'i:puzzle',
@@ -88,14 +88,14 @@ describe('AT-13 item view: the example movie', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('shows the title and Google, Letterboxd, IMDb for a movie, with a kind label but no status or summary (F007-W7, W8)', async () => {
+  it('shows the title and Google, Letterboxd, IMDb for a movie, with a type label but no status or summary (F007-W7, W8)', async () => {
     await renderItem()
     expect(screen.queryByRole('region', { name: 'TMDB actions' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Wrong match?' })).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /automatic TMDB updates/i }),
     ).not.toBeInTheDocument()
-    // F-002: a quiet kind label above the title.
+    // F-002: a quiet type label above the title.
     expect(screen.getByText('Movie')).toBeInTheDocument()
     expect(screen.queryByText('Watched')).not.toBeInTheDocument()
 
@@ -153,7 +153,7 @@ describe('AT-13 item view: the example movie', () => {
   })
 
   it('F009-W1 a saved website stays visible by default', async () => {
-    await renderOverride({ kind: 'generic', website: 'https://www.thematrix.com/' })
+    await renderOverride({ type: null, website: 'https://www.thematrix.com/' })
     await screen.findByRole('heading', { name: 'Description' })
     expect(screen.getByText('https://www.thematrix.com/')).toBeVisible()
     expect(screen.getByRole('button', { name: 'Edit website' })).toBeVisible()
@@ -276,29 +276,29 @@ describe('AT-13 item view: the example movie', () => {
   })
 })
 
-describe('F014-W3 custom kind item detail', () => {
-  it('uses the API kind name and typed fields, and offers an empty custom field', async () => {
+describe('F014-W3 custom type item detail', () => {
+  it('uses the API type name and typed fields, and offers an empty custom field', async () => {
     const tree = exampleResponses.getTree.body as {
       folders: unknown[]
       lists: Array<Record<string, unknown>>
     }
     const list = exampleResponses.getList.body as Record<string, unknown>
     server.use(
-      http.get(`${location.origin}/api/v1/kinds`, () => HttpResponse.json([customKind])),
+      http.get(`${location.origin}/api/v1/types`, () => HttpResponse.json([customType])),
       http.get(`${location.origin}/api/v1/tree`, () =>
         HttpResponse.json({
           ...tree,
           lists: tree.lists.map((entry) =>
-            entry.id === WATCHLIST ? { ...entry, kind: customKind.key } : entry,
+            entry.id === WATCHLIST ? { ...entry, type: customType.key } : entry,
           ),
         }),
       ),
       http.get(`${location.origin}/api/v1/lists/${WATCHLIST}`, () =>
-        HttpResponse.json({ ...list, id: WATCHLIST, kind: customKind.key }),
+        HttpResponse.json({ ...list, id: WATCHLIST, type: customType.key }),
       ),
     )
     overrideItem({
-      kind: customKind.key,
+      type: customType.key,
       metadata: { rating: 8.5, played_on: '2026-10-19' },
     })
     await renderItem()
@@ -314,11 +314,11 @@ describe('F014-W3 custom kind item detail', () => {
   })
 })
 
-describe('item view: kinds', () => {
+describe('item view: types', () => {
   it('tv show: ongoing run reads 2019–present', async () => {
     await renderOverride({
       title: 'Severance',
-      kind: 'tv_show',
+      type: 'tv_show',
       metadata: { first_air_year: 2019, seasons: 2 },
     })
     expect(await screen.findByText('2019–present')).toBeInTheDocument()
@@ -334,23 +334,23 @@ describe('item view: kinds', () => {
   it('tv show: finished run reads 2019–2023', async () => {
     await renderOverride({
       title: 'Severance',
-      kind: 'tv_show',
+      type: 'tv_show',
       metadata: { first_air_year: 2019, end_year: 2023 },
     })
     expect(await screen.findByText('2019–2023')).toBeInTheDocument()
   })
 
-  it('F008-W14 a generic item offers only Website, never Price', async () => {
+  it('F008-W14 an item with no type offers only Website, never Price', async () => {
     const user = userEvent.setup()
-    await renderOverride({ title: 'Notebook', kind: 'generic', metadata: {}, price: null })
+    await renderOverride({ title: 'Notebook', type: null, metadata: {}, price: null })
     await screen.findByRole('heading', { name: 'Description' })
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     expect(await screen.findByRole('menuitem', { name: 'Website' })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Price' })).not.toBeInTheDocument()
   })
 
-  it('generic item with nothing set shows no rows, only "Add field"', async () => {
-    await renderOverride({ title: 'Notebook', kind: 'generic', metadata: {} })
+  it('an item with no type and nothing set shows no rows, only "Add field"', async () => {
+    await renderOverride({ title: 'Notebook', type: null, metadata: {} })
     await screen.findByRole('heading', { name: 'Description' })
     expect(screen.queryByRole('term')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add field' })).toBeInTheDocument()
@@ -359,7 +359,7 @@ describe('item view: kinds', () => {
   it('motorcycle shows its units', async () => {
     await renderOverride({
       title: 'Ducati Monster',
-      kind: 'motorcycle',
+      type: 'motorcycle',
       metadata: { displacement_cc: 937, power_hp: 111, license_class: 'A' },
     })
     expect(await screen.findByText('937 cc')).toBeInTheDocument()
@@ -369,7 +369,7 @@ describe('item view: kinds', () => {
   it('car shows units and enum labels', async () => {
     await renderOverride({
       title: 'Golf',
-      kind: 'car',
+      type: 'car',
       metadata: { power_hp: 111, fuel_type: 'plugin_hybrid', model_year: 2021 },
     })
     expect(await screen.findByText('111 hp')).toBeInTheDocument()
@@ -380,22 +380,22 @@ describe('item view: kinds', () => {
   it('camera shows megapixels', async () => {
     await renderOverride({
       title: 'Alpha',
-      kind: 'camera',
+      type: 'camera',
       metadata: { megapixels: 24.2, sensor_format: 'full_frame' },
     })
     expect(await screen.findByText('24.2 MP')).toBeInTheDocument()
     expect(screen.getByText('Full frame')).toBeInTheDocument()
   })
 
-  it('a generic item shows Google, Reddit and Website; an empty website offers "Add website", which opens the editor', async () => {
-    await renderOverride({ kind: 'generic', metadata: {}, website: null })
+  it('an item with no type shows Google, Reddit and Website; an empty website offers "Add website", which opens the editor', async () => {
+    await renderOverride({ type: null, metadata: {}, website: null })
     expect(links().getByRole('link', { name: /^Reddit/ })).toBeInTheDocument()
     await userEvent.click(links().getByRole('button', { name: 'Add website' }))
     expect(await screen.findByRole('textbox', { name: /Website/ })).toBeInTheDocument()
   })
 
   it('a good website is a link', async () => {
-    await renderOverride({ kind: 'generic', metadata: {}, website: 'https://www.thematrix.com/' })
+    await renderOverride({ type: null, metadata: {}, website: 'https://www.thematrix.com/' })
     expect(links().getByRole('link', { name: /^Website/ })).toHaveAttribute(
       'href',
       'https://www.thematrix.com/',
@@ -405,7 +405,7 @@ describe('item view: kinds', () => {
   it('F007-W8 a single price reads € 1,200, a range € 1,000–1,400, no price shows nothing', async () => {
     // Price exists on motorcycle, car and camera only (D-085), and populated prices show by default.
     await renderOverride({
-      kind: 'car',
+      type: 'car',
       metadata: {},
       price: { min: '1200.00', max: '1200.00', currency: 'EUR' },
     })
@@ -414,7 +414,7 @@ describe('item view: kinds', () => {
 
   it('F007-W8 a range shows both bounds, each with the currency', async () => {
     await renderOverride({
-      kind: 'car',
+      type: 'car',
       metadata: {},
       price: { min: '1000.00', max: '1400.00', currency: 'EUR' },
     })
@@ -423,7 +423,7 @@ describe('item view: kinds', () => {
 
   it('F009-W2 a movie offers no Price field', async () => {
     const user = userEvent.setup()
-    await renderOverride({ title: 'Heat', kind: 'movie', metadata: {} })
+    await renderOverride({ title: 'Heat', type: 'movie', metadata: {} })
     await screen.findByRole('heading', { name: 'Description' })
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     expect(await screen.findByRole('menuitem', { name: 'Website' })).toBeInTheDocument()
@@ -432,7 +432,7 @@ describe('item view: kinds', () => {
 
   it('F009-W2 a car offers Price', async () => {
     const user = userEvent.setup()
-    await renderOverride({ title: 'Miata', kind: 'car', metadata: {} })
+    await renderOverride({ title: 'Miata', type: 'car', metadata: {} })
     await screen.findByRole('heading', { name: 'Description' })
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     expect(await screen.findByRole('menuitem', { name: 'Price' })).toBeInTheDocument()

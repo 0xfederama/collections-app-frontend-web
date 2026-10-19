@@ -67,8 +67,8 @@ test.describe('AT-22 unsaved changes guard', () => {
     request,
   }) => {
     const otherName = uniqueName('Elsewhere target')
-    const target = await createList(request, otherName, 'generic')
-    const list = await createList(request, uniqueName('Editing'), 'generic')
+    const target = await createList(request, otherName, null)
+    const list = await createList(request, uniqueName('Editing'), null)
     const item = await createItem(request, list.id, uniqueName('Draft'))
 
     await page.goto(itemUrl(list.id, item.id))

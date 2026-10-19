@@ -1,5 +1,5 @@
 import { Button, Select, TextField, type SelectOption } from '../../components/ui'
-import type { KindField } from '../items/kinds'
+import type { TypeField } from '../items/types'
 
 export interface FieldFilterValue {
   field: string
@@ -8,11 +8,11 @@ export interface FieldFilterValue {
   max: string
 }
 
-const filterable = (field: KindField) => field.type !== 'streaming'
+const filterable = (field: TypeField) => field.type !== 'streaming'
 
 export function parseFieldFilter(
   params: URLSearchParams,
-  fields: readonly KindField[],
+  fields: readonly TypeField[],
 ): FieldFilterValue | null {
   const fieldKey = params.get('filter_field')
   if (!fieldKey) return null
@@ -51,7 +51,7 @@ export function parseFieldFilter(
 }
 
 export interface FieldFilterProps {
-  fields: readonly KindField[]
+  fields: readonly TypeField[]
   value: FieldFilterValue | null
   onChange: (value: FieldFilterValue | null) => void
 }

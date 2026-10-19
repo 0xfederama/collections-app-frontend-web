@@ -3,11 +3,15 @@ import { describe, expect, it } from 'vitest'
 import { ItemThumb } from './ItemThumb'
 
 describe('F008-W13 item initials', () => {
-  it('draws the same letter tile for every kind, with no kind symbol', () => {
+  it('draws the same letter tile for every type, with no type symbol', () => {
     const { container } = render(
       <>
-        {(['movie', 'car', 'generic'] as const).map((kind) => (
-          <ItemThumb key={kind} item={{ title: 'alien', kind, image: null }} className="size-9" />
+        {(['movie', 'car', null] as const).map((type) => (
+          <ItemThumb
+            key={type ?? 'none'}
+            item={{ title: 'alien', type, image: null }}
+            className="size-9"
+          />
         ))}
       </>,
     )

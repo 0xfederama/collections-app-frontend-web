@@ -9,7 +9,7 @@ import { devSearchHandlers } from './devSearch'
 import { devSettingsHandlers } from './devSettings'
 import { devTrashHandlers } from './devTrash'
 import { handlers } from './handlers'
-import { kindHandlers } from './kinds'
+import { typeHandlers } from './types'
 
 /** Dev-only worker, started by main.tsx when VITE_API_MOCKS=1. `devHandlers` override the spec examples. */
 export const worker = setupWorker(
@@ -20,7 +20,7 @@ export const worker = setupWorker(
   ...devRecentHandlers,
   ...devSettingsHandlers,
   ...devTrashHandlers,
-  ...kindHandlers,
+  ...typeHandlers,
   ...devItemHandlers,
   ...devHandlers,
   ...handlers,

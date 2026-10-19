@@ -70,6 +70,7 @@ export {
   PawPrint,
   Pencil,
   Plane,
+  Lock,
   Plus,
   Puzzle,
   Rocket,
@@ -102,10 +103,10 @@ export {
 } from 'lucide-react'
 import { Camera, Car, Film, Motorbike, Tag, Tv, type LucideIcon } from 'lucide-react'
 
-export type ItemKind = string
+/** The type of a list or item: a workspace type key, or `null` for "no type". */
+export type ItemType = string | null
 
-export const kindIcons: Record<string, LucideIcon> = {
-  generic: Tag,
+export const typeIcons: Record<string, LucideIcon> = {
   movie: Film,
   tv_show: Tv,
   motorcycle: Motorbike,
@@ -113,8 +114,14 @@ export const kindIcons: Record<string, LucideIcon> = {
   camera: Camera,
 }
 
-export const kindLabels: Record<string, string> = {
-  generic: 'Item',
+/** The icon of a type; `null` (no type) and unknown custom types get the tag. */
+export const typeIconFor = (type: ItemType): LucideIcon =>
+  (type === null ? undefined : typeIcons[type]) ?? Tag
+
+/** What a list with no type (`null`) is called wherever it is shown. */
+export const NO_TYPE_LABEL = 'No type'
+
+export const typeLabels: Record<string, string> = {
   movie: 'Movie',
   tv_show: 'TV show',
   motorcycle: 'Motorcycle',

@@ -3,18 +3,18 @@ import { useQuery } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { api, unwrap } from '../../lib/api'
 import { useSettings } from '../settings/api'
-import type { ItemKind } from './api'
+import type { ItemType } from './api'
 
 type Suggestion = components['schemas']['TmdbSuggestion']
-type TmdbKind = components['schemas']['TmdbKind']
+type TmdbType = components['schemas']['TmdbType']
 export type TmdbTitleSelection = Pick<Suggestion, 'title' | 'tmdb_id'>
 
-const toTmdbKind = (kind: ItemKind): TmdbKind | undefined =>
-  kind === 'movie' || kind === 'tv_show' ? kind : undefined
+const toTmdbType = (type: ItemType): TmdbType | undefined =>
+  type === 'movie' || type === 'tv_show' ? type : undefined
 
 /** Movie and TV title input with localized TMDB suggestions. */
 export function TmdbTitleField({
-  kind,
+  type,
   title,
   onTitleChange,
   inputRef,
@@ -26,7 +26,7 @@ export function TmdbTitleField({
   placeholder,
   autoFocus,
 }: {
-  kind: ItemKind
+  type: ItemType
   title: string
   onTitleChange: (title: string) => void
   inputRef?: Ref<HTMLInputElement>
@@ -38,7 +38,7 @@ export function TmdbTitleField({
   placeholder?: string
   autoFocus?: boolean
 }) {
-  const tmdbKind = toTmdbKind(kind)
+  const tmdbType = toTmdbType(type)
   const settings = useSettings()
   const available = settings.data?.lookup_available === true
   const [query, setQuery] = useState('')
@@ -52,12 +52,12 @@ export function TmdbTitleField({
   }, [title])
 
   const suggestions = useQuery({
-    queryKey: ['tmdb', 'suggestions', tmdbKind, query],
-    enabled: !!tmdbKind && available && query.length >= 2,
+    queryKey: ['tmdb', 'suggestions', tmdbType, query],
+    enabled: !!tmdbType && available && query.length >= 2,
     queryFn: ({ signal }) =>
       unwrap(
         api.GET('/api/v1/tmdb/suggestions', {
-          params: { query: { kind: tmdbKind!, q: query } },
+          params: { query: { type: tmdbType!, q: query } },
           signal,
         }),
       ),
@@ -104,14 +104,14 @@ export function TmdbTitleField({
       <input
         ref={inputRef}
         type="text"
-        role={available && tmdbKind ? 'combobox' : undefined}
+        role={available && tmdbType ? 'combobox' : undefined}
         aria-label="Title"
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${listboxId}-error` : undefined}
-        aria-autocomplete={available && tmdbKind ? 'list' : undefined}
+        aria-autocomplete={available && tmdbType ? 'list' : undefined}
         aria-controls={showList ? listboxId : undefined}
-        aria-haspopup={available && tmdbKind ? 'listbox' : undefined}
-        aria-expanded={available && tmdbKind ? showList : undefined}
+        aria-haspopup={available && tmdbType ? 'listbox' : undefined}
+        aria-expanded={available && tmdbType ? showList : undefined}
         aria-activedescendant={showList ? `${listboxId}-${active}` : undefined}
         autoFocus={autoFocus}
         autoComplete="off"
@@ -173,7 +173,7 @@ export function TmdbTitleField({
   )
 }
 
-export function createLookupSelection(kind: ItemKind, available: boolean, tmdbId?: number) {
-  const lookup = (kind === 'movie' || kind === 'tv_show') && available
+export function createLookupSelection(type: ItemType, available: boolean, tmdbId?: number) {
+  const lookup = (type === 'movie' || type === 'tv_show') && available
   return { lookup, ...(lookup && tmdbId !== undefined ? { tmdb_id: tmdbId } : {}) }
 }

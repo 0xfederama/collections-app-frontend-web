@@ -111,11 +111,11 @@ export function QuickAddDialog({
     setBusy(true)
     let created: Item
     try {
-      const listKind = lists.find((list) => list.id === listId)?.kind ?? 'generic'
+      const listType = lists.find((list) => list.id === listId)?.type ?? null
       created = await create.mutateAsync({
         title: trimmed,
         ...createLookupSelection(
-          listKind,
+          listType,
           settings.data?.lookup_available === true,
           selection?.tmdb_id ?? tmdbId,
         ),
@@ -235,7 +235,7 @@ export function QuickAddDialog({
       >
         <div className="flex flex-col gap-1 pr-10">
           <TmdbTitleField
-            kind={lists.find((list) => list.id === listId)?.kind ?? 'generic'}
+            type={lists.find((list) => list.id === listId)?.type ?? null}
             title={title}
             onTitleChange={(value) => {
               setTitle(value)

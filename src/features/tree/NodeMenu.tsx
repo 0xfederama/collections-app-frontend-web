@@ -58,7 +58,7 @@ export function NodeMenu({
   actions: TreeActions
   name: string
   className?: string
-  /** Entries before the standard ones, e.g. a list's Kind (list header only). */
+  /** Entries before the standard ones, e.g. a list's Type (list header only). */
   leading?: MenuItem[]
 }) {
   return (

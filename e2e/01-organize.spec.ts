@@ -24,7 +24,7 @@ test.describe('F010-W1 the folder path of a new list', () => {
     await expect(row(page, folderName)).toBeVisible()
 
     const first = uniqueName('Vinyl')
-    // F011-W6: the folder is a dropdown beside the Kind one, opening on the top level.
+    // F011-W6: the folder is a dropdown beside the Type one, opening on the top level.
     const newList = () => page.getByRole('dialog', { name: 'New list' })
     const folderSelect = () => newList().getByRole('combobox', { name: 'Folder' })
     await page.getByRole('button', { name: 'New', exact: true }).click()

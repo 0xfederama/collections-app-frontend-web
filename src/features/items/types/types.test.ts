@@ -1,13 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import type { KindDefinition, KindField } from './index'
-import { formatField, kindDefinition, kindRows } from './index'
+import type { TypeDefinition, TypeField } from './index'
+import {
+  formatField,
+  NO_TYPE_DEFINITION,
+  NO_TYPE_VALUE,
+  typeDefinition,
+  typeName,
+  typeOptions,
+  typeRows,
+  valueToType,
+} from './index'
 
 const field = (
   key: string,
   label: string,
-  type: KindField['type'],
+  type: TypeField['type'],
   position: number,
-): KindField => ({
+): TypeField => ({
   key,
   label,
   type,
@@ -16,7 +25,7 @@ const field = (
   version: 1,
 })
 
-const boardGame: KindDefinition = {
+const boardGame: TypeDefinition = {
   key: 'board_game',
   name: 'Board game',
   default_icon: null,
@@ -33,11 +42,11 @@ const boardGame: KindDefinition = {
   ],
 }
 
-describe('F014-W3 API-driven kind fields', () => {
-  it('finds custom kinds and renders typed values in API field order', () => {
-    expect(kindDefinition([boardGame], 'board_game')).toBe(boardGame)
+describe('F014-W3 API-driven type fields', () => {
+  it('finds custom types and renders typed values in API field order', () => {
+    expect(typeDefinition([boardGame], 'board_game')).toBe(boardGame)
     expect(
-      kindRows(boardGame, {
+      typeRows(boardGame, {
         rating: 8.5,
         played_on: '2026-10-19',
         recommended: false,
@@ -58,7 +67,7 @@ describe('F014-W3 API-driven kind fields', () => {
   })
 
   it('keeps built-in IMDb and streaming values out of the ordinary detail rows', () => {
-    const movie: KindDefinition = {
+    const movie: TypeDefinition = {
       ...boardGame,
       key: 'movie',
       name: 'Movie',
@@ -69,11 +78,31 @@ describe('F014-W3 API-driven kind fields', () => {
       ],
     }
     expect(
-      kindRows(movie, {
+      typeRows(movie, {
         director: 'Lana Wachowski',
         imdb_url: 'https://www.imdb.com/title/tt0133093/',
         streaming: { country: 'IT' },
       }),
     ).toEqual([{ key: 'director', label: 'Director', text: 'Lana Wachowski' }])
+  })
+})
+
+describe('no type (null)', () => {
+  it('has an empty definition: no fields, no price, no pins', () => {
+    expect(typeDefinition([boardGame], null)).toBe(NO_TYPE_DEFINITION)
+    expect(NO_TYPE_DEFINITION.fields).toEqual([])
+    expect(NO_TYPE_DEFINITION.allows_price).toBe(false)
+    expect(typeDefinition([boardGame], 'unknown')).toBeUndefined()
+  })
+
+  it('is named "No type" and is the first option, mapped back to null', () => {
+    expect(typeName(undefined, null)).toBe('No type')
+    expect(typeOptions([boardGame])).toEqual([
+      { value: NO_TYPE_VALUE, label: 'No type' },
+      { separator: true },
+      { value: 'board_game', label: 'Board game' },
+    ])
+    expect(valueToType(NO_TYPE_VALUE)).toBeNull()
+    expect(valueToType('board_game')).toBe('board_game')
   })
 })

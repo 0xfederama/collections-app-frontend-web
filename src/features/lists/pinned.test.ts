@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { KindDefinition } from '../items/kinds'
+import type { TypeDefinition } from '../items/types'
 import type { ItemSummary } from './api'
 import {
   defaultPinned,
@@ -9,7 +9,7 @@ import {
   resolvePinned,
 } from './pinned'
 
-const definition: KindDefinition = {
+const definition: TypeDefinition = {
   key: 'board_game',
   name: 'Board game',
   default_icon: null,
@@ -43,7 +43,7 @@ const item: ItemSummary = {
   id: 'i1',
   list_id: 'l1',
   title: 'Brass',
-  kind: definition.key,
+  type: definition.key,
   image: null,
   price: null,
   website: null,
