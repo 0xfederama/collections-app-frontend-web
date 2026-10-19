@@ -41,7 +41,7 @@ test.describe('F018-W3 Wishlist: a title is enough, price is the only type field
     await page.reload()
     const item = itemPanel(page)
     await item.getByRole('button', { name: 'Edit price' }).click()
-    await expect(item.getByRole('textbox', { name: 'Price', exact: true })).toHaveValue('150')
+    await expect(item.getByRole('textbox', { name: 'Price', exact: true })).toHaveValue('150.00')
     await item.getByRole('button', { name: 'Add range' }).click()
     await item.getByRole('textbox', { name: 'Maximum price' }).fill('200')
     await item.getByRole('button', { name: 'Save price' }).click()
@@ -49,8 +49,12 @@ test.describe('F018-W3 Wishlist: a title is enough, price is the only type field
 
     await page.reload()
     await itemPanel(page).getByRole('button', { name: 'Edit price' }).click()
-    await expect(itemPanel(page).getByRole('textbox', { name: 'Minimum price' })).toHaveValue('150')
-    await expect(itemPanel(page).getByRole('textbox', { name: 'Maximum price' })).toHaveValue('200')
+    await expect(itemPanel(page).getByRole('textbox', { name: 'Minimum price' })).toHaveValue(
+      '150.00',
+    )
+    await expect(itemPanel(page).getByRole('textbox', { name: 'Maximum price' })).toHaveValue(
+      '200.00',
+    )
   })
 })
 
