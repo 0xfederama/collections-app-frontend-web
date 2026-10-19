@@ -1,3 +1,4 @@
+import { BookOpen } from '../../components/ui/icons'
 import tmdbLogo from '../../assets/tmdb-logo.svg'
 
 const externalLink =
@@ -12,18 +13,27 @@ export function AboutSection() {
         </a>
         <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
       </div>
-      <p>
-        Book details and covers come from{' '}
-        <a
-          className={externalLink}
-          href="https://openlibrary.org/"
-          target="_blank"
-          rel="noopener noreferrer"
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="grid size-10 shrink-0 place-items-center rounded-md bg-fill text-text"
         >
-          Open Library
-        </a>
-        , an open project of the Internet Archive.
-      </p>
+          <BookOpen className="size-5" />
+        </span>
+        <p>
+          Book details and covers come from{' '}
+          <a
+            className={`${externalLink} font-semibold`}
+            href="https://openlibrary.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open Library
+          </a>
+          , an open project of the Internet Archive. Thank you to everyone who builds and keeps it
+          free.
+        </p>
+      </div>
       <p>
         Streaming availability data is provided by{' '}
         <a

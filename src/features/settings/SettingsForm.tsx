@@ -452,7 +452,7 @@ export function SettingsForm({
         </h2>
         <StoreChoices
           label="Where to get it"
-          hint="New books start with these stores, in the order you pick them. Each book can change its own list."
+          hint="New books start with these stores, in the order you pick them. Each store is a link that searches for the book there, built from its ISBN or title. Each book can change its own list."
           value={parseStoreKeys(draft.preferred_stores)}
           onChange={(next) => set('preferred_stores', joinStoreKeys(next))}
           providers={providers.data}

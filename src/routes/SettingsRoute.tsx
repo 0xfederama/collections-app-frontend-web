@@ -71,7 +71,7 @@ export function SettingsRoute() {
             type="button"
             aria-pressed={pane === name}
             onClick={() => setPane(name)}
-            className={`shrink-0 rounded-md px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring ${pane === name ? 'bg-accent text-on-accent' : 'text-text-muted hover:bg-fill hover:text-text'}`}
+            className={`shrink-0 rounded-md px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring ${pane === name ? 'bg-accent text-accent-fg' : 'text-text-muted hover:bg-fill hover:text-text'}`}
           >
             {name}
           </button>
