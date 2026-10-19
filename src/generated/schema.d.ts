@@ -155,9 +155,30 @@ export interface paths {
          * Update workspace settings
          * @description Requires `If-Match` (`"s-N"`). Lowering `markdown_history_limit` prunes on the next save per item, not immediately.
          *     `trash_retention_days` (F012-B3): absent = unchanged, `null` = off, otherwise 1 to 365. Setting it does not purge at once; the daily job does.
-         *     `metadata_language` controls the locale used for TMDB suggestions and imported metadata.
+         *     `metadata_language` controls the locale used for lookup suggestions and imported metadata (TMDB; Open Library takes its language part as a preference).
+         *     `preferred_stores` (F-016) is the ordered list of stores offered on books: unique keys from `GET /api/v1/store-providers`, at most six.
          */
         patch: operations["updateSettings"];
+        trace?: never;
+    };
+    "/api/v1/store-providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the stores a `stores` field can name
+         * @description The fixed list of stores (F-016, D-096), in display order. It does not depend on the workspace.
+         */
+        get: operations["listStoreProviders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/tmdb/suggestions": {
@@ -174,6 +195,30 @@ export interface paths {
          *     Results retain TMDB's ranking. The returned poster URL is for suggestion display only and is not an item image.
          */
         get: operations["listTmdbSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/books/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suggest book matches
+         * @description Searches Open Library using the workspace's `metadata_language` as a language preference. A query that is a bare ISBN
+         *     (10 or 13 digits, hyphens allowed) searches by ISBN. When book lookup is turned off on the server (`book_lookup_available`
+         *     is `false` in the settings), returns `{ "available": false, "results": [] }`; this endpoint does not fail merely because
+         *     lookup is disabled. Results retain Open Library's ranking. `source_id` is the Open Library work id used by item create and
+         *     `POST /items/{id}/lookup`. `pages` is a median over editions, and `cover_url` is for suggestion display only, not an item image.
+         */
+        get: operations["searchBookSuggestions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -433,8 +478,10 @@ export interface paths {
          *     content are set through their own endpoints after creation. `metadata` is validated against the list's type (see the `*Metadata` schemas).
          *     `price` is either `{amount, currency}` (single price) or `{min, max, currency}` (range). A `price` on an item of a type without a price
          *     (`movie` or `tv_show`, or a list with no type; F009-B1) is rejected with `422 validation_failed` on `price` (`null` is fine).
-         *     For movie and TV lists, `lookup` defaults to `true`: the server searches by title and applies the first result. Send `tmdb_id` to
-         *     select a known suggestion. Send `lookup: false` to create the item exactly as supplied. Lookup fields are ignored on other types.
+         *     For movie, TV and book lists, `lookup` defaults to `true`: the server searches by title and applies the first result. Send `tmdb_id`
+         *     (movie and TV) or `source_id` (book) to select a known suggestion; the one that does not fit the list's type is ignored. Send
+         *     `lookup: false` to create the item exactly as supplied. Lookup fields are ignored on other types. On a book, a matched work also
+         *     proposes the Open Library link in `stores` (plus the workspace's preferred stores) when the request leaves `stores` unset.
          *     If automatic lookup finds no match, the item is still created unchanged. If lookup was explicitly requested but unavailable, the
          *     request returns `503 lookup_disabled` or `503 upstream_unavailable` and no item is created.
          */
@@ -515,18 +562,21 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Fill or replace an item's TMDB metadata
-         * @description Requires `If-Match` (`"i-N"`) and is available only for movie and TV items. `fill` preserves every non-empty user value and
-         *     fills empty fields; `rematch` searches from the current title unless `tmdb_id` selects a suggestion, then replaces the title and
-         *     all fields fetched from TMDB; `refresh` uses the stored `metadata.tmdb_id` unless `tmdb_id` is supplied and likewise replaces fetched
-         *     fields. All modes preserve an existing item image. A poster is stored through the normal image pipeline only when the item has no image.
-         *     The default mode is `fill`. When a search has no result, the operation returns the unchanged item and its current ETag.
-         *     An explicit lookup while the integration is disabled or TMDB cannot be reached returns `503 lookup_disabled` or
+         * Fill or replace an item's looked-up metadata
+         * @description Requires `If-Match` (`"i-N"`) and is available only for movie, TV and book items (TMDB for movie and TV, Open Library for books).
+         *     `fill` preserves every non-empty user value and fills empty fields; `rematch` searches from the current title unless `tmdb_id`
+         *     (movie and TV) or `source_id` (book) selects a suggestion, then replaces the title and all fields fetched from the provider;
+         *     `refresh` uses the stored `metadata.tmdb_id` or `metadata.openlibrary_id` unless the id is supplied and likewise replaces fetched
+         *     fields. All modes preserve an existing item image. A poster or cover is stored through the normal image pipeline only when the item
+         *     has no image. On a book, `fill` also adds the Open Library link to `stores` when `stores` is empty; no mode ever removes or replaces
+         *     the user's store choices. The default mode is `fill`. When a search has no result, the operation returns the unchanged item and its
+         *     current ETag. An explicit lookup while the integration is disabled or the provider cannot be reached returns `503 lookup_disabled` or
          *     `503 upstream_unavailable` respectively.
-         *     Imported fields and lookup-owned posters retain server-side provenance. Maintenance refreshes owned values after five calendar months;
-         *     at six months, a value that still cannot be refreshed is removed only when it still equals its imported snapshot. User edits and
-         *     user-supplied images are preserved. Poster age is tracked separately from metadata age. An item's `lookup_disabled` flag stops automatic
-         *     refresh and lets its owned values expire under the same rules.
+         *     Imported fields and lookup-owned posters retain server-side provenance, for every provider, so that fill, rematch and refresh never
+         *     overwrite user edits. TMDB data has a retention rule: maintenance refreshes owned values after five calendar months; at six months, a
+         *     value that still cannot be refreshed is removed only when it still equals its imported snapshot. User edits and user-supplied images
+         *     are preserved. Poster age is tracked separately from metadata age. An item's `lookup_disabled` flag stops automatic refresh and lets
+         *     its owned values expire under the same rules. Open Library data has no retention duty: it is kept until the user changes it.
          */
         post: operations["lookupItemMetadata"];
         delete?: never;
@@ -974,7 +1024,7 @@ export interface components {
             key: string;
             label: string;
             /** @enum {string} */
-            type: "text" | "number" | "date" | "boolean" | "link" | "streaming";
+            type: "text" | "number" | "date" | "boolean" | "link" | "streaming" | "stores";
             position: number;
             is_locked: boolean;
             version: number;
@@ -1023,10 +1073,13 @@ export interface components {
             workspace_name: string;
             streaming_country_code: string;
             metadata_language: components["schemas"]["MetadataLanguage"];
-            /** @description Whether this server has TMDB lookup configured. */
+            /** @description Whether this server has TMDB lookup (movies and TV) configured. */
             readonly lookup_available: boolean;
+            /** @description Whether book lookup (Open Library) is turned on. It is by default and needs no key; `OPENLIBRARY_DISABLED=true` turns it off. */
+            readonly book_lookup_available: boolean;
             markdown_history_limit: number;
             trash_retention_days: number | null;
+            preferred_stores: components["schemas"]["PreferredStores"];
             version: number;
         };
         UpdateSettingsRequest: {
@@ -1035,12 +1088,29 @@ export interface components {
             metadata_language?: components["schemas"]["MetadataLanguage"];
             markdown_history_limit?: number;
             trash_retention_days?: number | null;
+            preferred_stores?: components["schemas"]["PreferredStores"];
         };
         /**
          * @description ISO 639-1 language (`xx`), optionally with an uppercase region (`xx-YY`), passed to TMDB.
          * @example it-IT
          */
         MetadataLanguage: string;
+        /**
+         * @description A store a `stores` field or the preferred stores can name (F-016, D-096). Its display name comes from `GET /api/v1/store-providers`.
+         * @enum {string}
+         */
+        StoreKey: "openlibrary" | "bookshop" | "amazon" | "apple_books" | "google_play_books" | "kobo";
+        /** @description The stores new books are offered with, in the order chosen. Empty means none. Each key once. */
+        PreferredStores: components["schemas"]["StoreKey"][];
+        StoreProvider: {
+            key: components["schemas"]["StoreKey"];
+            /** @description Display name. */
+            name: string;
+        };
+        StoreProviders: {
+            /** @description Every store, in the fixed display order. */
+            providers: components["schemas"]["StoreProvider"][];
+        };
         Tree: {
             folders: components["schemas"]["Folder"][];
             lists: components["schemas"]["List"][];
@@ -1086,10 +1156,11 @@ export interface components {
         /** @description One of `manual`, `title`, `updated`, `price`, or a field key from the list type. The manual order is kept when the mode changes. */
         SortMode: string;
         /**
-         * @description The fields a list shows in its rows, in order: the first is the primary field, the second the secondary (F009-B2; replaces the
-         *     `{under, right}` slots of F-002). `null` means the type default. `[]` pins nothing, which is different from `null`, and a single-element list is valid.
-         *     Any field defined for the type can be pinned; `price` is also available when the type allows it. At most 2 unique keys
-         *     (`422 validation_failed` on `pinned_fields[i]`), else `422`. Changing the list's `type` resets it to `null`.
+         * @description The fields a list shows in its rows, in order (F009-B2; replaces the `{under, right}` slots of F-002; up to three since API 0.12.0,
+         *     F-016). With one key it sits beside the title. With two, the first sits beside the title and the second at the far right. With three,
+         *     the first two sit beside the title and the third at the far right. `null` means the type default. `[]` pins nothing, which is different
+         *     from `null`, and a single-element list is valid. Any field defined for the type can be pinned; `price` is also available when the type
+         *     allows it. At most 3 unique keys (`422 validation_failed` on `pinned_fields[i]`), else `422`. Changing the list's `type` resets it to `null`.
          * @example [
          *       "release_year",
          *       "runtime_minutes"
@@ -1226,7 +1297,7 @@ export interface components {
             readonly type: "camera";
             metadata: components["schemas"]["CameraMetadata"];
         };
-        /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. */
+        /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. For a type with a `stores` field (F-016, D-096) the response `metadata` also carries a read-only `store_links` object: provider key to URL, one entry per selected store that has a link (built from the item's title, `isbn` and `openlibrary_id`, never stored). Sending `store_links` in `metadata` is rejected as an unknown field (`400 unknown_field`, path `metadata.store_links`). */
         Item: components["schemas"]["ItemBase"] & {
             /** @description `null` when the list has no type. */
             readonly type: string | null;
@@ -1234,7 +1305,7 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item (`{}` when the type has none), and the image is reduced. */
+        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item except `store_links`, which only the full item carries (`{}` when the type has none), and the image is reduced. */
         ItemSummary: {
             /** Format: uuid */
             id: string;
@@ -1245,7 +1316,7 @@ export interface components {
             image: components["schemas"]["ImageSummary"];
             price: components["schemas"]["Price"];
             website: string | null;
-            /** @description Same object as `metadata` on the full item; its shape depends on `type` (see the `*Metadata` schemas). */
+            /** @description Same object as `metadata` on the full item, without the read-only `store_links`; its shape depends on `type` (see the `*Metadata` schemas). */
             metadata: {
                 [key: string]: unknown;
             };
@@ -1277,12 +1348,14 @@ export interface components {
         CreateItemRequest: {
             title: string;
             /**
-             * @description For movie and TV lists, run TMDB lookup during creation. Ignored on other types.
+             * @description For movie, TV and book lists, run lookup during creation. Ignored on other types.
              * @default true
              */
             lookup: boolean;
             /** @description Optional selected TMDB suggestion. Used only when lookup runs on a movie or TV item. */
             tmdb_id?: number;
+            /** @description Optional selected Open Library work id (from `GET /books/suggestions`). Used only when lookup runs on a book item. */
+            source_id?: string;
             price?: components["schemas"]["PriceInput"];
             website?: string | null;
             /** @description Free-form here because its shape depends on the list's type. Validated against that type: see the `*Metadata` schemas. */
@@ -1312,8 +1385,10 @@ export interface components {
              * @enum {string}
              */
             mode: "fill" | "rematch" | "refresh";
-            /** @description Selects a known TMDB match. Without it, fill/rematch searches by title and refresh uses stored metadata.tmdb_id. */
+            /** @description Selects a known TMDB match (movie and TV items). Without it, fill/rematch searches by title and refresh uses stored metadata.tmdb_id. */
             tmdb_id?: number;
+            /** @description Selects a known Open Library work (book items). Without it, fill/rematch searches by title and refresh uses stored metadata.openlibrary_id. */
+            source_id?: string;
         };
         /** @enum {string} */
         TmdbType: "movie" | "tv_show";
@@ -1329,6 +1404,25 @@ export interface components {
         TmdbSuggestions: {
             available: boolean;
             results: components["schemas"]["TmdbSuggestion"][];
+        };
+        BookSuggestion: {
+            /** @description The Open Library work id. */
+            source_id: string;
+            title: string;
+            /** @description The authors joined with a comma; empty when Open Library lists none. */
+            authors: string;
+            /** @description First publication year. */
+            year: number | null;
+            /** @description Median number of pages over the work's editions. */
+            pages: number | null;
+            /** Format: uri */
+            cover_url: string | null;
+            /** @description The first 13-digit ISBN of the work's editions, else the first ISBN. */
+            isbn: string | null;
+        };
+        BookSuggestions: {
+            available: boolean;
+            results: components["schemas"]["BookSuggestion"][];
         };
         Streaming: {
             /** @description ISO 3166-1 alpha-2. */
@@ -1573,7 +1667,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["ValidationProblem"];
             };
         };
-        /** @description An explicit TMDB lookup cannot run because lookup is disabled or the upstream service is unavailable */
+        /** @description An explicit lookup cannot run because lookup is disabled or the upstream service (TMDB or Open Library) is unavailable */
         LookupUnavailable: {
             headers: {
                 [name: string]: unknown;
@@ -2016,6 +2110,27 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    listStoreProviders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The providers */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoreProviders"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
     listTmdbSuggestions: {
         parameters: {
             query: {
@@ -2035,6 +2150,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TmdbSuggestions"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["LookupUnavailable"];
+        };
+    };
+    searchBookSuggestions: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ranked suggestions, or an unavailable result when book lookup is off */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookSuggestions"];
                 };
             };
             400: components["responses"]["BadRequest"];
