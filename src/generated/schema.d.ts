@@ -1075,7 +1075,7 @@ export interface components {
             metadata_language: components["schemas"]["MetadataLanguage"];
             /** @description Whether this server has TMDB lookup (movies and TV) configured. */
             readonly lookup_available: boolean;
-            /** @description Whether book lookup (Open Library) is turned on. It is by default and needs no key; `OPENLIBRARY_DISABLED=true` turns it off. */
+            /** @description Whether book lookup (Open Library) is available. It needs no key and is always on. */
             readonly book_lookup_available: boolean;
             markdown_history_limit: number;
             trash_retention_days: number | null;
@@ -1297,7 +1297,7 @@ export interface components {
             readonly type: "camera";
             metadata: components["schemas"]["CameraMetadata"];
         };
-        /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. For a type with a `stores` field (F-016, D-096) the response `metadata` also carries a read-only `store_links` object: provider key to URL, one entry per selected store that has a link (built from the item's title, `isbn` and `openlibrary_id`, never stored). Sending `store_links` in `metadata` is rejected as an unknown field (`400 unknown_field`, path `metadata.store_links`). */
+        /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. For a type with a `stores` field (F-016, D-096) the response `metadata` also carries a read-only `store_links` object: provider key to URL, one entry per selected store that has a link (built from the item's title, `isbn` and `openlibrary_id`, never stored). Links follow the workspace country (`streaming_country_code`): Amazon uses the country's storefront (amazon.it for `IT`, amazon.com for countries without one), Bookshop.org uses its UK site for `GB`, Google Play Books adds the country; other stores are global. Because links are computed on read, changing the country changes them. Sending `store_links` in `metadata` is rejected as an unknown field (`400 unknown_field`, path `metadata.store_links`). */
         Item: components["schemas"]["ItemBase"] & {
             /** @description `null` when the list has no type. */
             readonly type: string | null;

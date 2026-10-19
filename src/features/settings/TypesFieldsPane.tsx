@@ -1,14 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState, type FormEvent } from 'react'
-import {
-  AlertDialog,
-  Button,
-  Dialog,
-  IconButton,
-  Select,
-  Skeleton,
-  TextField,
-} from '../../components/ui'
+import { AlertDialog, Button, Dialog, Select, Skeleton, TextField } from '../../components/ui'
 import { Lock, Plus } from '../../components/ui/icons'
 import { SortableProvider, useSortableRow } from '../../components/ui/sortable'
 import { ApiError, NetworkError } from '../../lib/api'
@@ -336,7 +328,7 @@ export function TypesFieldsPane() {
 
   return (
     <div className="flex flex-col gap-5 sm:flex-row">
-      <div className="flex min-w-0 flex-col gap-2 sm:w-52 sm:shrink-0">
+      <div className="flex min-w-0 flex-col gap-1 sm:w-52 sm:shrink-0">
         <div className="flex flex-col gap-1" role="list" aria-label="Types">
           {types.map((type) => (
             <div role="listitem" key={type.key}>
@@ -351,18 +343,20 @@ export function TypesFieldsPane() {
             </div>
           ))}
         </div>
-        <div>
-          <IconButton
-            aria-label="New type"
-            variant="secondary"
-            onClick={() => {
-              setCreateError(null)
-              setCreateOpen(true)
-            }}
-          >
-            <Plus aria-hidden />
-          </IconButton>
-        </div>
+        <button
+          type="button"
+          title="New type"
+          onClick={() => {
+            setCreateError(null)
+            setCreateOpen(true)
+          }}
+          className="flex min-h-12 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-text-muted hover:bg-fill hover:text-text focus-visible:outline-2 focus-visible:outline-focus-ring"
+        >
+          <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-md bg-fill">
+            <Plus className="size-4" />
+          </span>
+          <span className="min-w-0 flex-1 text-sm font-medium">New type</span>
+        </button>
       </div>
       <div className="min-w-0 flex-1 sm:border-l sm:border-border sm:pl-5">
         {selected ? (

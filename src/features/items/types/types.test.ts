@@ -131,7 +131,7 @@ describe('F016-W1 the book type', () => {
       }).map(({ key, text }) => [key, text]),
     ).toEqual([
       ['author', 'Frank Herbert'],
-      ['pages', '412'],
+      ['pages', '412 p.'],
       ['isbn', '9780441172719'],
     ])
   })
