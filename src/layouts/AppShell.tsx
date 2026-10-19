@@ -101,7 +101,7 @@ function ShellFrame() {
             />
           </Drawer>
         </div>
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 pt-16">{content}</main>
+        <main className="relative min-h-0 flex-1 overflow-y-auto p-4 pt-16">{content}</main>
       </div>
     )
   }
@@ -135,7 +135,7 @@ function ShellFrame() {
           )}
         </div>
         <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-6">{content}</main>
+          <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto p-6">{content}</main>
           {panelVisible && (
             <DetailPanel listId={itemMatch.params.listId} search={location.search} />
           )}
@@ -161,7 +161,7 @@ function DetailPanel({ listId, search }: { listId: string | undefined; search: s
           <X aria-hidden />
         </IconButton>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto px-6">
         <ItemRoute />
       </div>
     </aside>
