@@ -119,6 +119,7 @@ test.describe('F011-W1/W2 streaming: no country, several platforms from a dropdo
     await panel.getByRole('textbox', { name: 'Another service' }).fill('Sky')
     await panel.getByRole('button', { name: 'Add', exact: true }).click()
     await panel.getByRole('button', { name: 'Save streaming' }).click()
+    await expect(panel.getByRole('button', { name: 'Save streaming' })).toBeHidden()
 
     await page.reload()
     const shown = itemPanel(page)
@@ -134,6 +135,7 @@ test.describe('F011-W1/W2 streaming: no country, several platforms from a dropdo
     await page.getByRole('menuitemcheckbox', { name: /Disney\+/ }).click()
     await page.keyboard.press('Escape')
     await shown.getByRole('button', { name: 'Save streaming' }).click()
+    await expect(shown.getByRole('button', { name: 'Save streaming' })).toBeHidden()
     await page.reload()
     const updated = itemPanel(page)
     await expect(updated.getByRole('img', { name: 'Netflix' })).toBeVisible()

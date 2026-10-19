@@ -101,7 +101,10 @@ test.describe('F016-W4 stores', () => {
     const panel = itemPanel(page)
     await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
     await panel.getByRole('button', { name: 'Edit where to get it' }).click()
-    await panel.getByRole('button', { name: 'Where to get it' }).click()
+    await panel
+      .getByRole('button', { name: /^Where to get it/ })
+      .first()
+      .click()
     await page.getByRole('menuitemcheckbox', { name: /Bookshop/ }).click()
     await page.getByRole('menuitemcheckbox', { name: /Kobo/ }).click()
     await page.keyboard.press('Escape')
