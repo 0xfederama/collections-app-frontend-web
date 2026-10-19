@@ -25,8 +25,8 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 
 ## Gotchas
 
-- Pinned fields, sort and filter accept any field key of the list's type (plus `price` where the type allows it); at most two pins, `null` = type default.
-- Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming fields are not filterable.
+- Pinned fields, sort and filter accept any field key of the list's type (plus `price` where the type allows it); at most three pins (`MAX_PINNED`), `null` = type default. One pin sits beside the title; two put the second in the right corner; three put the first two beside the title and the third in the corner (`pinnedPlacements`).
+- Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming and stores fields are not filterable, and stores fields are not sortable.
 - A sort the type does not define falls back to the list's `sort_mode`, so stale `?sort=` values are ignored.
 - Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally.
 - List icon writes are owned by the tree feature and use the list version with `If-Match`.
