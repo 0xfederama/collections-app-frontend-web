@@ -14,20 +14,11 @@ interface LinkSource {
   metadata?: object
 }
 
-/** The Open Library work page when the lookup found one, else its ISBN page, else a search. */
-function openLibraryUrl({ metadata }: LinkSource, query: string): string {
-  const meta = metadata as { openlibrary_id?: unknown; isbn?: unknown } | undefined
-  const id = meta?.openlibrary_id
+/** The Open Library work page when the lookup found one, else a search for the title. */
+function openLibraryUrl({ title, metadata }: LinkSource): string {
+  const id = (metadata as { openlibrary_id?: unknown } | undefined)?.openlibrary_id
   if (typeof id === 'string' && /^OL\d+W$/.test(id)) return `https://openlibrary.org/works/${id}`
-  if (/^\d{10}(\d{3})?$/.test(query)) return `https://openlibrary.org/isbn/${query}`
-  return `https://openlibrary.org/search?${new URLSearchParams({ q: query }).toString()}`
-}
-
-/** Books are searched by ISBN when there is one, else by title. */
-function bookQuery({ title, metadata }: LinkSource): string {
-  const isbn = (metadata as { isbn?: unknown } | undefined)?.isbn
-  const digits = typeof isbn === 'string' ? isbn.replace(/[\s-]/g, '') : ''
-  return digits || title
+  return `https://openlibrary.org/search?${new URLSearchParams({ q: title }).toString()}`
 }
 
 /** The search text for the item (PRODUCT §9): movies add year and `film`, TV shows `TV series`. */
@@ -100,15 +91,14 @@ export function buildExternalLinks(item: LinkSource): ExternalLink[] {
   }
   if (item.type === 'tv_show') return [googleLink, imdb]
   if (item.type === 'book') {
-    const query = bookQuery(item)
     return [
       googleLink,
       {
         id: 'goodreads',
         label: 'Goodreads',
-        href: `https://www.goodreads.com/search?${new URLSearchParams({ q: query }).toString()}`,
+        href: `https://www.goodreads.com/search?${new URLSearchParams({ q: item.title }).toString()}`,
       },
-      { id: 'openlibrary', label: 'Open Library', href: openLibraryUrl(item, query) },
+      { id: 'openlibrary', label: 'Open Library', href: openLibraryUrl(item) },
     ]
   }
   return [
