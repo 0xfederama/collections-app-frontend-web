@@ -177,7 +177,7 @@ function Selection() {
         />
         <Select label="Disabled select" options={countries} disabled />
         <Combobox
-          label="Streaming country"
+          label="Country"
           options={countries}
           value={combo}
           onValueChange={setCombo}

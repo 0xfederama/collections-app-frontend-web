@@ -426,12 +426,12 @@ export function SettingsForm({
         className={`flex flex-col gap-4 ${pane !== 'Media' ? 'hidden' : ''}`}
       >
         <h2 id="settings-movies-tv" className="text-sm font-semibold text-text-muted">
-          Movies &amp; TV
+          Country &amp; language
         </h2>
         <CountrySelect
           id={inputId('streaming_country_code')}
-          label="Streaming country"
-          hint="Streaming platforms on a movie or TV show are for this country unless you pick another."
+          label="Country"
+          hint="Streaming platforms on a movie or TV show, and the Amazon link on a book, are for this country."
           placeholder="Country"
           value={draft.streaming_country_code}
           onValueChange={(value) => set('streaming_country_code', value)}
@@ -452,7 +452,7 @@ export function SettingsForm({
         </h2>
         <StoreChoices
           label="Where to get it"
-          hint="New books start with these stores, in the order you pick them. Each store is a link that searches for the book there, built from its ISBN or title. Each book can change its own list."
+          hint="New books start with these stores, in the order you pick them. Each store is a link that searches for the book there (in your country where the store has one), built from its ISBN or title. Each book can change its own list."
           value={parseStoreKeys(draft.preferred_stores)}
           onChange={(next) => set('preferred_stores', joinStoreKeys(next))}
           providers={providers.data}

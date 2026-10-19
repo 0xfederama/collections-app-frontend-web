@@ -36,7 +36,7 @@ export const inputId = (field: SettingsField) => `settings-${field.replaceAll('_
 
 export const FIELD_LABELS: Record<SettingsField, string> = {
   workspace_name: 'Workspace name',
-  streaming_country_code: 'Streaming country',
+  streaming_country_code: 'Country',
   metadata_language: 'Metadata language',
   trash_retention_days: 'Delete trash automatically',
   markdown_history_limit: 'Description history limit',

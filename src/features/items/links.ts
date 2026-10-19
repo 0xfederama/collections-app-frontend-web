@@ -1,7 +1,7 @@
 import type { ItemType } from './api'
 
 export interface ExternalLink {
-  id: 'google' | 'letterboxd' | 'imdb' | 'reddit' | 'website'
+  id: 'google' | 'letterboxd' | 'imdb' | 'reddit' | 'website' | 'goodreads' | 'amazon'
   label: string
   /** `null` (website only): the item has no (usable) website, so no link is shown. */
   href: string | null
@@ -12,6 +12,41 @@ interface LinkSource {
   type: ItemType
   website: string | null
   metadata?: object
+}
+
+/** The Amazon storefront of a country (ISO 3166 alpha-2); any other country gets amazon.com. */
+const AMAZON_DOMAINS: Record<string, string> = {
+  IT: 'amazon.it',
+  DE: 'amazon.de',
+  FR: 'amazon.fr',
+  ES: 'amazon.es',
+  GB: 'amazon.co.uk',
+  NL: 'amazon.nl',
+  SE: 'amazon.se',
+  PL: 'amazon.pl',
+  BE: 'amazon.com.be',
+  IE: 'amazon.ie',
+  CA: 'amazon.ca',
+  MX: 'amazon.com.mx',
+  BR: 'amazon.com.br',
+  AU: 'amazon.com.au',
+  JP: 'amazon.co.jp',
+  IN: 'amazon.in',
+  TR: 'amazon.com.tr',
+  AE: 'amazon.ae',
+  SA: 'amazon.sa',
+  SG: 'amazon.sg',
+  EG: 'amazon.eg',
+}
+
+export const amazonDomain = (country: string | undefined): string =>
+  AMAZON_DOMAINS[(country ?? '').toUpperCase()] ?? 'amazon.com'
+
+/** Books are searched by ISBN when there is one, else by title. */
+function bookQuery({ title, metadata }: LinkSource): string {
+  const isbn = (metadata as { isbn?: unknown } | undefined)?.isbn
+  const digits = typeof isbn === 'string' ? isbn.replace(/[\s-]/g, '') : ''
+  return digits || title
 }
 
 /** The search text for the item (PRODUCT §9): movies add year and `film`, TV shows `TV series`. */
@@ -59,12 +94,12 @@ export function safeImdbUrl(url: unknown): string | null {
 
 /**
  * The external controls of AT-13 and F-002, in this order: movies Google, Letterboxd, IMDb; TV
- * shows Google, IMDb; every other type Google, Reddit, Website. The website is never replaced by a
+ * shows Google, IMDb; books Google, Goodreads, Amazon (the storefront of the Settings country); every other type Google, Reddit, Website. The website is never replaced by a
  * search; IMDb opens the stored `imdb_url` when valid, else a title search on IMDb. `URLSearchParams`
  * and `encodeURIComponent` do the encoding, so `&`, `#`, quotes and non-ASCII titles cannot change
  * the URL's structure.
  */
-export function buildExternalLinks(item: LinkSource): ExternalLink[] {
+export function buildExternalLinks(item: LinkSource, country?: string): ExternalLink[] {
   const query = searchQuery(item)
   const googleLink: ExternalLink = { id: 'google', label: 'Google', href: google(query) }
   const imdb: ExternalLink = {
@@ -83,6 +118,22 @@ export function buildExternalLinks(item: LinkSource): ExternalLink[] {
     return [googleLink, letterboxd, imdb]
   }
   if (item.type === 'tv_show') return [googleLink, imdb]
+  if (item.type === 'book') {
+    const query = bookQuery(item)
+    return [
+      googleLink,
+      {
+        id: 'goodreads',
+        label: 'Goodreads',
+        href: `https://www.goodreads.com/search?${new URLSearchParams({ q: query }).toString()}`,
+      },
+      {
+        id: 'amazon',
+        label: 'Amazon',
+        href: `https://www.${amazonDomain(country)}/s?${new URLSearchParams({ k: query }).toString()}`,
+      },
+    ]
+  }
   return [
     googleLink,
     { id: 'reddit', label: 'Reddit', href: google(`${query} site:reddit.com`) },
