@@ -259,3 +259,29 @@ test.describe('F009-W3 pinned fields: up to three, in order', () => {
     await expect(row.getByText('2005')).toBeHidden()
   })
 })
+
+test.describe('F016 Escape closes the opened item', () => {
+  test('Escape returns to the list, but inside a field editor it only closes the editor', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Esc films'), 'movie')
+    const title = uniqueName('Escape')
+    const item = await createItem(request, list.id, title, { metadata: { release_year: 2001 } })
+    await page.goto(itemUrl(list.id, item.id))
+    const panel = itemPanel(page)
+    await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
+
+    // An open field editor owns Escape: it cancels the edit and the item stays open.
+    await panel.getByRole('button', { name: 'Edit title' }).click()
+    await expect(panel.getByRole('textbox', { name: 'Title' })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(panel.getByRole('textbox', { name: 'Title' })).toBeHidden()
+    await expect(panel.getByRole('heading', { level: 1, name: title })).toBeVisible()
+
+    // With nothing being edited, Escape closes the item like "Close details".
+    await page.keyboard.press('Escape')
+    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}(\\?.*)?$`))
+    await expect(itemPanel(page)).toBeHidden()
+  })
+})

@@ -1,4 +1,5 @@
-import { Link, Navigate, useLocation, useParams } from 'react-router'
+import { useEffect } from 'react'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router'
 import { Button, EmptyState, typeIconFor } from '../../components/ui'
 import { ApiError } from '../../lib/api'
 import { cx } from '../../lib/cx'
@@ -12,6 +13,37 @@ import { NEW_ITEM_ID } from './newItem'
 import { NewItemDraft } from './NewItemDraft'
 import type { ItemType } from './api'
 
+/** Text entry, or a layer that owns Escape (dialog, menu, listbox, expanded popup). */
+const OWNS_ESCAPE =
+  'input, textarea, select, [contenteditable="true"], .cm-editor, [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [aria-expanded="true"]'
+
+/**
+ * Escape closes the opened item and returns to its list (the same place as "Close details"). It
+ * stays out of the way of everything that already uses Escape: a field editor or the description
+ * editor (they stop the key themselves), an open dialog, menu or popup, and any text entry.
+ */
+function useEscapeToList(to: { pathname: string; search: string }) {
+  const navigate = useNavigate()
+  const { pathname, search } = to
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return
+      const target = event.target as Element | null
+      if (target?.closest?.(OWNS_ESCAPE)) return
+      if (
+        document.querySelector(
+          '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]',
+        )
+      )
+        return
+      void navigate({ pathname, search })
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [navigate, pathname, search])
+}
+
 function ItemDetail({
   listId,
   itemId,
@@ -24,6 +56,7 @@ function ItemDetail({
   const item = useItem(itemId)
   const { search } = useLocation()
   const backTo = { pathname: `/lists/${listId}`, search }
+  useEscapeToList(backTo)
   const panel = useBreakpoint() === 'wide'
 
   if (item.status === 'pending') return <ItemSkeleton />

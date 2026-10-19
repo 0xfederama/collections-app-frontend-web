@@ -41,6 +41,45 @@ describe('AT-14 detail panel keeps the list view state', () => {
     expect(filter).toHaveValue('mat')
   })
 
+  it('F016 wide: Escape closes the item like "Close details", keeping the list state', async () => {
+    mockViewport(1440)
+    const user = userEvent.setup()
+    const router = renderRouter(PATH)
+    await screen.findByRole('heading', { level: 1 })
+
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${WATCHLIST}`))
+    expect(router.state.location.search).toBe('?q=mat&sort=title')
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
+  })
+
+  it('F016 narrow: Escape goes back to the list from the full item page', async () => {
+    mockViewport(800)
+    const user = userEvent.setup()
+    const router = renderRouter(PATH)
+    await screen.findByRole('heading', { level: 1 })
+
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${WATCHLIST}`))
+  })
+
+  it('F016 Escape in a text field or with a menu open does not close the item', async () => {
+    mockViewport(1440)
+    const user = userEvent.setup()
+    const router = renderRouter(PATH)
+    await screen.findByRole('heading', { level: 1 })
+
+    // A text entry owns Escape: the filter box in the list beside the panel.
+    const filter = await screen.findByRole('searchbox', {
+      name: 'Filter items by title or director',
+    })
+    await user.click(filter)
+    await user.keyboard('{Escape}')
+    expect(router.state.location.pathname).toContain('/items/')
+  })
+
   it('wide: the list beside the panel already shows the filter value', async () => {
     mockViewport(1440)
     renderRouter(PATH)
