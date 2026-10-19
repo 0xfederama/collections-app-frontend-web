@@ -60,3 +60,17 @@ describe('F014-W4 field filter URL validation', () => {
     expect(parseFieldFilter(params('filter_field=name&filter_min=2'), fields)).toBeNull()
   })
 })
+
+describe('F016-W4 store keys are not a filter', () => {
+  it('offers no filter on a stores field, so its URL parameters are refused', () => {
+    const stores: TypeField = {
+      key: 'stores',
+      label: 'Where to get it',
+      type: 'stores',
+      position: 0,
+      is_locked: true,
+      version: 1,
+    }
+    expect(parseFieldFilter(params('filter_field=stores&filter_value=kobo'), [stores])).toBeNull()
+  })
+})

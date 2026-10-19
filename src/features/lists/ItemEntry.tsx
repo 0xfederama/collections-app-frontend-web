@@ -7,6 +7,8 @@ import type { DisplayMode, ItemSummary } from './api'
 import { ItemThumb } from './ItemThumb'
 import { pinnedPlacements, pinnedTexts, storesOf, streamingOf, type PinnedKeys } from './pinned'
 import { ServiceIcon } from '../../components/ServiceIcon'
+import { useStoreProviders } from '../stores/api'
+import { storeName } from '../stores/providers'
 import type { ItemType } from '../items/api'
 import type { TypeDefinition } from '../items/types'
 
@@ -56,6 +58,7 @@ function PinnedSlot({
   iconSize: number
   className?: string
 }) {
+  const providers = useStoreProviders()
   const parts: ReactNode[] = []
   let run: string[] = []
   const flush = () => {
@@ -78,7 +81,12 @@ function PinnedSlot({
         parts.push(
           <span key={`k${parts.length}`} className="inline-flex flex-wrap items-center gap-1.5">
             {stores.map((store) => (
-              <ServiceIcon key={store} name={store} size={iconSize} />
+              <ServiceIcon
+                key={store}
+                name={store}
+                label={storeName(providers.data, store)}
+                size={iconSize}
+              />
             ))}
           </span>,
         )

@@ -38,8 +38,10 @@ function mountBackend(start?: Partial<Settings>) {
     streaming_country_code: 'IT',
     metadata_language: 'en-US',
     lookup_available: false,
+    book_lookup_available: true,
     markdown_history_limit: 20,
     trash_retention_days: null,
+    preferred_stores: [],
     version: 1,
     ...start,
   })
@@ -69,7 +71,7 @@ describe('W-13 settings: saving', () => {
     const user = await openSettings()
     const dialog = screen.getByRole('dialog', { name: 'Settings' })
     expect(Array.from(dialog.querySelectorAll('h2')).map((heading) => heading.textContent)).toEqual(
-      ['Settings', 'General', 'Movies & TV', 'Types & fields', 'Connection', 'About'],
+      ['Settings', 'General', 'Movies & TV', 'Books', 'Types & fields', 'Connection', 'About'],
     )
     expect(dialog.querySelector('#settings-movies-tv')?.parentElement).toHaveAttribute('hidden')
     expect(screen.getByLabelText(/Workspace name/)).toBeInTheDocument()
@@ -277,6 +279,37 @@ describe('W-13 settings: saving', () => {
     await user.click(closeSettings())
     await screen.findByRole('heading', { level: 1, name: 'Home' })
     expect(patches).toEqual([{ ifMatch: '"s-4"', body: { metadata_language: 'it-IT' } }])
+  })
+
+  it('F016-W4 saves the preferred stores in the order picked, through the settings snapshot', async () => {
+    const { patches } = mountBackend()
+    const user = await openSettings('Media')
+    await user.click(screen.getByRole('button', { name: /Where to get it/ }))
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Kobo/ }))
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Open Library/ }))
+    await user.keyboard('{Escape}')
+    await user.click(closeSettings())
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
+    expect(patches).toEqual([
+      { ifMatch: '"s-1"', body: { preferred_stores: ['kobo', 'openlibrary'] } },
+    ])
+  })
+
+  it('F016-W1 credits Open Library for book details and covers in About', async () => {
+    mountBackend()
+    await openSettings('About')
+    const about = screen.getByRole('region', { name: 'About' })
+    expect(about).toHaveTextContent(
+      'Book details and covers come from Open Library, an open project of the Internet Archive.',
+    )
+    expect(within(about).getByRole('link', { name: 'Open Library' })).toHaveAttribute(
+      'href',
+      'https://openlibrary.org/',
+    )
+    expect(within(about).getByRole('link', { name: 'Open Library' })).toHaveAttribute(
+      'rel',
+      'noopener noreferrer',
+    )
   })
 
   it('shows required TMDB and JustWatch attribution and external project links in About', async () => {

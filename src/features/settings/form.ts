@@ -1,9 +1,12 @@
 import type { FieldError } from '../../lib/api'
 import type { Settings, UpdateSettingsRequest } from './api'
+import { joinStoreKeys, parseStoreKeys } from '../stores/providers'
 
 /** API.md Settings: `markdown_history_limit` is 0–200, the name 1–200 characters. */
 export const HISTORY_LIMIT_MAX = 200
 export const NAME_MAX = 200
+/** The contract's limit on preferred stores (F016-W4). */
+export const PREFERRED_STORES_MAX = 6
 
 /** What the inputs hold, as strings. Keys are the API field names, so a 422 finds its input. */
 export interface SettingsDraft {
@@ -12,6 +15,8 @@ export interface SettingsDraft {
   metadata_language: string
   markdown_history_limit: string
   trash_retention_days: string
+  /** Comma-separated store keys, in the order chosen (the same text rule as a book's stores). */
+  preferred_stores: string
 }
 
 export type SettingsField = keyof SettingsDraft
@@ -24,6 +29,7 @@ export const FIELD_ORDER: SettingsField[] = [
   'metadata_language',
   'trash_retention_days',
   'markdown_history_limit',
+  'preferred_stores',
 ]
 
 export const inputId = (field: SettingsField) => `settings-${field.replaceAll('_', '-')}`
@@ -34,6 +40,7 @@ export const FIELD_LABELS: Record<SettingsField, string> = {
   metadata_language: 'Metadata language',
   trash_retention_days: 'Delete trash automatically',
   markdown_history_limit: 'Description history limit',
+  preferred_stores: 'Where to get it',
 }
 
 export function draftFromSettings(settings: Settings): SettingsDraft {
@@ -44,6 +51,7 @@ export function draftFromSettings(settings: Settings): SettingsDraft {
     markdown_history_limit: String(settings.markdown_history_limit),
     trash_retention_days:
       settings.trash_retention_days === null ? 'off' : String(settings.trash_retention_days),
+    preferred_stores: joinStoreKeys(settings.preferred_stores),
   }
 }
 
@@ -62,8 +70,13 @@ function normalized(draft: SettingsDraft) {
     markdown_history_limit: parseLimit(draft.markdown_history_limit),
     trash_retention_days:
       draft.trash_retention_days === 'off' ? null : Number(draft.trash_retention_days),
+    preferred_stores: parseStoreKeys(draft.preferred_stores),
   }
 }
+
+/** Same keys in the same order: the stores are an ordered list, so order is a change. */
+const sameKeys = (a: readonly string[], b: readonly string[]) =>
+  JSON.stringify(a) === JSON.stringify(b)
 
 export function validate(draft: SettingsDraft): ErrorMap {
   const errors: ErrorMap = {}
@@ -77,6 +90,9 @@ export function validate(draft: SettingsDraft): ErrorMap {
   }
   if (!['en-US', 'it-IT', 'fr-FR', 'de-DE', 'es-ES'].includes(value.metadata_language)) {
     errors.metadata_language = 'Choose a language.'
+  }
+  if (value.preferred_stores.length > PREFERRED_STORES_MAX) {
+    errors.preferred_stores = `Choose at most ${PREFERRED_STORES_MAX} stores.`
   }
   if (value.markdown_history_limit === null || value.markdown_history_limit > HISTORY_LIMIT_MAX) {
     errors.markdown_history_limit = `Enter a whole number from 0 to ${HISTORY_LIMIT_MAX}.`
@@ -101,6 +117,9 @@ export function buildPatch(base: Settings, draft: SettingsDraft): UpdateSettings
   ) {
     patch.markdown_history_limit = value.markdown_history_limit
   }
+  if (!sameKeys(value.preferred_stores, base.preferred_stores)) {
+    patch.preferred_stores = value.preferred_stores as UpdateSettingsRequest['preferred_stores']
+  }
   return patch
 }
 
@@ -112,7 +131,8 @@ export function isDirty(base: Settings, draft: SettingsDraft): boolean {
     value.streaming_country_code !== base.streaming_country_code ||
     value.metadata_language !== base.metadata_language ||
     value.markdown_history_limit !== base.markdown_history_limit ||
-    value.trash_retention_days !== base.trash_retention_days
+    value.trash_retention_days !== base.trash_retention_days ||
+    !sameKeys(value.preferred_stores, base.preferred_stores)
   )
 }
 
@@ -123,7 +143,8 @@ export function isFormDirty(base: Settings, draft: SettingsDraft): boolean {
     value.workspace_name !== base.workspace_name ||
     value.streaming_country_code !== base.streaming_country_code ||
     value.metadata_language !== base.metadata_language ||
-    value.markdown_history_limit !== base.markdown_history_limit
+    value.markdown_history_limit !== base.markdown_history_limit ||
+    !sameKeys(value.preferred_stores, base.preferred_stores)
   )
 }
 
@@ -168,6 +189,9 @@ export function draftDump(base: Settings, draft: SettingsDraft): string {
   }
   if (draft.markdown_history_limit.trim() !== String(base.markdown_history_limit)) {
     lines.push(`${FIELD_LABELS.markdown_history_limit}: ${draft.markdown_history_limit.trim()}`)
+  }
+  if (!sameKeys(value.preferred_stores, base.preferred_stores)) {
+    lines.push(`${FIELD_LABELS.preferred_stores}: ${value.preferred_stores.join(', ') || 'None'}`)
   }
   if (value.trash_retention_days !== base.trash_retention_days) {
     lines.push(

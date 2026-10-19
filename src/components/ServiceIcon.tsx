@@ -106,6 +106,8 @@ export interface ServiceIconProps {
   /** The service offers the title only for payment: shows a small `$` badge. */
   paid?: boolean
   size?: number
+  /** The display name, when `name` is a key (a store, F016-W4): the tooltip, the name and the letter. */
+  label?: string
 }
 
 function Tile({
@@ -172,8 +174,9 @@ function Tile({
  * Streaming platform as a tile. A service with no local file gets the same tile with the first
  * letter of its name (F009-W5): no text chip, no second shape.
  */
-export function ServiceIcon({ name, paid, size }: ServiceIconProps) {
-  return <Tile entry={serviceEntries[normalize(name)] ?? entry(name)} paid={paid} size={size} />
+export function ServiceIcon({ name, paid, size, label }: ServiceIconProps) {
+  const known = serviceEntries[normalize(name)] ?? entry(name)
+  return <Tile entry={label ? { ...known, label } : known} paid={paid} size={size} />
 }
 
 /** External link site (Google, Letterboxd, IMDb, Reddit, Website) as a tile, same geometry. */

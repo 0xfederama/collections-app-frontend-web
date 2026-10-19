@@ -13,6 +13,18 @@ export function AboutSection() {
         <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
       </div>
       <p>
+        Book details and covers come from{' '}
+        <a
+          className={externalLink}
+          href="https://openlibrary.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open Library
+        </a>
+        , an open project of the Internet Archive.
+      </p>
+      <p>
         Streaming availability data is provided by{' '}
         <a
           className={externalLink}

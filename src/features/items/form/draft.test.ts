@@ -116,3 +116,55 @@ describe('F014-W3 definition-backed item drafts', () => {
     expect(draftDump(item, draft, defaults)).toContain('Board game details:\n  Rating: 9')
   })
 })
+
+describe('F016-W4 the stores field in the item draft', () => {
+  const bookDefinition: TypeDefinition = {
+    key: 'book',
+    name: 'Book',
+    default_icon: null,
+    allows_price: true,
+    default_sort_field: null,
+    default_pinned_fields: ['author', 'pages', 'stores'],
+    is_locked: true,
+    version: 1,
+    fields: [
+      {
+        key: 'stores',
+        label: 'Where to get it',
+        type: 'stores',
+        position: 0,
+        is_locked: true,
+        version: 1,
+      },
+    ],
+  }
+  const book: Item = {
+    ...item,
+    type: 'book',
+    metadata: {
+      stores: ['openlibrary', 'kobo'],
+      store_links: { openlibrary: 'https://openlibrary.org/works/OL1W' },
+    },
+  }
+
+  it('F016-W4 reads the saved keys as one comma-separated text, the editor starts from it', () => {
+    expect(draftFromItem(book, bookDefinition).meta.stores).toBe('openlibrary, kobo')
+  })
+
+  it('F016-W4 sends the keys as a list, and omits the field when none is chosen', () => {
+    const draft = draftFromItem(book, bookDefinition)
+    expect(
+      toFields({ ...draft, meta: { stores: 'kobo, bookshop, kobo' } }, defaults).metadata,
+    ).toEqual({
+      stores: ['kobo', 'bookshop'],
+    })
+    expect(toFields({ ...draft, meta: { stores: ' , ' } }, defaults).metadata).toEqual({})
+  })
+
+  it('F016-W4 a change to the stores sends the whole metadata, without store_links', () => {
+    const draft = draftFromItem(book, bookDefinition)
+    expect(buildPatch(book, { ...draft, meta: { stores: 'openlibrary' } }, defaults)).toEqual({
+      metadata: { stores: ['openlibrary'] },
+    })
+  })
+})

@@ -117,7 +117,7 @@ export function EditorButtons({
   )
 }
 
-const STACKED = ['price', 'years', 'metadata.streaming']
+const STACKED = ['price', 'years', 'metadata.streaming', 'metadata.stores']
 
 type Failure =
   { kind: 'conflict' } | { kind: 'gone' } | { kind: 'network' } | { kind: 'other'; message: string }

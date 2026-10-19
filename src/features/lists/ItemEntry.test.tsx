@@ -1,10 +1,11 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { ItemEntry } from './ItemEntry'
 import type { ItemSummary } from './api'
 import type { TypeDefinition } from '../items/types'
 import { mockTypes } from '../../mocks/types'
+import { renderWithProviders } from '../../test-utils'
 
 const item = (over: Partial<ItemSummary> = {}): ItemSummary => ({
   id: 'i1',
@@ -47,7 +48,7 @@ function entry(
   const type = over.type ?? 'movie'
   const definition =
     type === 'book' ? bookDefinition : mockTypes.find((candidate) => candidate.key === type)!
-  render(
+  renderWithProviders(
     <MemoryRouter>
       <ul>
         <ItemEntry
@@ -111,7 +112,7 @@ describe('F009-W3 the first pinned field reads next to the title, the second in 
 describe('F016-W3 three pins: two beside the title, the third in the corner', () => {
   it.each(['compact', 'thumbnail', 'grid'] as const)(
     '%s: title, author and pages, then the stores as tiles',
-    (mode) => {
+    async (mode) => {
       const row = entry(['author', 'pages', 'stores'], mode, {
         type: 'book',
         title: 'Dune',
@@ -120,8 +121,9 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
       const order = readOrder(row)
       expect(order.indexOf('Dune')).toBe(0)
       expect(order.indexOf('Frank Herbert · 412')).toBe(1)
-      expect(within(row).getByRole('img', { name: 'openlibrary' })).toBeInTheDocument()
-      expect(within(row).getByRole('img', { name: 'kobo' })).toBeInTheDocument()
+      // F016-W4: the tiles are named by the store's display name, once the provider list loads.
+      expect(await within(row).findByRole('img', { name: 'Open Library' })).toBeInTheDocument()
+      expect(within(row).getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
     },
   )
 
