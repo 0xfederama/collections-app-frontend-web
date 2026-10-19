@@ -1295,7 +1295,7 @@ export interface components {
             readonly type: "camera";
             metadata: components["schemas"]["CameraMetadata"];
         };
-        /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. For a type with a `stores` field (F-016, D-096) the response `metadata` also carries a read-only `store_links` object: provider key to URL, one entry per selected store that has a link (built from the item's title and `isbn`, never stored). Links follow the workspace country (`streaming_country_code`): Amazon uses the country's storefront (amazon.it for `IT`, amazon.com for countries without one), Bookshop.org uses its UK site for `GB`, Google Play Books adds the country; other stores are global. Because links are computed on read, changing the country changes them. Sending `store_links` in `metadata` is rejected as an unknown field (`400 unknown_field`, path `metadata.store_links`). A book item also carries the read-only `metadata.openlibrary_id`: it is set by lookup, used by refresh and by clients to build the Open Library link (`https://openlibrary.org/works/<id>`), and must not be edited. The built-in book type has no first publication year (removed in 0.13.0; a suggestion's `year` is display only). */
+        /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. For a type with a `stores` field (F-016, D-096) the response `metadata` also carries a read-only `store_links` object (on the full item and on the rows of list items, search and recent items; since 0.14.0): provider key to URL, one entry per selected store that has a link (built from the item's title and `isbn`, never stored). Links follow the workspace country (`streaming_country_code`): Amazon uses the country's storefront (amazon.it for `IT`, amazon.com for countries without one), Bookshop.org uses its UK site for `GB`, Google Play Books adds the country; other stores are global. Because links are computed on read, changing the country changes them. Sending `store_links` in `metadata` is rejected as an unknown field (`400 unknown_field`, path `metadata.store_links`). A book item also carries the read-only `metadata.openlibrary_id`: it is set by lookup, used by refresh and by clients to build the Open Library link (`https://openlibrary.org/works/<id>`), and must not be edited. The built-in book type has no first publication year (removed in 0.13.0; a suggestion's `year` is display only). */
         Item: components["schemas"]["ItemBase"] & {
             /** @description `null` when the list has no type. */
             readonly type: string | null;
@@ -1303,7 +1303,7 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item except `store_links`, which only the full item carries (`{}` when the type has none), and the image is reduced. */
+        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item, including the read-only `store_links` for a type with a `stores` field, and the image is reduced. */
         ItemSummary: {
             /** Format: uuid */
             id: string;
@@ -1314,7 +1314,7 @@ export interface components {
             image: components["schemas"]["ImageSummary"];
             price: components["schemas"]["Price"];
             website: string | null;
-            /** @description Same object as `metadata` on the full item, without the read-only `store_links`; its shape depends on `type` (see the `*Metadata` schemas). */
+            /** @description Same object as `metadata` on the full item, with the read-only `store_links` when the type has a `stores` field; its shape depends on `type` (see the `*Metadata` schemas). */
             metadata: {
                 [key: string]: unknown;
             };
@@ -1429,6 +1429,11 @@ export interface components {
             platforms?: string[];
             /** @description Platforms available only through per-title rental or purchase, not subscription, free, or ad-supported offers. Each entry must match (case-insensitively) an entry of `platforms` and is stored with that entry's casing. Unique case-insensitively. Omitted, null or empty means none paid. */
             paid_platforms?: string[];
+            /**
+             * Format: uri
+             * @description The JustWatch page of the title for `country` (an https://www.justwatch.com URL), filled and refreshed by the TMDB lookup with the other imported streaming values and dropped with them when TMDB data expires (D-089). `null` or absent when there is none. Read-only for clients: a `link` sent in a write is ignored (not rejected), and the stored one is kept while `country` is unchanged, so a client can round-trip the whole `streaming` object. Changing the workspace `streaming_country_code` clears every item's link until its next lookup refresh. TMDB attributes this data to JustWatch.
+             */
+            readonly link?: string | null;
         };
         MovieMetadata: {
             release_year?: number;

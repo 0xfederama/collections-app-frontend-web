@@ -10,6 +10,7 @@ import { ServiceIcon } from '../../components/ServiceIcon'
 import { useStoreProviders } from '../stores/api'
 import { storeName } from '../stores/providers'
 import type { ItemType } from '../items/api'
+import { safeWebsiteUrl } from '../items/links'
 import type { TypeDefinition } from '../items/types'
 
 /** What an entry needs to be reorderable. Absent when reordering is not available. */
@@ -44,6 +45,35 @@ const linkClass =
 const surface =
   'border border-border bg-surface shadow-sm transition-shadow hover:shadow-md hover:bg-surface-raised has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-focus-ring'
 
+/**
+ * A store or streaming tile that opens its page in a new tab. It sits above the row's stretched
+ * title link (`relative z-10`), so a click on it never opens the item; without a usable https URL
+ * it is the plain tile.
+ */
+function TileLink({
+  href,
+  label,
+  children,
+}: {
+  href: string | null
+  label: string
+  children: ReactNode
+}) {
+  if (!href) return <>{children}</>
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={`${label} (opens in a new tab)`}
+      aria-label={`${label} (opens in a new tab)`}
+      className="relative z-10 inline-flex rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+    >
+      {children}
+    </a>
+  )
+}
+
 /** One placement of the pinned fields: text pieces joined with ` · `, streaming as service icons. */
 function PinnedSlot({
   keys,
@@ -77,17 +107,23 @@ function PinnedSlot({
     if (definition.fields.find((f) => f.key === key)?.type === 'stores') {
       flush()
       const stores = storesOf(item, key)
+      const links = (item.metadata.store_links ?? {}) as Record<string, unknown>
       if (stores.length) {
         parts.push(
           <span key={`k${parts.length}`} className="inline-flex flex-wrap items-center gap-1.5">
-            {stores.map((store) => (
-              <ServiceIcon
-                key={store}
-                name={store}
-                label={storeName(providers.data, store)}
-                size={iconSize}
-              />
-            ))}
+            {stores.map((store) => {
+              const label = storeName(providers.data, store)
+              const href = links[store]
+              return (
+                <TileLink
+                  key={store}
+                  href={safeWebsiteUrl(typeof href === 'string' ? href : null)}
+                  label={label}
+                >
+                  <ServiceIcon name={store} label={label} size={iconSize} />
+                </TileLink>
+              )
+            })}
           </span>,
         )
       }
@@ -99,11 +135,16 @@ function PinnedSlot({
     }
     flush()
     const services = streamingOf(item)
+    const justWatch = safeWebsiteUrl(
+      (item.metadata.streaming as { link?: string | null } | null | undefined)?.link ?? null,
+    )
     if (services.length) {
       parts.push(
         <span key={`s${parts.length}`} className="inline-flex items-center gap-1.5">
           {services.map((s) => (
-            <ServiceIcon key={s.name} name={s.name} paid={s.paid} size={iconSize} />
+            <TileLink key={s.name} href={justWatch} label={`${s.name} on JustWatch`}>
+              <ServiceIcon name={s.name} paid={s.paid} size={iconSize} />
+            </TileLink>
           ))}
         </span>,
       )

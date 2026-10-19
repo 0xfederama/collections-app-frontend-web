@@ -63,3 +63,30 @@ test.describe('F013-W3 director data and F014-W4 field filter', () => {
     await expect(rows.nth(1)).toContainText(zetaTitle)
   })
 })
+
+test.describe('F016 streaming tiles in a row open JustWatch', () => {
+  test('the tile links to the JustWatch page the lookup stored, in a new tab', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Streaming films'), 'movie')
+    const created = await createItem(request, list.id, '[mock] movie name', { lookup: true })
+    const found = await (await request.get(`/api/v1/items/${created.id}`)).json()
+    const streaming = { ...found.metadata.streaming, platforms: ['Netflix'] }
+    const patched = await request.patch(`/api/v1/items/${created.id}`, {
+      headers: { 'If-Match': `"i-${found.version}"` },
+      data: { metadata: { ...found.metadata, streaming } },
+    })
+    expect(patched.status(), 'PATCH item').toBe(200)
+
+    await page.goto(`/lists/${list.id}`)
+    await page.getByRole('radio', { name: 'Thumbnail rows' }).check({ force: true })
+    const row = page.getByRole('list', { name: 'Items' }).getByRole('listitem')
+    const tile = row.getByRole('link', { name: 'Netflix on JustWatch (opens in a new tab)' })
+    await expect(tile).toHaveAttribute(
+      'href',
+      /^https:\/\/www\.justwatch\.com\/[a-z]{2}\/movie\/mock$/,
+    )
+    await expect(tile).toHaveAttribute('target', '_blank')
+  })
+})

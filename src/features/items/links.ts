@@ -35,7 +35,7 @@ const google = (query: string) =>
   `https://www.google.com/search?${new URLSearchParams({ q: query }).toString()}`
 
 /** Only an `http(s)` URL is a link; anything else (or nothing) disables the control. */
-function safeWebsiteUrl(url: string | null): string | null {
+export function safeWebsiteUrl(url: string | null): string | null {
   if (!url) return null
   try {
     const { protocol } = new URL(url)

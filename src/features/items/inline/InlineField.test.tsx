@@ -134,7 +134,12 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
     await user.click(save('runtime'))
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0]?.ifMatch).toBe('"i-3"')
-    expect(calls[0]?.body).toEqual({ metadata: { ...matrix.metadata, runtime_minutes: 140 } })
+    // `streaming.link` is read-only: the client never sends it and the server keeps the stored one.
+    const streaming = { ...(matrix.metadata as { streaming: Record<string, unknown> }).streaming }
+    delete streaming.link
+    expect(calls[0]?.body).toEqual({
+      metadata: { ...matrix.metadata, streaming, runtime_minutes: 140 },
+    })
   })
 
   it('a second save uses the version the first one returned', async () => {
