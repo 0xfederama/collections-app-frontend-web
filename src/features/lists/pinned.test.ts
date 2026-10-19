@@ -5,7 +5,9 @@ import {
   defaultPinned,
   formatPinnedValue,
   pinnableFields,
+  pinnedPlacements,
   pinnedTexts,
+  MAX_PINNED,
   resolvePinned,
 } from './pinned'
 
@@ -76,5 +78,32 @@ describe('F014-W3 definition-backed pinned fields', () => {
     expect(formatPinnedValue('recommended', item, definition)).toBe('No')
     expect(formatPinnedValue('played_on', item, definition)).toEqual(expect.any(String))
     expect(pinnedTexts(['rating', 'recommended'], item, definition)).toEqual(['8.5', 'No'])
+  })
+})
+
+describe('F016-W3 pinned placements (up to three pins)', () => {
+  it('the limit is three', () => {
+    expect(MAX_PINNED).toBe(3)
+    const many = { ...definition, default_pinned_fields: ['a', 'b', 'c', 'd'] }
+    expect(defaultPinned(many)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('one pin sits beside the title, two keep first and corner, three add a third', () => {
+    expect(pinnedPlacements([])).toEqual({ first: [], second: [], third: [] })
+    expect(pinnedPlacements(['a'])).toEqual({ first: ['a'], second: [], third: [] })
+    expect(pinnedPlacements(['a', 'b'])).toEqual({ first: ['a'], second: ['b'], third: [] })
+    expect(pinnedPlacements(['a', 'b', 'c'])).toEqual({
+      first: ['a'],
+      second: ['b'],
+      third: ['c'],
+    })
+  })
+
+  it('TV seasons and episodes stay together with two pins', () => {
+    expect(pinnedPlacements(['seasons', 'episodes_per_season'])).toEqual({
+      first: ['seasons', 'episodes_per_season'],
+      second: [],
+      third: [],
+    })
   })
 })

@@ -12,10 +12,11 @@ const itemClass =
 
 /**
  * Toolbar menu "Pinned fields" (F009-W3): a checklist of the fields the list's type offers, in
- * order — the first pinned field reads next to the title, the second in the right corner. It shows
+ * order: the first pinned field reads next to the title, the last in the right corner (with three
+ * pins, the first two sit beside the title). It shows
  * the effective selection (the type default when the list has none) and its order. A toggle saves
  * at once; ticking a field appends it, unticking removes it (so the second becomes the first), and
- * at most two can be pinned. "Reset to default" sends `null`.
+ * at most three can be pinned. "Reset to default" sends `null`.
  */
 export function PinnedMenu({
   list,

@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { ItemEntry } from './ItemEntry'
 import type { ItemSummary } from './api'
+import type { TypeDefinition } from '../items/types'
 import { mockTypes } from '../../mocks/types'
 
 const item = (over: Partial<ItemSummary> = {}): ItemSummary => ({
@@ -22,13 +23,30 @@ const item = (over: Partial<ItemSummary> = {}): ItemSummary => ({
   ...over,
 })
 
+const bookDefinition: TypeDefinition = {
+  key: 'book',
+  name: 'Book',
+  default_icon: null,
+  allows_price: true,
+  default_sort_field: null,
+  default_pinned_fields: ['author', 'pages', 'stores'],
+  is_locked: true,
+  version: 1,
+  fields: [
+    { key: 'author', label: 'Author', type: 'text', position: 0, is_locked: true, version: 1 },
+    { key: 'pages', label: 'Pages', type: 'number', position: 1, is_locked: true, version: 1 },
+    { key: 'stores', label: 'Stores', type: 'stores', position: 2, is_locked: true, version: 1 },
+  ],
+}
+
 function entry(
   pinned: string[],
   mode: 'compact' | 'thumbnail' | 'grid',
   over: Partial<ItemSummary> = {},
 ) {
   const type = over.type ?? 'movie'
-  const definition = mockTypes.find((candidate) => candidate.key === type)!
+  const definition =
+    type === 'book' ? bookDefinition : mockTypes.find((candidate) => candidate.key === type)!
   render(
     <MemoryRouter>
       <ul>
@@ -87,5 +105,39 @@ describe('F009-W3 the first pinned field reads next to the title, the second in 
   it('pins nothing when the list stores an empty selection', () => {
     const row = entry([], 'grid')
     expect(readOrder(row)).toEqual(['Alien'])
+  })
+})
+
+describe('F016-W3 three pins: two beside the title, the third in the corner', () => {
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s: title, author and pages, then the stores as tiles',
+    (mode) => {
+      const row = entry(['author', 'pages', 'stores'], mode, {
+        type: 'book',
+        title: 'Dune',
+        metadata: { author: 'Frank Herbert', pages: 412, stores: ['openlibrary', 'kobo'] },
+      })
+      const order = readOrder(row)
+      expect(order.indexOf('Dune')).toBe(0)
+      expect(order.indexOf('Frank Herbert · 412')).toBe(1)
+      expect(within(row).getByRole('img', { name: 'openlibrary' })).toBeInTheDocument()
+      expect(within(row).getByRole('img', { name: 'kobo' })).toBeInTheDocument()
+    },
+  )
+
+  it('a book with no stores selected shows no tiles', () => {
+    const row = entry(['author', 'pages', 'stores'], 'compact', {
+      type: 'book',
+      metadata: { author: 'Frank Herbert' },
+    })
+    expect(within(row).queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  it('a TV show with seasons, episodes and a third pin keeps 5×7', () => {
+    const row = entry(['seasons', 'episodes_per_season', 'episode_minutes'], 'thumbnail', {
+      type: 'tv_show',
+      metadata: { seasons: 5, episodes_per_season: 7, episode_minutes: 45 },
+    })
+    expect(readOrder(row)).toEqual(['Alien', '5×7', '45 min'])
   })
 })

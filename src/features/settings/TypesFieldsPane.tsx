@@ -475,7 +475,7 @@ export function TypesFieldsPane() {
                     <legend className="mb-2 text-sm font-medium">Default pinned fields</legend>
                     {defaultFieldOptions.length === 0 ? (
                       <p className="text-sm text-text-muted">
-                        Add fields to choose up to two pins.
+                        Add fields to choose up to three pins.
                       </p>
                     ) : (
                       <div className="flex flex-col gap-1">
@@ -491,7 +491,7 @@ export function TypesFieldsPane() {
                               <input
                                 type="checkbox"
                                 checked={checked}
-                                disabled={!checked && pins.length >= 2}
+                                disabled={!checked && pins.length >= 3}
                                 onChange={(event) => {
                                   const next = event.target.checked
                                     ? [...pins, field.value]
