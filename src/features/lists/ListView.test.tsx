@@ -1182,7 +1182,7 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await user.type(title, 'dune{Enter}')
 
     const status = await within(panel).findByRole('status')
-    expect(status).toHaveTextContent('Looking up details on Open Library')
+    expect(status).toHaveTextContent('Looking up details')
     expect(posts).toEqual([{ title: 'dune' }])
     release()
     await waitFor(() =>

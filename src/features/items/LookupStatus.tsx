@@ -2,7 +2,7 @@
 export function LookupStatus() {
   return (
     <p role="status" aria-live="polite" className="text-sm text-text-muted">
-      Looking up details on Open Library… this can take a few seconds.
+      Looking up details… this can take a few seconds.
     </p>
   )
 }
