@@ -13,11 +13,14 @@ import {
 import { ImagePlus, Plus, X } from '../../components/ui/icons'
 import { ApiError, NetworkError } from '../../lib/api'
 import { itemKeys, useCreateItem, type Item } from '../items/api'
+import { TitleLookupField } from '../items/TitleLookupField'
 import {
   createLookupSelection,
-  TmdbTitleField,
-  type TmdbTitleSelection,
-} from '../items/TmdbTitleField'
+  isLookupUnavailable,
+  lookupSourceName,
+  type LookupSelection,
+  type LookupTitleSelection,
+} from '../items/lookup'
 import { MAX_CONTENT_BYTES, isTooLarge } from '../items/content/limits'
 import { useSaveContent } from '../items/content/api'
 import { LIMITS } from '../items/form/draft'
@@ -63,9 +66,11 @@ export function QuickAddDialog({
     pickedList ??
     (lists.some((l) => l.id === initialListId) ? initialListId : undefined) ??
     lists[0]?.id
+  const listType = lists.find((list) => list.id === listId)?.type ?? null
+  const sourceName = lookupSourceName(listType)
 
   const [title, setTitle] = useState('')
-  const [tmdbId, setTmdbId] = useState<number>()
+  const [chosen, setChosen] = useState<LookupSelection>({})
   const [website, setWebsite] = useState('')
   const [description, setDescription] = useState('')
   const [image, setImage] = useState<File>()
@@ -85,7 +90,7 @@ export function QuickAddDialog({
   const create = useCreateItem(listId ?? '')
   const saveContent = useSaveContent()
 
-  const submit = async (event?: FormEvent, lookup?: boolean, selection?: TmdbTitleSelection) => {
+  const submit = async (event?: FormEvent, lookup?: boolean, selection?: LookupTitleSelection) => {
     event?.preventDefault()
     if (busy) return
     const trimmed = (selection?.title ?? title).trim()
@@ -111,24 +116,16 @@ export function QuickAddDialog({
     setBusy(true)
     let created: Item
     try {
-      const listType = lists.find((list) => list.id === listId)?.type ?? null
       created = await create.mutateAsync({
         title: trimmed,
-        ...createLookupSelection(
-          listType,
-          settings.data?.lookup_available === true,
-          selection?.tmdb_id ?? tmdbId,
-        ),
+        ...createLookupSelection(listType, settings.data, selection ?? chosen),
         ...(lookup === undefined ? {} : { lookup }),
         ...(site ? { website: site } : {}),
       })
     } catch (caught) {
       setBusy(false)
-      const tmdbUnavailable =
-        caught instanceof ApiError &&
-        caught.status === 503 &&
-        (caught.code === 'upstream_unavailable' || caught.code === 'lookup_disabled')
-      setLookupUnavailable(tmdbUnavailable)
+      const unavailable = isLookupUnavailable(caught)
+      setLookupUnavailable(unavailable)
       if (caught instanceof ApiError && caught.status === 422) {
         const mapped: Partial<Record<Field, string>> = {}
         const rest: string[] = []
@@ -144,7 +141,7 @@ export function QuickAddDialog({
         }
       } else if (caught instanceof ApiError && caught.status === 409) {
         setFormError('This list no longer exists or is in Trash.')
-      } else if (tmdbUnavailable) {
+      } else if (unavailable) {
         setFormError(undefined)
       } else if (
         caught instanceof NetworkError ||
@@ -234,18 +231,15 @@ export function QuickAddDialog({
         className="flex flex-col gap-4"
       >
         <div className="flex flex-col gap-1 pr-10">
-          <TmdbTitleField
-            type={lists.find((list) => list.id === listId)?.type ?? null}
+          <TitleLookupField
+            type={listType}
             title={title}
             onTitleChange={(value) => {
               setTitle(value)
               dismiss('title')
             }}
-            onSelectionChange={setTmdbId}
-            onSuggestionSelect={(selection) => {
-              setTmdbId(selection.tmdb_id)
-              void submit(undefined, undefined, selection)
-            }}
+            onSelectionChange={setChosen}
+            onSuggestionSelect={(selection) => void submit(undefined, undefined, selection)}
             inputRef={titleRef}
             error={errors.title}
             placeholder="Title"
@@ -267,7 +261,7 @@ export function QuickAddDialog({
                 value={listId}
                 onValueChange={(value) => {
                   setPickedList(value)
-                  setTmdbId(undefined)
+                  setChosen({})
                 }}
                 error={errors.list}
               />
@@ -411,15 +405,15 @@ export function QuickAddDialog({
             className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
           >
             <p>
-              TMDB metadata is unavailable right now. Your title is still here; retry the lookup or
-              add it without TMDB metadata.
+              {sourceName} metadata is unavailable right now. Your title is still here; retry the
+              lookup or add it without {sourceName} metadata.
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               <Button size="sm" variant="secondary" onClick={() => void submit(undefined)}>
-                Retry TMDB lookup
+                Retry {sourceName} lookup
               </Button>
               <Button size="sm" variant="secondary" onClick={() => void submit(undefined, false)}>
-                Add without TMDB metadata
+                Add without {sourceName} metadata
               </Button>
             </div>
           </div>

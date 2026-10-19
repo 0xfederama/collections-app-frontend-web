@@ -432,7 +432,7 @@ export function SettingsForm({
         <Select
           id={inputId('metadata_language')}
           label="Metadata language"
-          hint="Titles and other details filled from TMDB use this language."
+          hint="Titles and other details filled from online sources use this language."
           value={draft.metadata_language}
           onValueChange={(value) => set('metadata_language', value)}
           error={errors.metadata_language}
