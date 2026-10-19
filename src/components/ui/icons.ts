@@ -106,8 +106,8 @@ import {
   Camera,
   Car,
   Film,
+  List,
   Motorbike,
-  Tag,
   Tv,
   type LucideIcon,
 } from 'lucide-react'
@@ -124,9 +124,9 @@ export const typeIcons: Record<string, LucideIcon> = {
   book: BookOpenIcon,
 }
 
-/** The icon of a type; `null` (no type) and unknown custom types get the tag. */
+/** The icon of a type; `null` (no type) and unknown custom types get the classic list glyph. */
 export const typeIconFor = (type: ItemType): LucideIcon =>
-  (type === null ? undefined : typeIcons[type]) ?? Tag
+  (type === null ? undefined : typeIcons[type]) ?? List
 
 /** What a list with no type (`null`) is called wherever it is shown. */
 export const NO_TYPE_LABEL = 'No type'

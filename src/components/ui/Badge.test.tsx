@@ -19,6 +19,12 @@ describe('Badge', () => {
     expect(container.querySelector('svg[aria-hidden="true"]')).toBeInTheDocument()
   })
 
+  it('F018 shows the list glyph for no type', () => {
+    const { container } = render(<Badge type={null} />)
+    expect(container.querySelector('svg.lucide-list')).toBeInTheDocument()
+    expect(container.querySelector('svg.lucide-tag')).not.toBeInTheDocument()
+  })
+
   it('covers the five built-in types', () => {
     expect(Object.keys(typeLabels)).toHaveLength(5)
   })
