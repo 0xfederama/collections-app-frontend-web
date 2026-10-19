@@ -6,7 +6,8 @@ export const uniqueId = () => `${Date.now().toString(36)}${Math.random().toStrin
 /** A readable unique name, e.g. `Movies k3j2x9ab`. */
 export const uniqueName = (label: string) => `${label} ${uniqueId()}`
 
-export type ItemType = 'movie' | 'tv_show' | 'motorcycle' | 'car' | 'camera' | 'book' | null
+/** The five built-in types (F018) plus "No type" (null). */
+export type ItemType = 'book' | 'movie' | 'tv_show' | 'vehicle' | 'wishlist' | null
 
 interface Created {
   id: string

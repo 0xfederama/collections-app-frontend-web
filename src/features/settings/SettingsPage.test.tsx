@@ -306,6 +306,8 @@ describe('W-13 settings: saving', () => {
     expect(about).toHaveTextContent(
       'Book details and covers come from Open Library, an open project of the Internet Archive.',
     )
+    expect(within(about).getByRole('img', { name: 'Open Library' })).toBeInTheDocument()
+    expect(about).not.toHaveTextContent('Thank you')
     expect(within(about).getByRole('link', { name: 'Open Library' })).toHaveAttribute(
       'href',
       'https://openlibrary.org/',
@@ -321,6 +323,10 @@ describe('W-13 settings: saving', () => {
     await openSettings('About')
     const about = screen.getByRole('region', { name: 'About' })
     expect(within(about).getByRole('img', { name: 'TMDB' })).toBeInTheDocument()
+    expect(within(about).getByRole('link', { name: 'TMDB' })).toHaveAttribute(
+      'href',
+      'https://www.themoviedb.org/',
+    )
     expect(about).toHaveTextContent(
       'This product uses the TMDB API but is not endorsed or certified by TMDB.',
     )

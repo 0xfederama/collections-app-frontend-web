@@ -188,7 +188,7 @@ describe('W-06 display modes', () => {
   const rich = [
     makeItem(1, {
       title: 'The Matrix',
-      type: 'car',
+      type: 'wishlist',
       price: { min: '1200', max: '1500', currency: 'EUR' },
     }),
   ]
@@ -196,15 +196,18 @@ describe('W-06 display modes', () => {
   it.each(['compact', 'thumbnail', 'grid'] as const)(
     '%s renders title link and price, no type label, status or summary (F007-W4, W7)',
     async (mode) => {
-      // A car list pins price by default, so the row shows it.
-      treeWithType('car')
-      useBackend({ list: { display_mode: mode, type: 'car', pinned_fields: null }, items: rich })
+      // A wishlist pins price by default, so the row shows it.
+      treeWithType('wishlist')
+      useBackend({
+        list: { display_mode: mode, type: 'wishlist', pinned_fields: null },
+        items: rich,
+      })
       renderList(at())
       const ul = await itemsList()
       const link = within(ul).getByRole('link', { name: 'The Matrix' })
       expect(link).toHaveAttribute('href', `/lists/${LIST}/items/${rich[0]!.id}`)
       expect(within(ul).getByText(/1,200.*1,500/)).toBeInTheDocument()
-      expect(within(ul).queryByText('Car')).not.toBeInTheDocument()
+      expect(within(ul).queryByText('Wishlist')).not.toBeInTheDocument()
       expect(screen.getByRole('radio', { name: radioName[mode] })).toBeChecked()
     },
   )
@@ -406,9 +409,9 @@ describe('W-06 URL state: sort and filter', () => {
     expect(backend.itemRequests.at(-1)!.searchParams.has('filter_field')).toBe(false)
   })
 
-  it('F002 a car list offers "Price" and picking it sets ?sort=price', async () => {
-    treeWithType('car')
-    const backend = useBackend({ list: { type: 'car' } })
+  it('F002 a wishlist offers "Price" and picking it sets ?sort=price', async () => {
+    treeWithType('wishlist')
+    const backend = useBackend({ list: { type: 'wishlist' } })
     const user = userEvent.setup()
     const router = renderList(at())
     await itemsList()
@@ -433,7 +436,7 @@ describe('W-06 URL state: sort and filter', () => {
     expect(screen.getByRole('option', { name: 'Release year' })).toBeInTheDocument()
   })
 
-  it('F009-W2 a movie list cannot pin price, a car list can', async () => {
+  it('F009-W2 a movie list cannot pin price, a wishlist can', async () => {
     treeWithType('movie')
     useBackend({ list: { type: 'movie' } })
     const user = userEvent.setup()
@@ -551,9 +554,9 @@ describe('F002-W2 pinned fields', () => {
       streaming: { platforms: ['Netflix'], paid_platforms: ['Netflix'] },
     },
   })
-  const car = makeItem(2, {
+  const wish = makeItem(2, {
     title: 'Miata',
-    type: 'car',
+    type: 'wishlist',
     price: { min: '1200', max: '1500', currency: 'EUR' },
     metadata: { model_year: 1999 },
   })
@@ -583,8 +586,8 @@ describe('F002-W2 pinned fields', () => {
 
   it('shows the list selection instead of the default, in its order, and [] pins nothing', async () => {
     useBackend({
-      list: { type: 'car', pinned_fields: ['price'] },
-      items: [car],
+      list: { type: 'wishlist', pinned_fields: ['price'] },
+      items: [wish],
     })
     renderList(at())
     const ul = await itemsList()
@@ -613,8 +616,8 @@ describe('F002-W2 pinned fields', () => {
 
   it('Reset to default PATCHes pinned_fields null', async () => {
     const backend = useBackend({
-      list: { type: 'car', pinned_fields: ['price'], version: 2 },
-      items: [car],
+      list: { type: 'wishlist', pinned_fields: ['price'], version: 2 },
+      items: [wish],
     })
     const user = userEvent.setup()
     renderList(at())

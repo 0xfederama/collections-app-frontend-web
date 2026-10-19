@@ -294,7 +294,7 @@ describe('AT-22 unsaved description guard', () => {
     type('dirty')
     await user.click(
       await within(screen.getByRole('navigation', { name: 'Library' })).findByRole('link', {
-        name: /Motorbikes/,
+        name: /Vehicles/,
       }),
     )
     const dialog = await screen.findByRole('alertdialog')

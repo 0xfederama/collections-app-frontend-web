@@ -24,7 +24,7 @@ Pins the backend OpenAPI contract, generates TypeScript types/examples, and prov
 
 ## Gotchas
 
-- Current pinned contract: `api-v0.13.0` (web 2.10.0). Do not edit `api/openapi.yaml` or `src/generated/`; run `api:sync` and verify with `api:check`.
+- Current pinned contract: `api-v0.16.0` (web 2.14.0). Do not edit `api/openapi.yaml` or `src/generated/`; run `api:sync` and verify with `api:check`.
 - F014 (`api-v0.10.1`): type definitions and fields are API data with their own ETags (`"k-N"`, `"kf-N"`); `src/mocks/types.ts` serves them read-only to tests and the dev worker.
 - F-016 (`api-v0.12.0`): Open Library book suggestions and lookup (`book_lookup_available`, `source_id`), the book type, `stores` fields and the store provider list. `api-v0.13.0`: setting `preferred_store` (one key, default `amazon`) replaces `preferred_stores`, Open Library is not a store, the book has no `first_publish_year`.
 - F013 adds TMDB suggestions and item lookup, movie `director`, the movie-only `director` sort, settings `metadata_language`, and read-only `lookup_available`.

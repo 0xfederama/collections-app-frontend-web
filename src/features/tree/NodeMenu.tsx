@@ -13,8 +13,15 @@ import type { TreeActions } from './useTreeDialogs'
 
 const icon = (node: ReactNode) => node
 
-/** Menu entries for one folder or list. Reordering is the drag handle (F007-W3), not the menu. */
-export function nodeMenuItems(node: TreeNode, actions: TreeActions): MenuItem[] {
+/**
+ * Menu entries for one folder or list. Reordering is the drag handle (F007-W3), not the menu.
+ * "Change icon" is offered only where `changeIcon` is set (the sidebar row, F018-W1), not in the list header.
+ */
+export function nodeMenuItems(
+  node: TreeNode,
+  actions: TreeActions,
+  { changeIcon = false }: { changeIcon?: boolean } = {},
+): MenuItem[] {
   const id = node.id
   const items: MenuItem[] = []
   if (node.kind === 'folder') {
@@ -33,6 +40,8 @@ export function nodeMenuItems(node: TreeNode, actions: TreeActions): MenuItem[] 
     )
   }
   items.push({ label: 'Rename', icon: icon(<Pencil />), onSelect: () => actions.rename(id) })
+  if (changeIcon && node.kind === 'list')
+    items.push({ label: 'Change icon', onSelect: () => actions.changeIcon(id) })
   items.push({ label: 'Move…', icon: icon(<FolderInput />), onSelect: () => actions.move(id) })
   items.push(
     { type: 'separator' },
@@ -53,6 +62,7 @@ export function NodeMenu({
   name,
   className,
   leading,
+  changeIcon,
 }: {
   node: TreeNode
   actions: TreeActions
@@ -60,6 +70,8 @@ export function NodeMenu({
   className?: string
   /** Entries before the standard ones, e.g. a list's Type (list header only). */
   leading?: MenuItem[]
+  /** Offer "Change icon" for a list (sidebar row only). */
+  changeIcon?: boolean
 }) {
   return (
     <Menu
@@ -68,7 +80,7 @@ export function NodeMenu({
           <Ellipsis aria-hidden />
         </IconButton>
       }
-      items={[...(leading ?? []), ...nodeMenuItems(node, actions)]}
+      items={[...(leading ?? []), ...nodeMenuItems(node, actions, { changeIcon })]}
     />
   )
 }

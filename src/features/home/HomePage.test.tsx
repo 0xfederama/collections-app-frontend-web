@@ -34,7 +34,7 @@ describe('W-13 home: quick links', () => {
       `/lists/${MOTORBIKES}`, // updated 09:40
       `/lists/${WATCHLIST}`, // updated 09:30
     ])
-    expect(links[0]).toHaveTextContent('Motorbikes')
+    expect(links[0]).toHaveTextContent('in Vehicles')
     expect(links[0]).toHaveTextContent('Vehicles')
     expect(links[0]).toHaveTextContent('1 item')
     expect(links[1]).toHaveTextContent('Watchlist')

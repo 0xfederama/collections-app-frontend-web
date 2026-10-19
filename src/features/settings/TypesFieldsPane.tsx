@@ -689,6 +689,8 @@ export function TypesFieldsPane() {
           <form onSubmit={(event) => void submitType(event)} className="flex flex-col gap-3">
             <TextField
               label="Type name"
+              placeholder="Board games"
+              hint="Suggest a plural name, like Board games. It is kept as you type it."
               value={name}
               onChange={(event) => setName(event.target.value)}
               maxLength={100}

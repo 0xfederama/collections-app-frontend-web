@@ -25,6 +25,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 ## Gotchas
 
 - Create and icon update send `icon` and `icon_color`; icon update uses the list snapshot's version in `If-Match`.
+- "Change icon" is in the sidebar row "…" only (`NodeMenu` `changeIcon`); the list header opens the same dialog from its icon button.
 - A 412 on icon update preserves the selected mark and offers Copy draft or Reload latest; reload requires confirmation and refreshes the tree before replacing the snapshot.
 - New list icon choice is a compact labelled field beside Name on the same row, including mobile; picker behavior is unchanged. The list mark is rendered by [lists](lists.md) in the sidebar, rail, list header and search results.
 - Create/move bodies include `folder_id` (`null` = top level); reorder is within same-kind siblings under one parent.

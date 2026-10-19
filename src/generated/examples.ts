@@ -251,8 +251,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         {
           "id": "7c1e5a10-0000-4000-8000-000000000012",
           "folder_id": "7c1e5a10-0000-4000-8000-000000000003",
-          "name": "Motorbikes",
-          "type": "motorcycle",
+          "name": "Vehicles",
+          "type": "vehicle",
           "description": null,
           "display_mode": "grid",
           "sort_mode": "title",
@@ -656,22 +656,19 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000102",
       "list_id": "7c1e5a10-0000-4000-8000-000000000012",
       "title": "Ducati Monster",
-      "type": "motorcycle",
+      "type": "vehicle",
       "image": {
         "source": "url",
         "url": "https://example.org/images/monster.jpg"
       },
-      "price": {
-        "min": "12000.00",
-        "max": "13500.00",
-        "currency": "EUR"
-      },
+      "price": null,
       "website": "https://www.ducati.com/",
       "metadata": {
+        "make": "Ducati",
+        "model": "Monster",
         "model_year": 2024,
         "displacement_cc": 937,
-        "power_hp": 111,
-        "license_class": "A"
+        "power_hp": 111
       },
       "content_version": 0,
       "sort_order": 0,
@@ -743,22 +740,19 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000102",
       "list_id": "7c1e5a10-0000-4000-8000-000000000012",
       "title": "Ducati Monster",
-      "type": "motorcycle",
+      "type": "vehicle",
       "image": {
         "source": "url",
         "url": "https://example.org/images/monster.jpg"
       },
-      "price": {
-        "min": "12000.00",
-        "max": "13500.00",
-        "currency": "EUR"
-      },
+      "price": null,
       "website": "https://www.ducati.com/",
       "metadata": {
+        "make": "Ducati",
+        "model": "Monster",
         "model_year": 2024,
         "displacement_cc": 937,
-        "power_hp": 111,
-        "license_class": "A"
+        "power_hp": 111
       },
       "content_version": 0,
       "sort_order": 0,
@@ -824,22 +818,19 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000102",
       "list_id": "7c1e5a10-0000-4000-8000-000000000012",
       "title": "Ducati Monster",
-      "type": "motorcycle",
+      "type": "vehicle",
       "image": {
         "source": "url",
         "url": "https://example.org/images/monster.jpg"
       },
-      "price": {
-        "min": "12000.00",
-        "max": "13500.00",
-        "currency": "EUR"
-      },
+      "price": null,
       "website": "https://www.ducati.com/",
       "metadata": {
+        "make": "Ducati",
+        "model": "Monster",
         "model_year": 2024,
         "displacement_cc": 937,
-        "power_hp": 111,
-        "license_class": "A"
+        "power_hp": 111
       },
       "content_version": 0,
       "sort_order": 0,

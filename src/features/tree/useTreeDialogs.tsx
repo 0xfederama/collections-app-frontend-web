@@ -6,6 +6,7 @@ import { arrayMove, type SortableMove } from '../../components/ui/sortable'
 import { readSession, STORAGE_KEYS, writeSession } from '../../lib/storage'
 import { treeKeys, useTreeIndex, type TreeData, type TreeNode } from './api'
 import { DeleteDialog } from './DeleteDialog'
+import { ListIconDialog } from './ListIconDialog'
 import {
   useCreateFolder,
   useCreateList,
@@ -24,7 +25,7 @@ import { buildSortable, canDropInto, subtreeCounts } from './order'
 
 type DialogState =
   | { type: 'create'; kind: 'folder' | 'list'; parentId: string | null }
-  | { type: 'rename' | 'move' | 'delete'; id: string }
+  | { type: 'rename' | 'move' | 'delete' | 'icon'; id: string }
 
 /** What the menus can ask for. Every method takes ids, so a menu never holds a stale object. */
 export interface TreeActions {
@@ -33,6 +34,8 @@ export interface TreeActions {
   rename: (id: string) => void
   move: (id: string) => void
   remove: (id: string) => void
+  /** Opens the list icon dialog (lists only; a folder has no icon). */
+  changeIcon: (id: string) => void
   /** Moves a node one place among its siblings of the same kind (-1 up, +1 down). */
   nudge: (id: string, delta: -1 | 1) => void
   /** Position among same-kind siblings, or `undefined` while the tree is loading. */
@@ -150,6 +153,7 @@ export function useTreeDialogs({
     rename: (id) => setDialog({ type: 'rename', id }),
     move: (id) => setDialog({ type: 'move', id }),
     remove: (id) => setDialog({ type: 'delete', id }),
+    changeIcon: (id) => setDialog({ type: 'icon', id }),
     position: (id) => {
       const slot = sortable?.slots.get(id)
       return slot && { index: slot.index, size: slot.size }
@@ -289,6 +293,10 @@ export function useTreeDialogs({
               }}
             />
           )
+        } else if (dialog.type === 'icon') {
+          // A folder has no icon: the dialog simply does not open for it.
+          if (node.kind === 'list')
+            content = <ListIconDialog key={`icon-${node.id}`} list={node.list} onClose={close} />
         } else if (dialog.type === 'delete') {
           const counts = subtreeCounts(node)
           const contents = countsText(counts)

@@ -6,7 +6,7 @@ describe('F008-W13 item initials', () => {
   it('draws the same letter tile for every type, with no type symbol', () => {
     const { container } = render(
       <>
-        {(['movie', 'car', null] as const).map((type) => (
+        {(['movie', 'vehicle', null] as const).map((type) => (
           <ItemThumb
             key={type ?? 'none'}
             item={{ title: 'alien', type, image: null }}

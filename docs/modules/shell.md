@@ -8,7 +8,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
 
 - `src/app/App.tsx`: mounts `QueryClientProvider`, `ToastProvider` and `RouterProvider`.
 - `src/app/router.tsx`: `routes` (every route is registered here), `createAppRouter`, `createTestRouter`.
-- `src/app/lazyRoute.tsx`: `lazyRoute(load)`, code-split route screens with a skeleton.
+- `src/app/lazyRoute.tsx`: `lazyRoute(load)`, code-split route screens with a skeleton (Settings passes `fallback: null`, so no skeleton shows while it loads).
 - `src/layouts/AppShell.tsx`: layout per breakpoint, drawer, detail sheet, `/` shortcut, `QuickAddProvider`.
 - `src/layouts/Sidebar.tsx`, `SidebarResizer.tsx`, `useSidebarState.ts`: sidebar, splitter, persisted width.
 - `src/features/tree/RailTree.tsx`: top-level entries of the collapsed sidebar.

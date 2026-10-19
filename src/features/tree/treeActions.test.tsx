@@ -60,21 +60,21 @@ describe('AT-03 tree CRUD (web): create', () => {
     const dlg = await dialog()
     const type = within(dlg).getByRole('combobox', { name: 'Type' })
     expect(type).toHaveTextContent('No type')
-    await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Cameras')
+    await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Garage')
     await user.click(type)
-    await user.click(await screen.findByRole('option', { name: 'Camera' }))
+    await user.click(await screen.findByRole('option', { name: 'Vehicles' }))
     expect(within(dlg).queryByRole('alert')).not.toBeInTheDocument()
     await user.click(within(dlg).getByRole('button', { name: 'Create' }))
 
     await waitFor(() => expect(backend.writes('POST', '/api/v1/lists')).toHaveLength(1))
     expect(backend.writes('POST', '/api/v1/lists')[0]?.body).toEqual({
-      name: 'Cameras',
-      type: 'camera',
+      name: 'Garage',
+      type: 'vehicle',
       folder_id: null,
       icon: null,
       icon_color: null,
     })
-    expect(backend.state.lists.find((l) => l.name === 'Cameras')?.type).toBe('camera')
+    expect(backend.state.lists.find((l) => l.name === 'Garage')?.type).toBe('vehicle')
   })
 
   it('F015 the type picker lists "No type" first, a separator, then the types, then "+ New type", which opens Settings', async () => {

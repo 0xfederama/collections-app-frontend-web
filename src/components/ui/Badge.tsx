@@ -1,5 +1,5 @@
 import { cx } from '../../lib/cx'
-import { NO_TYPE_LABEL, Tag, typeIcons, typeLabels, type ItemType } from './icons'
+import { List, NO_TYPE_LABEL, typeIcons, typeLabels, type ItemType } from './icons'
 
 export interface BadgeProps {
   type: ItemType
@@ -8,7 +8,7 @@ export interface BadgeProps {
 
 /** Item type marker: icon plus the type name (UI_SPEC §4). */
 export function Badge({ type, className }: BadgeProps) {
-  const Icon = (type === null ? undefined : typeIcons[type]) ?? Tag
+  const Icon = (type === null ? undefined : typeIcons[type]) ?? List
   return (
     <span
       className={cx(

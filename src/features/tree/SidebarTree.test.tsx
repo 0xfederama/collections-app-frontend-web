@@ -36,6 +36,8 @@ function renderRouter(path: string) {
 const stored = () => JSON.parse(localStorage.getItem(KEY) ?? 'null') as string[] | null
 const sidebar = () => screen.getByRole('navigation', { name: 'Library' })
 const treeitem = (name: RegExp | string) => within(sidebar()).queryByRole('treeitem', { name })
+// The example list is also called Vehicles, like its folder: the list row ends with its item count.
+const VEHICLES_LIST = /^Vehicles\s*\d+\s*items?/
 const mainHeading = (name: string) =>
   within(screen.getByRole('main')).findByRole('heading', { name })
 
@@ -91,9 +93,9 @@ describe('W-04 sidebar tree behaviour', () => {
     renderAt('/')
     const media = await within(sidebar()).findByRole('treeitem', { name: /Media/ })
     expect(media).toHaveAttribute('aria-expanded', 'false')
-    expect(treeitem(/Vehicles/)).toHaveAttribute('aria-expanded', 'false')
+    expect(treeitem(/^Vehicles$/)).toHaveAttribute('aria-expanded', 'false')
     expect(treeitem(/Movies/)).not.toBeInTheDocument()
-    expect(treeitem(/Motorbikes/)).not.toBeInTheDocument()
+    expect(treeitem(VEHICLES_LIST)).not.toBeInTheDocument()
   })
 
   it('expands and collapses a folder by click', async () => {
@@ -127,9 +129,9 @@ describe('W-04 sidebar tree behaviour', () => {
     const watchlist = await within(sidebar()).findByRole('link', { name: /Watchlist/ })
     expect(watchlist).toHaveAttribute('href', `/lists/${WATCHLIST}`)
     expect(watchlist).toHaveAccessibleName(/Watchlist\s*2\s*items/)
-    const motorbikes = within(sidebar()).getByRole('link', { name: /Motorbikes/ })
-    expect(motorbikes).toHaveAttribute('href', `/lists/${MOTORBIKES}`)
-    expect(motorbikes).toHaveAccessibleName(/Motorbikes\s*1\s*items?/)
+    const vehiclesList = within(sidebar()).getByRole('link', { name: /Vehicles/ })
+    expect(vehiclesList).toHaveAttribute('href', `/lists/${MOTORBIKES}`)
+    expect(vehiclesList).toHaveAccessibleName(/Vehicles\s*1\s*items?/)
   })
 
   it('navigates to the list when Enter is pressed on a list row', async () => {
@@ -163,8 +165,8 @@ describe('W-04 sidebar tree behaviour', () => {
         </ToastProvider>
       </QueryClientProvider>,
     )
-    await user.click(await within(sidebar()).findByRole('link', { name: /Motorbikes/ }))
-    expect(await mainHeading('Motorbikes')).toBeInTheDocument()
+    await user.click(await within(sidebar()).findByRole('link', { name: /Vehicles/ }))
+    expect(await mainHeading('Vehicles')).toBeInTheDocument()
     expect(navigate).toHaveBeenCalledTimes(1)
     expect(router.state.location.pathname).toBe(`/lists/${MOTORBIKES}`)
   })
@@ -185,7 +187,7 @@ describe('W-04 expanded folders', () => {
     renderAt('/')
     await user.click(await within(sidebar()).findByRole('treeitem', { name: /Media/ }))
     await waitFor(() => expect(stored()).toEqual([MEDIA]))
-    await user.click(treeitem(/Vehicles/)!)
+    await user.click(treeitem(/^Vehicles$/)!)
     await waitFor(() => expect(stored()).toEqual([MEDIA, VEHICLES]))
     await user.click(treeitem(/Media/)!)
     await waitFor(() => expect(stored()).toEqual([VEHICLES]))
@@ -197,7 +199,7 @@ describe('W-04 expanded folders', () => {
     expect(await within(sidebar()).findByRole('treeitem', { name: /Watchlist/ })).toBeVisible()
     expect(treeitem(/Media/)).toHaveAttribute('aria-expanded', 'true')
     expect(treeitem(/Movies/)).toHaveAttribute('aria-expanded', 'true')
-    expect(treeitem(/Vehicles/)).toHaveAttribute('aria-expanded', 'false')
+    expect(treeitem(/^Vehicles$/)).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('ignores unknown ids and prunes them on the next write', async () => {
@@ -206,7 +208,7 @@ describe('W-04 expanded folders', () => {
     const user = userEvent.setup()
     renderAt('/')
     expect(await within(sidebar()).findByRole('treeitem', { name: /Movies/ })).toBeInTheDocument()
-    await user.click(treeitem(/Vehicles/)!)
+    await user.click(treeitem(/^Vehicles$/)!)
     await waitFor(() => expect(stored()).toEqual([MEDIA, VEHICLES]))
   })
 
@@ -249,19 +251,19 @@ describe('W-04 expanded folders', () => {
     expect(await within(sidebar()).findByRole('treeitem', { name: /Watchlist/ })).toBeVisible()
     expect(treeitem(/Media/)).toHaveAttribute('aria-expanded', 'true')
     expect(treeitem(/Movies/)).toHaveAttribute('aria-expanded', 'true')
-    expect(treeitem(/Vehicles/)).toHaveAttribute('aria-expanded', 'false')
+    expect(treeitem(/^Vehicles$/)).toHaveAttribute('aria-expanded', 'false')
     await waitFor(() => expect(stored()).toEqual([MEDIA, MOVIES]))
   })
 
   it('auto-expands the ancestors again after navigating to another list', async () => {
     const { router } = renderRouter(`/lists/${WATCHLIST}`)
     await within(sidebar()).findByRole('treeitem', { name: /Watchlist/ })
-    expect(treeitem(/Vehicles/)).toHaveAttribute('aria-expanded', 'false')
+    expect(treeitem(/^Vehicles$/)).toHaveAttribute('aria-expanded', 'false')
 
     await router.navigate(`/lists/${MOTORBIKES}`)
-    expect(await within(sidebar()).findByRole('treeitem', { name: /Motorbikes/ })).toBeVisible()
-    expect(treeitem(/Vehicles/)).toHaveAttribute('aria-expanded', 'true')
-    expect(treeitem(/Motorbikes/)).toHaveAttribute('aria-selected', 'true')
+    expect(await within(sidebar()).findByRole('treeitem', { name: VEHICLES_LIST })).toBeVisible()
+    expect(treeitem(/^Vehicles$/)).toHaveAttribute('aria-expanded', 'true')
+    expect(treeitem(VEHICLES_LIST)).toHaveAttribute('aria-selected', 'true')
   })
 
   it('keeps a manual collapse of an ancestor until the active list changes', async () => {
@@ -277,7 +279,7 @@ describe('W-04 expanded folders', () => {
     expect(treeitem(/Movies/)).toHaveAttribute('aria-expanded', 'false')
 
     await router.navigate(`/lists/${MOTORBIKES}`)
-    await within(sidebar()).findByRole('treeitem', { name: /Motorbikes/ })
+    await within(sidebar()).findByRole('treeitem', { name: VEHICLES_LIST })
     expect(treeitem(/Movies/)).toHaveAttribute('aria-expanded', 'false')
 
     await router.navigate(`/lists/${WATCHLIST}`)

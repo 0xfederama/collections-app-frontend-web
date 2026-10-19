@@ -27,9 +27,14 @@ const BROKEN = 'https://images.example.invalid/missing.jpg'
 const TITLES: Record<string, string[]> = {
   movie: ['Blade Runner 2049', 'Arrival', 'The Grand Budapest Hotel', 'Past Lives', 'Drive'],
   tv_show: ['Severance', 'The Bear', 'Slow Horses', 'Andor', 'Shōgun'],
-  motorcycle: ['Ducati Monster', 'Triumph Speed 400', 'Yamaha MT-07', 'Honda CB650R'],
-  car: ['Mazda MX-5 Miata', 'Volvo V60 Cross Country', 'Alpine A110'],
-  camera: ['Fujifilm X100VI', 'Ricoh GR III', 'Leica Q3', 'Sony A7C II'],
+  vehicle: [
+    'Ducati Monster',
+    'Triumph Speed 400',
+    'Mazda MX-5 Miata',
+    'Volvo V60 Cross Country',
+    'Alpine A110',
+  ],
+  wishlist: ['Fujifilm X100VI', 'Ricoh GR III', 'Leica Q3', 'Sony A7C II'],
   none: ['Standing desk', 'Noise-cancelling headphones', 'Espresso machine', 'Trail shoes'],
 }
 /** Type fields for the pinned layout. The contract's summaries carry none yet, so the dev fake adds them. */
@@ -50,12 +55,8 @@ function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
         episode_minutes: 30 + ((i * 5) % 30),
         streaming: { platforms: ['Apple TV+'] },
       }
-    case 'motorcycle':
-      return { displacement_cc: 650 + i * 50 }
-    case 'car':
-      return { model_year: 2015 + (i % 10) }
-    case 'camera':
-      return { camera_type: (['mirrorless', 'dslr', 'film'] as const)[i % 3] }
+    case 'vehicle':
+      return { model_year: 2015 + (i % 10), power_hp: 70 + i * 10 }
     default:
       return {}
   }

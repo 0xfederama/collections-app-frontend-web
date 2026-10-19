@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ComponentType } from 'react'
+import { lazy, Suspense, type ComponentType, type ReactNode } from 'react'
 import { Skeleton } from '../components/ui'
 
 /** Placeholder while a route's code loads; the shell around it stays on screen. */
@@ -13,12 +13,19 @@ function RouteSkeleton() {
   )
 }
 
-/** A route component that is loaded on first render and shows a skeleton meanwhile. */
-export function lazyRoute(load: () => Promise<ComponentType>) {
+/**
+ * A route component that is loaded on first render and shows a skeleton meanwhile. Pass
+ * `fallback: null` for an overlay route (Settings), whose placeholder would otherwise show in the
+ * page flow under the page behind it.
+ */
+export function lazyRoute(
+  load: () => Promise<ComponentType>,
+  { fallback = <RouteSkeleton /> }: { fallback?: ReactNode } = {},
+) {
   const Lazy = lazy(async () => ({ default: await load() }))
   return function LazyRoute() {
     return (
-      <Suspense fallback={<RouteSkeleton />}>
+      <Suspense fallback={fallback}>
         <Lazy />
       </Suspense>
     )

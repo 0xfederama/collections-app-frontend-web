@@ -57,9 +57,8 @@ describe('AT-13 external links: shape per type (F-002)', () => {
     ['movie', ['google', 'letterboxd', 'imdb']],
     ['tv_show', ['google', 'imdb']],
     [null, ['google', 'reddit', 'website']],
-    ['motorcycle', ['google', 'reddit', 'website']],
-    ['car', ['google', 'reddit', 'website']],
-    ['camera', ['google', 'reddit', 'website']],
+    ['vehicle', ['google', 'reddit', 'website']],
+    ['wishlist', ['google', 'reddit', 'website']],
   ])('%s: %j', (type, ids) => {
     expect(buildExternalLinks(make({ type })).map((l) => l.id)).toEqual(ids)
   })
@@ -127,9 +126,8 @@ describe('AT-13 external links: search text per type', () => {
       make({ type: 'tv_show', metadata: { first_air_year: 2019 } }),
       'The Matrix TV series',
     ],
-    ['motorcycle', make({ type: 'motorcycle', metadata: { model_year: 2024 } }), 'The Matrix'],
-    ['car', make({ type: 'car' }), 'The Matrix'],
-    ['camera', make({ type: 'camera' }), 'The Matrix'],
+    ['vehicle', make({ type: 'vehicle', metadata: { model_year: 2024 } }), 'The Matrix'],
+    ['wishlist', make({ type: 'wishlist' }), 'The Matrix'],
     ['no type', make({ type: null }), 'The Matrix'],
   ])('%s', (_, item, expected) => {
     const link = byId(item)
