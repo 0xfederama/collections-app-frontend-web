@@ -3,6 +3,8 @@ import { ServiceIcon } from '../../../components/ServiceIcon'
 import { Button, Menu, type MenuItem } from '../../../components/ui'
 import { Plus, TriangleAlert } from '../../../components/ui/icons'
 import { useSettings } from '../../settings/api'
+import { useStoreProviders } from '../../stores/api'
+import { storeName } from '../../stores/providers'
 import { hasPrice, type TypeDefinition } from '../types'
 import { isWebUrl } from '../form/draft'
 import type { Draft } from '../form/draft'
@@ -58,7 +60,49 @@ function StreamingValue({ item }: { item: Item }) {
 
 const STREAMING_ID = 'metadata.streaming'
 
+/**
+ * The stores of a `stores` field as icon tiles (F016-W4), named by their display name. A store with
+ * a link in `store_links` (the server builds it from the title or ISBN) opens it; the others are
+ * tiles only.
+ */
+function StoresValue({ item, fieldKey }: { item: Item; fieldKey: string }) {
+  const providers = useStoreProviders()
+  const metadata = item.metadata as Record<string, unknown>
+  const stored = metadata[fieldKey]
+  const keys = Array.isArray(stored)
+    ? stored.filter((key): key is string => typeof key === 'string')
+    : []
+  const links = (metadata.store_links ?? {}) as Record<string, unknown>
+  if (keys.length === 0) return <span>no stores listed</span>
+  return (
+    <ul aria-label="Where to get it" className="flex flex-wrap items-center justify-start gap-2">
+      {keys.map((key) => {
+        const tile = <ServiceIcon name={key} label={storeName(providers.data, key)} />
+        const href = links[key]
+        return (
+          <li key={key} className="flex items-center justify-center">
+            {typeof href === 'string' && isWebUrl(href) ? (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+              >
+                {tile}
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            ) : (
+              tile
+            )}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 function Value({ item, spec }: { item: Item; spec: FieldSpec }) {
+  if (spec.field?.type === 'stores') return <StoresValue item={item} fieldKey={spec.field.key} />
   const value = spec.text?.(item)
   if (spec.field?.type === 'link' && value && isWebUrl(value))
     return (

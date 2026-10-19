@@ -90,8 +90,13 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "streaming_country_code": "IT",
       "metadata_language": "it-IT",
       "lookup_available": true,
+      "book_lookup_available": true,
       "markdown_history_limit": 20,
       "trash_retention_days": null,
+      "preferred_stores": [
+        "openlibrary",
+        "kobo"
+      ],
       "version": 4
     }
   },
@@ -105,9 +110,48 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "streaming_country_code": "IT",
       "metadata_language": "it-IT",
       "lookup_available": true,
+      "book_lookup_available": true,
       "markdown_history_limit": 20,
       "trash_retention_days": null,
+      "preferred_stores": [
+        "openlibrary",
+        "kobo"
+      ],
       "version": 4
+    }
+  },
+  "listStoreProviders": {
+    "method": "get",
+    "path": "/api/v1/store-providers",
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "providers": [
+        {
+          "key": "openlibrary",
+          "name": "Open Library"
+        },
+        {
+          "key": "bookshop",
+          "name": "Bookshop.org"
+        },
+        {
+          "key": "amazon",
+          "name": "Amazon"
+        },
+        {
+          "key": "apple_books",
+          "name": "Apple Books"
+        },
+        {
+          "key": "google_play_books",
+          "name": "Google Play Books"
+        },
+        {
+          "key": "kobo",
+          "name": "Kobo"
+        }
+      ]
     }
   },
   "listTmdbSuggestions": {
@@ -125,6 +169,35 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "year": 1999,
           "poster_url": "https://image.tmdb.org/t/p/w342/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
           "overview": "A computer hacker learns the truth."
+        }
+      ]
+    }
+  },
+  "searchBookSuggestions": {
+    "method": "get",
+    "path": "/api/v1/books/suggestions",
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "available": true,
+      "results": [
+        {
+          "source_id": "OL893415W",
+          "title": "Dune",
+          "authors": "Frank Herbert",
+          "year": 1965,
+          "pages": 608,
+          "cover_url": "https://covers.openlibrary.org/b/id/12547191-M.jpg",
+          "isbn": "9780441172719"
+        },
+        {
+          "source_id": "OL1234567W",
+          "title": "Dune Messiah",
+          "authors": "Frank Herbert",
+          "year": null,
+          "pages": null,
+          "cover_url": null,
+          "isbn": null
         }
       ]
     }

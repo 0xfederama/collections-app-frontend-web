@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { mockTypes } from '../../../mocks/types'
 import type { TypeDefinition, TypeField } from './index'
 import {
   formatField,
@@ -104,5 +105,34 @@ describe('no type (null)', () => {
     ])
     expect(valueToType(NO_TYPE_VALUE)).toBeNull()
     expect(valueToType('board_game')).toBe('board_game')
+  })
+})
+
+describe('F016-W1 the book type', () => {
+  const book = mockTypes.find((type) => type.key === 'book')!
+
+  it('is offered in the type menus, from the types API definitions', () => {
+    expect(typeOptions(mockTypes)).toContainEqual({ value: 'book', label: 'Book' })
+  })
+
+  it('draws store keys as tiles, never as text, and leaves them out of the text rows', () => {
+    expect(
+      formatField(
+        book.fields.find((field) => field.key === 'stores')!,
+        ['kobo'],
+      ),
+    ).toBeNull()
+    expect(
+      typeRows(book, {
+        author: 'Frank Herbert',
+        pages: 412,
+        isbn: '9780441172719',
+        stores: ['openlibrary', 'kobo'],
+      }).map(({ key, text }) => [key, text]),
+    ).toEqual([
+      ['author', 'Frank Herbert'],
+      ['pages', '412'],
+      ['isbn', '9780441172719'],
+    ])
   })
 })

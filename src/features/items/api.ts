@@ -143,7 +143,7 @@ export function useUpdateItem() {
   )
 }
 
-/** `POST /items/{id}/lookup`: explicit TMDB fill, re-match or refresh from the opened snapshot. */
+/** `POST /items/{id}/lookup`: explicit fill (TMDB or Open Library), re-match or refresh from the opened snapshot. */
 export function useLookupItem() {
   const client = useQueryClient()
   return useMutation({

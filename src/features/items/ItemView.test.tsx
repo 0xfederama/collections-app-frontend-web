@@ -9,6 +9,7 @@ import { mockViewport, renderAt } from '../../test-utils'
 import type { Item } from './api'
 import type { TypeDefinition } from '../settings/api'
 import { createContentBackend } from './content/contentTestBackend'
+import { mockTypes } from '../../mocks/types'
 
 const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
 const ITEM = '7c1e5a10-0000-4000-8000-000000000101'
@@ -657,5 +658,73 @@ describe('AT-08 web: item view description history', () => {
       ),
     ).toBeVisible()
     expect(within(drawer).getByRole('button', { name: 'Refresh the list' })).toBeVisible()
+  })
+})
+
+describe('F016-W1 book item detail', () => {
+  it('shows the author, pages and the stores as named tiles that link when a link is stored', async () => {
+    const base = mockTypes.find((type) => type.key === 'book')!
+    // The Open Library work id is bookkeeping: the API may send it, the detail never shows it.
+    const book = {
+      ...base,
+      fields: [
+        ...base.fields,
+        {
+          key: 'openlibrary_id',
+          label: 'Open Library id',
+          type: 'text' as const,
+          position: 9,
+          is_locked: true,
+          version: 1,
+        },
+      ],
+    }
+    const tree = exampleResponses.getTree.body as {
+      folders: unknown[]
+      lists: Array<Record<string, unknown>>
+    }
+    const list = exampleResponses.getList.body as Record<string, unknown>
+    server.use(
+      http.get(`${location.origin}/api/v1/types`, () => HttpResponse.json([book])),
+      http.get(`${location.origin}/api/v1/tree`, () =>
+        HttpResponse.json({
+          ...tree,
+          lists: tree.lists.map((entry) =>
+            entry.id === WATCHLIST ? { ...entry, type: book.key } : entry,
+          ),
+        }),
+      ),
+      http.get(`${location.origin}/api/v1/lists/${WATCHLIST}`, () =>
+        HttpResponse.json({ ...list, id: WATCHLIST, type: book.key }),
+      ),
+    )
+    await renderOverride({
+      type: book.key,
+      title: 'Dune',
+      metadata: {
+        author: 'Frank Herbert',
+        pages: 412,
+        stores: ['openlibrary', 'kobo'],
+        store_links: { openlibrary: 'https://openlibrary.org/works/OL893415W' },
+      },
+    })
+
+    expect(screen.getByText('Frank Herbert')).toBeVisible()
+    expect(screen.getByText('412')).toBeVisible()
+    const stores = within(await screen.findByRole('list', { name: 'Where to get it' }))
+    // F016-W4: the display names, and a link only where the server stored one.
+    expect(stores.getByRole('img', { name: 'Open Library' })).toBeInTheDocument()
+    expect(stores.getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
+    expect(stores.getByRole('link', { name: /Open Library/ })).toHaveAttribute(
+      'href',
+      'https://openlibrary.org/works/OL893415W',
+    )
+    expect(stores.queryByRole('link', { name: /Kobo/ })).not.toBeInTheDocument()
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    expect(await screen.findByRole('menuitem', { name: 'ISBN' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'First publication year' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Open Library id' })).not.toBeInTheDocument()
   })
 })

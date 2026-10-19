@@ -6,6 +6,7 @@ import { draftFromItem, type Draft } from '../form/draft'
 import type { Item } from '../api'
 import { FieldInputs, type FieldForm } from './editors'
 import type { FieldSpec } from './fields'
+import { renderWithProviders } from '../../../test-utils'
 
 const definition = {
   name: 'Board game',
@@ -82,5 +83,35 @@ describe('F014-W3 typed custom field editors', () => {
     await user.click(screen.getByRole('combobox', { name: 'Custom field' }))
     await user.click(await screen.findByRole('option', { name: 'No' }))
     expect(setMeta).toHaveBeenCalledWith('custom', 'false')
+  })
+})
+
+describe('F016-W4 stores editor', () => {
+  it('ticks a store from the provider list into the draft as its key', async () => {
+    const field = typeField('stores')
+    const draft: Draft = { ...draftFromItem(item, { ...definition, fields: [field] }) }
+    const setMeta = vi.fn()
+    const form: FieldForm = {
+      draft,
+      errors: {},
+      defaults: { country: 'IT' },
+      set: vi.fn(),
+      setMeta,
+      clearError: vi.fn(),
+      commit: vi.fn(),
+    }
+    const spec: FieldSpec = {
+      id: 'metadata.custom',
+      label: field.label,
+      errorKeys: ['metadata.custom'],
+      take: (target) => target,
+      isSet: () => false,
+      field,
+    }
+    const user = userEvent.setup()
+    renderWithProviders(<FieldInputs spec={spec} form={form} canRemovePrice={false} />)
+    await user.click(screen.getByRole('button', { name: /Custom field/ }))
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Kobo/ }))
+    expect(setMeta).toHaveBeenCalledWith('custom', 'kobo')
   })
 })

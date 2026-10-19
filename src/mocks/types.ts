@@ -101,6 +101,23 @@ export const mockTypes: TypeDefinition[] = [
       ['megapixels', 'Resolution', 'number'],
     ]),
   },
+  {
+    key: 'book',
+    name: 'Book',
+    default_icon: 'i:book-open',
+    allows_price: true,
+    default_sort_field: null,
+    default_pinned_fields: ['author', 'pages', 'stores'],
+    is_locked: true,
+    version: 1,
+    fields: fields([
+      ['author', 'Writer', 'text'],
+      ['pages', 'Pages', 'number'],
+      ['first_publish_year', 'First publication year', 'number'],
+      ['isbn', 'ISBN', 'text'],
+      ['stores', 'Where to get it', 'stores'],
+    ]),
+  },
 ]
 
 export const typeHandlers = [

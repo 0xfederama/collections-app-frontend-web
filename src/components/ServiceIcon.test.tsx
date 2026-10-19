@@ -154,3 +154,12 @@ describe('F009-W5 one tile for every icon', () => {
     expect(mark('MyAnimeList')).toHaveTextContent('M')
   })
 })
+
+describe('F016-W4 store tiles are named by the display name', () => {
+  it('uses the label as the tooltip, the name and the letter when the name is a key', () => {
+    render(<ServiceIcon name="bookshop" label="Bookshop.org" />)
+    const tile = screen.getByRole('img', { name: 'Bookshop.org' })
+    expect(tile).toHaveAttribute('title', 'Bookshop.org')
+    expect(tile.firstElementChild).toHaveTextContent('B')
+  })
+})

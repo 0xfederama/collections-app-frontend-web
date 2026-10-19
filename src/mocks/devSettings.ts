@@ -12,6 +12,8 @@ const initial = (): Settings => ({
   streaming_country_code: 'IT',
   metadata_language: 'en-US',
   lookup_available: false,
+  book_lookup_available: true,
+  preferred_stores: [],
   markdown_history_limit: 20,
   trash_retention_days: null,
   version: 1,

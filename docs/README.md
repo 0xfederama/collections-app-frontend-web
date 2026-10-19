@@ -1,17 +1,18 @@
 # Docs index
 
-- [api](modules/api.md): Pinned OpenAPI contract, generated types, `lib/api` client, TanStack Query defaults, TMDB lookup and MSW mocks.
+- [api](modules/api.md): Pinned OpenAPI contract, generated types, `lib/api` client, TanStack Query defaults, metadata lookup endpoints and MSW mocks.
 - [deploy](modules/deploy.md): Production web image: Caddy static server and `/api` proxy, CSP hash, `npm run docker:build`.
 - [health](modules/health.md): Backend readiness probe (`/readyz`), shown in Settings > Connection.
-- [lists](modules/lists.md): List view and list icon picker, mark, display modes, pinned fields, sort, movie director filter and item rows.
-- [quickadd](modules/quickadd.md): Quick add dialog (`N` shortcut, top-bar button): create an item with optional TMDB match, website, description and image.
+- [lists](modules/lists.md): List view and list icon picker, mark, display modes, up to three pinned fields, sort, field filters and item rows.
+- [quickadd](modules/quickadd.md): Quick add dialog (`N` shortcut, top-bar button): create an item with optional metadata match, website, description and image.
 - [search](modules/search.md): Global search dropdown and `/search?q=` results page, including list marks.
 - [shell](modules/shell.md): Providers, router, responsive frame (drawer, rail, frosted sidebar, detail sheet) and lazy route loading.
 - [theme](modules/theme.md): Light, dark and system theme (sidebar footer toggle), Frosted Gallery tokens, materials and system fonts.
 - [trash](modules/trash.md): Trash page at `/trash`: restore, permanent deletion, empty trash and paginated query.
 - [tree](modules/tree.md): Sidebar folder and list tree, list icon create/edit flows, queries, mutations and reorder.
 - [ui](modules/ui.md): Design-system primitives in `src/components/ui/`, service and link icons, and the `/dev/ui` gallery.
-- [items](modules/items.md): Item detail, TMDB lookup for new movie/TV items, populated in-place fields, description, image dialog including clipboard paste, inline new item, Move and Delete.
+- [items](modules/items.md): Item detail, metadata lookup for new movie, TV and book items, populated in-place fields, description, image dialog including clipboard paste, inline new item, Move and Delete.
 - [markdown](modules/markdown.md): Safe Markdown renderer (`MarkdownView`) and URL policy `sanitizeUrl`.
-- [settings](modules/settings.md): `/settings` modal panes: Appearance, Collection, Media, Types & fields and About (with Connection).
+- [settings](modules/settings.md): `/settings` modal panes: Appearance, Collection, Media (incl. preferred stores), Types & fields and About (with Connection and Open Library credit).
+- [stores](modules/stores.md): Fixed online store list (`useStoreProviders`), store names and the stores field picker.
 - [home](modules/home.md): Home at `/`: quick links to every list, "Recently updated" items (D-070) and the empty state.

@@ -35,7 +35,11 @@ export interface FieldSpec {
 type Metadata = Record<string, unknown>
 const metadataOf = (item: Item) => item.metadata as Metadata
 
-const has = (value: unknown) => value !== undefined && value !== null && value !== ''
+const has = (value: unknown) =>
+  value !== undefined &&
+  value !== null &&
+  value !== '' &&
+  !(Array.isArray(value) && value.length === 0)
 
 function takeTop<K extends keyof Draft>(keys: readonly K[]) {
   return (target: Draft, source: Draft): Draft => {

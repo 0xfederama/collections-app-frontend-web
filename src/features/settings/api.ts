@@ -18,9 +18,10 @@ export const typeKeys = { types: ['types'] as const }
 const typeMatch = (version: number) => ({ 'If-Match': `"k-${version}"` })
 const fieldMatch = (version: number) => ({ 'If-Match': `"kf-${version}"` })
 
-// Provider bookkeeping (TMDB id, lookup switch) lives in item metadata but is never user-facing:
-// not an editable field, and never pinnable, sortable or filterable (contract: pinned_fields).
-const BOOKKEEPING_FIELDS = new Set(['tmdb_id', 'lookup_disabled'])
+// Provider bookkeeping (TMDB id, Open Library work id, lookup switch) lives in item metadata but is
+// never user-facing: not an editable field, and never pinnable, sortable or filterable (contract:
+// pinned_fields).
+const BOOKKEEPING_FIELDS = new Set(['tmdb_id', 'lookup_disabled', 'openlibrary_id'])
 const withoutBookkeeping = (types: TypeDefinition[]): TypeDefinition[] =>
   types.map((type) => ({
     ...type,

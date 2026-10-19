@@ -68,20 +68,27 @@ describe('F009-W3 pinned fields are an ordered pair', () => {
 
     await open()
     expect(item('Runtime')).toBeChecked()
-    expect(item('Runtime')).toHaveAccessibleDescription('Pinned 1 of 2')
+    expect(item('Runtime')).toHaveAccessibleDescription('Pinned 1 of 3')
     expect(item('Runtime')).toHaveTextContent('1')
     expect(item('Streaming')).toBeChecked()
-    expect(item('Streaming')).toHaveAccessibleDescription('Pinned 2 of 2')
+    expect(item('Streaming')).toHaveAccessibleDescription('Pinned 2 of 3')
     expect(item('Release year')).not.toBeChecked()
   })
 
-  it('a third field is disabled while two are pinned', async () => {
+  it('F016-W3 a third field can be pinned while two are', async () => {
     const { open, item } = renderMenu('car', ['model_year', 'price'])
 
     await open()
-    expect(item('Model year')).toBeChecked()
-    expect(item('Price')).toBeChecked()
-    expect(item('Power')).toHaveAttribute('aria-disabled', 'true')
+    expect(item('Power')).not.toHaveAttribute('aria-disabled')
+  })
+
+  it('F016-W3 a fourth field is disabled while three are pinned', async () => {
+    const { open, item } = renderMenu('car', ['model_year', 'price', 'power_hp'])
+
+    await open()
+    expect(item('Power')).toBeChecked()
+    expect(item('Power')).toHaveAccessibleDescription('Pinned 3 of 3')
+    expect(item('Fuel')).toHaveAttribute('aria-disabled', 'true')
   })
 
   it('unpinning the first promotes the second to first', async () => {

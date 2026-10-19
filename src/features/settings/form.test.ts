@@ -18,8 +18,10 @@ const base: Settings = {
   streaming_country_code: 'IT',
   metadata_language: 'en-US',
   lookup_available: true,
+  book_lookup_available: true,
   markdown_history_limit: 20,
   trash_retention_days: null,
+  preferred_stores: [],
   version: 4,
 }
 const draftWith = (over: Partial<SettingsDraft> = {}): SettingsDraft => ({
@@ -35,6 +37,7 @@ describe('AT-14 settings form model', () => {
       metadata_language: 'en-US',
       markdown_history_limit: '20',
       trash_retention_days: 'off',
+      preferred_stores: '',
     })
   })
 
@@ -149,5 +152,36 @@ describe('AT-14 settings form model', () => {
     expect(
       draftDump(base, draftWith({ workspace_name: 'Home', markdown_history_limit: '5' })),
     ).toBe('Workspace name: Home\nDescription history limit: 5')
+  })
+})
+
+describe('F016-W4 preferred stores in the settings model', () => {
+  it('sends the stores in the order chosen, only when they differ from the saved list', () => {
+    const saved = { ...base, preferred_stores: ['openlibrary' as const, 'kobo' as const] }
+    expect(buildPatch(saved, draftWith({ preferred_stores: 'openlibrary, kobo' }))).toEqual({})
+    expect(buildPatch(saved, draftWith({ preferred_stores: 'kobo, openlibrary' }))).toEqual({
+      preferred_stores: ['kobo', 'openlibrary'],
+    })
+    expect(buildPatch(saved, draftWith({ preferred_stores: '' }))).toEqual({
+      preferred_stores: [],
+    })
+  })
+
+  it('counts a stores change as a dirty form and lists it in the copied draft', () => {
+    const draft = draftWith({ preferred_stores: 'bookshop' })
+    expect(isDirty(base, draft)).toBe(true)
+    expect(isFormDirty(base, draft)).toBe(true)
+    expect(draftDump(base, draft)).toBe('Where to get it: bookshop')
+  })
+
+  it('refuses more than six stores before saving', () => {
+    expect(
+      validate(
+        draftWith({
+          preferred_stores:
+            'openlibrary, bookshop, amazon, apple_books, google_play_books, kobo, openlibrary2',
+        }),
+      ),
+    ).toMatchObject({ preferred_stores: 'Choose at most 6 stores.' })
   })
 })

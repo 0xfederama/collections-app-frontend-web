@@ -45,6 +45,9 @@ const fieldTypes = [
 
 const NONE_FIELD = '__none__'
 
+/** The friendly name of a field type where the raw API word reads badly (`stores` is "Where to get it"'s type, F016-W4). */
+const fieldTypeWord = (type: TypeField['type']) => (type === 'stores' ? 'Stores' : type)
+
 interface TypeDefaultsDraft {
   typeKey: string
   icon: string | null
@@ -131,7 +134,7 @@ function SortableField({
       ref={ref}
       role="listitem"
       tabIndex={field.is_locked ? undefined : 0}
-      aria-label={`${field.label}, ${field.type === 'boolean' ? 'yes or no' : field.type}`}
+      aria-label={`${field.label}, ${field.type === 'boolean' ? 'yes or no' : fieldTypeWord(field.type)}`}
       aria-describedby={a11y['aria-describedby']}
       className={cx(
         'flex min-h-14 flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 focus-visible:outline-2 focus-visible:outline-focus-ring',
@@ -141,7 +144,7 @@ function SortableField({
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-medium break-words">{field.label}</span>
         <span className="text-xs text-text-muted">
-          {field.key} · {field.type === 'boolean' ? 'yes / no' : field.type}
+          {field.key} · {field.type === 'boolean' ? 'yes / no' : fieldTypeWord(field.type)}
           {field.is_locked ? ' · built in, read only' : ''}
         </span>
       </span>
@@ -475,7 +478,7 @@ export function TypesFieldsPane() {
                     <legend className="mb-2 text-sm font-medium">Default pinned fields</legend>
                     {defaultFieldOptions.length === 0 ? (
                       <p className="text-sm text-text-muted">
-                        Add fields to choose up to two pins.
+                        Add fields to choose up to three pins.
                       </p>
                     ) : (
                       <div className="flex flex-col gap-1">
@@ -491,7 +494,7 @@ export function TypesFieldsPane() {
                               <input
                                 type="checkbox"
                                 checked={checked}
-                                disabled={!checked && pins.length >= 2}
+                                disabled={!checked && pins.length >= 3}
                                 onChange={(event) => {
                                   const next = event.target.checked
                                     ? [...pins, field.value]

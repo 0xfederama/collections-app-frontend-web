@@ -3,6 +3,9 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useBlocker } from 'react-router'
 import { AlertDialog, Button, Dialog, Select, TextField, useToast } from '../../components/ui'
 import { CountrySelect } from '../../components/ui/IsoSelects'
+import { StoreChoices } from '../stores/StoreChoices'
+import { useStoreProviders } from '../stores/api'
+import { joinStoreKeys, parseStoreKeys } from '../stores/providers'
 import { ApiError, NetworkError } from '../../lib/api'
 import { settingsKeys, useUpdateSettings, type Settings } from './api'
 import {
@@ -60,6 +63,7 @@ export function SettingsForm({
   const client = useQueryClient()
   const toast = useToast()
   const { isPending, mutateAsync } = useUpdateSettings()
+  const providers = useStoreProviders()
 
   const [base, setBase] = useState(settings)
   const [draft, setDraft] = useState<SettingsDraft>(() => draftFromSettings(settings))
@@ -110,7 +114,11 @@ export function SettingsForm({
       const field = firstInvalid(found)
       if (field) {
         onPaneChange(
-          field === 'streaming_country_code' || field === 'metadata_language' ? 'Media' : 'General',
+          field === 'streaming_country_code' ||
+            field === 'metadata_language' ||
+            field === 'preferred_stores'
+            ? 'Media'
+            : 'General',
         )
         setFocusRequest((current) => ({ id: inputId(field), n: (current?.n ?? 0) + 1 }))
       }
@@ -432,12 +440,23 @@ export function SettingsForm({
         <Select
           id={inputId('metadata_language')}
           label="Metadata language"
-          hint="Titles and other details filled from TMDB use this language."
+          hint="Titles and other details filled from online sources use this language."
           value={draft.metadata_language}
           onValueChange={(value) => set('metadata_language', value)}
           error={errors.metadata_language}
           disabled={isPending}
           options={metadataLanguageOptions}
+        />
+        <h2 id="settings-books" className="pt-2 text-sm font-semibold text-text-muted">
+          Books
+        </h2>
+        <StoreChoices
+          label="Where to get it"
+          hint="New books start with these stores, in the order you pick them. Each book can change its own list."
+          value={parseStoreKeys(draft.preferred_stores)}
+          onChange={(next) => set('preferred_stores', joinStoreKeys(next))}
+          providers={providers.data}
+          error={errors.preferred_stores}
         />
       </section>
 

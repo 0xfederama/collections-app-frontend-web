@@ -3,7 +3,14 @@ import { useLocation, useNavigate } from 'react-router'
 import { Button } from '../../components/ui'
 import { ApiError, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemType } from './api'
-import { createLookupSelection, TmdbTitleField, type TmdbTitleSelection } from './TmdbTitleField'
+import { TitleLookupField } from './TitleLookupField'
+import {
+  createLookupSelection,
+  isLookupUnavailable,
+  lookupSourceName,
+  type LookupSelection,
+  type LookupTitleSelection,
+} from './lookup'
 import { LIMITS } from './form/draft'
 import { MessageBanner } from './inline/Banners'
 import { useEditGuard } from './inline/guard'
@@ -38,7 +45,8 @@ export function NewItemDraft({
   const [error, setError] = useState<string>()
   const [failure, setFailure] = useState<string>()
   const [lookupUnavailable, setLookupUnavailable] = useState(false)
-  const [tmdbId, setTmdbId] = useState<number>()
+  const [chosen, setChosen] = useState<LookupSelection>({})
+  const sourceName = lookupSourceName(type)
   const box = useRef<HTMLDivElement>(null)
 
   const changeTitle = (value: string) => {
@@ -54,7 +62,7 @@ export function NewItemDraft({
   }
   const cancel = () => leave(`/lists/${listId}`)
 
-  const commit = async (lookup?: boolean, selection?: TmdbTitleSelection) => {
+  const commit = async (lookup?: boolean, selection?: LookupTitleSelection) => {
     if (create.isPending) return
     const trimmed = (selection?.title ?? title).trim()
     setFailure(undefined)
@@ -63,20 +71,12 @@ export function NewItemDraft({
     try {
       const created = await create.mutateAsync({
         title: trimmed,
-        ...createLookupSelection(
-          type,
-          settings.data?.lookup_available === true,
-          selection?.tmdb_id ?? tmdbId,
-        ),
+        ...createLookupSelection(type, settings.data, selection ?? chosen),
         ...(lookup === undefined ? {} : { lookup }),
       })
       leave(`/lists/${listId}/items/${created.id}`)
     } catch (caught) {
-      if (
-        caught instanceof ApiError &&
-        caught.status === 503 &&
-        (caught.code === 'upstream_unavailable' || caught.code === 'lookup_disabled')
-      ) {
+      if (isLookupUnavailable(caught)) {
         setLookupUnavailable(true)
         setFailure(undefined)
       } else {
@@ -86,11 +86,7 @@ export function NewItemDraft({
         setError(caught.errors?.find((e) => e.field === 'title')?.message ?? caught.title)
       } else if (caught instanceof ApiError && caught.status === 409) {
         setFailure('This list no longer exists or is in Trash.')
-      } else if (
-        caught instanceof ApiError &&
-        caught.status === 503 &&
-        (caught.code === 'upstream_unavailable' || caught.code === 'lookup_disabled')
-      ) {
+      } else if (isLookupUnavailable(caught)) {
         // Keep the draft in place so the user can retry lookup or save the typed title alone.
       } else if (
         caught instanceof NetworkError ||
@@ -143,15 +139,12 @@ export function NewItemDraft({
           onBlur={onBlur}
           className="flex flex-wrap items-start gap-2"
         >
-          <TmdbTitleField
+          <TitleLookupField
             type={type}
             title={title}
             onTitleChange={changeTitle}
-            onSelectionChange={setTmdbId}
-            onSuggestionSelect={(selection) => {
-              setTmdbId(selection.tmdb_id)
-              void commit(undefined, selection)
-            }}
+            onSelectionChange={setChosen}
+            onSuggestionSelect={(selection) => void commit(undefined, selection)}
             autoFocus
             placeholder="Title of the new item"
             error={error}
@@ -169,8 +162,8 @@ export function NewItemDraft({
       </header>
       {lookupUnavailable ? (
         <MessageBanner>
-          TMDB metadata is unavailable right now. Your title is still here; retry the lookup or add
-          it without TMDB metadata.
+          {sourceName} metadata is unavailable right now. Your title is still here; retry the lookup
+          or add it without {sourceName} metadata.
           <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
@@ -178,7 +171,7 @@ export function NewItemDraft({
               onClick={() => void commit()}
               pending={create.isPending}
             >
-              Retry TMDB lookup
+              Retry {sourceName} lookup
             </Button>
             <Button
               size="sm"
@@ -186,7 +179,7 @@ export function NewItemDraft({
               onClick={() => void commit(false)}
               pending={create.isPending}
             >
-              Add without TMDB metadata
+              Add without {sourceName} metadata
             </Button>
           </div>
         </MessageBanner>

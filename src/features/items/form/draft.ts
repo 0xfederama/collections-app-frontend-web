@@ -3,6 +3,7 @@ import type { FieldError } from '../../../lib/api'
 import type { Item, ItemType } from '../api'
 import { formatField, isStreamingField, type TypeField } from '../types'
 import { IMDB_URL } from '../links'
+import { joinStoreKeys, parseStoreKeys } from '../../stores/providers'
 
 /**
  * The form state of the item editor and everything derived from it, as pure functions: validation,
@@ -118,6 +119,9 @@ export function draftFromItem(
     const value = stored[field.key]
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
       meta[field.key] = String(value)
+    // A `stores` field holds store keys, shown and edited as one comma-separated text (F016-W4).
+    else if (field.type === 'stores' && Array.isArray(value))
+      meta[field.key] = joinStoreKeys(value.filter((v): v is string => typeof v === 'string'))
   }
   const streaming = stored.streaming as Streaming | undefined
   return {
@@ -169,6 +173,10 @@ function fieldValue(field: TypeField, text: string): unknown {
       return NUMBER.test(value) && Number.isFinite(Number(value)) ? Number(value) : value
     case 'boolean':
       return value === 'true' ? true : value === 'false' ? false : value
+    case 'stores': {
+      const keys = parseStoreKeys(value)
+      return keys.length > 0 ? keys : undefined
+    }
     default:
       return value
   }
@@ -445,6 +453,7 @@ function metadataText(fields: readonly TypeField[], key: string, value: unknown)
     const streaming = value as Streaming
     return [streaming.country, streaming.platforms?.join(', ')].filter(Boolean).join(': ')
   }
+  if (Array.isArray(value)) return value.join(', ')
   const field = fields.find((candidate) => candidate.key === key)
   return (field && formatField(field, value)) || String(value)
 }

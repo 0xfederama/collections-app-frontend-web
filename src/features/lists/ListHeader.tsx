@@ -44,7 +44,10 @@ export function sortOptionsFor(definition: TypeDefinition): SelectOption[] {
   return [
     ...baseSortOptions,
     ...(hasPrice(definition) ? [{ value: 'price', label: 'Price' }] : []),
-    ...definition.fields.map((field) => ({ value: field.key, label: field.label })),
+    // A stores field holds a list of store keys, which has no order to sort by (F016-W4).
+    ...definition.fields
+      .filter((field) => field.type !== 'stores')
+      .map((field) => ({ value: field.key, label: field.label })),
   ]
 }
 

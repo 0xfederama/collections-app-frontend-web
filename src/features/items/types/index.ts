@@ -126,6 +126,9 @@ export function formatField(field: TypeField, value: unknown): string | null {
       return typeof value === 'boolean' ? (value ? 'Yes' : 'No') : null
     case 'streaming':
       return null
+    // Store keys are tiles (F016-W4), drawn by the detail and the rows, never as text.
+    case 'stores':
+      return null
   }
 }
 

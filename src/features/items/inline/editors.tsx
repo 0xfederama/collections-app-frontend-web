@@ -3,6 +3,10 @@ import { Plus, X } from '../../../components/ui/icons'
 import { CurrencySelect } from '../../../components/ui/IsoSelects'
 import { cx } from '../../../lib/cx'
 import { StreamingPlatforms } from './StreamingPlatforms'
+import { StoreChoices } from '../../stores/StoreChoices'
+import { useStoreProviders } from '../../stores/api'
+import { joinStoreKeys, parseStoreKeys } from '../../stores/providers'
+import type { TypeField } from '../types'
 import {
   INITIAL_CURRENCY,
   inputId,
@@ -197,6 +201,19 @@ function StreamingInputs({ form }: { form: FieldForm }) {
   )
 }
 
+/** The stores of a `stores` field (F016-W4): ticked from the fixed list, saved as one key list. */
+function StoresInputs({ form, field }: { form: FieldForm; field: TypeField }) {
+  const providers = useStoreProviders()
+  return (
+    <StoreChoices
+      value={parseStoreKeys(form.draft.meta[field.key] ?? '')}
+      onChange={(next) => form.setMeta(field.key, joinStoreKeys(next))}
+      providers={providers.data}
+      label={field.label}
+    />
+  )
+}
+
 /** The inputs of one field; the widget of a type field follows its config (`types/*.ts`). */
 export function FieldInputs({
   spec,
@@ -269,6 +286,7 @@ export function FieldInputs({
 
   const field = spec.field
   if (!field) return null
+  if (field.type === 'stores') return <StoresInputs form={form} field={field} />
   const key = `metadata.${field.key}`
   const value = draft.meta[field.key] ?? ''
   const common = { id: inputId(key), label: field.label, error: errors[key] }

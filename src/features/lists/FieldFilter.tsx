@@ -8,7 +8,8 @@ export interface FieldFilterValue {
   max: string
 }
 
-const filterable = (field: TypeField) => field.type !== 'streaming'
+// Streaming and store links are tiles, not values a filter can match (F016-W4).
+const filterable = (field: TypeField) => field.type !== 'streaming' && field.type !== 'stores'
 
 export function parseFieldFilter(
   params: URLSearchParams,
