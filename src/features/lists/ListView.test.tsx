@@ -1183,7 +1183,7 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
 
     const status = await within(panel).findByRole('status')
     expect(status).toHaveTextContent('Looking up details on Open Library')
-    expect(posts).toEqual([{ title: 'dune', lookup: true }])
+    expect(posts).toEqual([{ title: 'dune' }])
     release()
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),

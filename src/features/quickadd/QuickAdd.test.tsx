@@ -123,7 +123,7 @@ describe('F002-W4 quick add', () => {
 })
 
 describe('F016-W2 quick add on a book list', () => {
-  it('Enter creates the book without source_id, shows the lookup status while pending, then opens it', async () => {
+  it('Enter creates the book without source_id or an explicit lookup flag, shows the lookup status while pending, then opens it', async () => {
     mockViewport(1100)
     const tree = exampleResponses.getTree.body as Record<string, unknown> & {
       lists: Record<string, unknown>[]
@@ -173,7 +173,7 @@ describe('F016-W2 quick add on a book list', () => {
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
     )
-    expect(posts).toEqual([{ title: 'Dune', lookup: true }])
+    expect(posts).toEqual([{ title: 'Dune' }])
     expect(suggestions).toEqual([])
   })
 })
