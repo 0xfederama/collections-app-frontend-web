@@ -724,7 +724,7 @@ describe('F016-W1 book item detail', () => {
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     expect(await screen.findByRole('menuitem', { name: 'ISBN' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'First published' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'First publication year' })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Open Library id' })).not.toBeInTheDocument()
   })
 })
