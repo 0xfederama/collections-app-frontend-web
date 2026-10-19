@@ -21,7 +21,7 @@ const base: Settings = {
   book_lookup_available: true,
   markdown_history_limit: 20,
   trash_retention_days: null,
-  preferred_stores: [],
+  preferred_store: 'amazon',
   version: 4,
 }
 const draftWith = (over: Partial<SettingsDraft> = {}): SettingsDraft => ({
@@ -37,7 +37,7 @@ describe('AT-14 settings form model', () => {
       metadata_language: 'en-US',
       markdown_history_limit: '20',
       trash_retention_days: 'off',
-      preferred_stores: '',
+      preferred_store: 'amazon',
     })
   })
 
@@ -155,33 +155,24 @@ describe('AT-14 settings form model', () => {
   })
 })
 
-describe('F016-W4 preferred stores in the settings model', () => {
-  it('sends the stores in the order chosen, only when they differ from the saved list', () => {
-    const saved = { ...base, preferred_stores: ['openlibrary' as const, 'kobo' as const] }
-    expect(buildPatch(saved, draftWith({ preferred_stores: 'openlibrary, kobo' }))).toEqual({})
-    expect(buildPatch(saved, draftWith({ preferred_stores: 'kobo, openlibrary' }))).toEqual({
-      preferred_stores: ['kobo', 'openlibrary'],
-    })
-    expect(buildPatch(saved, draftWith({ preferred_stores: '' }))).toEqual({
-      preferred_stores: [],
+describe('F016 default store in the settings model', () => {
+  it('sends the store only when it differs from the saved one', () => {
+    expect(buildPatch(base, draftWith())).toEqual({})
+    expect(buildPatch(base, draftWith({ preferred_store: 'kobo' }))).toEqual({
+      preferred_store: 'kobo',
     })
   })
 
-  it('counts a stores change as a dirty form and lists it in the copied draft', () => {
-    const draft = draftWith({ preferred_stores: 'bookshop' })
+  it('counts a store change as a dirty form and lists it in the copied draft', () => {
+    const draft = draftWith({ preferred_store: 'bookshop' })
     expect(isDirty(base, draft)).toBe(true)
     expect(isFormDirty(base, draft)).toBe(true)
-    expect(draftDump(base, draft)).toBe('Where to get it: bookshop')
+    expect(draftDump(base, draft)).toBe('Default store: bookshop')
   })
 
-  it('refuses more than six stores before saving', () => {
+  it('maps a server 422 on preferred_store onto its input', () => {
     expect(
-      validate(
-        draftWith({
-          preferred_stores:
-            'openlibrary, bookshop, amazon, apple_books, google_play_books, kobo, openlibrary2',
-        }),
-      ),
-    ).toMatchObject({ preferred_stores: 'Choose at most 6 stores.' })
+      mapServerErrors([{ field: 'preferred_store', message: 'unknown store' }]).fields,
+    ).toEqual({ preferred_store: 'unknown store' })
   })
 })

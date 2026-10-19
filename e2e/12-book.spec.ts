@@ -17,7 +17,7 @@ async function expectNoSeriousIssues(page: Page) {
 async function seedBook(request: APIRequestContext, listId: string, title: string) {
   return createItem(request, listId, title, {
     lookup: false,
-    metadata: { author: 'Ada Writer', pages: 321, stores: ['openlibrary', 'kobo'] },
+    metadata: { author: 'Ada Writer', pages: 321, stores: ['amazon', 'kobo'] },
   })
 }
 
@@ -47,7 +47,12 @@ test.describe('F016-W2 book lookup fixture', () => {
     await expect(panel.getByText('Mock Author', { exact: true })).toBeVisible()
     await expect(panel.getByText('321 p.', { exact: true })).toBeVisible()
     await expect(panel.getByText('9780000000002', { exact: true })).toBeVisible()
-    await expect(panel.getByRole('img', { name: 'Open Library' }).first()).toBeVisible()
+    // The default store (Amazon) is the store; Open Library is only a link under the title.
+    await expect(panel.getByRole('img', { name: 'Amazon' }).first()).toBeVisible()
+    await expect(panel.getByRole('link', { name: 'Open Library' })).toHaveAttribute(
+      'href',
+      /openlibrary\.org/,
+    )
     // The cover became the item image.
     await expect(panel.getByRole('img', { name: FIXTURE_TITLE }).first()).toBeVisible()
   })
@@ -114,34 +119,35 @@ test.describe('F016-W4 stores', () => {
     await expect(panel.getByRole('img', { name: 'Kobo' })).toHaveCount(0)
   })
 
-  test('preferred stores in Settings: saved from Media, credited in About', async ({
+  test('default store in Settings: saved from Media, credited in About', async ({
     page,
     request,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/settings')
-    const settings = page.getByRole('dialog', { name: 'Settings' })
-    await settings.getByRole('button', { name: 'Media' }).click()
-    await settings.getByRole('button', { name: /Where to get it/ }).click()
-    await page.getByRole('menuitemcheckbox', { name: /Kobo/ }).click()
-    await page.keyboard.press('Escape')
-    const saved = page.waitForResponse(
-      (response) =>
-        response.request().method() === 'PATCH' && response.url().endsWith('/api/v1/settings'),
-    )
-    await settings.getByRole('button', { name: 'Close' }).click()
-    await saved
-    await expect
-      .poll(async () => (await (await request.get('/api/v1/settings')).json()).preferred_stores)
-      .toContain('kobo')
-
-    // Reset the workspace setting so other specs see the default (no preferred stores).
-    const current = await (await request.get('/api/v1/settings')).json()
-    const reset = await request.patch('/api/v1/settings', {
-      headers: { 'If-Match': `"s-${current.version}"` },
-      data: { preferred_stores: [] },
-    })
-    expect(reset.status()).toBe(200)
+    try {
+      await page.goto('/settings')
+      const settings = page.getByRole('dialog', { name: 'Settings' })
+      await settings.getByRole('button', { name: 'Media' }).click()
+      await settings.getByRole('combobox', { name: 'Default store' }).click()
+      await page.getByRole('option', { name: 'Kobo' }).click()
+      const saved = page.waitForResponse(
+        (response) =>
+          response.request().method() === 'PATCH' && response.url().endsWith('/api/v1/settings'),
+      )
+      await settings.getByRole('button', { name: 'Close' }).click()
+      await saved
+      await expect
+        .poll(async () => (await (await request.get('/api/v1/settings')).json()).preferred_store)
+        .toBe('kobo')
+    } finally {
+      // Reset the workspace setting so other specs see the default (Amazon).
+      const current = await (await request.get('/api/v1/settings')).json()
+      const reset = await request.patch('/api/v1/settings', {
+        headers: { 'If-Match': `"s-${current.version}"` },
+        data: { preferred_store: 'amazon' },
+      })
+      expect(reset.status()).toBe(200)
+    }
 
     await page.goto('/settings')
     await page

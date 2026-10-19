@@ -93,10 +93,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "book_lookup_available": true,
       "markdown_history_limit": 20,
       "trash_retention_days": null,
-      "preferred_stores": [
-        "openlibrary",
-        "kobo"
-      ],
+      "preferred_store": "kobo",
       "version": 4
     }
   },
@@ -113,10 +110,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "book_lookup_available": true,
       "markdown_history_limit": 20,
       "trash_retention_days": null,
-      "preferred_stores": [
-        "openlibrary",
-        "kobo"
-      ],
+      "preferred_store": "kobo",
       "version": 4
     }
   },
@@ -128,16 +122,12 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "body": {
       "providers": [
         {
-          "key": "openlibrary",
-          "name": "Open Library"
+          "key": "amazon",
+          "name": "Amazon"
         },
         {
           "key": "bookshop",
           "name": "Bookshop.org"
-        },
-        {
-          "key": "amazon",
-          "name": "Amazon"
         },
         {
           "key": "apple_books",

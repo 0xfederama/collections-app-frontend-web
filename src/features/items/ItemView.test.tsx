@@ -704,8 +704,8 @@ describe('F016-W1 book item detail', () => {
       metadata: {
         author: 'Frank Herbert',
         pages: 412,
-        stores: ['openlibrary', 'kobo'],
-        store_links: { openlibrary: 'https://openlibrary.org/works/OL893415W' },
+        stores: ['amazon', 'kobo'],
+        store_links: { amazon: 'https://www.amazon.it/s?k=Dune' },
       },
     })
 
@@ -713,18 +713,17 @@ describe('F016-W1 book item detail', () => {
     expect(screen.getByText('412 p.')).toBeVisible()
     const stores = within(await screen.findByRole('list', { name: 'Where to get it' }))
     // F016-W4: the display names, and a link only where the server stored one.
-    expect(stores.getByRole('img', { name: 'Open Library' })).toBeInTheDocument()
+    expect(stores.getByRole('img', { name: 'Amazon' })).toBeInTheDocument()
     expect(stores.getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
-    expect(stores.getByRole('link', { name: /Open Library/ })).toHaveAttribute(
+    expect(stores.getByRole('link', { name: /Amazon/ })).toHaveAttribute(
       'href',
-      'https://openlibrary.org/works/OL893415W',
+      'https://www.amazon.it/s?k=Dune',
     )
     expect(stores.queryByRole('link', { name: /Kobo/ })).not.toBeInTheDocument()
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     expect(await screen.findByRole('menuitem', { name: 'ISBN' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'First publication year' })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Open Library id' })).not.toBeInTheDocument()
   })
 })

@@ -142,13 +142,13 @@ describe('F016-W4 the stores field in the item draft', () => {
     ...item,
     type: 'book',
     metadata: {
-      stores: ['openlibrary', 'kobo'],
-      store_links: { openlibrary: 'https://openlibrary.org/works/OL1W' },
+      stores: ['amazon', 'kobo'],
+      store_links: { amazon: 'https://www.amazon.com/s?k=Dune' },
     },
   }
 
   it('F016-W4 reads the saved keys as one comma-separated text, the editor starts from it', () => {
-    expect(draftFromItem(book, bookDefinition).meta.stores).toBe('openlibrary, kobo')
+    expect(draftFromItem(book, bookDefinition).meta.stores).toBe('amazon, kobo')
   })
 
   it('F016-W4 sends the keys as a list, and omits the field when none is chosen', () => {
@@ -163,8 +163,8 @@ describe('F016-W4 the stores field in the item draft', () => {
 
   it('F016-W4 a change to the stores sends the whole metadata, without store_links', () => {
     const draft = draftFromItem(book, bookDefinition)
-    expect(buildPatch(book, { ...draft, meta: { stores: 'openlibrary' } }, defaults)).toEqual({
-      metadata: { stores: ['openlibrary'] },
+    expect(buildPatch(book, { ...draft, meta: { stores: 'amazon' } }, defaults)).toEqual({
+      metadata: { stores: ['amazon'] },
     })
   })
 })

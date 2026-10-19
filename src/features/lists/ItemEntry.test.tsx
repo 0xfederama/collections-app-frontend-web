@@ -116,13 +116,13 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
       const row = entry(['author', 'pages', 'stores'], mode, {
         type: 'book',
         title: 'Dune',
-        metadata: { author: 'Frank Herbert', pages: 412, stores: ['openlibrary', 'kobo'] },
+        metadata: { author: 'Frank Herbert', pages: 412, stores: ['amazon', 'kobo'] },
       })
       const order = readOrder(row)
       expect(order.indexOf('Dune')).toBe(0)
       expect(order.indexOf('Frank Herbert · 412 p.')).toBe(1)
       // F016-W4: the tiles are named by the store's display name, once the provider list loads.
-      expect(await within(row).findByRole('img', { name: 'Open Library' })).toBeInTheDocument()
+      expect(await within(row).findByRole('img', { name: 'Amazon' })).toBeInTheDocument()
       expect(within(row).getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
     },
   )

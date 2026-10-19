@@ -13,7 +13,7 @@ const initial = (): Settings => ({
   metadata_language: 'en-US',
   lookup_available: false,
   book_lookup_available: true,
-  preferred_stores: [],
+  preferred_store: 'amazon',
   markdown_history_limit: 20,
   trash_retention_days: null,
   version: 1,
@@ -52,6 +52,13 @@ function validationError(body: UpdateSettingsRequest) {
     (!Number.isInteger(retention) || retention < 1 || retention > 365)
   ) {
     return invalid('trash_retention_days', 'must be between 1 and 365')
+  }
+  const store = body.preferred_store
+  if (
+    store !== undefined &&
+    !['amazon', 'bookshop', 'apple_books', 'google_play_books', 'kobo'].includes(store)
+  ) {
+    return invalid('preferred_store', 'must be one of the store providers')
   }
   return null
 }

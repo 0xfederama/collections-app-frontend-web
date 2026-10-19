@@ -26,7 +26,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 ## Gotchas
 
 - Type fields, labels, types and price support come from `GET /api/v1/types`, not from code; `hasPrice` reads `allows_price` from the definition.
-- Book type (F-016) has author, pages, first publication year, ISBN and stores fields, all data-driven like the others.
+- Book type (F-016) has author, pages, ISBN and stores fields (no first publication year since `api-v0.13.0`), all data-driven like the others.
 - Lookup ids: movie and TV send `tmdb_id`; a book sends only `lookup: true` (no `source_id`, which the client no longer uses): the server fills the item from the first Open Library result, never overwriting typed values, and creates it unchanged if Open Library is slow or fails. While that POST is pending (2-5 s) `NewItemDraft` shows a `role="status"` line, "Looking up details on Open Library… this can take a few seconds."
 - There is no "Wrong match?", re-match or refresh UI on an item; lookup suggestions appear only when creating (inline draft and Quick add).
 - IMDb is rendered as a link tile and streaming keeps its own editor, so neither is a plain field row (`isHiddenTmdbField`, `isStreamingField`).
