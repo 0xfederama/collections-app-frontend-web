@@ -178,3 +178,57 @@ describe('F002-W2 sidebar "New" button', () => {
     expect(screen.queryByRole('menuitem', { name: 'Edit description' })).not.toBeInTheDocument()
   })
 })
+
+describe('F018-W1 list icon from the header and the sidebar', () => {
+  const iconDialog = (name: string) => screen.findByRole('dialog', { name: `List icon · ${name}` })
+
+  it('the header icon is a keyboard-reachable button named "Change icon" that opens the icon dialog', async () => {
+    const { user, backend } = await openList(ID.watchlist)
+    const button = within(main()).getByRole('button', { name: 'Change icon' })
+    // The heading keeps the list name only; the button is not part of it.
+    expect(within(main()).getByRole('heading', { level: 1, name: 'Watchlist' })).toBeInTheDocument()
+    act(() => button.focus())
+    await user.keyboard('{Enter}')
+    const dialog = await iconDialog('Watchlist')
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(backend.writes()).toHaveLength(0)
+  })
+
+  it('saving the header icon dialog sends If-Match from the version the list had when it opened', async () => {
+    const { user, backend } = await openList(ID.watchlist)
+    await user.click(within(main()).getByRole('button', { name: 'Change icon' }))
+    const dialog = await iconDialog('Watchlist')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(1))
+    const [patch] = backend.writes('PATCH')
+    expect(patch?.path).toBe(`/api/v1/lists/${ID.watchlist}`)
+    expect(patch?.ifMatch).toBe('"l-2"')
+    expect(Object.keys(patch?.body as object).sort()).toEqual(['icon', 'icon_color'])
+  })
+
+  it('the header "…" menu no longer offers "Change icon" but keeps the Type entry', async () => {
+    const { user } = await openList(ID.watchlist)
+    await user.click(await within(main()).findByRole('button', { name: /^More actions for/ }))
+    expect(await screen.findByRole('menuitem', { name: /^Type: Movie/ })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Change icon' })).not.toBeInTheDocument()
+  })
+
+  it('a sidebar list row menu offers "Change icon", which opens the same dialog', async () => {
+    const { user, backend } = await openList(ID.watchlist)
+    await pickRowAction(user, 'Watchlist', 'Change icon')
+    const dialog = await iconDialog('Watchlist')
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(backend.writes()).toHaveLength(0)
+  })
+
+  it('a folder row menu does not offer "Change icon"', async () => {
+    const { user } = await openList(ID.watchlist)
+    await user.click(
+      await within(sidebar()).findByRole('button', { name: 'More actions for Media' }),
+    )
+    await screen.findByRole('menuitem', { name: 'Rename' })
+    expect(screen.queryByRole('menuitem', { name: 'Change icon' })).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+  })
+})

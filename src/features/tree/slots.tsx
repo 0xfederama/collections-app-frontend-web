@@ -45,6 +45,7 @@ export function TreeRowActions({ node }: { node: TreeNode }): ReactNode {
         node={node}
         actions={actions}
         name={name}
+        changeIcon
         // No hover fill of its own: inside a hovered row it drew a second box as big as the row, so
         // the button just darkens its glyph (F011-W4).
         className="size-8 pointer-coarse:size-11 hover:bg-transparent hover:text-text"

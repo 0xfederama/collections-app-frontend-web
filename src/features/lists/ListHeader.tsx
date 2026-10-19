@@ -13,12 +13,14 @@ import {
   ArrowUpDown,
   LayoutGrid,
   List as ListIcon,
+  Pencil,
   Plus,
   Rows3,
   Search,
 } from '../../components/ui/icons'
 import type { List as TreeList } from '../tree/api'
 import { ListActionsMenu } from '../tree/ListActionsMenu'
+import { ListIconDialog } from '../tree/ListIconDialog'
 import { hasPrice, type TypeDefinition } from '../items/types'
 import type { DisplayMode, List, PinnedFields, SortMode } from './api'
 import { ListDescription } from './ListDescription'
@@ -75,6 +77,40 @@ export interface ListHeaderProps {
   onAddItem: () => void
 }
 
+/**
+ * The list icon as a button (F018-W1): it opens the icon dialog from the header. The pen shows on
+ * hover and keyboard focus, and always on touch, where there is no hover. The dialog takes the list
+ * as it is when it opens, so its If-Match is the version the user saw.
+ */
+function ListIconButton({ list, defaultIcon }: { list: TreeList; defaultIcon?: string | null }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Change icon"
+        onClick={() => setOpen(true)}
+        className="group/icon relative grid size-9 shrink-0 place-items-center rounded-md focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
+      >
+        <ListIconMark
+          icon={list.icon ?? defaultIcon}
+          iconColor={list.icon_color}
+          type={list.type}
+          className="size-9"
+          iconClassName="size-5"
+        />
+        <span
+          aria-hidden
+          className="absolute -right-1.5 -bottom-1.5 grid size-5 place-items-center rounded-full border border-border bg-surface text-text-muted opacity-0 group-hover/icon:opacity-100 group-focus-visible/icon:opacity-100 [@media(hover:none)]:opacity-100"
+        >
+          <Pencil className="size-3" />
+        </span>
+      </button>
+      {open && <ListIconDialog list={list} onClose={() => setOpen(false)} />}
+    </>
+  )
+}
+
 /** Name, New item (once the list has items), description, then the floating display mode / sort / filter toolbar (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
@@ -86,14 +122,8 @@ export function ListHeader(props: ListHeaderProps) {
     <>
       <header className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-3">
+          <ListIconButton list={props.treeList} defaultIcon={props.definition.default_icon} />
           <h1 className="min-w-0 flex-1 text-3xl leading-tight font-bold tracking-tight break-words">
-            <ListIconMark
-              icon={props.treeList.icon ?? props.definition.default_icon}
-              iconColor={props.treeList.icon_color}
-              type={props.treeList.type}
-              className="mr-3 inline-grid size-9 align-middle"
-              iconClassName="size-5"
-            />
             {props.treeList.name}
           </h1>
           {props.showAddItem && (
