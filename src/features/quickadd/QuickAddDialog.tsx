@@ -16,11 +16,13 @@ import { itemKeys, useCreateItem, type Item } from '../items/api'
 import { TitleLookupField } from '../items/TitleLookupField'
 import {
   createLookupSelection,
+  isBookLookup,
   isLookupUnavailable,
   lookupSourceName,
   type LookupSelection,
   type LookupTitleSelection,
 } from '../items/lookup'
+import { LookupStatus } from '../items/LookupStatus'
 import { MAX_CONTENT_BYTES, isTooLarge } from '../items/content/limits'
 import { useSaveContent } from '../items/content/api'
 import { LIMITS } from '../items/form/draft'
@@ -399,6 +401,7 @@ export function QuickAddDialog({
             )}
           </div>
         )}
+        {create.isPending && isBookLookup(listType, settings.data) && <LookupStatus />}
         {lookupUnavailable ? (
           <div
             role="alert"

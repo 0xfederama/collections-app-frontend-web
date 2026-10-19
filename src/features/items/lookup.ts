@@ -9,19 +9,19 @@ type Settings = Pick<
 
 /**
  * The metadata source a list's type is filled from: TMDB for movie and TV, Open Library for books
- * (F-016). `tmdbType` is only set for TMDB, which keeps the two suggestion endpoints apart.
+ * (F-016, looked up on commit, no suggestions). `tmdbType` is only set for TMDB.
  */
 export type LookupSource =
   | { provider: 'tmdb'; name: 'TMDB'; tmdbType: 'movie' | 'tv_show' }
   | { provider: 'books'; name: 'Open Library' }
 
-/** The id a picked suggestion sends on create or lookup. Only the one the list's type uses applies. */
-export type LookupSelection = { tmdb_id?: number; source_id?: string }
+/** The id a picked TMDB suggestion sends on create. Books have no picker: the server takes the first result. */
+export type LookupSelection = { tmdb_id?: number }
 
 /** A picked suggestion: the full title it fills in, plus its id. */
 export type LookupTitleSelection = LookupSelection & { title: string }
 
-export type CreateLookup = { lookup: boolean; tmdb_id?: number; source_id?: string }
+export type CreateLookup = { lookup: boolean; tmdb_id?: number }
 
 export function lookupSource(type: ItemType): LookupSource | undefined {
   if (type === 'movie' || type === 'tv_show')
@@ -55,11 +55,16 @@ export function createLookupSelection(
       ...(selection.tmdb_id !== undefined ? { tmdb_id: selection.tmdb_id } : {}),
     }
   }
-  return {
-    lookup: true,
-    ...(selection.source_id !== undefined ? { source_id: selection.source_id } : {}),
-  }
+  // Books (F-016): no picker and no id; the server fills from the first Open Library result.
+  return { lookup: true }
 }
+
+/** Only movie and TV titles offer suggestions while typing (TMDB); books are looked up on commit. */
+export const hasSuggestions = (type: ItemType) => type === 'movie' || type === 'tv_show'
+
+/** A book list on a server with Open Library lookup: creating an item waits for the lookup (2-5 s). */
+export const isBookLookup = (type: ItemType, settings: Settings | undefined) =>
+  lookupAvailable(settings, lookupSource(type)) && lookupSource(type)?.provider === 'books'
 
 /** The provider answered 503 because it is switched off or cannot be reached (nothing was created). */
 export const isLookupUnavailable = (caught: unknown) =>

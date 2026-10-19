@@ -6,12 +6,14 @@ import { useCreateItem, type ItemType } from './api'
 import { TitleLookupField } from './TitleLookupField'
 import {
   createLookupSelection,
+  isBookLookup,
   isLookupUnavailable,
   lookupSourceName,
   type LookupSelection,
   type LookupTitleSelection,
 } from './lookup'
 import { LIMITS } from './form/draft'
+import { LookupStatus } from './LookupStatus'
 import { MessageBanner } from './inline/Banners'
 import { useEditGuard } from './inline/guard'
 import { EditorButtons } from './inline/InlineField'
@@ -160,6 +162,7 @@ export function NewItemDraft({
           />
         </div>
       </header>
+      {create.isPending && isBookLookup(type, settings.data) && <LookupStatus />}
       {lookupUnavailable ? (
         <MessageBanner>
           {sourceName} metadata is unavailable right now. Your title is still here; retry the lookup

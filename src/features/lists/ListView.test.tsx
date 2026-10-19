@@ -1147,6 +1147,49 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     expect(posts).toEqual([{ title: 'The Matrix', lookup: true, tmdb_id: 603 }])
   })
 
+  it('F016-W2 a book draft shows the Open Library status while the create is pending', async () => {
+    mockViewport(1400)
+    useBackend({ list: { type: 'book' } })
+    treeWithType('book')
+    let release: () => void = () => {}
+    const gate = new Promise<void>((resolve) => (release = resolve))
+    const posts: unknown[] = []
+    server.use(
+      http.post(createUrl, async ({ request }) => {
+        const body = (await request.json()) as { title: string }
+        posts.push(body)
+        await gate
+        const created = {
+          ...(exampleResponses.getItem.body as object),
+          id: NEW_ID,
+          list_id: LIST,
+          title: body.title,
+          metadata: {},
+          version: 1,
+        }
+        server.use(
+          http.get(`${location.origin}/api/v1/items/${NEW_ID}`, () => HttpResponse.json(created)),
+        )
+        return HttpResponse.json(created, { status: 201 })
+      }),
+    )
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('textbox', { name: 'Title' })
+    await user.type(title, 'dune{Enter}')
+
+    const status = await within(panel).findByRole('status')
+    expect(status).toHaveTextContent('Looking up details on Open Library')
+    expect(posts).toEqual([{ title: 'dune', lookup: true }])
+    release()
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+  })
+
   it('keeps the typed title and can add without TMDB after lookup is unavailable', async () => {
     mockViewport(1400)
     useBackend()

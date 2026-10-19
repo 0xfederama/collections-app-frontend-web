@@ -22,7 +22,7 @@ async function seedBook(request: APIRequestContext, listId: string, title: strin
 }
 
 test.describe('F016-W2 book lookup fixture', () => {
-  test('title suggestions from Open Library fill the writer, pages, year, ISBN and cover', async ({
+  test('typing a title and pressing Enter fills the writer, pages, ISBN, store and cover from the first result', async ({
     page,
     request,
   }) => {
@@ -31,17 +31,17 @@ test.describe('F016-W2 book lookup fixture', () => {
     await page.getByRole('button', { name: 'New item' }).click()
 
     const panel = itemPanel(page)
-    const title = panel.getByRole('combobox', { name: 'Title' })
+    // Books have no title picker: a plain text input, looked up when the title is committed.
+    const title = panel.getByRole('textbox', { name: 'Title' })
+    await expect(panel.getByRole('combobox')).toHaveCount(0)
     await title.fill(FIXTURE_QUERY)
-    const suggestions = panel.getByRole('listbox', { name: 'Open Library title suggestions' })
-    await expect(suggestions.getByRole('option', { name: new RegExp(FIXTURE_TITLE) })).toBeVisible()
-    await expect(suggestions).toContainText('Mock Author')
-    await expect(suggestions).toContainText('321 pages')
-
-    // Selecting the active suggestion creates the item with the fixture's metadata.
-    await title.press('ArrowDown')
     await title.press('Enter')
-    await expect(panel.getByRole('heading', { level: 1, name: FIXTURE_TITLE })).toBeVisible()
+
+    // The server answers after the lookup, which can take a few seconds: wait generously. The
+    // backend replaces the typed title with the first result's title (the fixture's).
+    await expect(panel.getByRole('heading', { level: 1, name: FIXTURE_TITLE })).toBeVisible({
+      timeout: 30_000,
+    })
 
     // Populated fields are part of the detail by default: writer, pages, ISBN and the store.
     await expect(panel.getByText('Mock Author', { exact: true })).toBeVisible()
