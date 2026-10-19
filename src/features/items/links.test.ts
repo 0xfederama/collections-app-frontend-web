@@ -213,3 +213,22 @@ describe('AT-13 external links: website', () => {
     expect(link('reddit').href).not.toBeNull()
   })
 })
+
+describe('F016 book links', () => {
+  const book = {
+    title: 'Dune',
+    type: 'book',
+    website: null,
+    metadata: { isbn: '978-0-441-17271-9' },
+  }
+  it('offers Google, Goodreads and Amazon for the Settings country', () => {
+    const links = buildExternalLinks(book, 'IT')
+    expect(links.map((l) => l.id)).toEqual(['google', 'goodreads', 'amazon'])
+    expect(links[1]?.href).toBe('https://www.goodreads.com/search?q=9780441172719')
+    expect(links[2]?.href).toBe('https://www.amazon.it/s?k=9780441172719')
+  })
+  it('falls back to amazon.com and to the title without an ISBN', () => {
+    const links = buildExternalLinks({ ...book, metadata: {} }, 'ZZ')
+    expect(links[2]?.href).toBe('https://www.amazon.com/s?k=Dune')
+  })
+})

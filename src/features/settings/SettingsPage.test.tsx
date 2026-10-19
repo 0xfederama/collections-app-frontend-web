@@ -20,7 +20,7 @@ async function openSettings(pane = 'General') {
   await screen.findByRole('dialog', { name: 'Settings' })
   await screen.findByLabelText(/Workspace name/)
   if (pane !== 'General') await user.click(screen.getByRole('button', { name: pane }))
-  if (pane === 'Media') await screen.findByLabelText(/Streaming country/)
+  if (pane === 'Media') await screen.findByLabelText('Country')
   if (pane === 'About') await screen.findByRole('region', { name: 'About' })
   if (pane === 'Types & fields') await screen.findByRole('region', { name: 'Types & fields' })
   return user
@@ -71,7 +71,15 @@ describe('W-13 settings: saving', () => {
     const user = await openSettings()
     const dialog = screen.getByRole('dialog', { name: 'Settings' })
     expect(Array.from(dialog.querySelectorAll('h2')).map((heading) => heading.textContent)).toEqual(
-      ['Settings', 'General', 'Movies & TV', 'Books', 'Types & fields', 'Connection', 'About'],
+      [
+        'Settings',
+        'General',
+        'Country & language',
+        'Books',
+        'Types & fields',
+        'Connection',
+        'About',
+      ],
     )
     expect(dialog.querySelector('#settings-movies-tv')?.parentElement).toHaveAttribute('hidden')
     expect(screen.getByLabelText(/Workspace name/)).toBeInTheDocument()
@@ -82,9 +90,9 @@ describe('W-13 settings: saving', () => {
       'Off',
     )
     await user.click(screen.getByRole('button', { name: 'Media' }))
-    expect(screen.getByLabelText(/Streaming country/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Country')).toBeInTheDocument()
     expect(screen.getByLabelText(/Metadata language/)).toBeInTheDocument()
-    expect(field('Streaming country')).toHaveValue('Italy (IT)')
+    expect(field('Country')).toHaveValue('Italy (IT)')
     expect(screen.queryByRole('button', { name: 'Save settings' })).not.toBeInTheDocument()
   })
 
@@ -255,7 +263,7 @@ describe('W-13 settings: saving', () => {
   it('changing the country through the picker sends the ISO code', async () => {
     const { patches } = mountBackend()
     const user = await openSettings('Media')
-    await user.type(field('Streaming country'), 'france{Enter}')
+    await user.type(field('Country'), 'france{Enter}')
     await user.click(closeSettings())
     await screen.findByRole('heading', { level: 1, name: 'Home' })
     expect(patches[0]!.body).toEqual({ streaming_country_code: 'FR' })
@@ -402,7 +410,7 @@ describe('W-13 settings: history limit validation', () => {
 describe('W-13 settings: server errors', () => {
   it.each([
     ['workspace_name', 'Workspace name'],
-    ['streaming_country_code', 'Streaming country'],
+    ['streaming_country_code', 'Country'],
     ['markdown_history_limit', 'Description history limit'],
   ])('422 on %s lands on the input and focuses it', async (apiField, label) => {
     mountBackend()
