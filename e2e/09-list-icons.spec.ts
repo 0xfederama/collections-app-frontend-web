@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { createList, uniqueName } from './helpers'
+import { createList, sidebarTree, uniqueName } from './helpers'
 
 async function expectNoSeriousIssues(page: Page) {
   const { violations } = await new AxeBuilder({ page }).analyze()
@@ -55,11 +55,7 @@ test.describe('F012-W1 list icons', () => {
       expect(saved).toMatchObject({ icon: 'i:camera', icon_color: 'indigo' })
       if (!saved) throw new Error('The created list is missing from the tree.')
 
-      await page
-        .getByRole('main')
-        .getByRole('button', { name: `More actions for ${currentName}`, exact: true })
-        .click()
-      await page.getByRole('menuitem', { name: 'List icon…' }).click()
+      await page.getByRole('main').getByRole('button', { name: 'Change icon', exact: true }).click()
       const settings = page.getByRole('dialog', { name: `List icon · ${currentName}` })
       const editPicker = await openIconPicker(page)
       await expectNoSeriousIssues(page)
@@ -97,11 +93,7 @@ test.describe('F012-W1 list icons', () => {
       let body = (await response.json()) as { icon: string | null; icon_color: string | null }
       expect(body).toMatchObject({ icon: 'i:camera', icon_color: 'indigo' })
 
-      await page
-        .getByRole('main')
-        .getByRole('button', { name: `More actions for ${currentName}`, exact: true })
-        .click()
-      await page.getByRole('menuitem', { name: 'List icon…' }).click()
+      await page.getByRole('main').getByRole('button', { name: 'Change icon', exact: true }).click()
       const emojiSettings = page.getByRole('dialog', { name: `List icon · ${currentName}` })
       const emojiPicker = await openIconPicker(page)
       await emojiPicker.getByRole('textbox', { name: 'Use an emoji' }).fill('🪿')
@@ -113,11 +105,7 @@ test.describe('F012-W1 list icons', () => {
       body = (await response.json()) as { icon: string | null; icon_color: string | null }
       expect(body).toMatchObject({ icon: '🪿', icon_color: null })
 
-      await page
-        .getByRole('main')
-        .getByRole('button', { name: `More actions for ${currentName}`, exact: true })
-        .click()
-      await page.getByRole('menuitem', { name: 'List icon…' }).click()
+      await page.getByRole('main').getByRole('button', { name: 'Change icon', exact: true }).click()
       const reset = page.getByRole('dialog', { name: `List icon · ${currentName}` })
       await openIconPicker(page)
       const resetPicker = page.getByRole('dialog', { name: 'Choose list icon' })
@@ -183,9 +171,8 @@ test.describe('F012-W1 list icons', () => {
         await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
         await page
           .getByRole('main')
-          .getByRole('button', { name: `More actions for ${name}`, exact: true })
+          .getByRole('button', { name: 'Change icon', exact: true })
           .click()
-        await page.getByRole('menuitem', { name: 'List icon…' }).click()
         const picker = await openIconPicker(page)
         const iconGrid = picker.locator('section[aria-label="Built-in icons"] > div')
         const columnCount = await iconGrid.evaluate(
@@ -210,4 +197,48 @@ test.describe('F012-W1 list icons', () => {
       })
     }
   }
+})
+
+test.describe('F018-W1 list icon edit from the header and the sidebar row', () => {
+  test('change the icon from the header icon button, then from the sidebar row menu', async ({
+    page,
+    request,
+  }) => {
+    const name = uniqueName('Edit icon list')
+    const list = await createList(request, name, 'movie')
+    await page.goto(`/lists/${list.id}`)
+    await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+
+    // The header icon is a keyboard-reachable button named "Change icon".
+    const headerIcon = page
+      .getByRole('main')
+      .getByRole('button', { name: 'Change icon', exact: true })
+    await headerIcon.focus()
+    await page.keyboard.press('Enter')
+    const headerDialog = page.getByRole('dialog', { name: `List icon · ${name}` })
+    const headerPicker = await openIconPicker(page)
+    await expectNoSeriousIssues(page)
+    await headerPicker.getByRole('textbox', { name: 'Search icons and emoji' }).fill('camer')
+    await headerPicker.getByRole('button', { name: 'camera', exact: true }).click()
+    await headerPicker.getByRole('button', { name: 'Done' }).click()
+    await headerDialog.getByRole('button', { name: 'Save' }).click()
+    await expect(headerDialog).toBeHidden()
+    let response = await request.get(`/api/v1/lists/${list.id}`)
+    expect(await response.json()).toMatchObject({ icon: 'i:camera' })
+
+    // The sidebar row menu offers the same dialog, with the same save.
+    await sidebarTree(page)
+      .getByRole('button', { name: `More actions for ${name}`, exact: true })
+      .click()
+    await page.getByRole('menuitem', { name: 'Change icon', exact: true }).click()
+    const rowDialog = page.getByRole('dialog', { name: `List icon · ${name}` })
+    const rowPicker = await openIconPicker(page)
+    await rowPicker.getByRole('textbox', { name: 'Use an emoji' }).fill('🪿')
+    await rowPicker.getByRole('button', { name: 'Use emoji' }).click()
+    await rowPicker.getByRole('button', { name: 'Done' }).click()
+    await rowDialog.getByRole('button', { name: 'Save' }).click()
+    await expect(rowDialog).toBeHidden()
+    response = await request.get(`/api/v1/lists/${list.id}`)
+    expect(await response.json()).toMatchObject({ icon: '🪿', icon_color: null })
+  })
 })

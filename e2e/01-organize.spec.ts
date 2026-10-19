@@ -80,7 +80,7 @@ test.describe('AT-03 organize folders and lists', () => {
     await page.goto('/')
     await createViaSidebar(page, 'folder', folder)
     await expect(row(page, folder)).toHaveCount(1)
-    await createViaSidebar(page, 'list', list, 'Movie')
+    await createViaSidebar(page, 'list', list, 'Movies')
     await expect(page.getByRole('heading', { level: 1, name: list })).toBeVisible()
     await expect(row(page, list)).toHaveAttribute('aria-level', '1')
 

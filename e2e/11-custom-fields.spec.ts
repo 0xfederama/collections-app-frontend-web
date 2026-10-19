@@ -6,7 +6,7 @@ test.describe('F014-W4 custom field list workflow', () => {
     page,
     request,
   }) => {
-    const typeName = uniqueName('Board game')
+    const typeName = uniqueName('Board games')
     await page.goto('/settings')
     const settings = page.getByRole('dialog', { name: 'Settings' })
     await settings.getByRole('button', { name: 'Types & fields' }).click()

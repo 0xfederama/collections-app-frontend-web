@@ -145,10 +145,10 @@ test.describe('F011-W1/W2 streaming: no country, several platforms from a dropdo
 })
 
 test.describe('D-085 price only on the types that have one', () => {
-  test('add a price range to a car item, reload, remove it', async ({ page, request }) => {
-    const listName = uniqueName('Cars')
-    const title = uniqueName('Miata')
-    const list = await createList(request, listName, 'car')
+  test('add a price range to a wishlist item, reload, remove it', async ({ page, request }) => {
+    const listName = uniqueName('Wishlist')
+    const title = uniqueName('Espresso machine')
+    const list = await createList(request, listName, 'wishlist')
 
     await page.goto(`/lists/${list.id}`)
     await page.getByRole('button', { name: 'New item' }).click()
