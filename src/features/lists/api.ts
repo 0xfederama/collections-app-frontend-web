@@ -23,6 +23,10 @@ export interface ItemsParams {
   /** The URL override; `null` lets the server use the list's `sort_mode` (D-063). */
   sort: SortMode | null
   q: string
+  filterField: string | null
+  filterValue: string | null
+  filterMin: string | null
+  filterMax: string | null
 }
 
 /** Exported so other features (W-05, W-07, W-08) invalidate by key, not by string literal. */
@@ -31,7 +35,17 @@ export const listKeys = {
   /** Prefix of every items query of a list, whatever its sort or filter. */
   items: (listId: string) => ['lists', listId, 'items'] as const,
   itemsQuery: (listId: string, params: ItemsParams) =>
-    ['lists', listId, 'items', params.sort, params.q] as const,
+    [
+      'lists',
+      listId,
+      'items',
+      params.sort,
+      params.q,
+      params.filterField,
+      params.filterValue,
+      params.filterMin,
+      params.filterMax,
+    ] as const,
 }
 
 export function useList(listId: string) {
@@ -54,6 +68,10 @@ export function useListItems(listId: string, params: ItemsParams) {
             query: {
               ...(params.sort ? { sort: params.sort } : {}),
               ...(params.q ? { q: params.q } : {}),
+              ...(params.filterField ? { filter_field: params.filterField } : {}),
+              ...(params.filterValue !== null ? { filter_value: params.filterValue } : {}),
+              ...(params.filterMin !== null ? { filter_min: params.filterMin } : {}),
+              ...(params.filterMax !== null ? { filter_max: params.filterMax } : {}),
               limit: ITEMS_PAGE_SIZE,
               offset: pageParam,
             },

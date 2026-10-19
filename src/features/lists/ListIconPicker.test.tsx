@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { renderWithProviders } from '../../test-utils'
 import { isSingleEmoji, ListIconPicker } from './ListIconPicker'
 import { searchListIcons } from './iconModel'
 import type { IconChoice } from './iconModel'
@@ -39,7 +40,7 @@ describe('F012-W1 list icon picker', () => {
   it('lets keyboard users search, choose an icon and named color, enter a free emoji, and reset', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
-    render(<Harness onChange={onChange} />)
+    renderWithProviders(<Harness onChange={onChange} />)
 
     const search = screen.getByRole('textbox', { name: 'Search icons and emoji' })
     await user.type(search, 'camer')
@@ -61,7 +62,7 @@ describe('F012-W1 list icon picker', () => {
 
   it('uses token classes and touch-sized, visibly focusable icon and color controls', async () => {
     const user = userEvent.setup()
-    render(<Harness onChange={vi.fn()} />)
+    renderWithProviders(<Harness onChange={vi.fn()} />)
     const camera = screen.getByRole('button', { name: 'camera' })
     expect(camera).toHaveClass('pointer-coarse:size-11', 'focus-visible:outline-focus-ring')
     expect(camera).not.toHaveAttribute('style')

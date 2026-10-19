@@ -1,8 +1,7 @@
 import type { components } from '../../../generated/schema'
 import type { FieldError } from '../../../lib/api'
-import { kindLabels } from '../../../components/ui'
 import type { Item, ItemKind } from '../api'
-import { formatField, kindFields, type Field } from '../kinds'
+import { formatField, isStreamingField, type KindField } from '../kinds'
 import { IMDB_URL } from '../links'
 
 /**
@@ -30,6 +29,8 @@ export interface Draft {
   title: string
   /** The item's kind, derived from its list. Read-only: no input edits it. */
   kind: ItemKind
+  kindName: string
+  fields: readonly KindField[]
   /** Is the price control shown? A price is never there by default ("+ Add price"). */
   hasPrice: boolean
   priceMode: PriceMode
@@ -69,18 +70,17 @@ export interface FormFields {
 export const LIMITS = { title: 300, url: 2048, platform: 60 } as const
 const MAX_PLATFORMS = 30
 
+const NUMBER = /^-?(?:\d+\.?\d*|\.\d+)$/
 const INTEGER = /^\d+$/
-const ONE_DECIMAL = /^\d+(\.\d)?$/
 const PRICE = /^\d{1,10}(\.\d{1,2})?$/
 
 const metadataOf = (item: Item) => item.metadata as Metadata
 
 /** The fields of a kind that are plain inputs. `streaming` is two inputs of its own. */
-export const simpleFields = (kind: ItemKind): readonly Field[] =>
-  kindFields[kind].filter((field) => field.input !== 'streaming')
+export const simpleFields = (fields: readonly KindField[]): readonly KindField[] =>
+  fields.filter((field) => !isStreamingField(field))
 
-export const hasStreaming = (kind: ItemKind) =>
-  kindFields[kind].some((field) => field.input === 'streaming')
+export const hasStreaming = (fields: readonly KindField[]) => fields.some(isStreamingField)
 
 /**
  * The price inputs for a saved price. `min == max` is a single price; anything else (including an
@@ -108,17 +108,23 @@ function priceDraft(price: ItemPrice) {
   }
 }
 
-export function draftFromItem(item: Item): Draft {
+export function draftFromItem(
+  item: Item,
+  definition: { name: string; fields: readonly KindField[] },
+): Draft {
   const meta: Record<string, string> = {}
   const stored = metadataOf(item)
-  for (const field of simpleFields(item.kind)) {
+  for (const field of simpleFields(definition.fields)) {
     const value = stored[field.key]
-    if (typeof value === 'string' || typeof value === 'number') meta[field.key] = String(value)
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+      meta[field.key] = String(value)
   }
   const streaming = stored.streaming as Streaming | undefined
   return {
     title: item.title,
     kind: item.kind,
+    kindName: definition.name,
+    fields: definition.fields,
     ...priceDraft(item.price),
     website: item.website ?? '',
     meta,
@@ -155,15 +161,14 @@ export function parsePlatforms(text: string): string[] {
 }
 
 /** The value a text input stands for, or the raw text when it is not valid (validation reports it). */
-function fieldValue(field: Field, text: string): unknown {
+function fieldValue(field: KindField, text: string): unknown {
   const value = text.trim()
   if (!value) return undefined
-  switch (field.input) {
-    case 'year':
-    case 'integer':
-      return INTEGER.test(value) ? Number(value) : value
-    case 'decimal':
-      return ONE_DECIMAL.test(value) ? Number(value) : value
+  switch (field.type) {
+    case 'number':
+      return NUMBER.test(value) && Number.isFinite(Number(value)) ? Number(value) : value
+    case 'boolean':
+      return value === 'true' ? true : value === 'false' ? false : value
     default:
       return value
   }
@@ -188,11 +193,11 @@ export function toFields(draft: Draft, defaults: Defaults): FormFields {
   }
 
   const metadata: Metadata = {}
-  for (const field of simpleFields(draft.kind)) {
+  for (const field of simpleFields(draft.fields)) {
     const value = fieldValue(field, draft.meta[field.key] ?? '')
     if (value !== undefined) metadata[field.key] = value
   }
-  if (hasStreaming(draft.kind)) {
+  if (hasStreaming(draft.fields)) {
     const platforms = parsePlatforms(draft.streamingPlatforms)
     const country = draft.streamingCountry.trim().toUpperCase()
     if (country || platforms.length > 0) {
@@ -226,7 +231,10 @@ const BASIC_KEYS = ['title', 'price', 'website'] as const
  * kind is never sent: it belongs to the list. An unchanged price sends nothing; removing it sends `null`.
  */
 export function buildPatch(base: Item, draft: Draft, defaults: Defaults): UpdateItemRequest {
-  const before = toFields(draftFromItem(base), defaults)
+  const before = toFields(
+    draftFromItem(base, { name: draft.kindName, fields: draft.fields }),
+    defaults,
+  )
   const after = toFields(draft, defaults)
   const patch: Record<string, unknown> = {}
   for (const key of BASIC_KEYS) {
@@ -248,10 +256,10 @@ export const isDirty = (base: Item, draft: Draft, defaults: Defaults) =>
 export type ErrorMap = Record<string, string>
 
 /** Every input of the form for a kind, in page order (also the order of "focus the first invalid"). */
-export function inputKeys(kind: ItemKind): string[] {
+export function inputKeys(fields: readonly KindField[]): string[] {
   const keys = ['title', 'price.amount', 'price.min', 'price.max', 'price.currency', 'website']
-  for (const field of kindFields[kind]) {
-    if (field.input === 'streaming') {
+  for (const field of fields) {
+    if (isStreamingField(field)) {
       keys.push('metadata.streaming.country', 'metadata.streaming.platforms')
     } else keys.push(`metadata.${field.key}`)
   }
@@ -261,36 +269,29 @@ export function inputKeys(kind: ItemKind): string[] {
 /** The DOM id of the input of an error key. */
 export const inputId = (key: string) => `item-field-${key.replaceAll('.', '-')}`
 
-function validateField(field: Field, text: string): string | undefined {
+function validateField(field: KindField, text: string): string | undefined {
   const value = text.trim()
   if (!value) return undefined
-  const { min, max } = field
-  switch (field.input) {
+  switch (field.type) {
     case 'text':
-      return field.maxLength && value.length > field.maxLength
-        ? `Use at most ${field.maxLength} characters.`
-        : undefined
-    case 'year':
-    case 'integer':
-      return INTEGER.test(value) &&
-        Number(value) >= (min ?? 0) &&
-        Number(value) <= (max ?? Infinity)
+      return undefined
+    case 'number':
+      return NUMBER.test(value) && Number.isFinite(Number(value)) ? undefined : 'Enter a number.'
+    case 'date': {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return 'Enter a date.'
+      const date = new Date(`${value}T00:00:00Z`)
+      return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value
         ? undefined
-        : `Enter a whole number from ${min} to ${max}.`
-    case 'decimal':
-      return ONE_DECIMAL.test(value) &&
-        Number(value) >= (min ?? 0) &&
-        Number(value) <= (max ?? Infinity)
-        ? undefined
-        : `Enter a number from ${min} to ${max} with at most one decimal.`
-    case 'enum':
-      return field.options?.some((option) => option.value === value)
-        ? undefined
-        : 'Choose one of the options.'
-    case 'imdb_url':
-      return IMDB_URL.test(value)
-        ? undefined
-        : 'Enter an IMDb title link like https://www.imdb.com/title/tt0133093/'
+        : 'Enter a valid date.'
+    }
+    case 'boolean':
+      return value === 'true' || value === 'false' ? undefined : 'Choose yes or no.'
+    case 'link':
+      if (field.key === 'imdb_url')
+        return IMDB_URL.test(value)
+          ? undefined
+          : 'Enter an IMDb title link like https://www.imdb.com/title/tt0133093/'
+      return isWebUrl(value) ? undefined : 'Enter a web address beginning with http:// or https://.'
     default:
       return undefined
   }
@@ -342,13 +343,13 @@ export function validate(draft: Draft, defaults: Defaults): ErrorMap {
     }
   }
 
-  for (const field of simpleFields(draft.kind)) {
+  for (const field of simpleFields(draft.fields)) {
     const message = validateField(field, draft.meta[field.key] ?? '')
     if (message) errors[`metadata.${field.key}`] = message
   }
   validateKindRules(draft, errors)
 
-  if (hasStreaming(draft.kind)) {
+  if (hasStreaming(draft.fields)) {
     const platforms = parsePlatforms(draft.streamingPlatforms)
     const country = draft.streamingCountry.trim().toUpperCase() || defaults.country.toUpperCase()
     if ((platforms.length > 0 || draft.streamingCountry.trim()) && !/^[A-Z]{2}$/.test(country)) {
@@ -403,10 +404,10 @@ const ALIASES: Record<string, string> = {
  */
 export function mapServerErrors(
   errors: readonly FieldError[],
-  kind: ItemKind,
+  fields: readonly KindField[],
   priceMode: PriceMode = 'single',
 ): MappedErrors {
-  const known = new Set(inputKeys(kind))
+  const known = new Set(inputKeys(fields))
   const aliases: Record<string, string> = {
     ...ALIASES,
     price: priceMode === 'single' ? 'price.amount' : 'price.min',
@@ -438,13 +439,13 @@ const priceText = (price: PriceInput) => {
   return min !== null ? `from ${min} ${currency}` : `up to ${max} ${currency}`
 }
 
-function metadataText(kind: ItemKind, key: string, value: unknown): string {
+function metadataText(fields: readonly KindField[], key: string, value: unknown): string {
   if (value === undefined) return '(cleared)'
   if (key === 'streaming') {
     const streaming = value as Streaming
     return [streaming.country, streaming.platforms?.join(', ')].filter(Boolean).join(': ')
   }
-  const field = kindFields[kind].find((candidate) => candidate.key === key)
+  const field = fields.find((candidate) => candidate.key === key)
   return (field && formatField(field, value)) || String(value)
 }
 
@@ -453,7 +454,10 @@ function metadataText(kind: ItemKind, key: string, value: unknown): string {
  * (UI_SPEC §9). Cleared fields say so.
  */
 export function draftDump(base: Item, draft: Draft, defaults: Defaults): string {
-  const before = toFields(draftFromItem(base), defaults)
+  const before = toFields(
+    draftFromItem(base, { name: draft.kindName, fields: draft.fields }),
+    defaults,
+  )
   const after = toFields(draft, defaults)
   const lines: string[] = []
   const line = (label: string, value: string | null) =>
@@ -466,9 +470,9 @@ export function draftDump(base: Item, draft: Draft, defaults: Defaults): string 
   const details: string[] = []
   for (const key of keys) {
     if (same(before.metadata[key], after.metadata[key])) continue
-    const label = kindFields[draft.kind].find((field) => field.key === key)?.label ?? key
-    details.push(`  ${label}: ${metadataText(draft.kind, key, after.metadata[key])}`)
+    const label = draft.fields.find((field) => field.key === key)?.label ?? key
+    details.push(`  ${label}: ${metadataText(draft.fields, key, after.metadata[key])}`)
   }
-  if (details.length > 0) lines.push(`${kindLabels[draft.kind]} details:`, ...details)
+  if (details.length > 0) lines.push(`${draft.kindName} details:`, ...details)
   return lines.join('\n')
 }

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { createItem, createList, itemPanel, itemUrl, uniqueName } from './helpers'
 
-test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
+test.describe('F003-W1 item: kind field, website, sort by field key', () => {
   test('create a movie item, fill it in, save, reload, values stick', async ({ page, request }) => {
     const listName = uniqueName('Films')
     const title = '[mock] movie name'
@@ -40,14 +40,15 @@ test.describe('F003-W1 item: kind field, website, sort by kind key', () => {
     // A movie has no Website link button (F-002); the saved value reads in the Details row.
     await expect(item.getByText(website)).toBeVisible()
 
-    // Sort by the kind key (release year, ascending): 2001 before 2020.
+    // Sort by the field key (release year, ascending): 2001 before 2020.
     await page.goto(`/lists/${list.id}`)
     const links = page.getByRole('list', { name: 'Items' }).getByRole('link')
-    await expect(links).toHaveText([older, title])
-    await page.getByRole('combobox', { name: 'Sort' }).click()
-    await page.getByRole('option', { name: 'Release year' }).click()
-    await expect(page).toHaveURL(/sort=kind_key/)
+    // A movie list sorts by its kind's default field (release year) until another is chosen.
     await expect(links).toHaveText([title, older])
+    await page.getByRole('combobox', { name: 'Sort' }).click()
+    await page.getByRole('option', { name: 'Manual' }).click()
+    await expect(page).toHaveURL(/sort=manual/)
+    await expect(links).toHaveText([older, title])
   })
 
   test('F011 simple field editor keeps label, input, and actions on one row', async ({
@@ -222,12 +223,17 @@ test.describe('F009-W3 pinned fields: up to two, in order', () => {
     const pinnedMenu = page.getByRole('button', { name: 'Pinned fields' })
     await pinnedMenu.click()
     const checkbox = (name: string) => page.getByRole('menuitemcheckbox', { name })
-    // Clear the movie defaults (runtime + streaming) before selecting populated fields.
-    await checkbox('Runtime').click()
-    await checkbox('Streaming').click()
+    // Each tick is its own PATCH with the list's version: wait for it before the next tick.
+    const tick = async (name: string) => {
+      const saved = page.waitForResponse(
+        (response) => response.request().method() === 'PATCH' && response.url().includes('/lists/'),
+      )
+      await checkbox(name).click()
+      await saved
+    }
     // Two fields in a row, in the order they are ticked; a third cannot be added.
-    await checkbox('Release year').click()
-    await checkbox('Runtime').click()
+    await tick('Release year')
+    await tick('Runtime')
     await expect(checkbox('Director')).toBeDisabled()
     await page.keyboard.press('Escape')
 
@@ -240,7 +246,7 @@ test.describe('F009-W3 pinned fields: up to two, in order', () => {
 
     // Unpinning the first promotes the second to first: it moves back beside the title.
     await pinnedMenu.click()
-    await checkbox('Release year').click()
+    await tick('Release year')
     // Only one field is pinned now, so the populated director can be selected.
     await expect(checkbox('Director')).toBeEnabled()
     await page.keyboard.press('Escape')

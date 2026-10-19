@@ -14,7 +14,7 @@ import {
 } from './model'
 import { TrashErrorMessage } from './TrashError'
 
-const rootIcons = { folder: Folder, list: List, item: kindIcons.generic }
+const rootIcons = { folder: Folder, list: List, item: kindIcons.generic! }
 
 export interface TrashRowProps {
   entry: TrashEntry

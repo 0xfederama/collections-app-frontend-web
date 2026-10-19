@@ -1,7 +1,6 @@
 import type { components } from '../../generated/schema'
-import type { ItemKind } from '../items/api'
 import type { PinnedFields } from './api'
-import { formatField, hasPrice, kindFields } from '../items/kinds'
+import { formatField, hasPrice, type KindDefinition } from '../items/kinds'
 import { formatPrice } from './price'
 
 type ItemSummary = components['schemas']['ItemSummary']
@@ -15,27 +14,17 @@ export type PinnedKeys = readonly string[]
 /** Most keys a list may pin, in order (the contract's limit). */
 export const MAX_PINNED = 2
 
-const DEFAULTS: Record<ItemKind, PinnedKeys> = {
-  // Streaming in the corner on both streaming kinds, so the service icons stay in every movie and
-  // TV row (F-002). Pinning `seasons` and `episodes_per_season` together still reads `5×7`.
-  movie: ['runtime_minutes', 'streaming'],
-  tv_show: ['seasons', 'streaming'],
-  motorcycle: ['displacement_cc', 'price'],
-  car: ['model_year', 'price'],
-  camera: ['camera_type', 'price'],
-  generic: [],
-}
-
-/** The kind default (F-002 "Pinned fields" table, capped at two in F009-W3). The web owns it; the API stores `null` for it. */
-export function defaultPinned(kind: ItemKind): PinnedKeys {
-  return [...DEFAULTS[kind]]
+/** The kind default supplied by the definition API, capped defensively at the contract limit. */
+export function defaultPinned(definition: KindDefinition): PinnedKeys {
+  return [...(definition.default_pinned_fields ?? [])].slice(0, MAX_PINNED)
 }
 
 /** What the list shows: its own selection, else the kind default. `[]` pins nothing. */
-export function resolvePinned(list: { kind: ItemKind; pinned_fields: PinnedFields }): PinnedKeys {
-  // A generic list has no fields at all (F008-W14): nothing is pinned, whatever was stored.
-  if (list.kind === 'generic') return []
-  if (!list.pinned_fields) return defaultPinned(list.kind)
+export function resolvePinned(
+  list: { pinned_fields: PinnedFields },
+  definition: KindDefinition,
+): PinnedKeys {
+  if (!list.pinned_fields) return defaultPinned(definition)
   return [...list.pinned_fields]
 }
 
@@ -45,18 +34,14 @@ export interface PinnableField {
 }
 
 /**
- * Fields a list of this kind can pin: its kind fields (not the IMDb link), then price when the
- * kind defines one (D-085).
+ * Fields a list of this kind can pin, followed by price when the kind allows it.
  */
-export function pinnableFields(kind: ItemKind): PinnableField[] {
-  if (kind === 'generic') return []
-  const fields = kindFields[kind]
-    .filter((field) => field.input !== 'imdb_url')
-    .map(({ key, label }) => ({
-      key,
-      label: key === 'episode_minutes' ? 'Episode duration' : label,
-    }))
-  return hasPrice(kind) ? [...fields, { key: 'price', label: 'Price' }] : fields
+export function pinnableFields(definition: KindDefinition): PinnableField[] {
+  const fields = definition.fields.map(({ key, label }) => ({
+    key,
+    label: key === 'episode_minutes' ? 'Episode duration' : label,
+  }))
+  return hasPrice(definition) ? [...fields, { key: 'price', label: 'Price' }] : fields
 }
 
 const num = (value: unknown) => (typeof value === 'number' ? value : null)
@@ -65,18 +50,22 @@ const num = (value: unknown) => (typeof value === 'number' ? value : null)
  * The plain text of one pinned field, or `null` when the item has no value for it. `streaming` is
  * not text (the row draws icons) and returns `null` here.
  */
-export function formatPinnedValue(key: string, item: ItemSummary, kind: ItemKind): string | null {
+export function formatPinnedValue(
+  key: string,
+  item: ItemSummary,
+  definition: KindDefinition,
+): string | null {
   if (key === 'price') return formatPrice(item.price)
   if (key === 'streaming') return null
   const value = item.metadata[key]
-  if (kind === 'tv_show') {
+  if (definition.key === 'tv_show') {
     if (key === 'seasons') return num(value) === null ? null : `${value} seasons`
     if (key === 'episodes_per_season') {
       return num(value) === null ? null : `${value} episodes per season`
     }
     if (key === 'episode_minutes') return num(value) === null ? null : `${value} min`
   }
-  const field = kindFields[kind].find((f) => f.key === key)
+  const field = definition.fields.find((f) => f.key === key)
   return field ? formatField(field, value) : null
 }
 
@@ -95,13 +84,17 @@ export function pinnedPlacements(pinned: PinnedKeys): { first: string[]; second:
 }
 
 /** The text pieces of a run of fields, in order, ready to join with ` · `. Streaming is left to the caller. */
-export function pinnedTexts(keys: readonly string[], item: ItemSummary, kind: ItemKind): string[] {
+export function pinnedTexts(
+  keys: readonly string[],
+  item: ItemSummary,
+  definition: KindDefinition,
+): string[] {
   const texts: string[] = []
   const meta = item.metadata
   let combined = false
   for (const key of keys) {
     // Seasons and episodes together read `5×7`, once, where the first of them sits.
-    if (kind === 'tv_show' && (key === 'seasons' || key === 'episodes_per_season')) {
+    if (definition.key === 'tv_show' && (key === 'seasons' || key === 'episodes_per_season')) {
       if (keys.includes('seasons') && keys.includes('episodes_per_season')) {
         const seasons = num(meta.seasons)
         const episodes = num(meta.episodes_per_season)
@@ -110,7 +103,7 @@ export function pinnedTexts(keys: readonly string[], item: ItemSummary, kind: It
         continue
       }
     }
-    const text = formatPinnedValue(key, item, kind)
+    const text = formatPinnedValue(key, item, definition)
     if (text) texts.push(text)
   }
   return texts

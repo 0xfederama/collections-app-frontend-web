@@ -46,9 +46,13 @@ export type SettingsCloseRequestRef = { current: SettingsCloseRequest | null }
 export function SettingsForm({
   settings,
   closeRequestRef,
+  pane,
+  onPaneChange,
 }: {
   settings: Settings
   closeRequestRef: SettingsCloseRequestRef
+  pane: string
+  onPaneChange: (pane: string) => void
 }) {
   const client = useQueryClient()
   const toast = useToast()
@@ -98,10 +102,20 @@ export function SettingsForm({
   useEffect(() => {
     if (focusRequest) document.getElementById(focusRequest.id)?.focus()
   }, [focusRequest])
-  const focusFirst = useCallback((found: ErrorMap) => {
-    const field = firstInvalid(found)
-    if (field) setFocusRequest((current) => ({ id: inputId(field), n: (current?.n ?? 0) + 1 }))
-  }, [])
+  const focusFirst = useCallback(
+    (found: ErrorMap) => {
+      const field = firstInvalid(found)
+      if (field) {
+        onPaneChange(
+          field === 'streaming_country_code' || field === 'metadata_language'
+            ? 'Media'
+            : 'Collection',
+        )
+        setFocusRequest((current) => ({ id: inputId(field), n: (current?.n ?? 0) + 1 }))
+      }
+    },
+    [onPaneChange],
+  )
 
   const set = (field: SettingsField, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }))
@@ -345,7 +359,8 @@ export function SettingsForm({
 
       <section
         aria-labelledby="settings-collection"
-        className="flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md"
+        hidden={pane !== 'Collection'}
+        className={`flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md ${pane !== 'Collection' ? 'hidden' : ''}`}
       >
         <h2 id="settings-collection" className="text-sm font-semibold text-text-muted">
           Collection
@@ -397,7 +412,8 @@ export function SettingsForm({
 
       <section
         aria-labelledby="settings-movies-tv"
-        className="flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md"
+        hidden={pane !== 'Media'}
+        className={`flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md ${pane !== 'Media' ? 'hidden' : ''}`}
       >
         <h2 id="settings-movies-tv" className="text-sm font-semibold text-text-muted">
           Movies &amp; TV

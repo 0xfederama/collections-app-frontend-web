@@ -103,6 +103,27 @@ function useBackend(options: Options = {}): Recorded {
                 i.metadata.director.toLowerCase().includes(q)),
           )
         : [...state.items]
+      const fieldKey = url.searchParams.get('filter_field')
+      if (fieldKey) {
+        const value = url.searchParams.get('filter_value')
+        const min = url.searchParams.get('filter_min')
+        const max = url.searchParams.get('filter_max')
+        rows = rows.filter((item) => {
+          const fieldValue = item.metadata[fieldKey]
+          if (value !== null) {
+            if (typeof fieldValue === 'string')
+              return fieldValue.toLowerCase().includes(value.toLowerCase())
+            if (typeof fieldValue === 'boolean') return String(fieldValue) === value
+            return false
+          }
+          if (fieldValue === undefined || fieldValue === null) return false
+          const comparable = typeof fieldValue === 'number' ? fieldValue : String(fieldValue)
+          return (
+            (!min || comparable >= (typeof fieldValue === 'number' ? Number(min) : min)) &&
+            (!max || comparable <= (typeof fieldValue === 'number' ? Number(max) : max))
+          )
+        })
+      }
       if ((url.searchParams.get('sort') ?? state.list.sort_mode) === 'title') {
         rows = rows.sort((a, b) => a.title.localeCompare(b.title))
       }
@@ -176,6 +197,7 @@ describe('W-06 display modes', () => {
     '%s renders title link and price, no kind label, status or summary (F007-W4, W7)',
     async (mode) => {
       // A car list pins price by default, so the row shows it.
+      treeWithKind('car')
       useBackend({ list: { display_mode: mode, kind: 'car', pinned_fields: null }, items: rich })
       renderList(at())
       const ul = await itemsList()
@@ -312,16 +334,16 @@ describe('W-06 URL state: sort and filter', () => {
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
   })
 
-  it('F007-W9 a movie list offers "Release year" and picking it sets ?sort=kind_key', async () => {
+  it('F014-W3 a movie list offers "Release year" and sends its field key', async () => {
     const backend = useBackend()
     const user = userEvent.setup()
     const router = renderList(at())
     await itemsList()
     await user.click(sortSelect())
     await user.click(await screen.findByRole('option', { name: 'Release year' }))
-    expect(router.state.location.search).toBe('?sort=kind_key')
+    expect(router.state.location.search).toBe('?sort=release_year')
     await waitFor(() =>
-      expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('kind_key'),
+      expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('release_year'),
     )
   })
 
@@ -348,6 +370,40 @@ describe('W-06 URL state: sort and filter', () => {
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
     await user.click(sortSelect())
     expect(screen.queryByRole('option', { name: 'Director' })).not.toBeInTheDocument()
+  })
+
+  it('F014-W4 serializes a type-aware number range and sends the field filter contract', async () => {
+    const backend = useBackend({
+      list: { kind: 'movie' },
+      items: [
+        makeItem(1, { title: 'Earlier', metadata: { release_year: 1999 } }),
+        makeItem(2, { title: 'Later', metadata: { release_year: 2001 } }),
+      ],
+    })
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getByRole('combobox', { name: 'Filter field' }))
+    await user.click(await screen.findByRole('option', { name: 'Release year' }))
+    await user.type(screen.getByRole('spinbutton', { name: 'Release year minimum' }), '2000')
+    await waitFor(() =>
+      expect(router.state.location.search).toBe('?filter_field=release_year&filter_min=2000'),
+    )
+    await waitFor(() => {
+      expect(backend.itemRequests.at(-1)!.searchParams.get('filter_field')).toBe('release_year')
+      expect(backend.itemRequests.at(-1)!.searchParams.get('filter_min')).toBe('2000')
+    })
+    expect(titles()).toEqual(['Later'])
+    await user.click(screen.getByRole('button', { name: 'Clear field filter' }))
+    await waitFor(() => expect(router.state.location.search).toBe(''))
+  })
+
+  it('F014-W4 ignores stale and type-incompatible field filter URLs', async () => {
+    const backend = useBackend({ list: { kind: 'movie' } })
+    const router = renderList(at('?filter_field=missing&filter_value=anything'))
+    await itemsList()
+    await waitFor(() => expect(router.state.location.search).toBe(''))
+    expect(backend.itemRequests.at(-1)!.searchParams.has('filter_field')).toBe(false)
   })
 
   it('F002 a car list offers "Price" and picking it sets ?sort=price', async () => {

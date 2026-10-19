@@ -57,12 +57,15 @@ export function ListIconPicker({
   onClose,
   title = 'Choose list icon',
   kind = 'generic',
+  showColorControls = true,
 }: {
   value: IconChoice
   onChange: (value: IconChoice) => void
   onClose: () => void
   title?: string
   kind?: ItemKind
+  /** Kind definitions store an icon only; their default icon cannot carry a list icon color. */
+  showColorControls?: boolean
 }) {
   const [query, setQuery] = useState('')
   const [emojiDraft, setEmojiDraft] = useState('')
@@ -166,37 +169,39 @@ export function ListIconPicker({
             </Button>
           </form>
         </section>
-        <section aria-label="Icon color">
-          <h3 className="mb-2 text-sm font-medium">Color</h3>
-          {selected ? (
-            <div role="group" aria-label="Icon color" className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                aria-label="None"
-                aria-pressed={!value.icon_color}
-                onClick={() => onChange({ ...value, icon_color: null })}
-                className="size-8 pointer-coarse:size-11 rounded-md border border-border bg-surface text-xs text-text-muted aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2"
-              >
-                —
-              </button>
-              {LIST_ICON_COLORS.map((color) => (
+        {showColorControls && (
+          <section aria-label="Icon color">
+            <h3 className="mb-2 text-sm font-medium">Color</h3>
+            {selected ? (
+              <div role="group" aria-label="Icon color" className="flex flex-wrap gap-2">
                 <button
-                  key={color}
                   type="button"
-                  aria-label={COLOR_LABELS[color]}
-                  aria-pressed={value.icon_color === color}
-                  onClick={() => onChange({ icon: value.icon, icon_color: color })}
-                  className={cx(
-                    'size-8 pointer-coarse:size-11 rounded-md border border-border aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2',
-                    COLOR_SWATCH_CLASSES[color],
-                  )}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-text-muted">Colors apply to built-in icons.</p>
-          )}
-        </section>
+                  aria-label="None"
+                  aria-pressed={!value.icon_color}
+                  onClick={() => onChange({ ...value, icon_color: null })}
+                  className="size-8 pointer-coarse:size-11 rounded-md border border-border bg-surface text-xs text-text-muted aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2"
+                >
+                  —
+                </button>
+                {LIST_ICON_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    aria-label={COLOR_LABELS[color]}
+                    aria-pressed={value.icon_color === color}
+                    onClick={() => onChange({ icon: value.icon, icon_color: color })}
+                    className={cx(
+                      'size-8 pointer-coarse:size-11 rounded-md border border-border aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2',
+                      COLOR_SWATCH_CLASSES[color],
+                    )}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-text-muted">Colors apply to built-in icons.</p>
+            )}
+          </section>
+        )}
         <div className="flex items-center justify-between border-t border-border pt-3">
           <span className="flex items-center gap-2 text-sm text-text-muted">
             Preview{' '}

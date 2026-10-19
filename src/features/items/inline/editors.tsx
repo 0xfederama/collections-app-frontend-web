@@ -272,17 +272,15 @@ export function FieldInputs({
   const key = `metadata.${field.key}`
   const value = draft.meta[field.key] ?? ''
   const common = { id: inputId(key), label: field.label, error: errors[key] }
-  if (field.input === 'enum') {
+  if (field.type === 'boolean') {
     return (
       <div className={singleInput}>
         <Select
           {...common}
           options={[
             { value: NONE, label: 'Not set' },
-            ...(field.options ?? []).map((option) => ({
-              value: option.value,
-              label: option.label,
-            })),
+            { value: 'true', label: 'Yes' },
+            { value: 'false', label: 'No' },
           ]}
           value={value || NONE}
           onValueChange={(next) => setMeta(field.key, next === NONE ? '' : next)}
@@ -290,17 +288,16 @@ export function FieldInputs({
       </div>
     )
   }
-  const numeric = field.input === 'year' || field.input === 'integer' || field.input === 'decimal'
+  const link = field.type === 'link'
   return (
     <div className={singleInput}>
       <TextField
         {...common}
-        label={field.input === 'imdb_url' ? 'IMDb link' : field.label}
-        type={field.input === 'imdb_url' ? 'url' : undefined}
-        inputMode={field.input === 'decimal' ? 'decimal' : numeric ? 'numeric' : undefined}
+        label={field.key === 'imdb_url' ? 'IMDb link' : field.label}
+        type={field.type === 'date' ? 'date' : link ? 'url' : undefined}
+        inputMode={field.type === 'number' ? 'decimal' : link ? 'url' : undefined}
         autoComplete="off"
-        placeholder={field.input === 'imdb_url' ? 'https://www.imdb.com/title/tt…' : undefined}
-        suffix={field.unit}
+        placeholder={field.key === 'imdb_url' ? 'https://www.imdb.com/title/tt…' : undefined}
         value={value}
         onChange={(event) => setMeta(field.key, event.target.value)}
       />

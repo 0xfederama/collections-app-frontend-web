@@ -3,6 +3,7 @@ import { cx } from '../../lib/cx'
 import { builtinListIcon, parseListIcon } from './iconModel'
 import type { ListIconColor } from './iconModel'
 import type { ItemKind } from '../items/api'
+import { useKinds } from '../settings/api'
 
 const ICON_COLOR_CLASSES: Record<ListIconColor, string> = {
   red: 'text-list-icon-red',
@@ -30,7 +31,9 @@ export function ListIconMark({
   className?: string
   iconClassName?: string
 }) {
-  const parsed = parseListIcon(icon)
+  const definitions = useKinds()
+  const defaultIcon = definitions.data?.find((definition) => definition.key === kind)?.default_icon
+  const parsed = parseListIcon(icon ?? defaultIcon)
   const Builtin = parsed.builtin ? builtinListIcon(parsed.builtin)?.Icon : undefined
   const Glyph = Builtin ?? kindIcons[kind] ?? ListIcon
   return (

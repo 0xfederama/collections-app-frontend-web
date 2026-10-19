@@ -5,6 +5,7 @@ import type { PinnedFields } from './api'
 import { toolbarControl } from './toolbarStyles'
 import { MAX_PINNED, pinnableFields, resolvePinned } from './pinned'
 import type { List } from './api'
+import type { KindDefinition } from '../items/kinds'
 
 const itemClass =
   'flex h-9 cursor-pointer items-center gap-2 rounded-md px-3 text-sm outline-none select-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11 [&_svg]:size-4'
@@ -18,15 +19,17 @@ const itemClass =
  */
 export function PinnedMenu({
   list,
+  definition,
   onChange,
   onReset,
 }: {
   list: Pick<List, 'kind' | 'pinned_fields'>
+  definition: KindDefinition
   onChange: (pinned: PinnedFields) => void
   onReset: () => void
 }) {
-  const current = resolvePinned(list)
-  const fields = pinnableFields(list.kind)
+  const current = resolvePinned(list, definition)
+  const fields = pinnableFields(definition)
 
   const toggle = (key: string) => {
     const next = current.includes(key)

@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { kindLabels, type ItemKind, type MenuItem } from '../../components/ui'
+import { type ItemKind, type MenuItem } from '../../components/ui'
 import { useTreeDialogs } from './useTreeDialogs'
 import { NodeMenu } from './NodeMenu'
 import type { List } from './api'
-import { kindOptions, useChangeKind } from './useChangeKind'
+import { useChangeKind } from './useChangeKind'
 import { ListIconDialog } from './ListIconDialog'
 
 /**
@@ -18,9 +18,9 @@ export function ListActionsMenu({ list }: { list: List }) {
   const leading: MenuItem[] = [
     {
       type: 'radio-submenu',
-      label: `Kind: ${kindLabels[list.kind]}`,
+      label: `Kind: ${kind.currentName}`,
       value: list.kind,
-      options: kindOptions,
+      options: kind.options,
       onValueChange: (value) => kind.pick(value as ItemKind),
     },
     { type: 'separator' },

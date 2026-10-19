@@ -11,6 +11,7 @@ const readyz = `${location.origin}/readyz`
 async function openConnection() {
   mockViewport(1280)
   renderAt('/settings')
+  await userEvent.click(await screen.findByRole('button', { name: 'About' }))
   const heading = await screen.findByRole('heading', { level: 2, name: 'Connection' })
   return within(heading.closest('section')!)
 }

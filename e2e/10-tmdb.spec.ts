@@ -28,7 +28,7 @@ test.describe('F013 TMDB lookup fixture', () => {
   })
 })
 
-test.describe('F013-W3 director filter and sort', () => {
+test.describe('F013-W3 director data and F014-W4 field filter', () => {
   test('filters movies by director and sorts by director', async ({ page, request }) => {
     const list = await createList(request, uniqueName('Director films'), 'movie')
     const zetaTitle = uniqueName('Zeta')
@@ -42,19 +42,19 @@ test.describe('F013-W3 director filter and sort', () => {
       metadata: { director: 'Ada Auteur' },
     })
 
-    await page.goto(`/lists/${list.id}`)
+    await page.goto(`/lists/${list.id}?sort=manual`)
     const rows = page.getByRole('list', { name: 'Items' }).getByRole('link')
     await expect(rows).toHaveText([zetaTitle, alphaTitle])
 
-    const filter = page.getByRole('searchbox', { name: 'Filter items by title or director' })
+    await page.getByRole('combobox', { name: 'Filter field' }).click()
+    await page.getByRole('option', { name: 'Director' }).click()
+    const filter = page.getByRole('searchbox', { name: 'Filter Director' })
     await filter.fill('Ada Auteur')
+    await expect(page).toHaveURL(/filter_field=director.*filter_value=Ada\+Auteur/)
     await expect(rows).toHaveCount(1)
     await expect(rows.first()).toContainText(alphaTitle)
 
-    await filter.fill('')
-    // The list filter is debounced.  Wait for its query state to clear before
-    // setting the independent sort parameter, rather than racing the two URL
-    // updates.
+    await page.getByRole('button', { name: 'Clear field filter' }).click()
     await expect(rows).toHaveCount(2)
     await page.getByRole('combobox', { name: 'Sort' }).click()
     await page.getByRole('option', { name: 'Director' }).click()

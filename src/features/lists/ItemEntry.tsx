@@ -8,6 +8,7 @@ import { ItemThumb } from './ItemThumb'
 import { pinnedPlacements, pinnedTexts, streamingOf, type PinnedKeys } from './pinned'
 import { ServiceIcon } from '../../components/ServiceIcon'
 import type { ItemKind } from '../items/api'
+import type { KindDefinition } from '../items/kinds'
 
 /** What an entry needs to be reorderable. Absent when reordering is not available. */
 export interface EntryReorder {
@@ -31,6 +32,7 @@ export interface ItemEntryProps {
   /** The fields shown beside the title and in the corner (the list's, else the kind default). */
   pinned: PinnedKeys
   kind: ItemKind
+  definition: KindDefinition
 }
 
 const linkClass =
@@ -44,20 +46,20 @@ const surface =
 function PinnedSlot({
   keys,
   item,
-  kind,
+  definition,
   iconSize,
   className,
 }: {
   keys: readonly string[]
   item: ItemSummary
-  kind: ItemKind
+  definition: KindDefinition
   iconSize: number
   className?: string
 }) {
   const parts: ReactNode[] = []
   let run: string[] = []
   const flush = () => {
-    const texts = pinnedTexts(run, item, kind)
+    const texts = pinnedTexts(run, item, definition)
     if (texts.length) {
       parts.push(
         <span key={`t${parts.length}`} className="whitespace-nowrap tabular-nums">
@@ -90,9 +92,17 @@ function PinnedSlot({
 }
 
 /** One item of the list in the given display mode: a row (compact, thumbnail) or a card (grid). */
-export function ItemEntry({ item, mode, search, onOpen, reorder, pinned, kind }: ItemEntryProps) {
+export function ItemEntry({
+  item,
+  mode,
+  search,
+  onOpen,
+  reorder,
+  pinned,
+  definition,
+}: ItemEntryProps) {
   const to = { pathname: `/lists/${item.list_id}/items/${item.id}`, search }
-  const slots = { item: item, kind }
+  const slots = { item, definition }
   // F009-W3: the first pinned field reads next to the title, the second in the right corner.
   const { first, second } = pinnedPlacements(pinned)
 

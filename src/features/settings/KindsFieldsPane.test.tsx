@@ -1,0 +1,278 @@
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw/http'
+import { describe, expect, it } from 'vitest'
+import { server } from '../../mocks/server'
+import { mockViewport, renderAt } from '../../test-utils'
+import type { KindDefinition } from './api'
+
+const kindsUrl = `${location.origin}/api/v1/kinds`
+const movie: KindDefinition = {
+  key: 'movie',
+  name: 'Movie',
+  default_icon: null,
+  allows_price: false,
+  default_sort_field: 'title',
+  default_pinned_fields: [],
+  is_locked: true,
+  version: 3,
+  fields: [
+    { key: 'director', label: 'Director', type: 'text', position: 0, is_locked: true, version: 1 },
+  ],
+}
+const boardGame: KindDefinition = {
+  key: 'board_game',
+  name: 'Board game',
+  default_icon: null,
+  allows_price: false,
+  default_sort_field: null,
+  default_pinned_fields: null,
+  is_locked: false,
+  version: 2,
+  fields: [
+    { key: 'rating', label: 'Rating', type: 'number', position: 0, is_locked: false, version: 1 },
+  ],
+}
+
+async function openPane(kinds: KindDefinition[] = [movie, boardGame], lists: object[] = []) {
+  mockViewport(375)
+  server.use(http.get(kindsUrl, () => HttpResponse.json(kinds)))
+  server.use(
+    http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json({ folders: [], lists })),
+  )
+  const user = userEvent.setup()
+  renderAt('/settings')
+  await user.click(await screen.findByRole('button', { name: 'Kinds & fields' }))
+  await screen.findByRole('list', { name: 'Kinds' })
+  return user
+}
+
+describe('F014-W2 Kinds & fields pane', () => {
+  it('marks built in kinds and fields read only while allowing an added field', async () => {
+    const user = await openPane()
+    await user.click(screen.getByRole('button', { name: /Movie.*Built in.*locked/ }))
+    expect(
+      screen.getByText('Built in fields are locked. You can add your own fields to this kind.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Director')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete kind' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Rename Director' })).not.toBeInTheDocument()
+
+    let fieldRequest: { ifMatch: string | null; body: unknown } | undefined
+    server.use(
+      http.post(`${kindsUrl}/movie/fields`, async ({ request }) => {
+        fieldRequest = { ifMatch: request.headers.get('If-Match'), body: await request.json() }
+        return HttpResponse.json(
+          {
+            key: 'rating',
+            label: 'Rating',
+            type: 'number',
+            position: 1,
+            is_locked: false,
+            version: 1,
+          },
+          { status: 201 },
+        )
+      }),
+    )
+    await user.type(screen.getByLabelText('New field name'), 'Rating')
+    await user.click(screen.getByRole('combobox', { name: 'Field type' }))
+    await user.click(await screen.findByRole('option', { name: 'Number' }))
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(fieldRequest).toEqual({ ifMatch: '"k-3"', body: { label: 'Rating', type: 'number' } })
+  })
+
+  it('creates custom kinds with the selected price option and icon value', async () => {
+    const user = await openPane()
+    let createRequest: { body: Record<string, unknown> } | undefined
+    server.use(
+      http.post(kindsUrl, async ({ request }) => {
+        createRequest = { body: (await request.json()) as Record<string, unknown> }
+        return HttpResponse.json(
+          { ...boardGame, key: 'tabletop', name: 'Tabletop', fields: [] },
+          { status: 201 },
+        )
+      }),
+    )
+    await user.type(screen.getByLabelText('Kind name'), 'Tabletop')
+    await user.click(screen.getByRole('checkbox', { name: 'Allows a price' }))
+    await user.click(screen.getByRole('button', { name: 'Choose icon' }))
+    const picker = await screen.findByRole('dialog', { name: 'Choose kind icon' })
+    await user.click(within(picker).getByRole('button', { name: 'gamepad 2' }))
+    await user.click(within(picker).getByRole('button', { name: 'Done' }))
+    await user.click(screen.getByRole('button', { name: 'Create kind' }))
+    expect(createRequest?.body).toEqual({
+      name: 'Tabletop',
+      default_icon: 'i:gamepad-2',
+      allows_price: true,
+    })
+  })
+
+  it('previews populated values before custom field deletion and uses the field snapshot', async () => {
+    const user = await openPane()
+    await user.click(screen.getByRole('button', { name: /Board game/ }))
+    let deleteHeader: string | null = null
+    server.use(
+      http.get(`${kindsUrl}/board_game/fields/rating`, () =>
+        HttpResponse.json({ populated_item_count: 2 }),
+      ),
+      http.delete(`${kindsUrl}/board_game/fields/rating`, ({ request }) => {
+        deleteHeader = request.headers.get('If-Match')
+        return HttpResponse.json({ populated_item_count: 2 })
+      }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Delete Rating' }))
+    const confirmation = await screen.findByRole('alertdialog', { name: 'Delete Rating?' })
+    expect(within(confirmation).getByText(/2 items have a value/)).toBeInTheDocument()
+    await user.click(within(confirmation).getByRole('button', { name: 'Delete field' }))
+    expect(deleteHeader).toBe('"kf-1"')
+  })
+
+  it('updates defaults after fields exist using the kind version and only changed values', async () => {
+    const user = await openPane()
+    await user.click(screen.getByRole('button', { name: /Board game/ }))
+    let updateRequest: { ifMatch: string | null; body: unknown } | undefined
+    server.use(
+      http.patch(`${kindsUrl}/board_game`, async ({ request }) => {
+        updateRequest = {
+          ifMatch: request.headers.get('If-Match'),
+          body: await request.json(),
+        }
+        return HttpResponse.json({
+          ...boardGame,
+          allows_price: true,
+          default_sort_field: 'rating',
+          default_pinned_fields: ['rating'],
+          version: 3,
+        })
+      }),
+    )
+    await user.click(screen.getByRole('combobox', { name: 'Default sort field' }))
+    await user.click(await screen.findByRole('option', { name: 'Rating' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Allow prices for items' }))
+    await user.click(screen.getByRole('checkbox', { name: /^Rating/ }))
+    await user.click(screen.getByRole('button', { name: 'Save kind settings' }))
+    expect(updateRequest).toEqual({
+      ifMatch: '"k-2"',
+      body: {
+        allows_price: true,
+        default_sort_field: 'rating',
+        default_pinned_fields: ['rating'],
+      },
+    })
+  })
+
+  it('renames a custom kind with a partial patch and the loaded kind version', async () => {
+    const user = await openPane()
+    await user.click(screen.getByRole('button', { name: /Board game/ }))
+    let updateRequest: { ifMatch: string | null; body: unknown } | undefined
+    server.use(
+      http.patch(`${kindsUrl}/board_game`, async ({ request }) => {
+        updateRequest = {
+          ifMatch: request.headers.get('If-Match'),
+          body: await request.json(),
+        }
+        return HttpResponse.json({ ...boardGame, name: 'Tabletop', version: 3 })
+      }),
+    )
+    const nameField = screen.getByLabelText('Rename kind')
+    await user.clear(nameField)
+    await user.type(nameField, 'Tabletop')
+    await user.click(screen.getByRole('button', { name: 'Save name' }))
+    expect(updateRequest).toEqual({ ifMatch: '"k-2"', body: { name: 'Tabletop' } })
+  })
+
+  it('sends null to clear defaults while omitting untouched kind properties', async () => {
+    const configured: KindDefinition = {
+      ...boardGame,
+      default_icon: 'i:gamepad-2',
+      default_sort_field: 'rating',
+      default_pinned_fields: ['rating'],
+    }
+    const user = await openPane([movie, configured])
+    await user.click(screen.getByRole('button', { name: /Board game/ }))
+    let updateRequest: { ifMatch: string | null; body: unknown } | undefined
+    server.use(
+      http.patch(`${kindsUrl}/board_game`, async ({ request }) => {
+        updateRequest = {
+          ifMatch: request.headers.get('If-Match'),
+          body: await request.json(),
+        }
+        return HttpResponse.json({
+          ...configured,
+          default_icon: null,
+          default_sort_field: null,
+          default_pinned_fields: null,
+          version: 3,
+        })
+      }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Clear kind icon' }))
+    await user.click(screen.getByRole('combobox', { name: 'Default sort field' }))
+    await user.click(await screen.findByRole('option', { name: 'None' }))
+    await user.click(screen.getByRole('button', { name: 'Reset pins' }))
+    await user.click(screen.getByRole('button', { name: 'Save kind settings' }))
+    expect(updateRequest).toEqual({
+      ifMatch: '"k-2"',
+      body: { default_icon: null, default_sort_field: null, default_pinned_fields: null },
+    })
+  })
+
+  it('offers an explicit target kind for active lists before deleting the definition', async () => {
+    const list = {
+      id: 'list-1',
+      folder_id: null,
+      name: 'Weekend games',
+      kind: 'board_game',
+      description: null,
+      display_mode: 'compact',
+      sort_mode: 'manual',
+      pinned_fields: null,
+      icon: null,
+      icon_color: null,
+      sort_order: 0,
+      item_count: 4,
+      version: 7,
+      created_at: '2026-10-14T09:30:00Z',
+      updated_at: '2026-10-14T09:30:00Z',
+    }
+    let listKind = 'board_game'
+    let listPatch: { ifMatch: string | null; body: unknown } | undefined
+    let kindDeleted = false
+    const user = await openPane([movie, boardGame], [list])
+    await user.click(screen.getByRole('button', { name: /Board game/ }))
+    server.use(
+      http.patch(`${location.origin}/api/v1/lists/list-1`, async ({ request }) => {
+        listPatch = { ifMatch: request.headers.get('If-Match'), body: await request.json() }
+        listKind = 'movie'
+        Object.assign(list, { kind: listKind })
+        return HttpResponse.json({ ...list, kind: listKind, version: 8 })
+      }),
+      http.delete(`${kindsUrl}/board_game`, () => {
+        kindDeleted = true
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Delete kind' }))
+    const deleteDialog = await screen.findByRole('alertdialog', { name: 'Delete Board game?' })
+    expect(
+      within(deleteDialog).getByText(/1 active list uses this kind: Weekend games/),
+    ).toBeInTheDocument()
+    await user.click(within(deleteDialog).getByRole('button', { name: 'Choose target kind' }))
+    const changeDialog = await screen.findByRole('alertdialog', {
+      name: 'Change lists from Board game?',
+    })
+    expect(
+      within(changeDialog).getByText(/permanently clears the old kind's custom fields and price/),
+    ).toBeInTheDocument()
+    await user.click(within(changeDialog).getByRole('combobox', { name: 'Change listed lists to' }))
+    await user.click(await screen.findByRole('option', { name: 'Movie' }))
+    await user.click(within(changeDialog).getByRole('button', { name: 'Change listed kinds' }))
+    await waitFor(() => expect(listPatch).toEqual({ ifMatch: '"l-7"', body: { kind: 'movie' } }))
+    expect(kindDeleted).toBe(false)
+    const finalDialog = await screen.findByRole('alertdialog', { name: 'Delete Board game?' })
+    expect(within(finalDialog).getByText(/No active lists use this kind/)).toBeInTheDocument()
+    await user.click(within(finalDialog).getByRole('button', { name: 'Delete kind' }))
+    await waitFor(() => expect(kindDeleted).toBe(true))
+  })
+})

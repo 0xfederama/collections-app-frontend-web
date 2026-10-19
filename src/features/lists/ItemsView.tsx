@@ -13,6 +13,7 @@ import {
   type SortMode,
 } from './api'
 import type { ItemKind } from '../items/api'
+import type { KindDefinition } from '../items/kinds'
 import { ItemEntry } from './ItemEntry'
 import type { PinnedKeys } from './pinned'
 import {
@@ -69,6 +70,7 @@ export interface ItemsViewProps {
   listId: string
   mode: DisplayMode
   kind: ItemKind
+  definition: KindDefinition
   pinned: PinnedKeys
   /** e.g. `12 items` or `3 of 12 items`; shown after the items. */
   countLabel: string
@@ -92,18 +94,33 @@ export interface ItemsViewProps {
 
 /** The list body: empty states, the items in the display mode, drag-reorder and "Load more". */
 export function ItemsView(props: ItemsViewProps) {
-  const { listId, mode, kind, pinned, items, total, params, effectiveSort, hasNextPage, search } =
-    props
+  const {
+    listId,
+    mode,
+    kind,
+    definition,
+    pinned,
+    items,
+    total,
+    params,
+    effectiveSort,
+    hasNextPage,
+    search,
+  } = props
   const toast = useToast()
   const reorder = useReorderItems(listId)
   const [announcement, setAnnouncement] = useState('')
 
   if (items.length === 0 && !props.draft) {
-    return params.q ? (
+    return params.q || params.filterField ? (
       <EmptyState
         icon={Search}
         title="No items match"
-        description={`Nothing in this list has “${params.q}” in its title.`}
+        description={
+          params.q
+            ? `Nothing in this list has “${params.q}” in its title.`
+            : 'No items match the selected field filter.'
+        }
         action={
           <Button variant="secondary" onClick={props.onClearFilter}>
             Clear filter
@@ -124,12 +141,13 @@ export function ItemsView(props: ItemsViewProps) {
   const canReorder =
     effectiveSort === 'manual' &&
     !params.q &&
+    !params.filterField &&
     !hasNextPage &&
     items.length === total &&
     items.length > 1
   const hint = canReorder
     ? null
-    : params.q
+    : params.q || params.filterField
       ? 'Clear the filter to reorder items.'
       : effectiveSort !== 'manual'
         ? 'Switch to Manual sort to reorder items.'
@@ -175,6 +193,7 @@ export function ItemsView(props: ItemsViewProps) {
         size={items.length}
         mode={mode}
         kind={kind}
+        definition={definition}
         pinned={pinned}
         search={search}
         onOpen={props.onOpenItem}
@@ -186,6 +205,7 @@ export function ItemsView(props: ItemsViewProps) {
         item={item}
         mode={mode}
         kind={kind}
+        definition={definition}
         pinned={pinned}
         search={search}
         onOpen={props.onOpenItem}
@@ -256,6 +276,7 @@ function SortableEntry({
   size,
   mode,
   kind,
+  definition,
   pinned,
   search,
   onOpen,
@@ -266,6 +287,7 @@ function SortableEntry({
   size: number
   mode: DisplayMode
   kind: ItemKind
+  definition: KindDefinition
   pinned: PinnedKeys
   search: string
   onOpen: () => void
@@ -282,6 +304,7 @@ function SortableEntry({
       item={item}
       mode={mode}
       kind={kind}
+      definition={definition}
       pinned={pinned}
       search={search}
       onOpen={onOpen}

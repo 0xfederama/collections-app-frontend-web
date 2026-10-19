@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button, Dialog, Skeleton } from '../components/ui'
 import { AboutSection } from '../features/settings/AboutSection'
@@ -6,6 +6,7 @@ import { AppearanceSection } from '../features/settings/AppearanceSection'
 import { useSettings } from '../features/settings/api'
 import { ConnectionSection } from '../features/settings/ConnectionSection'
 import { SettingsForm, type SettingsCloseRequestRef } from '../features/settings/SettingsForm'
+import { KindsFieldsPane } from '../features/settings/KindsFieldsPane'
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
@@ -41,6 +42,7 @@ function WorkspaceSkeleton() {
  * its draft before allowing the pane to close.
  */
 export function SettingsRoute() {
+  const [pane, setPane] = useState('Collection')
   const settings = useSettings()
   const navigate = useNavigate()
   const location = useLocation()
@@ -56,33 +58,66 @@ export function SettingsRoute() {
       open
       onOpenChange={(open) => !open && close()}
       title="Settings"
-      className="max-h-[90dvh] w-[min(90vw,720px)]! max-w-none! gap-6"
+      className="max-h-[90dvh] w-[min(calc(100vw-2rem),720px)]! max-w-none! gap-4 p-4 sm:gap-6 sm:p-6"
     >
-      <Section id="settings-appearance" title="Appearance">
-        <AppearanceSection />
-      </Section>
+      <nav aria-label="Settings panes" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+        {['Appearance', 'Collection', 'Media', 'Kinds & fields', 'About'].map((name) => (
+          <button
+            key={name}
+            type="button"
+            aria-pressed={pane === name}
+            onClick={() => setPane(name)}
+            className={`shrink-0 rounded-md px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring ${pane === name ? 'bg-accent text-on-accent' : 'text-text-muted hover:bg-fill hover:text-text'}`}
+          >
+            {name}
+          </button>
+        ))}
+      </nav>
+      <div hidden={pane !== 'Appearance'}>
+        <Section id="settings-appearance" title="Appearance">
+          <AppearanceSection />
+        </Section>
+      </div>
       {settings.isPending ? (
-        <Section id="settings-collection" title="Collection">
-          <WorkspaceSkeleton />
-        </Section>
+        <div hidden={pane !== 'Collection'}>
+          <Section id="settings-collection" title="Collection">
+            <WorkspaceSkeleton />
+          </Section>
+        </div>
       ) : settings.isError || !settings.data ? (
-        <Section id="settings-collection" title="Collection">
-          <div role="alert" className="flex flex-col items-start gap-2">
-            <p>Couldn’t load the settings.</p>
-            <Button variant="secondary" onClick={() => void settings.refetch()}>
-              Retry
-            </Button>
-          </div>
-        </Section>
+        <div hidden={pane !== 'Collection'}>
+          <Section id="settings-collection" title="Collection">
+            <div role="alert" className="flex flex-col items-start gap-2">
+              <p>Couldn’t load the settings.</p>
+              <Button variant="secondary" onClick={() => void settings.refetch()}>
+                Retry
+              </Button>
+            </div>
+          </Section>
+        </div>
       ) : (
-        <SettingsForm closeRequestRef={closeRequestRef} settings={settings.data} />
+        <SettingsForm
+          closeRequestRef={closeRequestRef}
+          settings={settings.data}
+          pane={pane}
+          onPaneChange={setPane}
+        />
       )}
-      <Section id="settings-connection" title="Connection">
-        <ConnectionSection />
-      </Section>
-      <Section id="settings-about" title="About">
-        <AboutSection />
-      </Section>
+      <div hidden={pane !== 'Kinds & fields'}>
+        <Section id="settings-kinds-fields" title="Kinds & fields">
+          <KindsFieldsPane />
+        </Section>
+      </div>
+      <div hidden={pane !== 'About'}>
+        <Section id="settings-connection" title="Connection">
+          <ConnectionSection />
+        </Section>
+        <div className="mt-4">
+          <Section id="settings-about" title="About">
+            <AboutSection />
+          </Section>
+        </div>
+      </div>
     </Dialog>
   )
 }

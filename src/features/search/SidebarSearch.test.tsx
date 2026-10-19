@@ -31,6 +31,7 @@ function makeResult(n: number, title = `Result ${n}`) {
       created_at: '2026-10-14T09:31:00Z',
       updated_at: '2026-10-14T09:31:00Z',
     },
+    kind_name: 'Movie',
     path: [
       { type: 'folder' as const, id: uuid(1), name: 'Media', icon: null, icon_color: null },
       { type: 'folder' as const, id: uuid(2), name: 'Movies', icon: null, icon_color: null },

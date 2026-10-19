@@ -19,13 +19,13 @@ import {
 } from '../../components/ui/icons'
 import type { List as TreeList } from '../tree/api'
 import { ListActionsMenu } from '../tree/ListActionsMenu'
-import type { ItemKind } from '../items/api'
-import { hasDirectorSort, hasPrice, sortKeyLabel } from '../items/kinds'
+import { hasPrice, type KindDefinition } from '../items/kinds'
 import type { DisplayMode, List, PinnedFields, SortMode } from './api'
 import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
 import { PinnedMenu } from './PinnedMenu'
 import { toolbarControl } from './toolbarStyles'
+import { FieldFilter, type FieldFilterValue } from './FieldFilter'
 
 const modeOptions: SegmentedOption[] = [
   { value: 'compact', label: 'Compact rows', icon: <ListIcon />, iconOnly: true },
@@ -37,26 +37,21 @@ const baseSortOptions: SelectOption[] = [
   { value: 'manual', label: 'Manual' },
   { value: 'title', label: 'Title' },
   { value: 'updated', label: 'Recently updated' },
-  { value: 'price', label: 'Price' },
 ]
 
 /** Sort choices supported for this kind by the API. */
-export function sortOptionsFor(kind: ItemKind): SelectOption[] {
-  // Price exists on motorcycle, car and camera only (D-085), and generic has no kind key either.
-  const options = hasPrice(kind)
-    ? baseSortOptions
-    : baseSortOptions.filter((option) => option.value !== 'price')
-  const label = sortKeyLabel(kind)
-  if (kind === 'generic') return options
-  const withKindKey = label ? [...options, { value: 'kind_key', label }] : options
-  return hasDirectorSort(kind)
-    ? [...withKindKey, { value: 'director', label: 'Director' }]
-    : withKindKey
+export function sortOptionsFor(definition: KindDefinition): SelectOption[] {
+  return [
+    ...baseSortOptions,
+    ...(hasPrice(definition) ? [{ value: 'price', label: 'Price' }] : []),
+    ...definition.fields.map((field) => ({ value: field.key, label: field.label })),
+  ]
 }
 
 export interface ListHeaderProps {
   /** The list as the sidebar tree has it: its name shows before the list loads, and feeds the actions menu. */
   treeList: TreeList
+  definition: KindDefinition
   list: List | undefined
   /** The top-right "New item": hidden on an empty list, where the centered call to action is the only one. */
   showAddItem: boolean
@@ -70,6 +65,8 @@ export interface ListHeaderProps {
   makeDefaultPending: boolean
   filter: string
   onFilter: (value: string) => void
+  fieldFilter: FieldFilterValue | null
+  onFieldFilter: (value: FieldFilterValue | null) => void
   onPinned: (pinned: PinnedFields) => void
   onResetPinned: () => void
   onAddItem: () => void
@@ -88,7 +85,7 @@ export function ListHeader(props: ListHeaderProps) {
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="min-w-0 flex-1 text-3xl leading-tight font-bold tracking-tight break-words">
             <ListIconMark
-              icon={props.treeList.icon}
+              icon={props.treeList.icon ?? props.definition.default_icon}
               iconColor={props.treeList.icon_color}
               kind={props.treeList.kind}
               className="mr-3 inline-grid size-9 align-middle"
@@ -131,7 +128,7 @@ export function ListHeader(props: ListHeaderProps) {
             <div className="relative w-44 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:border-transparent! [&_button]:hover:border-transparent! [&_button]:hover:bg-fill-hover @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only @max-[44rem]:[&_button>span:last-child]:hidden">
               <Select
                 label="Sort"
-                options={sortOptionsFor(props.treeList.kind)}
+                options={sortOptionsFor(props.definition)}
                 value={props.sort}
                 onValueChange={(value) => props.onSort(value as SortMode)}
               />
@@ -153,8 +150,13 @@ export function ListHeader(props: ListHeaderProps) {
           )}
           {/* Pinned fields and the filter sit together at the right end (the filter field follows). */}
           <div className="ml-auto flex items-center gap-2">
-            {list && props.treeList.kind !== 'generic' && (
-              <PinnedMenu list={list} onChange={props.onPinned} onReset={props.onResetPinned} />
+            {list && (props.definition.fields.length > 0 || props.definition.allows_price) && (
+              <PinnedMenu
+                list={list}
+                definition={props.definition}
+                onChange={props.onPinned}
+                onReset={props.onResetPinned}
+              />
             )}
             <IconButton
               aria-label="Filter by title"
@@ -191,6 +193,11 @@ export function ListHeader(props: ListHeaderProps) {
               className="h-9! border-transparent! hover:border-transparent! focus-within:border-accent!"
             />
           </div>
+          <FieldFilter
+            fields={props.definition.fields}
+            value={props.fieldFilter}
+            onChange={props.onFieldFilter}
+          />
         </div>
       </div>
     </>
