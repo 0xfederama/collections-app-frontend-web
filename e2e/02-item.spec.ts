@@ -202,8 +202,8 @@ test.describe('D-085 price only on the types that have one', () => {
   })
 })
 
-test.describe('F009-W3 pinned fields: up to two, in order', () => {
-  test('two fields in order: the first beside the title, the second in the corner; unpinning promotes', async ({
+test.describe('F009-W3 pinned fields: up to three, in order', () => {
+  test('three fields in order: the first two beside the title, the third in the corner; unpinning promotes', async ({
     page,
     request,
   }) => {
@@ -234,26 +234,25 @@ test.describe('F009-W3 pinned fields: up to two, in order', () => {
     // Clear the movie defaults (runtime + streaming) before selecting populated fields.
     await tick('Runtime')
     await tick('Streaming')
-    // Two fields in a row, in the order they are ticked; a third cannot be added.
+    // Fields in the order they are ticked; a fourth cannot be added.
     await tick('Release year')
     await tick('Runtime')
-    await expect(checkbox('Director')).toBeDisabled()
+    await tick('Director')
+    await expect(checkbox('Streaming')).toBeDisabled()
     await page.keyboard.press('Escape')
 
-    // The first pinned field reads next to the title, the second at the right end of the row.
+    // The first two pinned fields read next to the title (one run), the third at the right end of the row.
     const titleBox = await row.getByRole('link', { name: title }).boundingBox()
-    const firstBox = await row.getByText('2005').boundingBox()
-    const secondBox = await row.getByText('117 min').boundingBox()
-    expect(Math.abs(firstBox!.y - titleBox!.y)).toBeLessThan(24)
-    expect(secondBox!.x).toBeGreaterThan(firstBox!.x)
+    const besideBox = await row.getByText('2005 · 117 min', { exact: true }).boundingBox()
+    const cornerBox = await row.getByText('Ada Auteur', { exact: true }).boundingBox()
+    expect(Math.abs(besideBox!.y - titleBox!.y)).toBeLessThan(24)
+    expect(cornerBox!.x).toBeGreaterThan(besideBox!.x)
 
-    // Unpinning the first promotes the second to first: it moves back beside the title.
+    // Unpinning the first promotes the others: runtime becomes the first, beside the title.
     await pinnedMenu.click()
     await tick('Release year')
-    // Only one field is pinned now, so the populated director can be selected.
-    await expect(checkbox('Director')).toBeEnabled()
     await page.keyboard.press('Escape')
-    const promoted = await row.getByText('117 min').boundingBox()
+    const promoted = await row.getByText('117 min', { exact: true }).boundingBox()
     expect(Math.abs(promoted!.y - titleBox!.y)).toBeLessThan(24)
     await expect(row.getByText('2005')).toBeHidden()
   })
