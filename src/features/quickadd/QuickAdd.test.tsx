@@ -166,7 +166,7 @@ describe('F016-W2 quick add on a book list', () => {
     await user.type(within(dialog).getByRole('textbox', { name: 'Title' }), 'Dune{Enter}')
 
     expect(await within(dialog).findByRole('status')).toHaveTextContent(
-      'Looking up details on Open Library… this can take a few seconds.',
+      'Looking up details… this can take a few seconds.',
     )
     expect(within(dialog).getByRole('button', { name: 'Add' })).toBeDisabled()
     release()
