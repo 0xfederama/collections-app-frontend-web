@@ -5,6 +5,7 @@ import { api, unwrap } from '../../lib/api'
 import { useSettings } from '../settings/api'
 import type { ItemType } from './api'
 import {
+  hasSuggestions,
   lookupAvailable,
   lookupSource,
   type LookupSelection,
@@ -12,76 +13,46 @@ import {
   type LookupTitleSelection,
 } from './lookup'
 
-/** One suggestion row, whichever source it came from (TMDB poster or Open Library cover). */
+/** One TMDB suggestion row. */
 type Row = {
   key: string
   title: string
   year: number | null
-  /** Book authors; always null for TMDB. */
-  by: string | null
-  /** Book page count; always null for TMDB. */
-  pages: number | null
   cover: string | null
   selection: LookupSelection
 }
-
-type Suggestions = { available: boolean; rows: Row[] }
 
 const tmdbRow = (suggestion: components['schemas']['TmdbSuggestion']): Row => ({
   key: `tmdb-${suggestion.tmdb_id}`,
   title: suggestion.title,
   year: suggestion.year,
-  by: null,
-  pages: null,
   cover: suggestion.poster_url,
   selection: { tmdb_id: suggestion.tmdb_id },
 })
 
-const bookRow = (suggestion: components['schemas']['BookSuggestion']): Row => ({
-  key: suggestion.source_id,
-  title: suggestion.title,
-  year: suggestion.year,
-  by: suggestion.authors || null,
-  pages: suggestion.pages,
-  cover: suggestion.cover_url,
-  selection: { source_id: suggestion.source_id },
-})
-
-/** `GET /tmdb/suggestions` or `GET /books/suggestions`: both answer `available` + `results`. */
-async function fetchSuggestions(source: LookupSource, q: string, signal: AbortSignal) {
-  if (source.provider === 'books') {
-    const body = await unwrap(
-      api.GET('/api/v1/books/suggestions', { params: { query: { q } }, signal }),
-    )
-    return { available: body.available, rows: body.results.map(bookRow) } satisfies Suggestions
-  }
+/** `GET /tmdb/suggestions`: answers `available` + `results`. */
+async function fetchSuggestions(source: TmdbSource, q: string, signal: AbortSignal) {
   const body = await unwrap(
     api.GET('/api/v1/tmdb/suggestions', {
       params: { query: { type: source.tmdbType, q } },
       signal,
     }),
   )
-  return { available: body.available, rows: body.results.map(tmdbRow) } satisfies Suggestions
+  return { available: body.available, rows: body.results.map(tmdbRow) }
 }
 
-/** The meta line under a title: the year for TMDB; authors, year and pages for books. */
-const rowMeta = (row: Row) =>
-  [
-    row.by,
-    row.year === null ? null : String(row.year),
-    row.pages === null ? null : `${row.pages} pages`,
-  ]
-    .filter((part): part is string => part !== null)
-    .join(' · ')
+/** The meta line under a title: the year. */
+const rowMeta = (row: Row) => (row.year === null ? '' : String(row.year))
 
-/** The accessible name of a row: "The Matrix (1999)", "Dune by Frank Herbert (1965)". */
-const rowLabel = (row: Row) =>
-  `${row.title}${row.by ? ` by ${row.by}` : ''}${row.year === null ? '' : ` (${row.year})`}`
+/** The accessible name of a row: "The Matrix (1999)". */
+const rowLabel = (row: Row) => `${row.title}${row.year === null ? '' : ` (${row.year})`}`
+
+type TmdbSource = Extract<LookupSource, { provider: 'tmdb' }>
 
 /**
- * Title input for a movie, TV or book item with suggestions from the item's metadata source (TMDB,
- * or Open Library for books, F-016). Suggestions appear as you type; picking one fills the title
- * and sends its id. Without a pick, the server takes the first result on create.
+ * Title input. For a movie or TV item it suggests TMDB titles as you type; picking one fills the
+ * title and sends its id (without a pick the server takes the first result on create). For every
+ * other type, books included (F-016: looked up on commit), it is a plain text input.
  */
 export function TitleLookupField({
   type,
@@ -111,7 +82,10 @@ export function TitleLookupField({
   const settings = useSettings()
   // The source is active only while this server offers it; otherwise the field is a plain input.
   const source = lookupSource(type)
-  const active = lookupAvailable(settings.data, source) ? source : undefined
+  const active =
+    hasSuggestions(type) && source?.provider === 'tmdb' && lookupAvailable(settings.data, source)
+      ? source
+      : undefined
   const [query, setQuery] = useState('')
   const [activeRow, setActiveRow] = useState(0)
   const [open, setOpen] = useState(false)

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Item detail and inline editing at `/lists/:listId/items/:itemId`, including image, description, fields, stores, Move and Delete. Field definitions come from the types API. Metadata lookup (TMDB for movie and TV, Open Library for books) is offered when creating an item.
+Item detail and inline editing at `/lists/:listId/items/:itemId`, including image, description, fields, stores, Move and Delete. Field definitions come from the types API. Metadata lookup is offered when creating an item: TMDB for movie and TV (title picker), Open Library for books (no picker, looked up when the title is committed).
 
 ## Key files
 
@@ -11,7 +11,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `inline/`, `form/draft.ts`: field edits and draft helpers.
 - `content/`: description editor and history.
 - `types/index.ts`: helpers over the API type definitions (no static registry).
-- `TitleLookupField.tsx`, `lookup.ts`: title suggestions and the source-specific ids.
+- `TitleLookupField.tsx`, `lookup.ts`: TMDB title suggestions (movie and TV only; books get a plain input). `LookupStatus.tsx`: the pending line for books.
 - `NewItemDraft.tsx`, `links.ts`, `api.ts`: inline creation, links and item data.
 
 ## Interfaces
@@ -20,14 +20,14 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `ImageDialog({ item, onClose, initialFile? })`, `ImageSection({ item, initialFile?, onChanged, onStale })`.
 - `useItem`, `useUpdateItem`, `useCreateItem`, `useLookupItem`, `useDeleteItem`, `useMoveItem`.
 - `typeDefinition(definitions, key)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
-- `TitleLookupField`, `lookupSource(type)`, `lookupAvailable(settings, source)`, `createLookupSelection(type, settings, selection)`.
+- `TitleLookupField`, `lookupSource(type)`, `lookupAvailable(settings, source)`, `createLookupSelection(type, settings, selection)`, `hasSuggestions(type)`, `isBookLookup(type, settings)`.
 - `DescriptionField({ itemId, listId })`, `InlineField`, `FieldBlock`.
 
 ## Gotchas
 
 - Type fields, labels, types and price support come from `GET /api/v1/types`, not from code; `hasPrice` reads `allows_price` from the definition.
 - Book type (F-016) has author, pages, first publication year, ISBN and stores fields, all data-driven like the others.
-- Lookup ids: a book sends `source_id` (Open Library), movie and TV send `tmdb_id`. `createLookupSelection` sends only the id the list's type uses.
+- Lookup ids: movie and TV send `tmdb_id`; a book sends only `lookup: true` (no `source_id`, which the client no longer uses): the server fills the item from the first Open Library result, never overwriting typed values, and creates it unchanged if Open Library is slow or fails. While that POST is pending (2-5 s) `NewItemDraft` shows a `role="status"` line, "Looking up details on Open Library… this can take a few seconds."
 - There is no "Wrong match?", re-match or refresh UI on an item; lookup suggestions appear only when creating (inline draft and Quick add).
 - IMDb is rendered as a link tile and streaming keeps its own editor, so neither is a plain field row (`isHiddenTmdbField`, `isStreamingField`).
 - The stores field is an editor of ticked provider keys (see [stores](stores.md)); it is never sorted or filtered.

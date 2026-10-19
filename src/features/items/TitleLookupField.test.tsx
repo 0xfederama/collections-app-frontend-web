@@ -94,113 +94,8 @@ describe('F013-W1 title lookup', () => {
   })
 })
 
-describe('F016-W2 book title lookup', () => {
-  it('shows Open Library suggestions with authors, year, pages and the cover', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(
-      <TitleLookupField
-        type="book"
-        title="Dune"
-        onTitleChange={vi.fn()}
-        onSelectionChange={vi.fn()}
-      />,
-    )
-
-    await user.click(await screen.findByRole('combobox', { name: 'Title' }))
-    const listbox = await screen.findByRole('listbox', { name: 'Open Library title suggestions' })
-    const dune = await screen.findByRole('option', { name: 'Dune by Frank Herbert (1965)' })
-
-    expect(dune).toHaveTextContent('Dune')
-    expect(dune).toHaveTextContent('Frank Herbert · 1965 · 608 pages')
-    expect(dune.querySelector('img')).toHaveAttribute(
-      'src',
-      'https://covers.openlibrary.org/b/id/12547191-M.jpg',
-    )
-    // A row without a year or pages shows only what Open Library has, and no cover.
-    const messiah = screen.getByRole('option', { name: 'Dune Messiah by Frank Herbert' })
-    expect(messiah).toHaveTextContent('Frank Herbert')
-    expect(messiah).not.toHaveTextContent('pages')
-    expect(messiah.querySelector('img')).toBeNull()
-    expect(listbox).toHaveTextContent('608 pages')
-  })
-
-  it('first result on Enter selects the work id and fills the title', async () => {
-    const user = userEvent.setup()
-    const onTitleChange = vi.fn()
-    const onSelectionChange = vi.fn()
-    const onSuggestionSelect = vi.fn()
-    renderWithProviders(
-      <TitleLookupField
-        type="book"
-        title="Dune"
-        onTitleChange={onTitleChange}
-        onSelectionChange={onSelectionChange}
-        onSuggestionSelect={onSuggestionSelect}
-      />,
-    )
-
-    await user.click(await screen.findByRole('combobox', { name: 'Title' }))
-    await screen.findByRole('option', { name: 'Dune by Frank Herbert (1965)' })
-    await user.keyboard('{Enter}')
-
-    expect(onTitleChange).toHaveBeenLastCalledWith('Dune')
-    expect(onSelectionChange).toHaveBeenLastCalledWith({ source_id: 'OL893415W' })
-    expect(onSuggestionSelect).toHaveBeenLastCalledWith({ title: 'Dune', source_id: 'OL893415W' })
-  })
-
-  it('pointer selection of a second suggestion sends its own work id', async () => {
-    const user = userEvent.setup()
-    const onSuggestionSelect = vi.fn()
-    renderWithProviders(
-      <TitleLookupField
-        type="book"
-        title="Dune"
-        onTitleChange={vi.fn()}
-        onSelectionChange={vi.fn()}
-        onSuggestionSelect={onSuggestionSelect}
-      />,
-    )
-
-    await user.click(await screen.findByRole('combobox', { name: 'Title' }))
-    await user.click(await screen.findByRole('option', { name: 'Dune Messiah by Frank Herbert' }))
-
-    expect(onSuggestionSelect).toHaveBeenLastCalledWith({
-      title: 'Dune Messiah',
-      source_id: 'OL1234567W',
-    })
-  })
-
-  it('is a plain input while book lookup is off, and movies keep TMDB suggestions', async () => {
-    withLookup({ book_lookup_available: false, lookup_available: true })
-    const client = createTestQueryClient()
-    const { unmount } = renderWithProviders(
-      <TitleLookupField
-        type="book"
-        title="Dune"
-        onTitleChange={vi.fn()}
-        onSelectionChange={vi.fn()}
-      />,
-      client,
-    )
-
-    await waitFor(() => expect(client.getQueryState(settingsKeys.settings)?.status).toBe('success'))
-    expect(screen.getByRole('textbox', { name: 'Title' })).not.toHaveAttribute('aria-haspopup')
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
-    unmount()
-
-    // The switches are per source: the movie field of the same server still has suggestions.
-    renderWithProviders(
-      <TitleLookupField
-        type="movie"
-        title="The Mat"
-        onTitleChange={vi.fn()}
-        onSelectionChange={vi.fn()}
-      />,
-    )
-    expect(await screen.findByRole('combobox', { name: 'Title' })).toBeInTheDocument()
-  })
-
-  it('a movie title never requests book suggestions', async () => {
+describe('F016-W2 book title field', () => {
+  it('is a plain text input with no combobox and never requests book suggestions', async () => {
     const requests: string[] = []
     server.use(
       http.get(`${origin}/api/v1/books/suggestions`, ({ request }) => {
@@ -211,6 +106,32 @@ describe('F016-W2 book title lookup', () => {
       }),
     )
     const user = userEvent.setup()
+    const onSuggestionSelect = vi.fn()
+    const client = createTestQueryClient()
+    renderWithProviders(
+      <TitleLookupField
+        type="book"
+        title="Dune"
+        onTitleChange={vi.fn()}
+        onSelectionChange={vi.fn()}
+        onSuggestionSelect={onSuggestionSelect}
+      />,
+      client,
+    )
+
+    await waitFor(() => expect(client.getQueryState(settingsKeys.settings)?.status).toBe('success'))
+    const title = screen.getByRole('textbox', { name: 'Title' })
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+    expect(title).not.toHaveAttribute('aria-haspopup')
+    await user.click(title)
+    await user.keyboard('{Enter}')
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    expect(onSuggestionSelect).not.toHaveBeenCalled()
+    expect(requests).toEqual([])
+  })
+
+  it('movies keep TMDB suggestions on the same server', async () => {
     renderWithProviders(
       <TitleLookupField
         type="movie"
@@ -219,9 +140,6 @@ describe('F016-W2 book title lookup', () => {
         onSelectionChange={vi.fn()}
       />,
     )
-
-    await user.click(await screen.findByRole('combobox', { name: 'Title' }))
-    expect(await screen.findByRole('option', { name: 'The Matrix (1999)' })).toBeInTheDocument()
-    expect(requests).toEqual([])
+    expect(await screen.findByRole('combobox', { name: 'Title' })).toBeInTheDocument()
   })
 })

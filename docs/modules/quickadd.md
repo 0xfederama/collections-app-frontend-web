@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Quick add (F-002): one dialog to create an item from anywhere: a title, destination list and optional metadata match (TMDB or Open Library), website, Markdown description and image. It replaced the old "Add item" dialog. Spec: `design-docs/features/F-002-ui-refresh.md`.
+Quick add (F-002): one dialog to create an item from anywhere: a title, destination list and optional metadata match (TMDB picker for movie and TV, Open Library lookup on commit for books), website, Markdown description and image. It replaced the old "Add item" dialog. Spec: `design-docs/features/F-002-ui-refresh.md`.
 
 ## Key files
 
@@ -26,5 +26,5 @@ Quick add (F-002): one dialog to create an item from anywhere: a title, destinat
 - Create errors: 422 maps to the title or website field; 409 means the list is gone or in Trash; network or 5xx says nothing was created.
 - Client checks (image type and size, length limits) run before the request.
 - No type is chosen here: the item takes the list's type.
-- Title suggestions (`TitleLookupField`) come from TMDB for movie and TV and from Open Library for books, only when the server reports that source available; selecting one creates the item with the suggested title and its id (`tmdb_id` or `source_id`, see `items/lookup.ts`). Typing a title and pressing Enter or Ctrl/Cmd+Enter keeps the existing submit behavior.
+- Title suggestions (`TitleLookupField`) come from TMDB for movie and TV only, when the server reports it available; selecting one creates the item with the suggested title and `tmdb_id` (see `items/lookup.ts`). Books have no picker: the title is a plain input and Enter posts `lookup: true` without `source_id`; while the create is pending a `role="status"` line ("Looking up details on Open Library…") shows and Add stays pending, then the dialog closes and opens the item. Typing a title and pressing Enter or Ctrl/Cmd+Enter keeps the existing submit behavior.
 - If lookup becomes unavailable during creation, the dialog preserves the typed title and offers retrying lookup or creating without metadata.

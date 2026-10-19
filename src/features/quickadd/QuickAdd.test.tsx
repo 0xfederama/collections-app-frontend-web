@@ -123,7 +123,7 @@ describe('F002-W4 quick add', () => {
 })
 
 describe('F016-W2 quick add on a book list', () => {
-  it('a pointer pick of an Open Library suggestion creates the book with its work id', async () => {
+  it('Enter creates the book without source_id, shows the lookup status while pending, then opens it', async () => {
     mockViewport(1100)
     const tree = exampleResponses.getTree.body as Record<string, unknown> & {
       lists: Record<string, unknown>[]
@@ -136,11 +136,21 @@ describe('F016-W2 quick add on a book list', () => {
         }),
       ),
     )
+    const suggestions: string[] = []
+    server.use(
+      http.get(`${origin}/api/v1/books/suggestions`, ({ request }) => {
+        suggestions.push(request.url)
+        return HttpResponse.json({ available: true, results: [] })
+      }),
+    )
+    let release: () => void = () => {}
+    const gate = new Promise<void>((resolve) => (release = resolve))
     const posts: unknown[] = []
     server.use(
       http.post(`${origin}/api/v1/lists/${LIST}/items`, async ({ request }) => {
         const body = (await request.json()) as { title: string }
         posts.push(body)
+        await gate
         const created = { ...matrix, id: NEW_ID, title: body.title, metadata: {}, version: 1 }
         server.use(http.get(`${origin}/api/v1/items/${NEW_ID}`, () => HttpResponse.json(created)))
         return HttpResponse.json(created, { status: 201 })
@@ -152,15 +162,18 @@ describe('F016-W2 quick add on a book list', () => {
 
     await user.keyboard('n')
     const dialog = await screen.findByRole('dialog', { name: 'Quick add' })
-    const title = within(dialog).getByLabelText(/^Title/)
-    await user.type(title, 'Dune')
-    await user.click(
-      await within(dialog).findByRole('option', { name: 'Dune by Frank Herbert (1965)' }),
-    )
+    expect(within(dialog).queryByRole('combobox', { name: 'Title' })).not.toBeInTheDocument()
+    await user.type(within(dialog).getByRole('textbox', { name: 'Title' }), 'Dune{Enter}')
 
+    expect(await within(dialog).findByRole('status')).toHaveTextContent(
+      'Looking up details on Open Library… this can take a few seconds.',
+    )
+    expect(within(dialog).getByRole('button', { name: 'Add' })).toBeDisabled()
+    release()
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
     )
-    expect(posts).toEqual([{ title: 'Dune', lookup: true, source_id: 'OL893415W' }])
+    expect(posts).toEqual([{ title: 'Dune', lookup: true }])
+    expect(suggestions).toEqual([])
   })
 })
