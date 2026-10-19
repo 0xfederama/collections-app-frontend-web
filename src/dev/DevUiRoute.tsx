@@ -163,6 +163,18 @@ function Selection() {
           placeholder="Choose…"
           error="Pick a currency."
         />
+        <Select
+          label="Type (separators and an action)"
+          options={[
+            { value: 'generic', label: 'No type' },
+            { separator: true },
+            { value: 'movie', label: 'Movie' },
+            { value: 'car', label: 'Car' },
+            { separator: true },
+            { value: 'new', label: '+ New type', action: true },
+          ]}
+          value="generic"
+        />
         <Select label="Disabled select" options={countries} disabled />
         <Combobox
           label="Streaming country"

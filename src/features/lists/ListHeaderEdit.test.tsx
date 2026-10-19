@@ -21,16 +21,16 @@ async function pickKind(user: Awaited<ReturnType<typeof openList>>['user'], name
   await user.keyboard('{Enter}')
 }
 
-describe('F008-W5 list kind in the "…" menu', () => {
+describe('F008-W5 list type in the "…" menu', () => {
   it('the title stands alone: no kind chip next to it', async () => {
     await openList(ID.watchlist)
-    expect(within(main()).queryByRole('button', { name: /^Kind:/ })).not.toBeInTheDocument()
+    expect(within(main()).queryByRole('button', { name: /^Type:/ })).not.toBeInTheDocument()
   })
 
-  it('asks before clearing the kind fields of a list with items, and not for an empty one', async () => {
+  it('asks before clearing the type fields of a list with items, and not for an empty one', async () => {
     const { user, backend } = await openList(ID.watchlist)
 
-    await openKindMenu(user, /^Kind: Movie/)
+    await openKindMenu(user, /^Type: Movie/)
     await pickKind(user, 'Car')
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toHaveTextContent('permanently clears')
@@ -40,7 +40,7 @@ describe('F008-W5 list kind in the "…" menu', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
     expect(backend.writes()).toHaveLength(0)
 
-    await openKindMenu(user, /^Kind: Movie/)
+    await openKindMenu(user, /^Type: Movie/)
     await pickKind(user, 'Car')
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', {
@@ -56,7 +56,7 @@ describe('F008-W5 list kind in the "…" menu', () => {
 
     // An empty list changes kind at once, with no warning.
     await user.click(within(sidebar()).getByRole('treeitem', { name: /^Ideas/ }))
-    await openKindMenu(user, /^Kind: Item/)
+    await openKindMenu(user, /^Type: No type/)
     await pickKind(user, 'Camera')
     await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(2))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
@@ -68,7 +68,7 @@ describe('F008-W5 list kind in the "…" menu', () => {
     await pickRowAction(user, 'Watchlist', 'Rename')
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toBeInTheDocument()
-    expect(within(dialog).queryByRole('combobox', { name: 'Kind' })).not.toBeInTheDocument()
+    expect(within(dialog).queryByRole('combobox', { name: 'Type' })).not.toBeInTheDocument()
   })
 })
 

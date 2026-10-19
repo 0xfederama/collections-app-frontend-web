@@ -21,7 +21,7 @@ export function classifyItemError(error: unknown): ItemError {
       return {
         kind: 'unavailable',
         message:
-          'That list holds another kind of item. Items can only move to lists of the same kind.',
+          'That list holds another type of item. Items can only move to lists of the same type.',
       }
     }
     if (error.status === 409) {

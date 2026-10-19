@@ -276,7 +276,7 @@ describe('move item (UI_SPEC §9 errors)', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Move' }))
 
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
-      'only move to lists of the same kind',
+      'only move to lists of the same type',
     )
     expect(screen.getByRole('dialog', { name: /Move/ })).toBeInTheDocument()
     expect(router.state.location.pathname).toBe(PATH)

@@ -250,7 +250,7 @@ export function ListView({ treeList }: { treeList: List }) {
     if (definitions.isPending) return <ItemsSkeleton mode={list?.display_mode ?? 'grid'} />
     return (
       <div role="alert" className="flex flex-col items-start gap-2">
-        <p>Couldn’t load this list’s kind definition.</p>
+        <p>Couldn’t load this list’s type definition.</p>
         <Button variant="secondary" onClick={() => void definitions.refetch()}>
           Retry
         </Button>

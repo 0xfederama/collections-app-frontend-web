@@ -10,6 +10,7 @@ import { useUpdateListIcon } from './mutations'
 import { treeKeys, type List } from './api'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
+import { kindName } from '../items/kinds'
 import { useKinds } from '../settings/api'
 
 const COLOR_LABELS: Record<Exclude<ListIconColor, null>, string> = {
@@ -77,7 +78,7 @@ export function ListIconDialog({
     ? (builtinListIcon(parsedChoice.builtin)?.name ?? 'Built-in icon')
     : parsedChoice.emoji
       ? `Emoji ${parsedChoice.emoji}`
-      : `Default ${definition?.name ?? snapshot.kind.replaceAll('_', ' ')} icon`
+      : `Default ${kindName(definition, snapshot.kind)} icon`
   const draftText = `Icon: ${choiceLabel}\nColor: ${choice.icon_color ? COLOR_LABELS[choice.icon_color] : 'None'}`
 
   const copyDraft = async () => {

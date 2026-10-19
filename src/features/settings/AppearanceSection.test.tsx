@@ -10,12 +10,12 @@ async function openSettings() {
   mockViewport(1280)
   const user = userEvent.setup()
   renderAt('/settings')
-  await user.click(await screen.findByRole('button', { name: 'Appearance' }))
+  await screen.findByRole('dialog', { name: 'Settings' })
   await screen.findByRole('heading', { name: 'Appearance' })
   return user
 }
 
-describe('F008 rework: theme in Settings > Appearance', () => {
+describe('F008 rework: theme in Settings > General', () => {
   it('has an Appearance section with a labelled theme group, "System default" selected', async () => {
     await openSettings()
     expect(within(group()).getByRole('radio', { name: 'System default' })).toBeChecked()

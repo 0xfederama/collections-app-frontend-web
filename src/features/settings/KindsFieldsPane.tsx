@@ -1,6 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState, type FormEvent } from 'react'
-import { AlertDialog, Button, Select, Skeleton, TextField } from '../../components/ui'
+import {
+  AlertDialog,
+  Button,
+  Dialog,
+  IconButton,
+  Select,
+  Skeleton,
+  TextField,
+} from '../../components/ui'
+import { Plus } from '../../components/ui/icons'
 import { SortableProvider, useSortableRow } from '../../components/ui/sortable'
 import { ApiError, NetworkError } from '../../lib/api'
 import { cx } from '../../lib/cx'
@@ -34,6 +43,7 @@ const fieldTypes = [
 ] as const
 
 const NONE_FIELD = '__none__'
+const GENERIC_KEY = 'generic'
 
 interface KindDefaultsDraft {
   kindKey: string
@@ -93,7 +103,7 @@ function KindRow({
         className="size-9"
         iconClassName="size-4"
       />
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">{kind.name}</span>
+      <span className="min-w-0 flex-1 text-sm font-medium break-words">{kind.name}</span>
       {kind.is_locked && (
         <span className="shrink-0 rounded-full bg-fill px-2 py-1 text-xs text-text-muted">
           Built in · locked
@@ -128,12 +138,12 @@ function SortableField({
       aria-label={`${field.label}, ${field.type === 'boolean' ? 'yes or no' : field.type}`}
       aria-describedby={a11y['aria-describedby']}
       className={cx(
-        'flex min-h-14 items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 focus-visible:outline-2 focus-visible:outline-focus-ring',
+        'flex min-h-14 flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 focus-visible:outline-2 focus-visible:outline-focus-ring',
         isDragging && 'opacity-50',
       )}
     >
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">{field.label}</span>
+        <span className="block text-sm font-medium break-words">{field.label}</span>
         <span className="text-xs text-text-muted">
           {field.key} · {field.type === 'boolean' ? 'yes / no' : field.type}
           {field.is_locked ? ' · built in, read only' : ''}
@@ -167,7 +177,9 @@ export function KindsFieldsPane() {
   const deleteField = useDeleteKindField()
   const previewDelete = usePreviewKindFieldDelete()
   const reorderFields = useReorderKindFields()
-  const kinds = useMemo(() => kindsQuery.data ?? [], [kindsQuery.data])
+  const allKinds = useMemo(() => kindsQuery.data ?? [], [kindsQuery.data])
+  // The Generic type is the fallback for lists without a type: it is never shown or edited here.
+  const kinds = useMemo(() => allKinds.filter((kind) => kind.key !== GENERIC_KEY), [allKinds])
   const [pickedKey, setSelectedKey] = useState<string | null>(null)
   // Until the user picks one (or after the picked kind is gone), the first kind is selected.
   const selected = kinds.find((kind) => kind.key === pickedKey) ?? kinds[0] ?? null
@@ -185,6 +197,8 @@ export function KindsFieldsPane() {
   const setRenameName = (value: string) => {
     if (selectedKey) setRenameDraft({ key: selectedKey, name: value })
   }
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createError, setCreateError] = useState<unknown>(null)
   const [name, setName] = useState('')
   const [fieldLabel, setFieldLabel] = useState('')
   const [fieldType, setFieldType] = useState<(typeof fieldTypes)[number]['value']>('text')
@@ -209,7 +223,7 @@ export function KindsFieldsPane() {
     confirmDeleteKind && treeQuery.data
       ? treeQuery.data.lists.filter((list) => list.kind === confirmDeleteKind.key)
       : []
-  const targetKinds = kinds.filter((kind) => kind.key !== confirmDeleteKind?.key)
+  const targetKinds = allKinds.filter((kind) => kind.key !== confirmDeleteKind?.key)
   const defaultFieldOptions = selected
     ? [
         ...selected.fields.map((field) => ({ value: field.key, label: field.label })),
@@ -263,7 +277,7 @@ export function KindsFieldsPane() {
         allows_price: allowsPrice,
       })
       .catch((error: unknown) => {
-        setOperationError(error)
+        setCreateError(error)
         return null
       })
     if (created) {
@@ -272,6 +286,8 @@ export function KindsFieldsPane() {
       setAllowsPrice(false)
       setSelectedKey((created as KindDefinition).key)
       setOperationError(null)
+      setCreateError(null)
+      setCreateOpen(false)
     }
   }
 
@@ -300,7 +316,7 @@ export function KindsFieldsPane() {
   if (kindsQuery.isPending)
     return (
       <div role="status" className="flex flex-col gap-3">
-        <span className="sr-only">Loading kinds</span>
+        <span className="sr-only">Loading types</span>
         <Skeleton className="h-12" />
         <Skeleton className="h-12" />
         <Skeleton className="h-12" />
@@ -309,7 +325,7 @@ export function KindsFieldsPane() {
   if (kindsQuery.isError)
     return (
       <div role="alert" className="flex flex-col items-start gap-2 text-sm">
-        <p>Couldn’t load kinds and fields.</p>
+        <p>Couldn’t load types and fields.</p>
         <Button variant="secondary" onClick={() => void kindsQuery.refetch()}>
           Retry
         </Button>
@@ -317,9 +333,9 @@ export function KindsFieldsPane() {
     )
 
   return (
-    <div className="flex max-h-[65vh] min-h-0 flex-col gap-4 overflow-y-auto sm:flex-row">
-      <div className="flex min-w-0 flex-col gap-2 sm:w-56 sm:shrink-0">
-        <div className="flex flex-col gap-1" role="list" aria-label="Kinds">
+    <div className="flex flex-col gap-5 sm:flex-row">
+      <div className="flex min-w-0 flex-col gap-2 sm:w-52 sm:shrink-0">
+        <div className="flex flex-col gap-1" role="list" aria-label="Types">
           {kinds.map((kind) => (
             <div role="listitem" key={kind.key}>
               <KindRow
@@ -333,63 +349,28 @@ export function KindsFieldsPane() {
             </div>
           ))}
         </div>
-        <form
-          onSubmit={(event) => void submitKind(event)}
-          className="mt-2 flex flex-col gap-2 rounded-md border border-border p-3"
-        >
-          <h3 className="text-sm font-semibold">Create a kind</h3>
-          <TextField
-            label="Kind name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            maxLength={100}
-          />
-          <label className="flex min-h-10 items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={allowsPrice}
-              onChange={(event) => setAllowsPrice(event.target.checked)}
-            />{' '}
-            Allows a price
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                setIconTarget('create')
-                setIconOpen(true)
-              }}
-            >
-              {icon.icon ? (
-                <>
-                  <ListIconMark icon={icon.icon} className="size-5" iconClassName="size-3" />
-                  Change icon
-                </>
-              ) : (
-                'Choose icon'
-              )}
-            </Button>
-            <Button type="submit" size="sm" pending={createKind.isPending} disabled={!name.trim()}>
-              Create kind
-            </Button>
-          </div>
-          <p className="text-xs leading-5 text-text-muted">
-            Create the kind first, then add its fields and set the default sort and pins in its
-            details.
-          </p>
-        </form>
+        <div>
+          <IconButton
+            aria-label="New type"
+            variant="secondary"
+            onClick={() => {
+              setCreateError(null)
+              setCreateOpen(true)
+            }}
+          >
+            <Plus aria-hidden />
+          </IconButton>
+        </div>
       </div>
-      <div className="min-w-0 flex-1 rounded-lg bg-surface p-4 shadow-md sm:p-5">
+      <div className="min-w-0 flex-1 sm:border-l sm:border-border sm:pl-5">
         {selected ? (
           <>
             <div className="flex flex-wrap items-start gap-3">
-              <div className="min-w-0 flex-1">
-                <h3 className="text-base font-semibold">{selected.name}</h3>
+              <div className="min-w-0 flex-1 basis-40">
+                <h3 className="text-base font-semibold break-words">{selected.name}</h3>
                 <p className="text-xs text-text-muted">
                   {selected.is_locked
-                    ? 'Built in kind · settings are read only'
+                    ? 'Built in type · settings are read only'
                     : `Key: ${selected.key}`}
                 </p>
               </div>
@@ -399,11 +380,13 @@ export function KindsFieldsPane() {
                   size="sm"
                   disabled={treeQuery.isPending || treeQuery.isError}
                   onClick={() => {
-                    setChangeTargetKind(kinds.find((kind) => kind.key !== selected.key)?.key ?? '')
+                    setChangeTargetKind(
+                      kinds.find((kind) => kind.key !== selected.key)?.key ?? GENERIC_KEY,
+                    )
                     setConfirmDeleteKind(selected)
                   }}
                 >
-                  Delete kind
+                  Delete type
                 </Button>
               )}
             </div>
@@ -412,7 +395,7 @@ export function KindsFieldsPane() {
                 <div className="flex flex-wrap items-end gap-2">
                   <div className="min-w-40 flex-1">
                     <TextField
-                      label="Rename kind"
+                      label="Rename type"
                       value={renameName}
                       onChange={(event) => setRenameName(event.target.value)}
                       maxLength={100}
@@ -453,7 +436,7 @@ export function KindsFieldsPane() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      aria-label="Clear kind icon"
+                      aria-label="Clear type icon"
                       onClick={() => setDefaults({ ...defaults, icon: null })}
                     >
                       Clear icon
@@ -481,7 +464,7 @@ export function KindsFieldsPane() {
                     Allows a price
                   </label>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
                   <Select
                     label="Default sort field"
                     options={[{ value: NONE_FIELD, label: 'None' }, ...defaultFieldOptions]}
@@ -522,7 +505,7 @@ export function KindsFieldsPane() {
                                   setDefaults({ ...defaults, pinnedFields: next })
                                 }}
                               />
-                              <span className="min-w-0 flex-1 truncate">{field.label}</span>
+                              <span className="min-w-0 flex-1 break-words">{field.label}</span>
                               {checked && (
                                 <span className="text-xs text-text-muted">{position + 1}</span>
                               )}
@@ -533,7 +516,7 @@ export function KindsFieldsPane() {
                     )}
                     <p className="mt-1 text-xs text-text-muted">
                       {defaults.pinnedFields === null
-                        ? 'No kind-specific pin default is set.'
+                        ? 'No type-specific pin default is set.'
                         : defaults.pinnedFields.length === 0
                           ? 'No fields are pinned by default.'
                           : 'Pin order follows the numbers shown.'}
@@ -567,12 +550,12 @@ export function KindsFieldsPane() {
                     pending={updateKind.isPending}
                     onClick={() => void saveKindDefaults()}
                   >
-                    Save kind settings
+                    Save type settings
                   </Button>
                 </div>
               </div>
             )}
-            <div className="mt-5 flex items-end gap-2 border-t border-border pt-4">
+            <div className="mt-5 flex flex-wrap items-end gap-2 border-t border-border pt-4">
               <div className="min-w-32 flex-1">
                 <TextField
                   label="New field name"
@@ -608,7 +591,7 @@ export function KindsFieldsPane() {
             </div>
             {selected.is_locked && (
               <p className="mt-2 text-xs text-text-muted">
-                Built in fields are locked. You can add your own fields to this kind.
+                Built in fields are locked. You can add your own fields to this type.
               </p>
             )}
             {selected.fields.length ? (
@@ -696,10 +679,62 @@ export function KindsFieldsPane() {
           </>
         ) : (
           <div className="grid min-h-40 place-items-center text-center text-sm text-text-muted">
-            Choose a kind to view and edit its fields.
+            Choose a type to view and edit its fields.
           </div>
         )}
       </div>
+      {createOpen && (
+        <Dialog
+          open
+          onOpenChange={(open) => !open && !createKind.isPending && setCreateOpen(false)}
+          title="New type"
+          description="Create the type first, then add its fields and set the default sort and pins in its details."
+        >
+          <form onSubmit={(event) => void submitKind(event)} className="flex flex-col gap-3">
+            <TextField
+              label="Type name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              maxLength={100}
+            />
+            <label className="flex min-h-10 items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={allowsPrice}
+                onChange={(event) => setAllowsPrice(event.target.checked)}
+              />{' '}
+              Allows a price
+            </label>
+            {createError !== null && (
+              <p role="alert" className="text-sm text-danger-text">
+                {errorText(createError)}
+              </p>
+            )}
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setIconTarget('create')
+                  setIconOpen(true)
+                }}
+              >
+                {icon.icon ? (
+                  <>
+                    <ListIconMark icon={icon.icon} className="size-5" iconClassName="size-3" />
+                    Change icon
+                  </>
+                ) : (
+                  'Choose icon'
+                )}
+              </Button>
+              <Button type="submit" pending={createKind.isPending} disabled={!name.trim()}>
+                Create type
+              </Button>
+            </div>
+          </form>
+        </Dialog>
+      )}
       {operationError !== null && (
         <div
           role="alert"
@@ -734,10 +769,10 @@ export function KindsFieldsPane() {
           title={`Delete ${confirmDeleteKind.name}?`}
           description={
             affectedLists.length
-              ? `${affectedLists.length} active ${affectedLists.length === 1 ? 'list uses' : 'lists use'} this kind: ${affectedLists.map((list) => list.name).join(', ')}. Change them to another kind before deleting this definition.`
-              : 'No active lists use this kind. Deleting the definition cannot be undone.'
+              ? `${affectedLists.length} active ${affectedLists.length === 1 ? 'list uses' : 'lists use'} this type: ${affectedLists.map((list) => list.name).join(', ')}. Change them to another type before deleting this definition.`
+              : 'No active lists use this type. Deleting the definition cannot be undone.'
           }
-          confirmLabel={affectedLists.length ? 'Choose target kind' : 'Delete kind'}
+          confirmLabel={affectedLists.length ? 'Choose target type' : 'Delete type'}
           destructive
           pending={deleteKind.isPending || treeQuery.isPending}
           onOpenChange={(open) => !open && !deleteKind.isPending && setConfirmDeleteKind(null)}
@@ -756,8 +791,8 @@ export function KindsFieldsPane() {
         <AlertDialog
           open
           title={`Change lists from ${confirmChangeLists.name}?`}
-          description="Changing a list's kind permanently clears the old kind's custom fields and price from all its items, including trashed items. Titles, images, descriptions and history stay. There is no undo."
-          confirmLabel="Change listed kinds"
+          description="Changing a list's type permanently clears the old type's custom fields and price from all its items, including trashed items. Titles, images, descriptions and history stay. There is no undo."
+          confirmLabel="Change listed types"
           destructive
           keepOpen
           pending={updateList.isPending || deleteKind.isPending}
@@ -804,7 +839,7 @@ export function KindsFieldsPane() {
           description={
             confirmDeleteField.count === 0
               ? 'No items have a value for this field.'
-              : `${confirmDeleteField.count} ${confirmDeleteField.count === 1 ? 'item has' : 'items have'} a value (including trashed items). Deleting the field removes those values, and any sort or pin that uses it falls back to the kind defaults.`
+              : `${confirmDeleteField.count} ${confirmDeleteField.count === 1 ? 'item has' : 'items have'} a value (including trashed items). Deleting the field removes those values, and any sort or pin that uses it falls back to the type defaults.`
           }
           confirmLabel="Delete field"
           destructive
@@ -820,7 +855,7 @@ export function KindsFieldsPane() {
       )}
       {iconOpen && (
         <ListIconPicker
-          title="Choose kind icon"
+          title="Choose type icon"
           kind="generic"
           showColorControls={false}
           value={

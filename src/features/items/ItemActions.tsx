@@ -144,7 +144,7 @@ function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => void }) 
       open
       onOpenChange={(open) => !open && onClose()}
       title={`Move “${item.title}”`}
-      description="Choose the list to move it to. Only lists of the same kind are offered. It goes to the end of that list."
+      description="Choose the list to move it to. Only lists of the same type are offered. It goes to the end of that list."
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -163,7 +163,7 @@ function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => void }) 
           value={target}
           onValueChange={setTarget}
           placeholder={tree.status === 'pending' ? 'Loading lists…' : 'Search lists'}
-          emptyMessage="No other lists of this kind"
+          emptyMessage="No other lists of this type"
         />
         {tree.status === 'error' && (
           <ErrorBox

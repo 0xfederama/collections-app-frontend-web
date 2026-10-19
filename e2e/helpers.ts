@@ -87,7 +87,7 @@ export async function createViaSidebar(
     await page.getByRole('option', { name: folder, exact: true }).click()
   }
   if (kind) {
-    await dialog.getByRole('combobox', { name: 'Kind' }).click()
+    await dialog.getByRole('combobox', { name: 'Type' }).click()
     await page.getByRole('option', { name: kind, exact: true }).click()
   }
   await dialog.getByRole('button', { name: 'Create' }).click()

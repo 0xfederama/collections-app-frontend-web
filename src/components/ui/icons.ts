@@ -113,8 +113,15 @@ export const kindIcons: Record<string, LucideIcon> = {
   camera: Camera,
 }
 
+/** What the built-in `generic` kind is called wherever it is shown: it means "no type selected". */
+export const NO_TYPE_LABEL = 'No type'
+
+/** The name to show for a kind: the API name, except `generic`, which reads as "No type". */
+export const kindDisplayName = (key: string, name: string) =>
+  key === 'generic' ? NO_TYPE_LABEL : name
+
 export const kindLabels: Record<string, string> = {
-  generic: 'Item',
+  generic: 'No type',
   movie: 'Movie',
   tv_show: 'TV show',
   motorcycle: 'Motorcycle',

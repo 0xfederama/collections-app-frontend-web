@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { useMatch, useNavigate } from 'react-router'
+import { useLocation, useMatch, useNavigate } from 'react-router'
 import { useToast } from '../../components/ui'
 import { arrayMove, type SortableMove } from '../../components/ui/sortable'
 import { readSession, STORAGE_KEYS, writeSession } from '../../lib/storage'
@@ -81,6 +81,7 @@ export function useTreeDialogs({
   const queryClient = useQueryClient()
   const toast = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
   const activeListId = useMatch({ path: '/lists/:listId', end: false })?.params.listId ?? null
 
   const createFolder = useCreateFolder()
@@ -95,6 +96,12 @@ export function useTreeDialogs({
 
   const sortable = useMemo(() => (index ? buildSortable(index.nodes) : undefined), [index])
   const close = () => setDialog(null)
+  // "+ New type" in the New list dialog: Settings opens over the current page on the Types pane.
+  // `pane` is a hint the Settings route may read; unknown values must be ignored there.
+  const openTypesSettings = () => {
+    close()
+    void navigate('/settings?pane=types', { state: { background: location } })
+  }
   const created = useRef<string | null>(null)
 
   /** Refetches the tree and returns it, so a dialog can pick up the latest version. */
@@ -188,6 +195,7 @@ export function useTreeDialogs({
               : { options: listPathOptions(index), initial: dialog.parentId ?? lastListFolder() }
           }
           onClose={close}
+          onNewType={isFolder ? undefined : openTypesSettings}
           onCloseAutoFocus={(event) => {
             const id = created.current
             if (!id || !focusCreated) return

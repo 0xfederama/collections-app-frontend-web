@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useBlocker } from 'react-router'
 import { AlertDialog, Button, Dialog, Select, TextField, useToast } from '../../components/ui'
 import { CountrySelect } from '../../components/ui/IsoSelects'
@@ -48,11 +48,14 @@ export function SettingsForm({
   closeRequestRef,
   pane,
   onPaneChange,
+  appearance,
 }: {
   settings: Settings
   closeRequestRef: SettingsCloseRequestRef
   pane: string
   onPaneChange: (pane: string) => void
+  /** The per-device theme choice, shown at the end of the General pane. */
+  appearance?: ReactNode
 }) {
   const client = useQueryClient()
   const toast = useToast()
@@ -107,9 +110,7 @@ export function SettingsForm({
       const field = firstInvalid(found)
       if (field) {
         onPaneChange(
-          field === 'streaming_country_code' || field === 'metadata_language'
-            ? 'Media'
-            : 'Collection',
+          field === 'streaming_country_code' || field === 'metadata_language' ? 'Media' : 'General',
         )
         setFocusRequest((current) => ({ id: inputId(field), n: (current?.n ?? 0) + 1 }))
       }
@@ -358,12 +359,12 @@ export function SettingsForm({
       </div>
 
       <section
-        aria-labelledby="settings-collection"
-        hidden={pane !== 'Collection'}
-        className={`flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md ${pane !== 'Collection' ? 'hidden' : ''}`}
+        aria-labelledby="settings-general"
+        hidden={pane !== 'General'}
+        className={`flex flex-col gap-4 ${pane !== 'General' ? 'hidden' : ''}`}
       >
-        <h2 id="settings-collection" className="text-sm font-semibold text-text-muted">
-          Collection
+        <h2 id="settings-general" className="text-sm font-semibold text-text-muted">
+          General
         </h2>
         <TextField
           id={inputId('workspace_name')}
@@ -408,12 +409,13 @@ export function SettingsForm({
           onChange={(event) => set('markdown_history_limit', event.target.value)}
           error={errors.markdown_history_limit}
         />
+        {appearance}
       </section>
 
       <section
         aria-labelledby="settings-movies-tv"
         hidden={pane !== 'Media'}
-        className={`flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md ${pane !== 'Media' ? 'hidden' : ''}`}
+        className={`flex flex-col gap-4 ${pane !== 'Media' ? 'hidden' : ''}`}
       >
         <h2 id="settings-movies-tv" className="text-sm font-semibold text-text-muted">
           Movies &amp; TV

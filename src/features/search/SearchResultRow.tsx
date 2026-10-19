@@ -1,3 +1,4 @@
+import { kindDisplayName } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import { ItemThumb } from '../lists/ItemThumb'
 import { ListIconMark } from '../lists/ListIconMark'
@@ -57,9 +58,12 @@ export function SearchResultBody({ result, large }: { result: SearchResult; larg
         </span>
         <ResultPath path={path} className="text-xs" kind={item.kind} />
       </span>
-      <span className="inline-flex shrink-0 text-text-muted" title={result.kind_name}>
+      <span
+        className="inline-flex shrink-0 text-text-muted"
+        title={kindDisplayName(item.kind, result.kind_name)}
+      >
         <ListIconMark kind={item.kind} className="size-5 bg-transparent" iconClassName="size-4" />
-        <span className="sr-only">{result.kind_name}</span>
+        <span className="sr-only">{kindDisplayName(item.kind, result.kind_name)}</span>
       </span>
     </>
   )

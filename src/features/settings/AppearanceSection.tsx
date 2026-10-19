@@ -15,11 +15,16 @@ const options = [
 export function AppearanceSection() {
   const { preference, setPreference } = useThemePreference()
   return (
-    <SegmentedControl
-      aria-label="Theme"
-      options={options}
-      value={preference}
-      onValueChange={(value) => setPreference(value as ThemePreference)}
-    />
+    <div className="flex flex-col gap-3">
+      <h3 id="settings-appearance" className="text-sm font-semibold text-text-muted">
+        Appearance
+      </h3>
+      <SegmentedControl
+        aria-label="Theme"
+        options={options}
+        value={preference}
+        onValueChange={(value) => setPreference(value as ThemePreference)}
+      />
+    </div>
   )
 }

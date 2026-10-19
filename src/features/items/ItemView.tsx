@@ -35,7 +35,7 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
     if (definitions.isPending) return <ItemSkeleton />
     return (
       <div role="alert" className="flex flex-col items-start gap-2">
-        <p>Couldn’t load this item’s kind definition.</p>
+        <p>Couldn’t load this item’s type definition.</p>
         <Button variant="secondary" onClick={() => void definitions.refetch()}>
           Retry
         </Button>

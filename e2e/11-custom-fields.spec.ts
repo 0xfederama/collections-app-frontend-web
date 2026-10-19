@@ -9,18 +9,16 @@ test.describe('F014-W4 custom field list workflow', () => {
     const kindName = uniqueName('Board game')
     await page.goto('/settings')
     const settings = page.getByRole('dialog', { name: 'Settings' })
-    await settings.getByRole('button', { name: 'Kinds & fields' }).click()
-    await page
-      .getByRole('region', { name: 'Kinds & fields' })
-      .getByLabel('Kind name')
-      .fill(kindName)
+    await settings.getByRole('button', { name: 'Types & fields' }).click()
+    await page.getByRole('button', { name: 'New type' }).click()
+    await page.getByLabel('Type name').fill(kindName)
     const createKindResponse = page.waitForResponse(
       (response) =>
         response.request().method() === 'POST' && response.url().endsWith('/api/v1/kinds'),
     )
-    await page.getByRole('button', { name: 'Create kind' }).click()
+    await page.getByRole('button', { name: 'Create type' }).click()
     const kind = await (await createKindResponse).json()
-    const region = page.getByRole('region', { name: 'Kinds & fields' })
+    const region = page.getByRole('region', { name: 'Types & fields' })
     await region.getByLabel('New field name').fill('Rating')
     await region.getByRole('combobox', { name: 'Field type' }).click()
     await page.getByRole('option', { name: 'Number' }).click()

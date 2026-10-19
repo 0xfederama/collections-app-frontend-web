@@ -54,12 +54,12 @@ describe('AT-03 tree CRUD (web): create', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${created.id}`))
   })
 
-  it('F007-W7 a new list asks for its kind (Item by default) and sends the chosen one', async () => {
+  it('F007-W7 a new list asks for its type (No type by default) and sends the chosen one', async () => {
     const { user, backend } = await openTree()
     await pickHeaderAction(user, 'List')
     const dlg = await dialog()
-    const kind = within(dlg).getByRole('combobox', { name: 'Kind' })
-    expect(kind).toHaveTextContent('Item')
+    const kind = within(dlg).getByRole('combobox', { name: 'Type' })
+    expect(kind).toHaveTextContent('No type')
     await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Cameras')
     await user.click(kind)
     await user.click(await screen.findByRole('option', { name: 'Camera' }))
@@ -75,6 +75,29 @@ describe('AT-03 tree CRUD (web): create', () => {
       icon_color: null,
     })
     expect(backend.state.lists.find((l) => l.name === 'Cameras')?.kind).toBe('camera')
+  })
+
+  it('F015 the type picker lists "No type" first, a separator, then the types, then "+ New type", which opens Settings', async () => {
+    const { user, router } = await openTree()
+    await pickHeaderAction(user, 'List')
+    const dlg = await dialog()
+    await user.click(within(dlg).getByRole('combobox', { name: 'Type' }))
+    const options = await screen.findAllByRole('option')
+    expect(options.length).toBeGreaterThan(3)
+    expect(options[0]).toHaveTextContent('No type')
+    expect(options.at(-1)).toHaveTextContent('+ New type')
+    // Radix draws the separators as aria-hidden divs: one after "No type", one before "+ New type".
+    const listbox = screen.getByRole('listbox')
+    expect(options[0]!.nextElementSibling).toHaveAttribute('aria-hidden', 'true')
+    expect(options.at(-1)!.previousElementSibling).toHaveAttribute('aria-hidden', 'true')
+    expect(listbox).toBeInTheDocument()
+    await user.click(options.at(-1)!)
+
+    await waitFor(() =>
+      expect(screen.queryByRole('textbox', { name: 'Name' })).not.toBeInTheDocument(),
+    )
+    await waitFor(() => expect(router.state.location.pathname).toBe('/settings'))
+    expect(router.state.location.search).toBe('?pane=types')
   })
 
   it('F012-W1 creates a list with a searchable built-in icon and named color', async () => {
@@ -101,11 +124,11 @@ describe('AT-03 tree CRUD (web): create', () => {
     })
   })
 
-  it('a new folder has no kind picker', async () => {
+  it('a new folder has no type picker', async () => {
     const { user } = await openTree()
     await pickHeaderAction(user, 'Folder')
     const dlg = await dialog()
-    expect(within(dlg).queryByRole('combobox', { name: 'Kind' })).not.toBeInTheDocument()
+    expect(within(dlg).queryByRole('combobox', { name: 'Type' })).not.toBeInTheDocument()
   })
 
   it('"New folder inside" sends the parent id and the new folder shows nested', async () => {

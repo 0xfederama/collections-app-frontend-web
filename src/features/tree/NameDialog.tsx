@@ -6,6 +6,7 @@ import {
   Select,
   TextField,
   type ItemKind,
+  type SelectEntry,
   type SelectOption,
 } from '../../components/ui'
 import { cx } from '../../lib/cx'
@@ -16,6 +17,7 @@ import { ListIconPicker } from '../lists/ListIconPicker'
 import { ListIconMark } from '../lists/ListIconMark'
 import type { IconChoice } from '../lists/iconModel'
 import { useKinds } from '../settings/api'
+import { kindOptions as buildKindOptions } from '../items/kinds'
 
 export interface NameDialogProps {
   title: string
@@ -23,7 +25,7 @@ export interface NameDialogProps {
   submitLabel: string
   noun: 'folder' | 'list'
   initialName?: string
-  /** Create list only: shows the kind picker, starting at `initial`. Renaming never changes the kind. */
+  /** Create list only: shows the type picker, starting at `initial`. Renaming never changes the kind. */
   kind?: { initial: ItemKind }
   /**
    * Create list only: the folder the list goes into, as the shared destination picker. Renaming
@@ -40,6 +42,8 @@ export interface NameDialogProps {
     icon: IconChoice,
   ) => Promise<unknown>
   onClose: () => void
+  /** Create list only: adds a "+ New type" entry to the type picker; the caller closes this dialog and opens Settings. */
+  onNewType?: () => void
   /** Refetches the tree and returns the latest name (`undefined` if the item is gone). Rename only. */
   onReload?: () => Promise<string | undefined>
   /** Where focus goes when the dialog closes; `preventDefault()` replaces the return to the opener. */
@@ -47,6 +51,7 @@ export interface NameDialogProps {
 }
 
 const MAX_LENGTH = 200
+const NEW_TYPE_VALUE = '__new_type__'
 
 /** Create and rename dialog: one name field, plus the kind and the folder on a new list. */
 export function NameDialog({
@@ -60,14 +65,17 @@ export function NameDialog({
   listIcon,
   onSubmit,
   onClose,
+  onNewType,
   onReload,
   onCloseAutoFocus,
 }: NameDialogProps) {
   const definitions = useKinds()
-  const kindOptions = (definitions.data ?? []).map((definition) => ({
-    value: definition.key,
-    label: definition.name,
-  }))
+  const kindOptions: SelectEntry[] = [
+    ...buildKindOptions(definitions.data),
+    ...(onNewType
+      ? [{ separator: true as const }, { value: NEW_TYPE_VALUE, label: '+ New type', action: true }]
+      : []),
+  ]
   const [name, setName] = useState(initialName)
   const [chosenKind, setChosenKind] = useState<ItemKind>(kind?.initial ?? 'generic')
   const [iconChoice, setIconChoice] = useState<IconChoice>({ icon: null, icon_color: null })
@@ -177,16 +185,19 @@ export function NameDialog({
             </div>
           )}
         </div>
-        {/* F011-W6: Kind and Folder sit side by side, the folder as a dropdown on the right. */}
+        {/* F011-W6: Type and Folder sit side by side, the folder as a dropdown on the right. */}
         {(kind || path) && (
           <div className={cx('grid gap-4', kind && path && 'sm:grid-cols-2')}>
             {kind && (
               <Select
-                label="Kind"
-                hint="Every item in the list has this kind."
+                label="Type"
+                hint="Every item in the list has this type."
                 options={kindOptions}
                 value={chosenKind}
-                onValueChange={(value) => setChosenKind(value as ItemKind)}
+                onValueChange={(value) => {
+                  if (value === NEW_TYPE_VALUE) onNewType?.()
+                  else setChosenKind(value as ItemKind)
+                }}
               />
             )}
             {path && (

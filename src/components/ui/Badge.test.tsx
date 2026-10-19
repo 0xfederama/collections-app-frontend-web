@@ -4,7 +4,7 @@ import { Badge } from './Badge'
 import { kindLabels, type ItemKind } from './icons'
 
 const kinds: [ItemKind, string][] = [
-  ['generic', 'Item'],
+  ['generic', 'No type'],
   ['movie', 'Movie'],
   ['tv_show', 'TV show'],
   ['motorcycle', 'Motorcycle'],

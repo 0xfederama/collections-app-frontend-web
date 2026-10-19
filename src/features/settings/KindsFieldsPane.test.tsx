@@ -42,20 +42,20 @@ async function openPane(kinds: KindDefinition[] = [movie, boardGame], lists: obj
   )
   const user = userEvent.setup()
   renderAt('/settings')
-  await user.click(await screen.findByRole('button', { name: 'Kinds & fields' }))
-  await screen.findByRole('list', { name: 'Kinds' })
+  await user.click(await screen.findByRole('button', { name: 'Types & fields' }))
+  await screen.findByRole('list', { name: 'Types' })
   return user
 }
 
-describe('F014-W2 Kinds & fields pane', () => {
+describe('F014-W2 Types & fields pane', () => {
   it('marks built in kinds and fields read only while allowing an added field', async () => {
     const user = await openPane()
     await user.click(screen.getByRole('button', { name: /Movie.*Built in.*locked/ }))
     expect(
-      screen.getByText('Built in fields are locked. You can add your own fields to this kind.'),
+      screen.getByText('Built in fields are locked. You can add your own fields to this type.'),
     ).toBeInTheDocument()
     expect(screen.getByText('Director')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Delete kind' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete type' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Rename Director' })).not.toBeInTheDocument()
 
     let fieldRequest: { ifMatch: string | null; body: unknown } | undefined
@@ -94,13 +94,14 @@ describe('F014-W2 Kinds & fields pane', () => {
         )
       }),
     )
-    await user.type(screen.getByLabelText('Kind name'), 'Tabletop')
+    await user.click(screen.getByRole('button', { name: 'New type' }))
+    await user.type(screen.getByLabelText('Type name'), 'Tabletop')
     await user.click(screen.getByRole('checkbox', { name: 'Allows a price' }))
     await user.click(screen.getByRole('button', { name: 'Choose icon' }))
-    const picker = await screen.findByRole('dialog', { name: 'Choose kind icon' })
+    const picker = await screen.findByRole('dialog', { name: 'Choose type icon' })
     await user.click(within(picker).getByRole('button', { name: 'gamepad 2' }))
     await user.click(within(picker).getByRole('button', { name: 'Done' }))
-    await user.click(screen.getByRole('button', { name: 'Create kind' }))
+    await user.click(screen.getByRole('button', { name: 'Create type' }))
     expect(createRequest?.body).toEqual({
       name: 'Tabletop',
       default_icon: 'i:gamepad-2',
@@ -151,7 +152,7 @@ describe('F014-W2 Kinds & fields pane', () => {
     await user.click(await screen.findByRole('option', { name: 'Rating' }))
     await user.click(screen.getByRole('checkbox', { name: 'Allow prices for items' }))
     await user.click(screen.getByRole('checkbox', { name: /^Rating/ }))
-    await user.click(screen.getByRole('button', { name: 'Save kind settings' }))
+    await user.click(screen.getByRole('button', { name: 'Save type settings' }))
     expect(updateRequest).toEqual({
       ifMatch: '"k-2"',
       body: {
@@ -175,7 +176,7 @@ describe('F014-W2 Kinds & fields pane', () => {
         return HttpResponse.json({ ...boardGame, name: 'Tabletop', version: 3 })
       }),
     )
-    const nameField = screen.getByLabelText('Rename kind')
+    const nameField = screen.getByLabelText('Rename type')
     await user.clear(nameField)
     await user.type(nameField, 'Tabletop')
     await user.click(screen.getByRole('button', { name: 'Save name' }))
@@ -207,11 +208,11 @@ describe('F014-W2 Kinds & fields pane', () => {
         })
       }),
     )
-    await user.click(screen.getByRole('button', { name: 'Clear kind icon' }))
+    await user.click(screen.getByRole('button', { name: 'Clear type icon' }))
     await user.click(screen.getByRole('combobox', { name: 'Default sort field' }))
     await user.click(await screen.findByRole('option', { name: 'None' }))
     await user.click(screen.getByRole('button', { name: 'Reset pins' }))
-    await user.click(screen.getByRole('button', { name: 'Save kind settings' }))
+    await user.click(screen.getByRole('button', { name: 'Save type settings' }))
     expect(updateRequest).toEqual({
       ifMatch: '"k-2"',
       body: { default_icon: null, default_sort_field: null, default_pinned_fields: null },
@@ -253,26 +254,26 @@ describe('F014-W2 Kinds & fields pane', () => {
         return new HttpResponse(null, { status: 204 })
       }),
     )
-    await user.click(screen.getByRole('button', { name: 'Delete kind' }))
+    await user.click(screen.getByRole('button', { name: 'Delete type' }))
     const deleteDialog = await screen.findByRole('alertdialog', { name: 'Delete Board game?' })
     expect(
-      within(deleteDialog).getByText(/1 active list uses this kind: Weekend games/),
+      within(deleteDialog).getByText(/1 active list uses this type: Weekend games/),
     ).toBeInTheDocument()
-    await user.click(within(deleteDialog).getByRole('button', { name: 'Choose target kind' }))
+    await user.click(within(deleteDialog).getByRole('button', { name: 'Choose target type' }))
     const changeDialog = await screen.findByRole('alertdialog', {
       name: 'Change lists from Board game?',
     })
     expect(
-      within(changeDialog).getByText(/permanently clears the old kind's custom fields and price/),
+      within(changeDialog).getByText(/permanently clears the old type's custom fields and price/),
     ).toBeInTheDocument()
     await user.click(within(changeDialog).getByRole('combobox', { name: 'Change listed lists to' }))
     await user.click(await screen.findByRole('option', { name: 'Movie' }))
-    await user.click(within(changeDialog).getByRole('button', { name: 'Change listed kinds' }))
+    await user.click(within(changeDialog).getByRole('button', { name: 'Change listed types' }))
     await waitFor(() => expect(listPatch).toEqual({ ifMatch: '"l-7"', body: { kind: 'movie' } }))
     expect(kindDeleted).toBe(false)
     const finalDialog = await screen.findByRole('alertdialog', { name: 'Delete Board game?' })
-    expect(within(finalDialog).getByText(/No active lists use this kind/)).toBeInTheDocument()
-    await user.click(within(finalDialog).getByRole('button', { name: 'Delete kind' }))
+    expect(within(finalDialog).getByText(/No active lists use this type/)).toBeInTheDocument()
+    await user.click(within(finalDialog).getByRole('button', { name: 'Delete type' }))
     await waitFor(() => expect(kindDeleted).toBe(true))
   })
 })

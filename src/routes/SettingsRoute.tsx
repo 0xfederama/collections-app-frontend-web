@@ -10,10 +10,7 @@ import { KindsFieldsPane } from '../features/settings/KindsFieldsPane'
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section
-      aria-labelledby={id}
-      className="flex flex-col gap-4 rounded-lg bg-surface p-5 shadow-md"
-    >
+    <section aria-labelledby={id} className="flex flex-col gap-4">
       <h2 id={id} className="text-sm font-semibold text-text-muted">
         {title}
       </h2>
@@ -21,6 +18,8 @@ function Section({ id, title, children }: { id: string; title: string; children:
     </section>
   )
 }
+
+const PANES = ['General', 'Media', 'Types & fields', 'About']
 
 function WorkspaceSkeleton() {
   return (
@@ -42,10 +41,12 @@ function WorkspaceSkeleton() {
  * its draft before allowing the pane to close.
  */
 export function SettingsRoute() {
-  const [pane, setPane] = useState('Collection')
+  const location = useLocation()
+  const [pane, setPane] = useState(() =>
+    new URLSearchParams(location.search).get('pane') === 'types' ? 'Types & fields' : 'General',
+  )
   const settings = useSettings()
   const navigate = useNavigate()
-  const location = useLocation()
   const closeRequestRef = useRef<SettingsCloseRequestRef['current']>(null)
   const hasBackground = Boolean((location.state as { background?: unknown } | null)?.background)
   const closeNow = () => void (hasBackground ? navigate(-1) : navigate('/', { replace: true }))
@@ -58,10 +59,13 @@ export function SettingsRoute() {
       open
       onOpenChange={(open) => !open && close()}
       title="Settings"
-      className="max-h-[90dvh] w-[min(calc(100vw-2rem),720px)]! max-w-none! gap-4 p-4 sm:gap-6 sm:p-6"
+      className="top-[clamp(1rem,15dvh,9rem)]! max-h-[calc(100dvh-clamp(1rem,15dvh,9rem)-1rem)]! w-[min(calc(100vw-2rem),720px)]! max-w-none! translate-y-0! gap-4 overflow-hidden! p-4 sm:gap-6 sm:p-6"
     >
-      <nav aria-label="Settings panes" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
-        {['Appearance', 'Collection', 'Media', 'Kinds & fields', 'About'].map((name) => (
+      <nav
+        aria-label="Settings panes"
+        className="-mx-1 flex shrink-0 gap-1 overflow-x-auto px-1 pb-1"
+      >
+        {PANES.map((name) => (
           <button
             key={name}
             type="button"
@@ -73,49 +77,49 @@ export function SettingsRoute() {
           </button>
         ))}
       </nav>
-      <div hidden={pane !== 'Appearance'}>
-        <Section id="settings-appearance" title="Appearance">
-          <AppearanceSection />
-        </Section>
-      </div>
-      {settings.isPending ? (
-        <div hidden={pane !== 'Collection'}>
-          <Section id="settings-collection" title="Collection">
-            <WorkspaceSkeleton />
+      <div className="-mx-2 min-h-0 flex-1 overflow-y-auto px-2 py-1">
+        {settings.isPending ? (
+          <div hidden={pane !== 'General'}>
+            <Section id="settings-general" title="General">
+              <WorkspaceSkeleton />
+              <AppearanceSection />
+            </Section>
+          </div>
+        ) : settings.isError || !settings.data ? (
+          <div hidden={pane !== 'General'}>
+            <Section id="settings-general" title="General">
+              <div role="alert" className="flex flex-col items-start gap-2">
+                <p>Couldn’t load the settings.</p>
+                <Button variant="secondary" onClick={() => void settings.refetch()}>
+                  Retry
+                </Button>
+              </div>
+              <AppearanceSection />
+            </Section>
+          </div>
+        ) : (
+          <SettingsForm
+            closeRequestRef={closeRequestRef}
+            settings={settings.data}
+            pane={pane}
+            onPaneChange={setPane}
+            appearance={<AppearanceSection />}
+          />
+        )}
+        <div hidden={pane !== 'Types & fields'}>
+          <Section id="settings-kinds-fields" title="Types & fields">
+            <KindsFieldsPane />
           </Section>
         </div>
-      ) : settings.isError || !settings.data ? (
-        <div hidden={pane !== 'Collection'}>
-          <Section id="settings-collection" title="Collection">
-            <div role="alert" className="flex flex-col items-start gap-2">
-              <p>Couldn’t load the settings.</p>
-              <Button variant="secondary" onClick={() => void settings.refetch()}>
-                Retry
-              </Button>
-            </div>
+        <div hidden={pane !== 'About'}>
+          <Section id="settings-connection" title="Connection">
+            <ConnectionSection />
           </Section>
-        </div>
-      ) : (
-        <SettingsForm
-          closeRequestRef={closeRequestRef}
-          settings={settings.data}
-          pane={pane}
-          onPaneChange={setPane}
-        />
-      )}
-      <div hidden={pane !== 'Kinds & fields'}>
-        <Section id="settings-kinds-fields" title="Kinds & fields">
-          <KindsFieldsPane />
-        </Section>
-      </div>
-      <div hidden={pane !== 'About'}>
-        <Section id="settings-connection" title="Connection">
-          <ConnectionSection />
-        </Section>
-        <div className="mt-4">
-          <Section id="settings-about" title="About">
-            <AboutSection />
-          </Section>
+          <div className="mt-4">
+            <Section id="settings-about" title="About">
+              <AboutSection />
+            </Section>
+          </div>
         </div>
       </div>
     </Dialog>

@@ -1,3 +1,4 @@
+import { kindDisplayName, type SelectEntry } from '../../../components/ui'
 import type { KindDefinition, KindField } from '../../settings/api'
 
 export type { KindDefinition, KindField }
@@ -8,7 +9,26 @@ export const kindDefinition = (
 ): KindDefinition | undefined => definitions?.find((kind) => kind.key === key)
 
 export const kindName = (definition: KindDefinition | undefined, fallback: string) =>
-  definition?.name ?? fallback.replaceAll('_', ' ')
+  kindDisplayName(definition?.key ?? fallback, definition?.name ?? fallback.replaceAll('_', ' '))
+
+/**
+ * Type choices for a list: "No type" (the generic kind) first, a separator, then the rest in API
+ * order (built-in, then custom).
+ */
+export const kindOptions = (definitions: readonly KindDefinition[] | undefined): SelectEntry[] => {
+  const all = definitions ?? []
+  const generic = all.filter((definition) => definition.key === 'generic')
+  const others = all.filter((definition) => definition.key !== 'generic')
+  const option = (definition: KindDefinition) => ({
+    value: definition.key,
+    label: kindDisplayName(definition.key, definition.name),
+  })
+  return [
+    ...generic.map(option),
+    ...(generic.length > 0 && others.length > 0 ? [{ separator: true as const }] : []),
+    ...others.map(option),
+  ]
+}
 
 /** IMDb is rendered as an external-link tile and streaming keeps its richer built-in editor. */
 export const isHiddenTmdbField = (field: KindField) => field.key === 'imdb_url'
