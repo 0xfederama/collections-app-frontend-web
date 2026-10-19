@@ -3,7 +3,8 @@ import { ServiceIcon } from '../../../components/ServiceIcon'
 import { Button, Menu, type MenuItem } from '../../../components/ui'
 import { Plus, TriangleAlert } from '../../../components/ui/icons'
 import { useSettings } from '../../settings/api'
-import { hasPrice } from '../kinds'
+import { hasPrice, type KindDefinition } from '../kinds'
+import { isWebUrl } from '../form/draft'
 import type { Draft } from '../form/draft'
 import type { Item } from '../api'
 import { InlineField } from './InlineField'
@@ -58,7 +59,20 @@ function StreamingValue({ item }: { item: Item }) {
 const STREAMING_ID = 'metadata.streaming'
 
 function Value({ item, spec }: { item: Item; spec: FieldSpec }) {
-  return <span className="break-words tabular-nums">{spec.text?.(item)}</span>
+  const value = spec.text?.(item)
+  if (spec.field?.type === 'link' && value && isWebUrl(value))
+    return (
+      <a
+        href={value}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="break-all text-accent-text underline underline-offset-2"
+      >
+        {value}
+        <span className="sr-only"> (opens in a new tab)</span>
+      </a>
+    )
+  return <span className="break-words tabular-nums">{value}</span>
 }
 
 /** An editor opened from "+ Add field": the spec, and how to start its draft. */
@@ -73,15 +87,17 @@ interface Adding {
  */
 export function FieldBlock({
   item,
+  definition,
   addWebsiteRequest = 0,
 }: {
   item: Item
+  definition: KindDefinition
   /** A counter: each increase opens the website editor (the links row's "Add website"). */
   addWebsiteRequest?: number
 }) {
-  const kind = kindSpecs(item.kind)
+  const kind = kindSpecs(definition)
   // A generic item has no kind fields, and only the kinds with a price get the price field (D-085).
-  const price = hasPrice(item.kind) ? [priceSpec] : []
+  const price = hasPrice(definition) ? [priceSpec] : []
   const specs = [...kind, ...price, websiteSpec]
   /** Ids the user added with "+ Add field"; they stay shown until the page is left. */
   const [added, setAdded] = useState<string[]>([])
@@ -128,6 +144,7 @@ export function FieldBlock({
   const editor = (spec: FieldSpec, children: ReactNode, barClassName?: string) => (
     <InlineField
       item={item}
+      definition={definition}
       spec={spec}
       startOpen={isAdding(spec)}
       initialDraft={adding.find((entry) => entry.id === spec.id)?.initialDraft}

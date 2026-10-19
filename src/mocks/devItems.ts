@@ -1,13 +1,14 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
 import { devTree, devTreeState } from './devData'
-import { hasPrice } from '../features/items/kinds'
 import { problemResponse } from './problems'
+import { mockKinds } from './kinds'
 
 type Tree = components['schemas']['Tree']
 type List = components['schemas']['List']
 type ItemSummary = components['schemas']['ItemSummary']
 type ItemKind = ItemSummary['kind']
+const PRICE_KINDS = new Set(mockKinds.filter((kind) => kind.allows_price).map((kind) => kind.key))
 type SortMode = components['schemas']['SortMode']
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
@@ -61,7 +62,7 @@ function fakeMetadata(kind: ItemKind, i: number): Record<string, unknown> {
 function makeItems(list: List, count: number): ItemSummary[] {
   return Array.from({ length: count }, (_, i) => {
     const kind = list.kind
-    const pool = TITLES[kind]
+    const pool = TITLES[kind] ?? TITLES.generic!
     const title = `${pool[i % pool.length]}${i >= pool.length ? ` (${Math.floor(i / pool.length) + 1})` : ''}`
     const image =
       i % 7 === 3
@@ -77,7 +78,7 @@ function makeItems(list: List, count: number): ItemSummary[] {
       kind,
       image,
       price:
-        priced === 0 || !hasPrice(kind)
+        priced === 0 || !PRICE_KINDS.has(kind)
           ? null
           : priced === 1
             ? { min: String(500 + i * 25), max: String(500 + i * 25), currency: 'EUR' }
@@ -114,11 +115,6 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
     return items.get(id)
   }
 
-  /** Stand-in for the kind's sort key : a stable number, unset for some. */
-  const fakeKey = (item: ItemSummary): number | null => {
-    const sum = [...item.title].reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
-    return item.title.length % 5 === 0 ? null : sum % 90
-  }
   const bySort = (sort: SortMode) => (a: ItemSummary, b: ItemSummary) => {
     if (sort === 'title') return a.title.localeCompare(b.title)
     if (sort === 'updated') return b.updated_at.localeCompare(a.updated_at)
@@ -130,13 +126,18 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
       } else if (pa !== pb) return pa - pb
       return a.title.localeCompare(b.title) || a.id.localeCompare(b.id)
     }
-    if (sort === 'kind_key') {
-      const ka = fakeKey(a)
-      const kb = fakeKey(b)
-      // Ascending, empty last, tie-break on id.
-      if (ka === null || kb === null) {
-        if (ka !== kb) return ka === null ? 1 : -1
-      } else if (ka !== kb) return ka - kb
+    if (!['manual', 'title', 'updated'].includes(sort)) {
+      const left = a.metadata[sort]
+      const right = b.metadata[sort]
+      if (left === undefined || right === undefined) {
+        if (left !== right) return left === undefined ? 1 : -1
+      } else if (typeof left === 'number' && typeof right === 'number' && left !== right) {
+        return left - right
+      } else if (typeof left === 'boolean' && typeof right === 'boolean' && left !== right) {
+        return left ? 1 : -1
+      } else if (String(left) !== String(right)) {
+        return String(left).localeCompare(String(right), undefined, { sensitivity: 'base' })
+      }
       return a.id.localeCompare(b.id)
     }
     return a.sort_order - b.sort_order
@@ -150,9 +151,12 @@ export function createItemsBackend(tree: Tree, findList: (id: string) => List | 
       if (!all || !list) return problemResponse(404, 'not_found')
       const query = new URL(request.url).searchParams
       const sort = (query.get('sort') as SortMode | null) ?? list.sort_mode
+      const definition = mockKinds.find((kind) => kind.key === list.kind)
+      const validField = definition?.fields.some((field) => field.key === sort)
       if (
-        (sort === 'kind_key' && list.kind === 'generic') ||
-        (sort === 'price' && !hasPrice(list.kind))
+        !['manual', 'title', 'updated'].includes(sort) &&
+        !(sort === 'price' && PRICE_KINDS.has(list.kind)) &&
+        !validField
       ) {
         return problemResponse(400, 'invalid_parameter')
       }

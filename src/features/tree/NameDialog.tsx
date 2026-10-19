@@ -5,7 +5,6 @@ import {
   IconButton,
   Select,
   TextField,
-  kindLabels,
   type ItemKind,
   type SelectOption,
 } from '../../components/ui'
@@ -16,6 +15,7 @@ import { useAction } from './useAction'
 import { ListIconPicker } from '../lists/ListIconPicker'
 import { ListIconMark } from '../lists/ListIconMark'
 import type { IconChoice } from '../lists/iconModel'
+import { useKinds } from '../settings/api'
 
 export interface NameDialogProps {
   title: string
@@ -48,11 +48,6 @@ export interface NameDialogProps {
 
 const MAX_LENGTH = 200
 
-const kindOptions = (Object.keys(kindLabels) as ItemKind[]).map((value) => ({
-  value,
-  label: kindLabels[value],
-}))
-
 /** Create and rename dialog: one name field, plus the kind and the folder on a new list. */
 export function NameDialog({
   title,
@@ -68,6 +63,11 @@ export function NameDialog({
   onReload,
   onCloseAutoFocus,
 }: NameDialogProps) {
+  const definitions = useKinds()
+  const kindOptions = (definitions.data ?? []).map((definition) => ({
+    value: definition.key,
+    label: definition.name,
+  }))
   const [name, setName] = useState(initialName)
   const [chosenKind, setChosenKind] = useState<ItemKind>(kind?.initial ?? 'generic')
   const [iconChoice, setIconChoice] = useState<IconChoice>({ icon: null, icon_color: null })
@@ -85,6 +85,7 @@ export function NameDialog({
   const { error, pending, run, clearError, setError } = useAction(noun)
 
   const selectedLabel = path?.options.find((option) => option.value === chosenPath)?.label
+  const selectedKind = definitions.data?.find((definition) => definition.key === chosenKind)
 
   const submit = async (event?: FormEvent) => {
     event?.preventDefault()
@@ -166,7 +167,7 @@ export function NameDialog({
                 onClick={() => setIconPickerOpen(true)}
               >
                 <ListIconMark
-                  icon={iconChoice.icon}
+                  icon={iconChoice.icon ?? selectedKind?.default_icon}
                   iconColor={iconChoice.icon_color}
                   kind={chosenKind}
                   className="size-8"

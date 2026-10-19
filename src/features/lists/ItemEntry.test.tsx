@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { ItemEntry } from './ItemEntry'
 import type { ItemSummary } from './api'
+import { mockKinds } from '../../mocks/kinds'
 
 const item = (over: Partial<ItemSummary> = {}): ItemSummary => ({
   id: 'i1',
@@ -27,6 +28,7 @@ function entry(
   over: Partial<ItemSummary> = {},
 ) {
   const kind = over.kind ?? 'movie'
+  const definition = mockKinds.find((candidate) => candidate.key === kind)!
   render(
     <MemoryRouter>
       <ul>
@@ -34,6 +36,7 @@ function entry(
           item={item(over)}
           mode={mode}
           kind={kind}
+          definition={definition}
           pinned={pinned}
           search=""
           onOpen={() => {}}

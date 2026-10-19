@@ -1,6 +1,6 @@
 import { useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { Button, kindIcons, kindLabels } from '../../components/ui'
+import { Button } from '../../components/ui'
 import { ApiError, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemKind } from './api'
 import { createLookupSelection, TmdbTitleField, type TmdbTitleSelection } from './TmdbTitleField'
@@ -8,7 +8,9 @@ import { LIMITS } from './form/draft'
 import { MessageBanner } from './inline/Banners'
 import { useEditGuard } from './inline/guard'
 import { EditorButtons } from './inline/InlineField'
-import { useSettings } from '../settings/api'
+import { useKinds, useSettings } from '../settings/api'
+import { ListIconMark } from '../lists/ListIconMark'
+import { kindDefinition, kindName } from './kinds'
 
 /**
  * The draft of a new item (F008-W9), shown by the item route at `/lists/:listId/items/new`.
@@ -29,6 +31,8 @@ export function NewItemDraft({
   const { search } = useLocation()
   const create = useCreateItem(listId)
   const settings = useSettings()
+  const definitions = useKinds()
+  const definition = kindDefinition(definitions.data, kind)
   const guard = useEditGuard()
   const [title, setTitle] = useState('')
   const [error, setError] = useState<string>()
@@ -36,7 +40,6 @@ export function NewItemDraft({
   const [lookupUnavailable, setLookupUnavailable] = useState(false)
   const [tmdbId, setTmdbId] = useState<number>()
   const box = useRef<HTMLDivElement>(null)
-  const KindIcon = kindIcons[kind]
 
   const changeTitle = (value: string) => {
     setTitle(value)
@@ -126,8 +129,13 @@ export function NewItemDraft({
     <article aria-label="New item" className="flex flex-col gap-5">
       <header className="flex flex-col gap-1">
         <p className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
-          <KindIcon aria-hidden className="size-3.5" />
-          {kindLabels[kind]} · New item (draft)
+          <ListIconMark
+            icon={definition?.default_icon}
+            kind={kind}
+            className="size-5 bg-transparent"
+            iconClassName="size-3.5"
+          />
+          {kindName(definition, kind)} · New item (draft)
         </p>
         <div
           ref={box}

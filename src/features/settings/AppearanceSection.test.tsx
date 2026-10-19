@@ -10,6 +10,7 @@ async function openSettings() {
   mockViewport(1280)
   const user = userEvent.setup()
   renderAt('/settings')
+  await user.click(await screen.findByRole('button', { name: 'Appearance' }))
   await screen.findByRole('heading', { name: 'Appearance' })
   return user
 }

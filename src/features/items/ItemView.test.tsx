@@ -7,6 +7,7 @@ import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { mockViewport, renderAt } from '../../test-utils'
 import type { Item } from './api'
+import type { KindDefinition } from '../settings/api'
 import { createContentBackend } from './content/contentTestBackend'
 
 const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
@@ -17,6 +18,36 @@ const contentUrl = `${itemUrl}/content`
 const settingsUrl = `${location.origin}/api/v1/settings`
 
 const matrix = exampleResponses.getItem.body as Item
+
+const customKind: KindDefinition = {
+  key: 'board_game',
+  name: 'Board game',
+  default_icon: 'i:puzzle',
+  allows_price: false,
+  default_sort_field: 'rating',
+  default_pinned_fields: ['rating'],
+  is_locked: false,
+  version: 1,
+  fields: [
+    { key: 'rating', label: 'Rating', type: 'number', position: 0, is_locked: false, version: 1 },
+    {
+      key: 'recommended',
+      label: 'Recommended',
+      type: 'boolean',
+      position: 1,
+      is_locked: false,
+      version: 1,
+    },
+    {
+      key: 'played_on',
+      label: 'Played on',
+      type: 'date',
+      position: 2,
+      is_locked: false,
+      version: 1,
+    },
+  ],
+}
 
 function overrideItem(over: Partial<Item>) {
   server.use(http.get(itemUrl, () => HttpResponse.json({ ...matrix, ...over })))
@@ -242,6 +273,44 @@ describe('AT-13 item view: the example movie', () => {
       'href',
       `/lists/${WATCHLIST}`,
     )
+  })
+})
+
+describe('F014-W3 custom kind item detail', () => {
+  it('uses the API kind name and typed fields, and offers an empty custom field', async () => {
+    const tree = exampleResponses.getTree.body as {
+      folders: unknown[]
+      lists: Array<Record<string, unknown>>
+    }
+    const list = exampleResponses.getList.body as Record<string, unknown>
+    server.use(
+      http.get(`${location.origin}/api/v1/kinds`, () => HttpResponse.json([customKind])),
+      http.get(`${location.origin}/api/v1/tree`, () =>
+        HttpResponse.json({
+          ...tree,
+          lists: tree.lists.map((entry) =>
+            entry.id === WATCHLIST ? { ...entry, kind: customKind.key } : entry,
+          ),
+        }),
+      ),
+      http.get(`${location.origin}/api/v1/lists/${WATCHLIST}`, () =>
+        HttpResponse.json({ ...list, id: WATCHLIST, kind: customKind.key }),
+      ),
+    )
+    overrideItem({
+      kind: customKind.key,
+      metadata: { rating: 8.5, played_on: '2026-10-19' },
+    })
+    await renderItem()
+
+    expect(screen.getByText('Board game')).toBeVisible()
+    expect(screen.getByText('8.5')).toBeVisible()
+    expect(screen.getByText('Played on')).toBeVisible()
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Recommended' }))
+    expect(screen.getByRole('combobox', { name: 'Recommended' })).toBeVisible()
   })
 })
 

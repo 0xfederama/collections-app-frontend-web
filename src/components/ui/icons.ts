@@ -102,9 +102,9 @@ export {
 } from 'lucide-react'
 import { Camera, Car, Film, Motorbike, Tag, Tv, type LucideIcon } from 'lucide-react'
 
-export type ItemKind = 'generic' | 'movie' | 'tv_show' | 'motorcycle' | 'car' | 'camera'
+export type ItemKind = string
 
-export const kindIcons: Record<ItemKind, LucideIcon> = {
+export const kindIcons: Record<string, LucideIcon> = {
   generic: Tag,
   movie: Film,
   tv_show: Tv,
@@ -113,7 +113,7 @@ export const kindIcons: Record<ItemKind, LucideIcon> = {
   camera: Camera,
 }
 
-export const kindLabels: Record<ItemKind, string> = {
+export const kindLabels: Record<string, string> = {
   generic: 'Item',
   movie: 'Movie',
   tv_show: 'TV show',

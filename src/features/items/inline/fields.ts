@@ -1,7 +1,14 @@
 import { formatPrice } from '../../lists/price'
-import type { Item, ItemKind } from '../api'
+import type { Item } from '../api'
 import { INITIAL_CURRENCY, type Draft } from '../form/draft'
-import { formatField, formatTvYears, kindFields, type Field } from '../kinds'
+import {
+  formatField,
+  formatTvYears,
+  isHiddenTmdbField,
+  isStreamingField,
+  type KindDefinition,
+  type KindField,
+} from '../kinds'
 
 /**
  * What one in-place field is: which part of the form `Draft` it edits, which error keys belong to
@@ -21,8 +28,8 @@ export interface FieldSpec {
   isSet: (item: Item) => boolean
   /** Plain text of the saved value, for the read-only display (and the draft dump). */
   text?: (item: Item) => string | null
-  /** The kind field behind it, when it is one (the editor widget follows its `input`). */
-  field?: Field
+  /** The API kind field behind it (the editor widget follows its type). */
+  field?: KindField
 }
 
 type Metadata = Record<string, unknown>
@@ -85,12 +92,12 @@ export const newPrice = (): Partial<Draft> => ({
  * The detail rows of a kind, in config order: each kind field is one row, a TV show's two year
  * fields are one `Years` row, and streaming is one row (country, platforms, which ones are paid).
  */
-export function kindSpecs(kind: ItemKind): FieldSpec[] {
+export function kindSpecs(definition: KindDefinition): FieldSpec[] {
   const specs: FieldSpec[] = []
-  for (const field of kindFields[kind]) {
+  for (const field of definition.fields) {
     // The IMDb code only feeds the IMDb link button (F-002): no row, and the value is never touched.
-    if (field.input === 'imdb_url') continue
-    if (field.input === 'streaming') {
+    if (isHiddenTmdbField(field)) continue
+    if (isStreamingField(field)) {
       specs.push({
         id: 'metadata.streaming',
         label: field.label,
@@ -99,7 +106,10 @@ export function kindSpecs(kind: ItemKind): FieldSpec[] {
         isSet: (item) => has(metadataOf(item).streaming),
         field,
       })
-    } else if (kind === 'tv_show' && (field.key === 'first_air_year' || field.key === 'end_year')) {
+    } else if (
+      definition.key === 'tv_show' &&
+      (field.key === 'first_air_year' || field.key === 'end_year')
+    ) {
       if (field.key === 'end_year') continue
       specs.push({
         id: 'years',

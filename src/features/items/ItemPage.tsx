@@ -33,7 +33,7 @@ function ItemDetail({
     if (item.error instanceof ApiError && item.error.status === 404) {
       return (
         <EmptyState
-          icon={kindIcons.generic}
+          icon={kindIcons.generic!}
           headingLevel="h1"
           title="Item not found"
           description="It may have been deleted or moved to Trash."

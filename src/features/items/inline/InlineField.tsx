@@ -29,6 +29,7 @@ import { FieldInputs, type FieldForm } from './editors'
 import type { FieldSpec } from './fields'
 import { useEditGuard } from './guard'
 import { useSettings } from '../../settings/api'
+import type { KindDefinition } from '../kinds'
 
 /** Pen, ✓ and ✕ are the same on the description, so they are shared. */
 export const focusRing =
@@ -123,6 +124,7 @@ type Failure =
 
 interface InlineFieldProps {
   item: Item
+  definition: KindDefinition
   spec: FieldSpec
   /** The saved value as read-only content. */
   children: ReactNode
@@ -147,6 +149,7 @@ interface InlineFieldProps {
  */
 export function InlineField({
   item,
+  definition,
   spec,
   children,
   initialDraft,
@@ -167,6 +170,7 @@ export function InlineField({
     return (
       <FieldEditor
         item={item}
+        definition={definition}
         spec={spec}
         initialDraft={initialDraft}
         focusDelay={startOpen}
@@ -210,6 +214,7 @@ export function InlineField({
 
 function FieldEditor({
   item: live,
+  definition,
   spec,
   initialDraft,
   focusDelay,
@@ -217,6 +222,7 @@ function FieldEditor({
   onDone,
 }: {
   item: Item
+  definition: KindDefinition
   spec: FieldSpec
   initialDraft?: Partial<Draft>
   focusDelay: boolean
@@ -238,7 +244,10 @@ function FieldEditor({
   // One write at a time: the next one needs the version the previous one returns.
   const busy = useIsMutating() > 0
 
-  const [draft, setDraft] = useState<Draft>(() => ({ ...draftFromItem(item), ...initialDraft }))
+  const [draft, setDraft] = useState<Draft>(() => ({
+    ...draftFromItem(item, definition),
+    ...initialDraft,
+  }))
   const [errors, setErrors] = useState<ErrorMap>({})
   const [otherErrors, setOtherErrors] = useState<string[]>([])
   const [failure, setFailure] = useState<Failure | null>(null)
@@ -248,7 +257,7 @@ function FieldEditor({
   const box = useRef<HTMLDivElement>(null)
 
   // The draft of this field on top of the snapshot (only this field's inputs are copied).
-  const merged = (source: Draft) => spec.take(draftFromItem(item), source)
+  const merged = (source: Draft) => spec.take(draftFromItem(item, definition), source)
   const dirty = isDirty(item, merged(draft), defaults)
   useEffect(() => {
     guard.setDirty(spec.id, dirty)
@@ -329,7 +338,7 @@ function FieldEditor({
       if (caught.status === 412) return setFailure({ kind: 'conflict' })
       if (caught.status === 404) return setFailure({ kind: 'gone' })
       if (caught.status === 422 && caught.errors?.length) {
-        const mapped = mapServerErrors(caught.errors, item.kind, source.priceMode)
+        const mapped = mapServerErrors(caught.errors, definition.fields, source.priceMode)
         const own = Object.fromEntries(
           Object.entries(mapped.fields).filter(([key]) => spec.errorKeys.includes(key)),
         )

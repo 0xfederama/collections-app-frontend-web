@@ -26,6 +26,60 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "contentType": "text/plain",
     "body": "ready"
   },
+  "listKinds": {
+    "method": "get",
+    "path": "/api/v1/kinds",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "createKind": {
+    "method": "post",
+    "path": "/api/v1/kinds",
+    "status": 201,
+    "contentType": "application/json"
+  },
+  "updateKind": {
+    "method": "patch",
+    "path": "/api/v1/kinds/{key}",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "deleteKind": {
+    "method": "delete",
+    "path": "/api/v1/kinds/{key}",
+    "status": 204,
+    "contentType": null
+  },
+  "createKindField": {
+    "method": "post",
+    "path": "/api/v1/kinds/{key}/fields",
+    "status": 201,
+    "contentType": "application/json"
+  },
+  "reorderKindFields": {
+    "method": "put",
+    "path": "/api/v1/kinds/{key}/fields/order",
+    "status": 204,
+    "contentType": null
+  },
+  "previewDeleteKindField": {
+    "method": "get",
+    "path": "/api/v1/kinds/{key}/fields/{fieldKey}",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "updateKindField": {
+    "method": "patch",
+    "path": "/api/v1/kinds/{key}/fields/{fieldKey}",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "deleteKindField": {
+    "method": "delete",
+    "path": "/api/v1/kinds/{key}/fields/{fieldKey}",
+    "status": 200,
+    "contentType": "application/json"
+  },
   "getSettings": {
     "method": "get",
     "path": "/api/v1/settings",
@@ -34,7 +88,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "body": {
       "workspace_name": "Our Collection",
       "streaming_country_code": "IT",
-      "metadata_language": "en-US",
+      "metadata_language": "it-IT",
       "lookup_available": true,
       "markdown_history_limit": 20,
       "trash_retention_days": null,
@@ -49,7 +103,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "body": {
       "workspace_name": "Our Collection",
       "streaming_country_code": "IT",
-      "metadata_language": "en-US",
+      "metadata_language": "it-IT",
       "lookup_available": true,
       "markdown_history_limit": 20,
       "trash_retention_days": null,
@@ -822,6 +876,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "created_at": "2026-10-14T09:31:00Z",
             "updated_at": "2026-10-14T10:00:00Z"
           },
+          "kind_name": "Movie",
           "path": [
             {
               "type": "folder",
@@ -890,6 +945,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "created_at": "2026-10-14T09:31:00Z",
             "updated_at": "2026-10-14T10:00:00Z"
           },
+          "kind_name": "Movie",
           "path": [
             {
               "type": "folder",

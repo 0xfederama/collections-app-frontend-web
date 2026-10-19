@@ -13,5 +13,5 @@
 - [ui](modules/ui.md): Design-system primitives in `src/components/ui/`, service and link icons, and the `/dev/ui` gallery.
 - [items](modules/items.md): Item detail, TMDB lookup for new movie/TV items, populated in-place fields, description, image dialog including clipboard paste, inline new item, Move and Delete.
 - [markdown](modules/markdown.md): Safe Markdown renderer (`MarkdownView`) and URL policy `sanitizeUrl`.
-- [settings](modules/settings.md): `/settings`: Appearance, Collection, Movies & TV, Connection and About.
+- [settings](modules/settings.md): `/settings` modal panes: Appearance, Collection, Media, Kinds & fields and About (with Connection).
 - [home](modules/home.md): Home at `/`: quick links to every list, "Recently updated" items (D-070) and the empty state.

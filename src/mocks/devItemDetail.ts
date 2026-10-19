@@ -1,7 +1,6 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
 import { devTreeState } from './devData'
-import { kindFields } from '../features/items/kinds'
 import { devItemStore } from './devItems'
 import { problemResponse } from './problems'
 
@@ -136,7 +135,7 @@ type FieldIssue = { field: string; message: string }
 type Body = Record<string, unknown>
 
 /** A light version of the server's rules (DATA_MODEL §2), enough to exercise the form's 422 paths. */
-function validateBody(body: Body, kind: string, metadata: Body | undefined): FieldIssue[] {
+function validateBody(body: Body, kind: string): FieldIssue[] {
   const issues: FieldIssue[] = []
   const add = (field: string, message: string) => issues.push({ field, message })
   if ('title' in body && (typeof body.title !== 'string' || !body.title.trim())) {
@@ -162,16 +161,6 @@ function validateBody(body: Body, kind: string, metadata: Body | undefined): Fie
   if (typeof url === 'string' && !/^https?:\/\//.test(url)) {
     add('website', 'Must be an http or https address.')
   }
-  for (const [key, value] of Object.entries(metadata ?? {})) {
-    const field = kindFields[kind as keyof typeof kindFields]?.find((f) => f.key === key)
-    if (!field) continue
-    if (typeof value === 'number' && field.min !== undefined && value < field.min) {
-      add(`metadata.${key}`, `Must be at least ${field.min}.`)
-    }
-    if (typeof value === 'number' && field.max !== undefined && value > field.max) {
-      add(`metadata.${key}`, `Must be at most ${field.max}.`)
-    }
-  }
   return issues
 }
 
@@ -192,7 +181,7 @@ export const devItemDetailHandlers = [
     const unknown = unknownKey(body, ITEM_KEYS)
     if (unknown) return problemResponse(400, 'unknown_field', { detail: unknown })
     const kind = devTreeState.lists.find((l) => l.id === listId)?.kind ?? 'generic'
-    const issues = validateBody({ ...body, title: body.title ?? '' }, kind, body.metadata as Body)
+    const issues = validateBody({ ...body, title: body.title ?? '' }, kind)
     if (issues.length > 0) return problemResponse(422, 'validation_failed', { errors: issues })
     const now = new Date().toISOString()
     const created = {
@@ -235,7 +224,7 @@ export const devItemDetailHandlers = [
     const current = fullItem(summary)
     const kind = current.kind
     const metadata = ('metadata' in body ? body.metadata : current.metadata) as Body
-    const issues = validateBody(body, kind, metadata)
+    const issues = validateBody(body, kind)
     if (issues.length > 0) return problemResponse(422, 'validation_failed', { errors: issues })
     const { website, price, metadata: _ignored, ...summaryPatch } = body
     void _ignored

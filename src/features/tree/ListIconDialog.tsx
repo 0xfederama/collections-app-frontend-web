@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { AlertDialog, Button, Dialog, kindLabels, useToast } from '../../components/ui'
+import { AlertDialog, Button, Dialog, useToast } from '../../components/ui'
 import { api, unwrap } from '../../lib/api'
 import { builtinListIcon, parseListIcon } from '../lists/iconModel'
 import type { IconChoice, ListIconColor } from '../lists/iconModel'
@@ -10,6 +10,7 @@ import { useUpdateListIcon } from './mutations'
 import { treeKeys, type List } from './api'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
+import { useKinds } from '../settings/api'
 
 const COLOR_LABELS: Record<Exclude<ListIconColor, null>, string> = {
   red: 'Red',
@@ -46,6 +47,8 @@ export function ListIconDialog({
   const queryClient = useQueryClient()
   const action = useAction('list')
   const toast = useToast()
+  const definitions = useKinds()
+  const definition = definitions.data?.find((kind) => kind.key === snapshot.kind)
 
   const reload = async () => {
     setReloading(true)
@@ -74,7 +77,7 @@ export function ListIconDialog({
     ? (builtinListIcon(parsedChoice.builtin)?.name ?? 'Built-in icon')
     : parsedChoice.emoji
       ? `Emoji ${parsedChoice.emoji}`
-      : `Default ${kindLabels[snapshot.kind]} icon`
+      : `Default ${definition?.name ?? snapshot.kind.replaceAll('_', ' ')} icon`
   const draftText = `Icon: ${choiceLabel}\nColor: ${choice.icon_color ? COLOR_LABELS[choice.icon_color] : 'None'}`
 
   const copyDraft = async () => {
@@ -114,7 +117,7 @@ export function ListIconDialog({
               Choose icon
             </Button>
             <ListIconMark
-              icon={choice.icon}
+              icon={choice.icon ?? definition?.default_icon}
               iconColor={choice.icon_color}
               kind={snapshot.kind}
               className="size-9"

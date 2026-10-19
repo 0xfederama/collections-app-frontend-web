@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
-import { hasPrice } from '../features/items/kinds'
 import { problemResponse } from './problems'
+import { mockKinds } from './kinds'
 
 type Folder = components['schemas']['Folder']
 type List = components['schemas']['List']
@@ -11,8 +11,15 @@ type SortMode = components['schemas']['SortMode']
 type ItemKind = components['schemas']['ItemKind']
 
 const DISPLAY_MODES: DisplayMode[] = ['compact', 'thumbnail', 'grid']
-const ITEM_KINDS: ItemKind[] = ['generic', 'movie', 'tv_show', 'motorcycle', 'car', 'camera']
-const SORT_MODES: SortMode[] = ['manual', 'title', 'updated', 'price', 'kind_key']
+const ITEM_KINDS = mockKinds.map((kind) => kind.key)
+const PRICE_KINDS = new Set(mockKinds.filter((kind) => kind.allows_price).map((kind) => kind.key))
+const supportsSort = (kind: ItemKind, sort: SortMode) =>
+  ['manual', 'title', 'updated'].includes(sort) ||
+  (sort === 'price' && PRICE_KINDS.has(kind)) ||
+  mockKinds.some(
+    (definition) =>
+      definition.key === kind && definition.fields.some((field) => field.key === sort),
+  )
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 
@@ -243,17 +250,12 @@ export function createTreeBackend(initial: Tree) {
         icon_color?: List['icon_color']
       }
       let changed = false
-      // `kind_key` has no key on a generic list, so the resulting pair must not be (kind_key, generic).
       const nextKind = ITEM_KINDS.includes(body.kind as ItemKind)
         ? (body.kind as ItemKind)
         : list.kind
       const nextSort = (body.sort_mode as SortMode | undefined) ?? list.sort_mode
-      if (nextSort === 'kind_key' && nextKind === 'generic') {
-        return invalid('sort_mode', 'Sorting by the kind key is not available on a generic list.')
-      }
-      if (nextSort === 'price' && !hasPrice(nextKind)) {
-        return invalid('sort_mode', 'Sorting by price is not available on this kind.')
-      }
+      if (!supportsSort(nextKind, nextSort))
+        return invalid('sort_mode', 'Sorting by this field is not available on this kind.')
       if (body.display_mode !== undefined) {
         if (!DISPLAY_MODES.includes(body.display_mode as DisplayMode)) {
           return invalid('display_mode', 'Unknown display mode.')
@@ -262,7 +264,7 @@ export function createTreeBackend(initial: Tree) {
         changed = true
       }
       if (body.sort_mode !== undefined) {
-        if (!SORT_MODES.includes(body.sort_mode as SortMode)) {
+        if (!supportsSort(nextKind, body.sort_mode as SortMode)) {
           return invalid('sort_mode', 'Unknown sort mode.')
         }
         list.sort_mode = body.sort_mode as SortMode

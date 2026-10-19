@@ -39,6 +39,104 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/kinds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List kind definitions and fields */
+        get: operations["listKinds"];
+        put?: never;
+        /** Create a custom kind */
+        post: operations["createKind"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/kinds/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a custom kind not used by any list */
+        delete: operations["deleteKind"];
+        options?: never;
+        head?: never;
+        /** Update a custom kind */
+        patch: operations["updateKind"];
+        trace?: never;
+    };
+    "/api/v1/kinds/{key}/fields": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a custom field */
+        post: operations["createKindField"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/kinds/{key}/fields/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder custom fields */
+        put: operations["reorderKindFields"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/kinds/{key}/fields/{fieldKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                fieldKey: string;
+            };
+            cookie?: never;
+        };
+        /** Count item values that deleting a custom field would remove */
+        get: operations["previewDeleteKindField"];
+        put?: never;
+        post?: never;
+        /** Delete a custom field and strip populated values */
+        delete: operations["deleteKindField"];
+        options?: never;
+        head?: never;
+        /** Rename a custom field */
+        patch: operations["updateKindField"];
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -211,8 +309,8 @@ export interface paths {
          * Create a list
          * @description Appended to the end of its siblings. `folder_id` absent or `null` creates it at the root. A missing or trashed folder returns
          *     `409 destination_unavailable`. `kind` is required: every item of the list has that kind. `description` is Markdown (up to 64 KiB).
-         *     `sort_mode: kind_key` and `sort_mode: price` are rejected (`422 validation_failed`) on a `generic` list, and `sort_mode: price`
-         *     also on `movie` and `tv_show` lists (F009-B1: only the kinds with a price can sort by it). `icon` and `icon_color` are optional (F012-B1).
+         *     `sort_mode` accepts a built-in mode or a field key defined by the list's kind. `price` is valid only for kinds that allow a price.
+         *     When omitted, the kind's default sort field is used if defined. `icon` and `icon_color` are optional (F012-B1).
          */
         post: operations["createList"];
         delete?: never;
@@ -269,12 +367,12 @@ export interface paths {
         /**
          * Update a list
          * @description Requires `If-Match` (`"l-N"`). Send `description: null` to clear it. `description` is Markdown (up to 64 KiB) and has no version
-         *     history: it is edited with the list's `version`. `sort_mode: kind_key` and `sort_mode: price` are rejected (`422 validation_failed`) on a `generic` list, and `sort_mode: price` also on `movie` and `tv_show` lists (F009-B1).
+         *     history: it is edited with the list's `version`. `sort_mode` accepts a built-in mode or a field key defined by the list's kind;
+         *     `price` is valid only for kinds that allow a price.
          *
          *     Changing `kind` on a list that has items **clears the `metadata` of all its items** (trashed ones too; their `version` is bumped),
          *     because the kind fields differ per kind. A change **to a kind without a price** (`generic`, `movie`, `tv_show`) also clears the `price` of all its items (trashed ones too) and
-         *     turns a stored `sort_mode: price` into `manual`. Clients should warn first. If the list is left on `sort_mode: kind_key` and the new
-         *     kind is `generic`, the request is rejected with `422 validation_failed`. A kind change also resets `pinned_fields` to `null` (unless
+         *     turns a stored sort field unavailable on the new kind into the new kind's default sort field (or `manual` if it has none). Clients should warn first. A kind change also resets `pinned_fields` to `null` (unless
          *     the same request sets it, which is then validated against the new kind). Send `pinned_fields: null` to reset it to the kind default;
          *     absent leaves it unchanged.
          *
@@ -320,13 +418,12 @@ export interface paths {
         };
         /**
          * List the items of a list
-         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title and, on movie lists, director. `sort=kind_key` sorts by the kind's
-         *     sort key ascending, empty values last (movie: `release_year`, tv_show: `first_air_year`, motorcycle: `displacement_cc`,
-         *     car: `power_hp`, camera: `megapixels`); on a `generic` list it returns `400 invalid_parameter`.
-         *     `sort=price` sorts by `price.min` ascending, items without a price last, ties by title then `id` (no currency conversion); on a list
-         *     whose kind has no price (generic, movie, tv_show) it returns `400 invalid_parameter` (F009-B1).
-         *     `sort=director` is available only on movie lists, sorts case-insensitively with empty directors last, and returns
-         *     `400 invalid_parameter` on every other kind.
+         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title and, on movie lists, director.
+         *     `sort` accepts `manual`, `title`, `updated`, `price`, or a field key from the list kind. Field values sort by their definition type:
+         *     number numerically, date chronologically, text/link case-insensitively, boolean false first; missing or empty values last.
+         *     `price` sorts by `price.min` ascending, items without a price last (no currency conversion), and is available only when the kind allows price.
+         *     A field filter uses `filter_field` with `filter_value` for text/link substring or boolean equality, and `filter_min`/`filter_max`
+         *     for inclusive number/date ranges. Field filtering combines with `q`.
          */
         get: operations["listItems"];
         put?: never;
@@ -873,6 +970,55 @@ export interface components {
         } | null;
         /** Format: binary */
         BinaryFile: string;
+        KindField: {
+            key: string;
+            label: string;
+            /** @enum {string} */
+            type: "text" | "number" | "date" | "boolean" | "link" | "streaming";
+            position: number;
+            is_locked: boolean;
+            version: number;
+        };
+        KindDefinition: {
+            key: string;
+            name: string;
+            default_icon?: string | null;
+            allows_price: boolean;
+            default_sort_field?: string | null;
+            default_pinned_fields?: string[] | null;
+            is_locked: boolean;
+            version: number;
+            fields: components["schemas"]["KindField"][];
+        };
+        CreateKindRequest: {
+            name: string;
+            default_icon?: string | null;
+            allows_price?: boolean;
+            default_sort_field?: string | null;
+            default_pinned_fields?: string[] | null;
+        };
+        UpdateKindRequest: {
+            name?: string;
+            default_icon?: string | null;
+            allows_price?: boolean;
+            default_sort_field?: string | null;
+            default_pinned_fields?: string[] | null;
+        };
+        CreateKindFieldRequest: {
+            label: string;
+            /** @enum {string} */
+            type: "text" | "number" | "date" | "boolean" | "link";
+        };
+        UpdateKindFieldRequest: {
+            label: string;
+        };
+        ReorderKindFieldsRequest: {
+            keys: string[];
+        };
+        KindFieldDeletePreview: {
+            /** @description Number of items, including trashed items, with a value for this field. */
+            populated_item_count: number;
+        };
         Settings: {
             workspace_name: string;
             streaming_country_code: string;
@@ -892,7 +1038,7 @@ export interface components {
         };
         /**
          * @description ISO 639-1 language (`xx`), optionally with an uppercase region (`xx-YY`), passed to TMDB.
-         * @example en-US
+         * @example it-IT
          */
         MetadataLanguage: string;
         Tree: {
@@ -937,23 +1083,13 @@ export interface components {
         };
         /** @enum {string} */
         DisplayMode: "compact" | "thumbnail" | "grid";
-        /**
-         * @description `kind_key` sorts by the kind's sort key (movie: `release_year`, tv_show: `first_air_year`, motorcycle: `displacement_cc`,
-         *     car: `power_hp`, camera: `megapixels`), ascending, empty values last. It is not valid on `generic` lists.
-         *     `price` is valid only on the kinds that have a price (motorcycle, car, camera; F009-B1), not on `generic`, `movie` or `tv_show`.
-         *     It sorts by the lowest price (`price.min`) ascending, items without a price last, ties by title and then id. Currencies are not
-         *     converted, so mixed currencies compare by amount only. The manual order is kept when the mode changes.
-         *     `director` is valid only on movie lists. It sorts the director text case-insensitively, empty values last, then title and id.
-         * @enum {string}
-         */
-        SortMode: "manual" | "title" | "updated" | "kind_key" | "price" | "director";
+        /** @description One of `manual`, `title`, `updated`, `price`, or a field key from the list kind. The manual order is kept when the mode changes. */
+        SortMode: string;
         /**
          * @description The fields a list shows in its rows, in order: the first is the primary field, the second the secondary (F009-B2; replaces the
-         *     `{under, right}` slots of F-002). `null` means the kind default (the web app owns the defaults). `[]` pins nothing, which is different
-         *     from `null`, and a single-element list is valid. Allowed keys: the keys of the kind's `metadata` fields, plus `price` **only** on the
-         *     kinds that have one (motorcycle, car, camera; F009-B1). `generic` has no key at all, and `movie` and `tv_show` have no `price`. At most
-         *     2 unique keys (`422 validation_failed` on `pinned_fields[i]`), else `422`. Provider bookkeeping fields (`tmdb_id`,
-         *     `lookup_disabled`) are never pinnable. Changing the list's `kind` resets it to `null`.
+         *     `{under, right}` slots of F-002). `null` means the kind default. `[]` pins nothing, which is different from `null`, and a single-element list is valid.
+         *     Any field defined for the kind can be pinned; `price` is also available when the kind allows it. At most 2 unique keys
+         *     (`422 validation_failed` on `pinned_fields[i]`), else `422`. Changing the list's `kind` resets it to `null`.
          * @example [
          *       "release_year",
          *       "runtime_minutes"
@@ -1040,9 +1176,8 @@ export interface components {
         /**
          * @description The kind of a list. Items have no kind of their own: theirs is read-only and derived from their list. Changing the kind of a
          *     list that has items clears the `metadata` of all its items.
-         * @enum {string}
          */
-        ItemKind: "generic" | "movie" | "tv_show" | "motorcycle" | "car" | "camera";
+        ItemKind: string;
         /** @description Fields shared by every item kind. `kind` (read-only, derived from the list) and `metadata` are added by the per-kind schemas. */
         ItemBase: {
             /** Format: uuid */
@@ -1068,70 +1203,39 @@ export interface components {
             /** @enum {string} */
             readonly kind: "generic";
             metadata: components["schemas"]["GenericMetadata"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "generic";
         };
         MovieItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
             readonly kind: "movie";
             metadata: components["schemas"]["MovieMetadata"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "movie";
         };
         TvShowItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
             readonly kind: "tv_show";
             metadata: components["schemas"]["TvShowMetadata"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "tv_show";
         };
         MotorcycleItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
             readonly kind: "motorcycle";
             metadata: components["schemas"]["MotorcycleMetadata"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "motorcycle";
         };
         CarItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
             readonly kind: "car";
             metadata: components["schemas"]["CarMetadata"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "car";
         };
         CameraItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
             readonly kind: "camera";
             metadata: components["schemas"]["CameraMetadata"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "camera";
         };
-        /** @description An item. `kind` is read-only and derived from the item's list; `metadata` has the shape of that kind (discriminated union). */
-        Item: components["schemas"]["GenericItem"] | components["schemas"]["MovieItem"] | components["schemas"]["TvShowItem"] | components["schemas"]["MotorcycleItem"] | components["schemas"]["CarItem"] | components["schemas"]["CameraItem"];
+        /** @description An item. `kind` is read-only and derived from the item's list; `metadata` is validated against that workspace kind's field definitions. */
+        Item: components["schemas"]["ItemBase"] & {
+            readonly kind: string;
+            metadata: {
+                [key: string]: unknown;
+            };
+        };
         /** @description An item row in lists, search and recent items: the same `metadata` object as the full item (`{}` when the kind has none), and the image is reduced. */
         ItemSummary: {
             /** Format: uuid */
@@ -1161,6 +1265,8 @@ export interface components {
         };
         SearchResult: {
             item: components["schemas"]["ItemSummary"];
+            /** @description The display name from this workspace's kind definition. */
+            kind_name: string;
             path: components["schemas"]["SearchPathSegment"][];
         };
         SearchPage: {
@@ -1231,7 +1337,7 @@ export interface components {
             country: string;
             /** @description Unique case-insensitively. */
             platforms?: string[];
-            /** @description Platforms offered only for payment. Each entry must match (case-insensitively) an entry of `platforms` and is stored with that entry's casing. Unique case-insensitively. Omitted, null or empty means none paid. */
+            /** @description Platforms available only through per-title rental or purchase, not subscription, free, or ad-supported offers. Each entry must match (case-insensitively) an entry of `platforms` and is stored with that entry's casing. Unique case-insensitively. Omitted, null or empty means none paid. */
             paid_platforms?: string[];
         };
         /** @description Must be `{}`. */
@@ -1584,6 +1690,272 @@ export interface operations {
                 };
                 content: {
                     "text/plain": string;
+                };
+            };
+        };
+    };
+    listKinds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Definitions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KindDefinition"][];
+                };
+            };
+        };
+    };
+    createKind: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateKindRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    Location: components["headers"]["Location"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KindDefinition"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["FolderMoveConflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    deleteKind: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description **Required.** The typed ETag of the resource being changed (`"i-7"`, `"c-3"`, …). Declared optional only so the generated server
+                 *     does not answer 400 itself: a missing header (or `*`) returns `428 precondition_required`, a stale one `412 version_conflict`.
+                 * @example "i-7"
+                 */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            409: components["responses"]["FolderMoveConflict"];
+        };
+    };
+    updateKind: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description **Required.** The typed ETag of the resource being changed (`"i-7"`, `"c-3"`, …). Declared optional only so the generated server
+                 *     does not answer 400 itself: a missing header (or `*`) returns `428 precondition_required`, a stale one `412 version_conflict`.
+                 * @example "i-7"
+                 */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateKindRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KindDefinition"];
+                };
+            };
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    createKindField: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description **Required.** The typed ETag of the resource being changed (`"i-7"`, `"c-3"`, …). Declared optional only so the generated server
+                 *     does not answer 400 itself: a missing header (or `*`) returns `428 precondition_required`, a stale one `412 version_conflict`.
+                 * @example "i-7"
+                 */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateKindFieldRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KindField"];
+                };
+            };
+        };
+    };
+    reorderKindFields: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description **Required.** The typed ETag of the resource being changed (`"i-7"`, `"c-3"`, …). Declared optional only so the generated server
+                 *     does not answer 400 itself: a missing header (or `*`) returns `428 precondition_required`, a stale one `412 version_conflict`.
+                 * @example "i-7"
+                 */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderKindFieldsRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered */
+            204: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    previewDeleteKindField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                fieldKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deletion preview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KindFieldDeletePreview"];
+                };
+            };
+        };
+    };
+    deleteKindField: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description **Required.** The typed ETag of the resource being changed (`"i-7"`, `"c-3"`, …). Declared optional only so the generated server
+                 *     does not answer 400 itself: a missing header (or `*`) returns `428 precondition_required`, a stale one `412 version_conflict`.
+                 * @example "i-7"
+                 */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path: {
+                key: string;
+                fieldKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KindFieldDeletePreview"];
+                };
+            };
+        };
+    };
+    updateKindField: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description **Required.** The typed ETag of the resource being changed (`"i-7"`, `"c-3"`, …). Declared optional only so the generated server
+                 *     does not answer 400 itself: a missing header (or `*`) returns `428 precondition_required`, a stale one `412 version_conflict`.
+                 * @example "i-7"
+                 */
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path: {
+                key: string;
+                fieldKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateKindFieldRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KindField"];
                 };
             };
         };
@@ -2106,10 +2478,18 @@ export interface operations {
     listItems: {
         parameters: {
             query?: {
-                /** @description Defaults to the list's `sort_mode`. */
-                sort?: components["schemas"]["SortMode"];
+                /** @description Defaults to the list's `sort_mode`; may be a field key of the list kind. */
+                sort?: string;
                 /** @description Case-insensitive title filter; on movie lists it also matches `metadata.director`. */
                 q?: string;
+                /** @description Kind field key to filter. Requires value or range parameters matching the field type. */
+                filter_field?: string;
+                /** @description Text/link substring or boolean (`true`/`false`) filter value. */
+                filter_value?: string;
+                /** @description Inclusive lower bound for number or ISO date field filters. */
+                filter_min?: string;
+                /** @description Inclusive upper bound for number or ISO date field filters. */
+                filter_max?: string;
                 /** @description Page size. */
                 limit?: components["parameters"]["Limit"];
                 /** @description Number of rows to skip. */

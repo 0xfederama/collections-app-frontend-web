@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { PinnedMenu } from './PinnedMenu'
 import type { List } from './api'
 import type { ItemKind } from '../items/api'
+import { mockKinds } from '../../mocks/kinds'
 
 type Pinned = List['pinned_fields']
 
@@ -19,9 +20,11 @@ function Harness({
   patches: Pinned[]
 }) {
   const [pinned, setPinned] = useState<Pinned>(initial)
+  const definition = mockKinds.find((candidate) => candidate.key === kind)!
   return (
     <PinnedMenu
       list={{ kind, pinned_fields: pinned }}
+      definition={definition}
       onChange={(next) => {
         setPinned(next)
         patches.push(next)

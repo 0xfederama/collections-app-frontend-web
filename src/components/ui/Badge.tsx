@@ -1,5 +1,5 @@
 import { cx } from '../../lib/cx'
-import { kindIcons, kindLabels, type ItemKind } from './icons'
+import { kindIcons, kindLabels, Tag, type ItemKind } from './icons'
 
 export interface BadgeProps {
   kind: ItemKind
@@ -8,7 +8,7 @@ export interface BadgeProps {
 
 /** Item kind marker: icon plus the kind name (UI_SPEC §4). */
 export function Badge({ kind, className }: BadgeProps) {
-  const Icon = kindIcons[kind]
+  const Icon = kindIcons[kind] ?? Tag
   return (
     <span
       className={cx(
@@ -17,7 +17,7 @@ export function Badge({ kind, className }: BadgeProps) {
       )}
     >
       <Icon aria-hidden className="size-3.5" />
-      {kindLabels[kind]}
+      {kindLabels[kind] ?? kind.replaceAll('_', ' ')}
     </span>
   )
 }

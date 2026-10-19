@@ -1,4 +1,3 @@
-import { kindIcons, kindLabels } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import { ItemThumb } from '../lists/ItemThumb'
 import { ListIconMark } from '../lists/ListIconMark'
@@ -41,7 +40,6 @@ export function ResultPath({
  */
 export function SearchResultBody({ result, large }: { result: SearchResult; large?: boolean }) {
   const { item, path } = result
-  const KindIcon = kindIcons[item.kind]
   return (
     <>
       {/* The title is written next to the cover, so a real image's alt text would repeat it. */}
@@ -59,9 +57,9 @@ export function SearchResultBody({ result, large }: { result: SearchResult; larg
         </span>
         <ResultPath path={path} className="text-xs" kind={item.kind} />
       </span>
-      <span className="inline-flex shrink-0 text-text-muted" title={kindLabels[item.kind]}>
-        <KindIcon aria-hidden className="size-4" />
-        <span className="sr-only">{kindLabels[item.kind]}</span>
+      <span className="inline-flex shrink-0 text-text-muted" title={result.kind_name}>
+        <ListIconMark kind={item.kind} className="size-5 bg-transparent" iconClassName="size-4" />
+        <span className="sr-only">{result.kind_name}</span>
       </span>
     </>
   )

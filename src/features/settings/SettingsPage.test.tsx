@@ -13,12 +13,16 @@ const settingsUrl = `${location.origin}/api/v1/settings`
 const field = (name: string) => screen.getByLabelText(new RegExp(`^${name}( \\*)?$`))
 const closeSettings = () => screen.getByRole('button', { name: 'Close' })
 
-async function openSettings() {
+async function openSettings(pane = 'Collection') {
   mockViewport(1280)
   const user = userEvent.setup()
   renderAt('/settings')
   await screen.findByRole('dialog', { name: 'Settings' })
   await screen.findByLabelText(/Workspace name/)
+  if (pane !== 'Collection') await user.click(screen.getByRole('button', { name: pane }))
+  if (pane === 'Media') await screen.findByLabelText(/Streaming country/)
+  if (pane === 'About') await screen.findByRole('region', { name: 'About' })
+  if (pane === 'Kinds & fields') await screen.findByRole('region', { name: 'Kinds & fields' })
   return user
 }
 
@@ -62,23 +66,31 @@ async function retype(user: ReturnType<typeof userEvent.setup>, label: string, t
 describe('W-13 settings: saving', () => {
   it('shows the loaded values and has no manual save control', async () => {
     mountBackend()
-    await openSettings()
+    const user = await openSettings()
     const dialog = screen.getByRole('dialog', { name: 'Settings' })
     expect(Array.from(dialog.querySelectorAll('h2')).map((heading) => heading.textContent)).toEqual(
-      ['Settings', 'Appearance', 'Collection', 'Movies & TV', 'Connection', 'About'],
+      [
+        'Settings',
+        'Appearance',
+        'Collection',
+        'Movies & TV',
+        'Kinds & fields',
+        'Connection',
+        'About',
+      ],
     )
-    const collection = within(dialog).getByRole('region', { name: 'Collection' })
-    const movies = within(dialog).getByRole('region', { name: 'Movies & TV' })
-    expect(within(collection).getByLabelText(/Workspace name/)).toBeInTheDocument()
-    expect(within(collection).getByLabelText(/Description history limit/)).toBeInTheDocument()
-    expect(within(movies).getByLabelText(/Streaming country/)).toBeInTheDocument()
-    expect(within(movies).getByLabelText(/Metadata language/)).toBeInTheDocument()
+    expect(dialog.querySelector('#settings-movies-tv')?.parentElement).toHaveAttribute('hidden')
+    expect(screen.getByLabelText(/Workspace name/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Description history limit/)).toBeInTheDocument()
     expect(field('Workspace name')).toHaveValue('Our Collection')
-    expect(field('Streaming country')).toHaveValue('Italy (IT)')
     expect(field('Description history limit')).toHaveValue('20')
     expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toHaveTextContent(
       'Off',
     )
+    await user.click(screen.getByRole('button', { name: 'Media' }))
+    expect(screen.getByLabelText(/Streaming country/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Metadata language/)).toBeInTheDocument()
+    expect(field('Streaming country')).toHaveValue('Italy (IT)')
     expect(screen.queryByRole('button', { name: 'Save settings' })).not.toBeInTheDocument()
   })
 
@@ -248,7 +260,7 @@ describe('W-13 settings: saving', () => {
 
   it('changing the country through the picker sends the ISO code', async () => {
     const { patches } = mountBackend()
-    const user = await openSettings()
+    const user = await openSettings('Media')
     await user.type(field('Streaming country'), 'france{Enter}')
     await user.click(closeSettings())
     await screen.findByRole('heading', { level: 1, name: 'Home' })
@@ -265,7 +277,7 @@ describe('W-13 settings: saving', () => {
       trash_retention_days: null,
       version: 4,
     })
-    const user = await openSettings()
+    const user = await openSettings('Media')
     const language = screen.getByRole('combobox', { name: 'Metadata language' })
     expect(language).toHaveTextContent('English (United States)')
     await user.click(language)
@@ -277,7 +289,7 @@ describe('W-13 settings: saving', () => {
 
   it('shows required TMDB and JustWatch attribution and external project links in About', async () => {
     mountBackend()
-    await openSettings()
+    await openSettings('About')
     const about = screen.getByRole('region', { name: 'About' })
     expect(within(about).getByRole('img', { name: 'TMDB' })).toBeInTheDocument()
     expect(about).toHaveTextContent(
@@ -305,6 +317,15 @@ describe('W-13 settings: saving', () => {
     await user.click(closeSettings())
     await screen.findByRole('heading', { level: 1, name: 'Home' })
     expect(patches).toEqual([])
+  })
+
+  it('offers keyboard reachable panes and the Kinds & fields pane', async () => {
+    mountBackend()
+    const user = await openSettings()
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Appearance' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Kinds & fields' }))
+    expect(await screen.findByRole('list', { name: 'Kinds' })).toBeInTheDocument()
   })
 })
 
