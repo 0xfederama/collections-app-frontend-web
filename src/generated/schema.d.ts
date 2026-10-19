@@ -416,7 +416,7 @@ export interface paths {
          *     `price` is valid only for types that allow a price.
          *
          *     Changing `type` on a list that has items **clears the `metadata` of all its items** (trashed ones too; their `version` is bumped),
-         *     because the type fields differ per type. A change **to a type without a price** (`movie`, `tv_show`) or **to no type** (`null`) also clears the `price` of all its items (trashed ones too) and
+         *     because the type fields differ per type. A change **to a type without a price** (any type whose definition does not allow price, such as `movie`, `tv_show`, `book` or `vehicle`) or **to no type** (`null`) also clears the `price` of all its items (trashed ones too) and
          *     turns a stored sort field unavailable on the new type into the new type's default sort field (or `manual` if it has none). Clients should warn first. A type change also resets `pinned_fields` to `null` (unless
          *     the same request sets it, which is then validated against the new type). Send `pinned_fields: null` to reset it to the type default;
          *     absent leaves it unchanged.
@@ -477,7 +477,7 @@ export interface paths {
          * @description Appended to the end of the list. The item's `type` is the list's type (read-only, not accepted in the body). Image and Markdown
          *     content are set through their own endpoints after creation. `metadata` is validated against the list's type (see the `*Metadata` schemas).
          *     `price` is either `{amount, currency}` (single price) or `{min, max, currency}` (range). A `price` on an item of a type without a price
-         *     (`movie` or `tv_show`, or a list with no type; F009-B1) is rejected with `422 validation_failed` on `price` (`null` is fine).
+         *     (a type whose definition does not allow price, such as `movie`, `tv_show`, `book` or `vehicle`, or a list with no type; F009-B1, F-018) is rejected with `422 validation_failed` on `price` (`null` is fine).
          *     For movie, TV and book lists, `lookup` defaults to `true`: the server searches by title and applies the first result. Send `tmdb_id`
          *     (movie and TV) or `source_id` (book) to select a known suggestion; the one that does not fit the list's type is ignored. Send
          *     `lookup: false` to create the item exactly as supplied. Lookup fields are ignored on other types. On a book, a matched work also
@@ -542,7 +542,7 @@ export interface paths {
         head?: never;
         /**
          * Update an item
-         * @description Requires `If-Match` (`"i-N"`). Any of `title, price, website, metadata`; send `null` to clear a nullable field. A non-null `price` on an item of a type without a price (`movie`, `tv_show`, or a list with no type; F009-B1) is rejected with `422 validation_failed`. `metadata` is
+         * @description Requires `If-Match` (`"i-N"`). Any of `title, price, website, metadata`; send `null` to clear a nullable field. A non-null `price` on an item of a type without a price (`movie`, `tv_show`, `book`, `vehicle`, or a list with no type; F009-B1, F-018) is rejected with `422 validation_failed`. `metadata` is
          *     validated against the list's type and replaces the stored one. The type cannot be changed here (it belongs to the list).
          *     Image changes go through the image endpoints.
          */
@@ -1280,20 +1280,15 @@ export interface components {
             readonly type: "tv_show";
             metadata: components["schemas"]["TvShowMetadata"];
         };
-        MotorcycleItem: components["schemas"]["ItemBase"] & {
+        VehicleItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            readonly type: "motorcycle";
-            metadata: components["schemas"]["MotorcycleMetadata"];
+            readonly type: "vehicle";
+            metadata: components["schemas"]["VehicleMetadata"];
         };
-        CarItem: components["schemas"]["ItemBase"] & {
+        WishlistItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            readonly type: "car";
-            metadata: components["schemas"]["CarMetadata"];
-        };
-        CameraItem: components["schemas"]["ItemBase"] & {
-            /** @enum {string} */
-            readonly type: "camera";
-            metadata: components["schemas"]["CameraMetadata"];
+            readonly type: "wishlist";
+            metadata: components["schemas"]["WishlistMetadata"];
         };
         /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. For a type with a `stores` field (F-016, D-096) the response `metadata` also carries a read-only `store_links` object (on the full item and on the rows of list items, search and recent items; since 0.14.0): provider key to URL, one entry per selected store that has a link (built from the item's title and `isbn`, never stored). Links follow the workspace country (`streaming_country_code`): Amazon uses the country's storefront (amazon.it for `IT`, amazon.com for countries without one), Bookshop.org uses its UK site for `GB`, Google Play Books adds the country; other stores are global. Because links are computed on read, changing the country changes them. Sending `store_links` in `metadata` is rejected as an unknown field (`400 unknown_field`, path `metadata.store_links`). A book item also carries the read-only `metadata.openlibrary_id`: it is set by lookup, used by refresh and by clients to build the Open Library link (`https://openlibrary.org/works/<id>`), and must not be edited. The built-in book type has no first publication year (removed in 0.13.0; a suggestion's `year` is display only). */
         Item: components["schemas"]["ItemBase"] & {
@@ -1466,32 +1461,18 @@ export interface components {
             /** @description Per-item opt-out from automatic TMDB lookup. */
             lookup_disabled?: boolean;
         };
-        MotorcycleMetadata: {
-            model_year?: number;
-            displacement_cc?: number;
-            /** @description One decimal. */
-            power_hp?: number;
-            /** @enum {string} */
-            license_class?: "AM" | "A1" | "A2" | "A";
-        };
-        CarMetadata: {
+        VehicleMetadata: {
             make?: string;
             model?: string;
+            /** @description Labelled Year. */
             model_year?: number;
-            /** @enum {string} */
-            fuel_type?: "petrol" | "diesel" | "hybrid" | "plugin_hybrid" | "electric" | "lpg" | "cng" | "hydrogen" | "other";
-            /** @description One decimal. */
+            /** @description Engine size in cc. */
+            displacement_cc?: number;
+            /** @description Power in hp, one decimal. */
             power_hp?: number;
         };
-        CameraMetadata: {
-            /** @enum {string} */
-            camera_type?: "mirrorless" | "dslr" | "film";
-            release_year?: number;
-            /** @enum {string} */
-            sensor_format?: "full_frame" | "aps_c" | "micro_four_thirds" | "one_inch" | "medium_format" | "film_35mm" | "other";
-            /** @description One decimal. */
-            megapixels?: number;
-        };
+        /** @description No type-specific fields. The price is the item's `price` (a wishlist type allows one). */
+        WishlistMetadata: Record<string, never>;
         UploadImageRequest: {
             /**
              * Format: binary
