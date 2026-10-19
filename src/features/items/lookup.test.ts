@@ -5,7 +5,7 @@ const on = { lookup_available: true, book_lookup_available: true }
 
 describe('F016-W2 create lookup fields', () => {
   it('sends lookup on without an id, so the server takes the first result', () => {
-    expect(createLookupSelection('book', on, {})).toEqual({ lookup: true })
+    expect(createLookupSelection('book', on, {})).toEqual({})
   })
 
   it('sends lookup off for a book list while book lookup is off', () => {
@@ -15,7 +15,7 @@ describe('F016-W2 create lookup fields', () => {
   })
 
   it('ignores a TMDB id on a book list', () => {
-    expect(createLookupSelection('book', on, { tmdb_id: 603 })).toEqual({ lookup: true })
+    expect(createLookupSelection('book', on, { tmdb_id: 603 })).toEqual({})
   })
 
   it('keeps TMDB ids for movie and TV lists and is off without a TMDB switch', () => {

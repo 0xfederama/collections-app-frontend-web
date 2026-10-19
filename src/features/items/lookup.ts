@@ -21,7 +21,7 @@ export type LookupSelection = { tmdb_id?: number }
 /** A picked suggestion: the full title it fills in, plus its id. */
 export type LookupTitleSelection = LookupSelection & { title: string }
 
-export type CreateLookup = { lookup: boolean; tmdb_id?: number }
+export type CreateLookup = { lookup?: boolean; tmdb_id?: number }
 
 export function lookupSource(type: ItemType): LookupSource | undefined {
   if (type === 'movie' || type === 'tv_show')
@@ -55,8 +55,11 @@ export function createLookupSelection(
       ...(selection.tmdb_id !== undefined ? { tmdb_id: selection.tmdb_id } : {}),
     }
   }
-  // Books (F-016): no picker and no id; the server fills from the first Open Library result.
-  return { lookup: true }
+  // Books (F-016): no picker and no id; the server fills from the first Open Library result. `lookup`
+  // is left out on purpose: an explicit `lookup: true` makes the lookup mandatory (503 when Open
+  // Library is slow or down, nothing created), while omitting it is best effort (the item is
+  // created as typed).
+  return {}
 }
 
 /** Only movie and TV titles offer suggestions while typing (TMDB); books are looked up on commit. */

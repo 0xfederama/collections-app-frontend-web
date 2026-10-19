@@ -11,7 +11,14 @@ export type Item = components['schemas']['Item']
 export type ItemType = components['schemas']['ItemType']
 export type ItemContent = components['schemas']['Content']
 export type UpdateItemRequest = components['schemas']['UpdateItemRequest']
-export type CreateItemRequest = components['schemas']['CreateItemRequest']
+/**
+ * The create body. The contract only requires `title` (`lookup` defaults to true on the server), but
+ * the generator marks a defaulted field as required, so `lookup` is made optional here: omitting it
+ * is the best-effort lookup for books (an explicit `lookup: true` is mandatory and can 503).
+ */
+export type CreateItemRequest = Omit<components['schemas']['CreateItemRequest'], 'lookup'> & {
+  lookup?: boolean
+}
 export type LookupItemRequest = components['schemas']['LookupItemRequest']
 
 /** Exported so other features (W-08, W-09, W-10) invalidate by key, not by string literal. */
@@ -171,7 +178,12 @@ export function useCreateItem(listId: string) {
   const client = useQueryClient()
   return useMutation({
     mutationFn: (body: CreateItemRequest) =>
-      unwrap(api.POST('/api/v1/lists/{id}/items', { params: { path: { id: listId } }, body })),
+      unwrap(
+        api.POST('/api/v1/lists/{id}/items', {
+          params: { path: { id: listId } },
+          body: body as components['schemas']['CreateItemRequest'],
+        }),
+      ),
     onSuccess: (created) => {
       client.setQueryData<Item>(itemKeys.detail(created.id), created)
       void invalidateContent(client)
