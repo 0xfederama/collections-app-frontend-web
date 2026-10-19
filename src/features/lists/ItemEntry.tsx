@@ -135,14 +135,22 @@ function PinnedSlot({
     }
     flush()
     const services = streamingOf(item)
-    const justWatch = safeWebsiteUrl(
-      (item.metadata.streaming as { link?: string | null } | null | undefined)?.link ?? null,
-    )
+    const streaming = item.metadata.streaming as
+      { link?: string | null; platform_links?: Record<string, string> } | null | undefined
+    // Each service opens its own search for the title (`platform_links`, built by the server); one
+    // without an entry falls back to the title's JustWatch page, and without either stays plain.
+    const justWatch = safeWebsiteUrl(streaming?.link ?? null)
     if (services.length) {
       parts.push(
         <span key={`s${parts.length}`} className="inline-flex items-center gap-1.5">
           {services.map((s) => (
-            <TileLink key={s.name} href={justWatch} label={`${s.name} on JustWatch`}>
+            <TileLink
+              key={s.name}
+              href={safeWebsiteUrl(streaming?.platform_links?.[s.name] ?? null) ?? justWatch}
+              label={
+                streaming?.platform_links?.[s.name] ? `Find on ${s.name}` : `${s.name} on JustWatch`
+              }
+            >
               <ServiceIcon name={s.name} paid={s.paid} size={iconSize} />
             </TileLink>
           ))}

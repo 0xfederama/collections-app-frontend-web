@@ -178,6 +178,26 @@ describe('F016 row tiles open their page without opening the item', () => {
     ).toHaveAttribute('href', 'https://www.justwatch.com/it/movie/alien')
   })
 
+  it('each service opens its own search when the server gives platform_links, else the JustWatch page', () => {
+    const row = entry(['release_year', 'streaming'], 'thumbnail', {
+      metadata: {
+        release_year: 1979,
+        streaming: {
+          platforms: ['Netflix', 'Sky'],
+          link: 'https://www.justwatch.com/it/movie/alien',
+          platform_links: { Netflix: 'https://www.netflix.com/search?q=Alien' },
+        },
+      },
+    })
+    expect(
+      within(row).getByRole('link', { name: 'Find on Netflix (opens in a new tab)' }),
+    ).toHaveAttribute('href', 'https://www.netflix.com/search?q=Alien')
+    // Sky has no entry: it falls back to the title's JustWatch page.
+    expect(
+      within(row).getByRole('link', { name: 'Sky on JustWatch (opens in a new tab)' }),
+    ).toHaveAttribute('href', 'https://www.justwatch.com/it/movie/alien')
+  })
+
   it('no streaming link, or a non-https one, leaves the plain tile', () => {
     const row = entry(['release_year', 'streaming'], 'thumbnail', {
       metadata: { streaming: { platforms: ['Netflix'], link: 'javascript:alert(1)' } },

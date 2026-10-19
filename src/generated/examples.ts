@@ -498,7 +498,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
               "paid_platforms": [
                 "Prime Video"
               ],
-              "link": "https://www.justwatch.com/it/movie/the-matrix"
+              "link": "https://www.justwatch.com/it/movie/the-matrix",
+              "platform_links": {
+                "Netflix": "https://www.netflix.com/search?q=The+Matrix",
+                "Prime Video": "https://www.primevideo.com/search/?phrase=The+Matrix"
+              }
             }
           },
           "content_version": 2,
@@ -566,7 +570,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "paid_platforms": [
             "Prime Video"
           ],
-          "link": "https://www.justwatch.com/it/movie/the-matrix"
+          "link": "https://www.justwatch.com/it/movie/the-matrix",
+          "platform_links": {
+            "Netflix": "https://www.netflix.com/search?q=The+Matrix",
+            "Prime Video": "https://www.primevideo.com/search/?phrase=The+Matrix"
+          }
         }
       },
       "content_version": 2,
@@ -608,7 +616,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "paid_platforms": [
             "Prime Video"
           ],
-          "link": "https://www.justwatch.com/it/movie/the-matrix"
+          "link": "https://www.justwatch.com/it/movie/the-matrix",
+          "platform_links": {
+            "Netflix": "https://www.netflix.com/search?q=The+Matrix",
+            "Prime Video": "https://www.primevideo.com/search/?phrase=The+Matrix"
+          }
         }
       },
       "content_version": 2,
@@ -708,7 +720,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "paid_platforms": [
             "Prime Video"
           ],
-          "link": "https://www.justwatch.com/it/movie/the-matrix"
+          "link": "https://www.justwatch.com/it/movie/the-matrix",
+          "platform_links": {
+            "Netflix": "https://www.netflix.com/search?q=The+Matrix",
+            "Prime Video": "https://www.primevideo.com/search/?phrase=The+Matrix"
+          }
         }
       },
       "content_version": 2,
@@ -785,7 +801,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "paid_platforms": [
             "Prime Video"
           ],
-          "link": "https://www.justwatch.com/it/movie/the-matrix"
+          "link": "https://www.justwatch.com/it/movie/the-matrix",
+          "platform_links": {
+            "Netflix": "https://www.netflix.com/search?q=The+Matrix",
+            "Prime Video": "https://www.primevideo.com/search/?phrase=The+Matrix"
+          }
         }
       },
       "content_version": 2,
@@ -936,7 +956,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
                 "paid_platforms": [
                   "Prime Video"
                 ],
-                "link": "https://www.justwatch.com/it/movie/the-matrix"
+                "link": "https://www.justwatch.com/it/movie/the-matrix",
+                "platform_links": {
+                  "Netflix": "https://www.netflix.com/search?q=The+Matrix",
+                  "Prime Video": "https://www.primevideo.com/search/?phrase=The+Matrix"
+                }
               }
             },
             "content_version": 2,
@@ -1006,7 +1030,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
                 "paid_platforms": [
                   "Prime Video"
                 ],
-                "link": "https://www.justwatch.com/it/movie/the-matrix"
+                "link": "https://www.justwatch.com/it/movie/the-matrix",
+                "platform_links": {
+                  "Netflix": "https://www.netflix.com/search?q=The+Matrix",
+                  "Prime Video": "https://www.primevideo.com/search/?phrase=The+Matrix"
+                }
               }
             },
             "content_version": 2,
