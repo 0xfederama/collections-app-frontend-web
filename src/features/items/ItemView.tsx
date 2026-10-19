@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui'
 import { cx } from '../../lib/cx'
-import { useKinds } from '../settings/api'
+import { useTypes } from '../settings/api'
 import { ListIconMark } from '../lists/ListIconMark'
 import { useItemActions, ItemActions } from './ItemActions'
 import type { Item } from './api'
@@ -11,7 +11,7 @@ import { FieldBlock } from './inline/FieldBlock'
 import { titleSpec } from './inline/fields'
 import { InlineField } from './inline/InlineField'
 import { ItemHero } from './ItemHero'
-import { kindDefinition, kindName } from './kinds'
+import { typeDefinition, typeName } from './types'
 import { ItemSkeleton } from './ItemSkeleton'
 
 const formatDate = (iso: string) =>
@@ -26,8 +26,8 @@ const formatDate = (iso: string) =>
  * they follow the content. F009-W4: there is no "…" menu, the footer is where the page ends.
  */
 export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolean }) {
-  const definitions = useKinds()
-  const definition = kindDefinition(definitions.data, item.kind)
+  const definitions = useTypes()
+  const definition = typeDefinition(definitions.data, item.type)
   const actions = useItemActions(item)
   // "Add website" in the links row asks the details block to open the website editor.
   const [websiteRequest, setWebsiteRequest] = useState(0)
@@ -51,18 +51,18 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
         )}
       >
         <ItemHero item={item} />
-        {/* One title block (F008-W10): kind label above, then the title, then the links with "+" at
+        {/* One title block (F008-W10): type label above, then the title, then the links with "+" at
             the end of their line. Move and Delete are not here: they close the page (F009-W4). */}
         <header className="flex flex-col gap-2">
           <div className="flex min-w-0 flex-col gap-1">
             <p className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
               <ListIconMark
                 icon={definition.default_icon}
-                kind={item.kind}
+                type={item.type}
                 className="size-5 bg-transparent"
                 iconClassName="size-3.5"
               />
-              {kindName(definition, item.kind)}
+              {typeName(definition, item.type)}
             </p>
             <div className="min-w-0">
               <InlineField item={item} definition={definition} spec={titleSpec}>

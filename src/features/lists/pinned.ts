@@ -1,6 +1,6 @@
 import type { components } from '../../generated/schema'
 import type { PinnedFields } from './api'
-import { formatField, hasPrice, type KindDefinition } from '../items/kinds'
+import { formatField, hasPrice, type TypeDefinition } from '../items/types'
 import { formatPrice } from './price'
 
 type ItemSummary = components['schemas']['ItemSummary']
@@ -14,15 +14,15 @@ export type PinnedKeys = readonly string[]
 /** Most keys a list may pin, in order (the contract's limit). */
 export const MAX_PINNED = 2
 
-/** The kind default supplied by the definition API, capped defensively at the contract limit. */
-export function defaultPinned(definition: KindDefinition): PinnedKeys {
+/** The type default supplied by the definition API, capped defensively at the contract limit. */
+export function defaultPinned(definition: TypeDefinition): PinnedKeys {
   return [...(definition.default_pinned_fields ?? [])].slice(0, MAX_PINNED)
 }
 
-/** What the list shows: its own selection, else the kind default. `[]` pins nothing. */
+/** What the list shows: its own selection, else the type default. `[]` pins nothing. */
 export function resolvePinned(
   list: { pinned_fields: PinnedFields },
-  definition: KindDefinition,
+  definition: TypeDefinition,
 ): PinnedKeys {
   if (!list.pinned_fields) return defaultPinned(definition)
   return [...list.pinned_fields]
@@ -34,9 +34,9 @@ export interface PinnableField {
 }
 
 /**
- * Fields a list of this kind can pin, followed by price when the kind allows it.
+ * Fields a list of this type can pin, followed by price when the type allows it.
  */
-export function pinnableFields(definition: KindDefinition): PinnableField[] {
+export function pinnableFields(definition: TypeDefinition): PinnableField[] {
   const fields = definition.fields.map(({ key, label }) => ({
     key,
     label: key === 'episode_minutes' ? 'Episode duration' : label,
@@ -53,7 +53,7 @@ const num = (value: unknown) => (typeof value === 'number' ? value : null)
 export function formatPinnedValue(
   key: string,
   item: ItemSummary,
-  definition: KindDefinition,
+  definition: TypeDefinition,
 ): string | null {
   if (key === 'price') return formatPrice(item.price)
   if (key === 'streaming') return null
@@ -87,7 +87,7 @@ export function pinnedPlacements(pinned: PinnedKeys): { first: string[]; second:
 export function pinnedTexts(
   keys: readonly string[],
   item: ItemSummary,
-  definition: KindDefinition,
+  definition: TypeDefinition,
 ): string[] {
   const texts: string[] = []
   const meta = item.metadata

@@ -45,7 +45,7 @@ describe('AT-03 tree CRUD (web): create', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(backend.writes('POST', '/api/v1/lists')[0]?.body).toEqual({
       name: 'Games',
-      kind: 'generic',
+      type: null,
       folder_id: null,
       icon: null,
       icon_color: null,
@@ -58,10 +58,10 @@ describe('AT-03 tree CRUD (web): create', () => {
     const { user, backend } = await openTree()
     await pickHeaderAction(user, 'List')
     const dlg = await dialog()
-    const kind = within(dlg).getByRole('combobox', { name: 'Type' })
-    expect(kind).toHaveTextContent('No type')
+    const type = within(dlg).getByRole('combobox', { name: 'Type' })
+    expect(type).toHaveTextContent('No type')
     await user.type(within(dlg).getByRole('textbox', { name: 'Name' }), 'Cameras')
-    await user.click(kind)
+    await user.click(type)
     await user.click(await screen.findByRole('option', { name: 'Camera' }))
     expect(within(dlg).queryByRole('alert')).not.toBeInTheDocument()
     await user.click(within(dlg).getByRole('button', { name: 'Create' }))
@@ -69,12 +69,12 @@ describe('AT-03 tree CRUD (web): create', () => {
     await waitFor(() => expect(backend.writes('POST', '/api/v1/lists')).toHaveLength(1))
     expect(backend.writes('POST', '/api/v1/lists')[0]?.body).toEqual({
       name: 'Cameras',
-      kind: 'camera',
+      type: 'camera',
       folder_id: null,
       icon: null,
       icon_color: null,
     })
-    expect(backend.state.lists.find((l) => l.name === 'Cameras')?.kind).toBe('camera')
+    expect(backend.state.lists.find((l) => l.name === 'Cameras')?.type).toBe('camera')
   })
 
   it('F015 the type picker lists "No type" first, a separator, then the types, then "+ New type", which opens Settings', async () => {
@@ -156,7 +156,7 @@ describe('AT-03 tree CRUD (web): create', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(backend.writes('POST', '/api/v1/lists')[0]?.body).toEqual({
       name: 'Lenses',
-      kind: 'generic',
+      type: null,
       folder_id: ID.gear,
       icon: null,
       icon_color: null,
@@ -170,7 +170,7 @@ describe('AT-03 tree CRUD (web): create', () => {
     const { user, backend } = await openTree()
     await pickHeaderAction(user, 'List')
     const dlg = await dialog()
-    // F011-W6: a dropdown beside the Kind picker, not a list of radios.
+    // F011-W6: a dropdown beside the Type picker, not a list of radios.
     const folders = within(dlg).getByRole('combobox', { name: 'Folder' })
     expect(folders).toHaveTextContent('Top level')
     expect(within(dlg).getByText('It will be created at the top level.')).toBeInTheDocument()
@@ -189,7 +189,7 @@ describe('AT-03 tree CRUD (web): create', () => {
     await waitFor(() => expect(backend.writes('POST', '/api/v1/lists')).toHaveLength(1))
     expect(backend.writes('POST', '/api/v1/lists')[0]?.body).toEqual({
       name: 'Lenses',
-      kind: 'generic',
+      type: null,
       folder_id: ID.gear,
       icon: null,
       icon_color: null,

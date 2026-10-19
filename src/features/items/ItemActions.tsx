@@ -5,7 +5,7 @@ import { AlertDialog, Button, Combobox, Dialog, useToast } from '../../component
 import { FolderInput, Trash2 } from '../../components/ui/icons'
 import { treeKeys, useTreeIndex, type TreeIndex, type TreeNode } from '../tree/api'
 import { countsText } from '../trash/model'
-import { itemKeys, useDeleteItem, useMoveItem, type Item, type ItemKind } from './api'
+import { itemKeys, useDeleteItem, useMoveItem, type Item, type ItemType } from './api'
 import { classifyItemError, type ItemError } from './errors'
 import { useEditGuard } from './inline/guard'
 
@@ -20,13 +20,13 @@ function ErrorBox({ error }: { error: ItemError }) {
   )
 }
 
-/** Every list of the item's kind as `Folder › Sub › List`, in tree order (items only move within a kind). */
-function listOptions(index: TreeIndex, currentListId: string, kind: ItemKind) {
+/** Every list of the item's type as `Folder › Sub › List`, in tree order (items only move within a type). */
+function listOptions(index: TreeIndex, currentListId: string, type: ItemType) {
   const out: { value: string; label: string; disabled?: boolean }[] = []
   const visit = (nodes: TreeNode[]) => {
     for (const node of nodes) {
       if (node.kind === 'folder') visit(node.children)
-      else if (node.list.kind === kind) {
+      else if (node.list.type === type) {
         const path = [...index.ancestorsOf(node.id).map((f) => f.name), node.list.name].join(' › ')
         const current = node.id === currentListId
         out.push({
@@ -122,7 +122,7 @@ function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => void }) 
   const { error, setError, fail, guard } = useFailure(item, onClose)
   const [target, setTarget] = useState<string | null>(null)
 
-  const options = tree.status === 'success' ? listOptions(tree.index, item.list_id, item.kind) : []
+  const options = tree.status === 'success' ? listOptions(tree.index, item.list_id, item.type) : []
   const choice = options.find((o) => o.value === target && !o.disabled)
 
   const submit = async () => {

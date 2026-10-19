@@ -7,7 +7,7 @@ test.describe('AT-12 search and AT-13 external links', () => {
     request,
   }) => {
     const token = uniqueId()
-    const list = await createList(request, uniqueName('Searchable'), 'generic')
+    const list = await createList(request, uniqueName('Searchable'), null)
     const first = `The Matrix ${token}`
     const second = `Matrix Reloaded ${token}`
     await createItem(request, list.id, first)
@@ -32,7 +32,7 @@ test.describe('AT-12 search and AT-13 external links', () => {
     await expect(itemPanel(page).getByRole('heading', { level: 1, name: second })).toBeVisible()
   })
 
-  test('external links per kind: order, encoding, Add website', async ({ page, request }) => {
+  test('external links per type: order, encoding, Add website', async ({ page, request }) => {
     const token = uniqueId()
     const movies = await createList(request, uniqueName('Links'), 'movie')
     const title = `Tom & Jerry #${token} "Cut"`
@@ -60,8 +60,8 @@ test.describe('AT-12 search and AT-13 external links', () => {
       await expect(controls.nth(index)).toHaveAttribute('rel', 'noopener noreferrer')
     }
 
-    // Any other kind: Google, Reddit, Website; an empty website offers "Add website".
-    const generic = await createList(request, uniqueName('Things'), 'generic')
+    // Any other type: Google, Reddit, Website; an empty website offers "Add website".
+    const generic = await createList(request, uniqueName('Things'), null)
     const website = `https://example.com/${token}`
     const withSite = await createItem(request, generic.id, uniqueName('Site'), { website })
     const without = await createItem(request, generic.id, uniqueName('No site'))

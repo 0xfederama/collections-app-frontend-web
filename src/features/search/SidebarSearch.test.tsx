@@ -20,7 +20,7 @@ function makeResult(n: number, title = `Result ${n}`) {
       id: uuid(1000 + n),
       list_id: LIST_ID,
       title,
-      kind: 'movie' as const,
+      type: 'movie' as const,
       image: null,
       price: null,
       website: null,
@@ -31,7 +31,7 @@ function makeResult(n: number, title = `Result ${n}`) {
       created_at: '2026-10-14T09:31:00Z',
       updated_at: '2026-10-14T09:31:00Z',
     },
-    kind_name: 'Movie',
+    type_name: 'Movie',
     path: [
       { type: 'folder' as const, id: uuid(1), name: 'Media', icon: null, icon_color: null },
       { type: 'folder' as const, id: uuid(2), name: 'Movies', icon: null, icon_color: null },

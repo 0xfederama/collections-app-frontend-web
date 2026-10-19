@@ -83,7 +83,7 @@ describe('F006-W1 invalidateContent', () => {
         run(
           c,
           () => useCreateItem('l1'),
-          (m) => m.mutateAsync({ kind: 'movie', title: 'T' } as never),
+          (m) => m.mutateAsync({ type: 'movie', title: 'T' } as never),
         ),
     ],
     ['restore', (c) => run(c, useRestoreTrash, (m) => m.mutateAsync({ batchId: 'b1' }))],

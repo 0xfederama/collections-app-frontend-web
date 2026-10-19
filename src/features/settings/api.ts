@@ -5,37 +5,37 @@ import { invalidateContent } from '../invalidateContent'
 
 export type Settings = components['schemas']['Settings']
 export type UpdateSettingsRequest = components['schemas']['UpdateSettingsRequest']
-export type KindDefinition = components['schemas']['KindDefinition']
-export type KindField = components['schemas']['KindField']
-export type CreateKindRequest = components['schemas']['CreateKindRequest']
-export type CreateKindFieldRequest = components['schemas']['CreateKindFieldRequest']
-export type UpdateKindRequest = components['schemas']['UpdateKindRequest']
+export type TypeDefinition = components['schemas']['TypeDefinition']
+export type TypeField = components['schemas']['TypeField']
+export type CreateTypeRequest = components['schemas']['CreateTypeRequest']
+export type CreateTypeFieldRequest = components['schemas']['CreateTypeFieldRequest']
+export type UpdateTypeRequest = components['schemas']['UpdateTypeRequest']
 
 export const settingsKeys = { settings: ['settings'] as const }
-export const kindKeys = { kinds: ['kinds'] as const }
+export const typeKeys = { types: ['types'] as const }
 
-// Kind definitions and fields have their own typed ETags ("k-N" and "kf-N").
-const kindMatch = (version: number) => ({ 'If-Match': `"k-${version}"` })
+// Type definitions and fields have their own typed ETags ("k-N" and "kf-N").
+const typeMatch = (version: number) => ({ 'If-Match': `"k-${version}"` })
 const fieldMatch = (version: number) => ({ 'If-Match': `"kf-${version}"` })
 
 // Provider bookkeeping (TMDB id, lookup switch) lives in item metadata but is never user-facing:
 // not an editable field, and never pinnable, sortable or filterable (contract: pinned_fields).
 const BOOKKEEPING_FIELDS = new Set(['tmdb_id', 'lookup_disabled'])
-const withoutBookkeeping = (kinds: KindDefinition[]): KindDefinition[] =>
-  kinds.map((kind) => ({
-    ...kind,
-    fields: kind.fields.filter((field) => !BOOKKEEPING_FIELDS.has(field.key)),
+const withoutBookkeeping = (types: TypeDefinition[]): TypeDefinition[] =>
+  types.map((type) => ({
+    ...type,
+    fields: type.fields.filter((field) => !BOOKKEEPING_FIELDS.has(field.key)),
   }))
 
-export function useKinds() {
+export function useTypes() {
   return useQuery({
-    queryKey: kindKeys.kinds,
+    queryKey: typeKeys.types,
     select: withoutBookkeeping,
-    queryFn: ({ signal }) => unwrap(api.GET('/api/v1/kinds', { signal })),
+    queryFn: ({ signal }) => unwrap(api.GET('/api/v1/types', { signal })),
   })
 }
 
-function useKindMutation<TVars, TData>(mutationFn: (vars: TVars) => Promise<TData>) {
+function useTypeMutation<TVars, TData>(mutationFn: (vars: TVars) => Promise<TData>) {
   const client = useQueryClient()
   return useMutation({
     mutationFn,
@@ -43,54 +43,54 @@ function useKindMutation<TVars, TData>(mutationFn: (vars: TVars) => Promise<TDat
       // A definition changes the fields rendered by items and rows. Deleting a field additionally
       // strips stored metadata and may reset list pins/sort defaults on the server.
       await Promise.all([
-        client.invalidateQueries({ queryKey: kindKeys.kinds }),
+        client.invalidateQueries({ queryKey: typeKeys.types }),
         invalidateContent(client),
       ])
     },
   })
 }
 
-export function useCreateKind() {
-  return useKindMutation((body: CreateKindRequest) => unwrap(api.POST('/api/v1/kinds', { body })))
+export function useCreateType() {
+  return useTypeMutation((body: CreateTypeRequest) => unwrap(api.POST('/api/v1/types', { body })))
 }
 
-export function useUpdateKind() {
-  return useKindMutation(({ kind, patch }: { kind: KindDefinition; patch: UpdateKindRequest }) =>
+export function useUpdateType() {
+  return useTypeMutation(({ type, patch }: { type: TypeDefinition; patch: UpdateTypeRequest }) =>
     unwrap(
-      api.PATCH('/api/v1/kinds/{key}', {
-        params: { path: { key: kind.key }, header: kindMatch(kind.version) },
+      api.PATCH('/api/v1/types/{key}', {
+        params: { path: { key: type.key }, header: typeMatch(type.version) },
         body: patch,
       }),
     ),
   )
 }
 
-export function useDeleteKind() {
-  return useKindMutation(async (kind: KindDefinition) => {
-    await api.DELETE('/api/v1/kinds/{key}', {
-      params: { path: { key: kind.key }, header: kindMatch(kind.version) },
+export function useDeleteType() {
+  return useTypeMutation(async (type: TypeDefinition) => {
+    await api.DELETE('/api/v1/types/{key}', {
+      params: { path: { key: type.key }, header: typeMatch(type.version) },
     })
   })
 }
 
-export function useCreateKindField() {
-  return useKindMutation(({ kind, body }: { kind: KindDefinition; body: CreateKindFieldRequest }) =>
+export function useCreateTypeField() {
+  return useTypeMutation(({ type, body }: { type: TypeDefinition; body: CreateTypeFieldRequest }) =>
     unwrap(
-      api.POST('/api/v1/kinds/{key}/fields', {
-        params: { path: { key: kind.key }, header: kindMatch(kind.version) },
+      api.POST('/api/v1/types/{key}/fields', {
+        params: { path: { key: type.key }, header: typeMatch(type.version) },
         body,
       }),
     ),
   )
 }
 
-export function useRenameKindField() {
-  return useKindMutation(
-    ({ kind, field, label }: { kind: KindDefinition; field: KindField; label: string }) =>
+export function useRenameTypeField() {
+  return useTypeMutation(
+    ({ type, field, label }: { type: TypeDefinition; field: TypeField; label: string }) =>
       unwrap(
-        api.PATCH('/api/v1/kinds/{key}/fields/{fieldKey}', {
+        api.PATCH('/api/v1/types/{key}/fields/{fieldKey}', {
           params: {
-            path: { key: kind.key, fieldKey: field.key },
+            path: { key: type.key, fieldKey: field.key },
             header: fieldMatch(field.version),
           },
           body: { label },
@@ -99,12 +99,12 @@ export function useRenameKindField() {
   )
 }
 
-export function useDeleteKindField() {
-  return useKindMutation(async ({ kind, field }: { kind: KindDefinition; field: KindField }) =>
+export function useDeleteTypeField() {
+  return useTypeMutation(async ({ type, field }: { type: TypeDefinition; field: TypeField }) =>
     unwrap(
-      api.DELETE('/api/v1/kinds/{key}/fields/{fieldKey}', {
+      api.DELETE('/api/v1/types/{key}/fields/{fieldKey}', {
         params: {
-          path: { key: kind.key, fieldKey: field.key },
+          path: { key: type.key, fieldKey: field.key },
           header: fieldMatch(field.version),
         },
       }),
@@ -112,21 +112,21 @@ export function useDeleteKindField() {
   )
 }
 
-export function usePreviewKindFieldDelete() {
+export function usePreviewTypeFieldDelete() {
   return useMutation({
-    mutationFn: ({ kind, field }: { kind: KindDefinition; field: KindField }) =>
+    mutationFn: ({ type, field }: { type: TypeDefinition; field: TypeField }) =>
       unwrap(
-        api.GET('/api/v1/kinds/{key}/fields/{fieldKey}', {
-          params: { path: { key: kind.key, fieldKey: field.key } },
+        api.GET('/api/v1/types/{key}/fields/{fieldKey}', {
+          params: { path: { key: type.key, fieldKey: field.key } },
         }),
       ),
   })
 }
 
-export function useReorderKindFields() {
-  return useKindMutation(({ kind, keys }: { kind: KindDefinition; keys: string[] }) =>
-    api.PUT('/api/v1/kinds/{key}/fields/order', {
-      params: { path: { key: kind.key }, header: kindMatch(kind.version) },
+export function useReorderTypeFields() {
+  return useTypeMutation(({ type, keys }: { type: TypeDefinition; keys: string[] }) =>
+    api.PUT('/api/v1/types/{key}/fields/order', {
+      params: { path: { key: type.key }, header: typeMatch(type.version) },
       body: { keys },
     }),
   )

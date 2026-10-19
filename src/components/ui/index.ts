@@ -8,7 +8,7 @@ export { Dialog, type DialogProps } from './Dialog'
 export { Drawer, type DrawerProps } from './Drawer'
 export { EmptyState, type EmptyStateProps } from './EmptyState'
 export { IconButton, type IconButtonProps } from './IconButton'
-export { kindDisplayName, kindIcons, kindLabels, NO_TYPE_LABEL, type ItemKind } from './icons'
+export { typeIconFor, typeIcons, typeLabels, NO_TYPE_LABEL, type ItemType } from './icons'
 export { Menu, type MenuItem, type MenuProps } from './Menu'
 export {
   Select,

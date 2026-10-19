@@ -4,26 +4,26 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { PinnedMenu } from './PinnedMenu'
 import type { List } from './api'
-import type { ItemKind } from '../items/api'
-import { mockKinds } from '../../mocks/kinds'
+import type { ItemType } from '../items/api'
+import { mockTypes } from '../../mocks/types'
 
 type Pinned = List['pinned_fields']
 
 /** The menu is controlled by the list, so the harness keeps the state and records the PATCHes. */
 function Harness({
-  kind,
+  type,
   initial,
   patches,
 }: {
-  kind: ItemKind
+  type: ItemType
   initial: Pinned
   patches: Pinned[]
 }) {
   const [pinned, setPinned] = useState<Pinned>(initial)
-  const definition = mockKinds.find((candidate) => candidate.key === kind)!
+  const definition = mockTypes.find((candidate) => candidate.key === type)!
   return (
     <PinnedMenu
-      list={{ kind, pinned_fields: pinned }}
+      list={{ type, pinned_fields: pinned }}
       definition={definition}
       onChange={(next) => {
         setPinned(next)
@@ -37,10 +37,10 @@ function Harness({
   )
 }
 
-function renderMenu(kind: ItemKind, initial: Pinned) {
+function renderMenu(type: ItemType, initial: Pinned) {
   const patches: Pinned[] = []
   const user = userEvent.setup()
-  render(<Harness kind={kind} initial={initial} patches={patches} />)
+  render(<Harness type={type} initial={initial} patches={patches} />)
   const open = async () => {
     await user.click(screen.getByRole('button', { name: /Pinned fields/ }))
     return screen.findByRole('menu')
@@ -63,7 +63,7 @@ describe('F009-W3 pinned fields are an ordered pair', () => {
     expect(patches).toEqual([['release_year'], ['release_year', 'runtime_minutes']])
   })
 
-  it('shows the effective selection (the kind default) with the order written on it', async () => {
+  it('shows the effective selection (the type default) with the order written on it', async () => {
     const { open, item } = renderMenu('movie', null)
 
     await open()

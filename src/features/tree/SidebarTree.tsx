@@ -126,7 +126,7 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
           <ListIconMark
             icon={list.icon}
             iconColor={list.icon_color}
-            kind={list.kind}
+            type={list.type}
             className="size-full"
             iconClassName="size-3.5"
           />

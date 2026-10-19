@@ -100,7 +100,7 @@ type ListPatch =
   { display_mode: DisplayMode } | { sort_mode: SortMode } | { pinned_fields: PinnedFields }
 
 /**
- * PATCH a list's `display_mode`, `sort_mode` or `pinned_fields` (`null` resets to the kind default). `If-Match` is built from the version in the cache
+ * PATCH a list's `display_mode`, `sort_mode` or `pinned_fields` (`null` resets to the type default). `If-Match` is built from the version in the cache
  * at call time, and calls for one list run one after another so quick successive changes do not
  * conflict with each other. A 412 is never retried: the caller refetches and tells the user.
  * The change shows at once and is rolled back on failure.

@@ -39,25 +39,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/kinds": {
+    "/api/v1/types": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List kind definitions and fields */
-        get: operations["listKinds"];
+        /** List type definitions and fields */
+        get: operations["listTypes"];
         put?: never;
-        /** Create a custom kind */
-        post: operations["createKind"];
+        /** Create a custom type */
+        post: operations["createType"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/kinds/{key}": {
+    "/api/v1/types/{key}": {
         parameters: {
             query?: never;
             header?: never;
@@ -69,15 +69,15 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete a custom kind not used by any list */
-        delete: operations["deleteKind"];
+        /** Delete a custom type not used by any list */
+        delete: operations["deleteType"];
         options?: never;
         head?: never;
-        /** Update a custom kind */
-        patch: operations["updateKind"];
+        /** Update a custom type */
+        patch: operations["updateType"];
         trace?: never;
     };
-    "/api/v1/kinds/{key}/fields": {
+    "/api/v1/types/{key}/fields": {
         parameters: {
             query?: never;
             header?: never;
@@ -89,14 +89,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Add a custom field */
-        post: operations["createKindField"];
+        post: operations["createTypeField"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/kinds/{key}/fields/order": {
+    "/api/v1/types/{key}/fields/order": {
         parameters: {
             query?: never;
             header?: never;
@@ -107,7 +107,7 @@ export interface paths {
         };
         get?: never;
         /** Reorder custom fields */
-        put: operations["reorderKindFields"];
+        put: operations["reorderTypeFields"];
         post?: never;
         delete?: never;
         options?: never;
@@ -115,7 +115,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/kinds/{key}/fields/{fieldKey}": {
+    "/api/v1/types/{key}/fields/{fieldKey}": {
         parameters: {
             query?: never;
             header?: never;
@@ -126,15 +126,15 @@ export interface paths {
             cookie?: never;
         };
         /** Count item values that deleting a custom field would remove */
-        get: operations["previewDeleteKindField"];
+        get: operations["previewDeleteTypeField"];
         put?: never;
         post?: never;
         /** Delete a custom field and strip populated values */
-        delete: operations["deleteKindField"];
+        delete: operations["deleteTypeField"];
         options?: never;
         head?: never;
         /** Rename a custom field */
-        patch: operations["updateKindField"];
+        patch: operations["updateTypeField"];
         trace?: never;
     };
     "/api/v1/settings": {
@@ -308,9 +308,9 @@ export interface paths {
         /**
          * Create a list
          * @description Appended to the end of its siblings. `folder_id` absent or `null` creates it at the root. A missing or trashed folder returns
-         *     `409 destination_unavailable`. `kind` is required: every item of the list has that kind. `description` is Markdown (up to 64 KiB).
-         *     `sort_mode` accepts a built-in mode or a field key defined by the list's kind. `price` is valid only for kinds that allow a price.
-         *     When omitted, the kind's default sort field is used if defined. `icon` and `icon_color` are optional (F012-B1).
+         *     `409 destination_unavailable`. `type` is required: every item of the list has that type. `description` is Markdown (up to 64 KiB).
+         *     `sort_mode` accepts a built-in mode or a field key defined by the list's type. `price` is valid only for types that allow a price.
+         *     When omitted, the type's default sort field is used if defined. `icon` and `icon_color` are optional (F012-B1).
          */
         post: operations["createList"];
         delete?: never;
@@ -367,13 +367,13 @@ export interface paths {
         /**
          * Update a list
          * @description Requires `If-Match` (`"l-N"`). Send `description: null` to clear it. `description` is Markdown (up to 64 KiB) and has no version
-         *     history: it is edited with the list's `version`. `sort_mode` accepts a built-in mode or a field key defined by the list's kind;
-         *     `price` is valid only for kinds that allow a price.
+         *     history: it is edited with the list's `version`. `sort_mode` accepts a built-in mode or a field key defined by the list's type;
+         *     `price` is valid only for types that allow a price.
          *
-         *     Changing `kind` on a list that has items **clears the `metadata` of all its items** (trashed ones too; their `version` is bumped),
-         *     because the kind fields differ per kind. A change **to a kind without a price** (`generic`, `movie`, `tv_show`) also clears the `price` of all its items (trashed ones too) and
-         *     turns a stored sort field unavailable on the new kind into the new kind's default sort field (or `manual` if it has none). Clients should warn first. A kind change also resets `pinned_fields` to `null` (unless
-         *     the same request sets it, which is then validated against the new kind). Send `pinned_fields: null` to reset it to the kind default;
+         *     Changing `type` on a list that has items **clears the `metadata` of all its items** (trashed ones too; their `version` is bumped),
+         *     because the type fields differ per type. A change **to a type without a price** (`movie`, `tv_show`) or **to no type** (`null`) also clears the `price` of all its items (trashed ones too) and
+         *     turns a stored sort field unavailable on the new type into the new type's default sort field (or `manual` if it has none). Clients should warn first. A type change also resets `pinned_fields` to `null` (unless
+         *     the same request sets it, which is then validated against the new type). Send `pinned_fields: null` to reset it to the type default;
          *     absent leaves it unchanged.
          *
          *     `icon` and `icon_color` (F012-B1): send `icon: null` to reset the icon to the default. Changing the icon to an emoji or to `null`
@@ -419,9 +419,9 @@ export interface paths {
         /**
          * List the items of a list
          * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title and, on movie lists, director.
-         *     `sort` accepts `manual`, `title`, `updated`, `price`, or a field key from the list kind. Field values sort by their definition type:
+         *     `sort` accepts `manual`, `title`, `updated`, `price`, or a field key from the list type. Field values sort by their definition type:
          *     number numerically, date chronologically, text/link case-insensitively, boolean false first; missing or empty values last.
-         *     `price` sorts by `price.min` ascending, items without a price last (no currency conversion), and is available only when the kind allows price.
+         *     `price` sorts by `price.min` ascending, items without a price last (no currency conversion), and is available only when the type allows price.
          *     A field filter uses `filter_field` with `filter_value` for text/link substring or boolean equality, and `filter_min`/`filter_max`
          *     for inclusive number/date ranges. Field filtering combines with `q`.
          */
@@ -429,12 +429,12 @@ export interface paths {
         put?: never;
         /**
          * Create an item
-         * @description Appended to the end of the list. The item's `kind` is the list's kind (read-only, not accepted in the body). Image and Markdown
-         *     content are set through their own endpoints after creation. `metadata` is validated against the list's kind (see the `*Metadata` schemas).
-         *     `price` is either `{amount, currency}` (single price) or `{min, max, currency}` (range). A `price` on an item of a kind without a price
-         *     (`generic`, `movie` or `tv_show`; F009-B1) is rejected with `422 validation_failed` on `price` (`null` is fine).
+         * @description Appended to the end of the list. The item's `type` is the list's type (read-only, not accepted in the body). Image and Markdown
+         *     content are set through their own endpoints after creation. `metadata` is validated against the list's type (see the `*Metadata` schemas).
+         *     `price` is either `{amount, currency}` (single price) or `{min, max, currency}` (range). A `price` on an item of a type without a price
+         *     (`movie` or `tv_show`, or a list with no type; F009-B1) is rejected with `422 validation_failed` on `price` (`null` is fine).
          *     For movie and TV lists, `lookup` defaults to `true`: the server searches by title and applies the first result. Send `tmdb_id` to
-         *     select a known suggestion. Send `lookup: false` to create the item exactly as supplied. Lookup fields are ignored on other kinds.
+         *     select a known suggestion. Send `lookup: false` to create the item exactly as supplied. Lookup fields are ignored on other types.
          *     If automatic lookup finds no match, the item is still created unchanged. If lookup was explicitly requested but unavailable, the
          *     request returns `503 lookup_disabled` or `503 upstream_unavailable` and no item is created.
          */
@@ -495,8 +495,8 @@ export interface paths {
         head?: never;
         /**
          * Update an item
-         * @description Requires `If-Match` (`"i-N"`). Any of `title, price, website, metadata`; send `null` to clear a nullable field. A non-null `price` on an item of a kind without a price (`generic`, `movie`, `tv_show`; F009-B1) is rejected with `422 validation_failed`. `metadata` is
-         *     validated against the list's kind and replaces the stored one. The kind cannot be changed here (it belongs to the list).
+         * @description Requires `If-Match` (`"i-N"`). Any of `title, price, website, metadata`; send `null` to clear a nullable field. A non-null `price` on an item of a type without a price (`movie`, `tv_show`, or a list with no type; F009-B1) is rejected with `422 validation_failed`. `metadata` is
+         *     validated against the list's type and replaces the stored one. The type cannot be changed here (it belongs to the list).
          *     Image changes go through the image endpoints.
          */
         patch: operations["updateItem"];
@@ -550,7 +550,7 @@ export interface paths {
         /**
          * Move an item to another list
          * @description Requires `If-Match` (`"i-N"`). Appended to the end of the destination list. A missing or trashed list returns
-         *     `409 destination_unavailable`. A destination list of another kind returns `409 kind_mismatch`.
+         *     `409 destination_unavailable`. A destination list of another type returns `409 type_mismatch` (two lists with no type match).
          */
         post: operations["moveItem"];
         delete?: never;
@@ -863,7 +863,7 @@ export interface components {
              * @description Stable machine-readable code.
              * @enum {string}
              */
-            code: "malformed_request" | "unknown_field" | "invalid_parameter" | "not_found" | "cycle_detected" | "parent_in_trash" | "destination_unavailable" | "kind_mismatch" | "order_stale" | "version_conflict" | "payload_too_large" | "unsupported_media_type" | "validation_failed" | "lookup_disabled" | "upstream_unavailable" | "precondition_required" | "internal";
+            code: "malformed_request" | "unknown_field" | "invalid_parameter" | "not_found" | "cycle_detected" | "parent_in_trash" | "destination_unavailable" | "type_mismatch" | "order_stale" | "version_conflict" | "payload_too_large" | "unsupported_media_type" | "validation_failed" | "lookup_disabled" | "upstream_unavailable" | "precondition_required" | "internal";
             /** @description Only on `internal` problems. Matches the `X-Request-Id` header. */
             request_id?: string;
         };
@@ -970,7 +970,7 @@ export interface components {
         } | null;
         /** Format: binary */
         BinaryFile: string;
-        KindField: {
+        TypeField: {
             key: string;
             label: string;
             /** @enum {string} */
@@ -979,7 +979,7 @@ export interface components {
             is_locked: boolean;
             version: number;
         };
-        KindDefinition: {
+        TypeDefinition: {
             key: string;
             name: string;
             default_icon?: string | null;
@@ -988,34 +988,34 @@ export interface components {
             default_pinned_fields?: string[] | null;
             is_locked: boolean;
             version: number;
-            fields: components["schemas"]["KindField"][];
+            fields: components["schemas"]["TypeField"][];
         };
-        CreateKindRequest: {
+        CreateTypeRequest: {
             name: string;
             default_icon?: string | null;
             allows_price?: boolean;
             default_sort_field?: string | null;
             default_pinned_fields?: string[] | null;
         };
-        UpdateKindRequest: {
+        UpdateTypeRequest: {
             name?: string;
             default_icon?: string | null;
             allows_price?: boolean;
             default_sort_field?: string | null;
             default_pinned_fields?: string[] | null;
         };
-        CreateKindFieldRequest: {
+        CreateTypeFieldRequest: {
             label: string;
             /** @enum {string} */
             type: "text" | "number" | "date" | "boolean" | "link";
         };
-        UpdateKindFieldRequest: {
+        UpdateTypeFieldRequest: {
             label: string;
         };
-        ReorderKindFieldsRequest: {
+        ReorderTypeFieldsRequest: {
             keys: string[];
         };
-        KindFieldDeletePreview: {
+        TypeFieldDeletePreview: {
             /** @description Number of items, including trashed items, with a value for this field. */
             populated_item_count: number;
         };
@@ -1083,13 +1083,13 @@ export interface components {
         };
         /** @enum {string} */
         DisplayMode: "compact" | "thumbnail" | "grid";
-        /** @description One of `manual`, `title`, `updated`, `price`, or a field key from the list kind. The manual order is kept when the mode changes. */
+        /** @description One of `manual`, `title`, `updated`, `price`, or a field key from the list type. The manual order is kept when the mode changes. */
         SortMode: string;
         /**
          * @description The fields a list shows in its rows, in order: the first is the primary field, the second the secondary (F009-B2; replaces the
-         *     `{under, right}` slots of F-002). `null` means the kind default. `[]` pins nothing, which is different from `null`, and a single-element list is valid.
-         *     Any field defined for the kind can be pinned; `price` is also available when the kind allows it. At most 2 unique keys
-         *     (`422 validation_failed` on `pinned_fields[i]`), else `422`. Changing the list's `kind` resets it to `null`.
+         *     `{under, right}` slots of F-002). `null` means the type default. `[]` pins nothing, which is different from `null`, and a single-element list is valid.
+         *     Any field defined for the type can be pinned; `price` is also available when the type allows it. At most 2 unique keys
+         *     (`422 validation_failed` on `pinned_fields[i]`), else `422`. Changing the list's `type` resets it to `null`.
          * @example [
          *       "release_year",
          *       "runtime_minutes"
@@ -1115,7 +1115,7 @@ export interface components {
             /** Format: uuid */
             folder_id: string | null;
             name: string;
-            kind: components["schemas"]["ItemKind"];
+            type: components["schemas"]["ItemType"];
             /** @description Markdown, up to 64 KiB (UTF-8 bytes). */
             description: string | null;
             display_mode: components["schemas"]["DisplayMode"];
@@ -1136,7 +1136,7 @@ export interface components {
         };
         CreateListRequest: {
             name: string;
-            kind: components["schemas"]["ItemKind"];
+            type?: components["schemas"]["ItemType"];
             /** Format: uuid */
             folder_id?: string | null;
             /** @description Markdown, up to 64 KiB (UTF-8 bytes). */
@@ -1149,7 +1149,7 @@ export interface components {
         };
         UpdateListRequest: {
             name?: string;
-            kind?: components["schemas"]["ItemKind"];
+            type?: components["schemas"]["ItemType"];
             /** @description Markdown, up to 64 KiB (UTF-8 bytes). */
             description?: string | null;
             display_mode?: components["schemas"]["DisplayMode"];
@@ -1174,11 +1174,13 @@ export interface components {
             ids: string[];
         };
         /**
-         * @description The kind of a list. Items have no kind of their own: theirs is read-only and derived from their list. Changing the kind of a
-         *     list that has items clears the `metadata` of all its items.
+         * @description The type of a list: the key of a type defined in the workspace, or `null` for a list with no type (nothing selected; the default
+         *     on create). Items have no type of their own: theirs is read-only and derived from their list (`null` for a list with no type). A list
+         *     with no type has no custom fields, no price, only the built-in sort modes and no pinned fields; its items' `metadata` is `{}`. Changing the
+         *     type of a list that has items (to another type or to/from `null`) clears the `metadata` of all its items.
          */
-        ItemKind: string;
-        /** @description Fields shared by every item kind. `kind` (read-only, derived from the list) and `metadata` are added by the per-kind schemas. */
+        ItemType: string | null;
+        /** @description Fields shared by every item type. `type` (read-only, derived from the list) and `metadata` are added by the per-type schemas. */
         ItemBase: {
             /** Format: uuid */
             id: string;
@@ -1199,55 +1201,51 @@ export interface components {
             /** @description Ancestor folders and the list. Present on `getItem` only. */
             path?: components["schemas"]["PathSegment"][];
         };
-        GenericItem: components["schemas"]["ItemBase"] & {
-            /** @enum {string} */
-            readonly kind: "generic";
-            metadata: components["schemas"]["GenericMetadata"];
-        };
         MovieItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            readonly kind: "movie";
+            readonly type: "movie";
             metadata: components["schemas"]["MovieMetadata"];
         };
         TvShowItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            readonly kind: "tv_show";
+            readonly type: "tv_show";
             metadata: components["schemas"]["TvShowMetadata"];
         };
         MotorcycleItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            readonly kind: "motorcycle";
+            readonly type: "motorcycle";
             metadata: components["schemas"]["MotorcycleMetadata"];
         };
         CarItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            readonly kind: "car";
+            readonly type: "car";
             metadata: components["schemas"]["CarMetadata"];
         };
         CameraItem: components["schemas"]["ItemBase"] & {
             /** @enum {string} */
-            readonly kind: "camera";
+            readonly type: "camera";
             metadata: components["schemas"]["CameraMetadata"];
         };
-        /** @description An item. `kind` is read-only and derived from the item's list; `metadata` is validated against that workspace kind's field definitions. */
+        /** @description An item. `type` is read-only and derived from the item's list; `metadata` is validated against that workspace type's field definitions. */
         Item: components["schemas"]["ItemBase"] & {
-            readonly kind: string;
+            /** @description `null` when the list has no type. */
+            readonly type: string | null;
             metadata: {
                 [key: string]: unknown;
             };
         };
-        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item (`{}` when the kind has none), and the image is reduced. */
+        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item (`{}` when the type has none), and the image is reduced. */
         ItemSummary: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             list_id: string;
             title: string;
-            kind: components["schemas"]["ItemKind"];
+            type: components["schemas"]["ItemType"];
             image: components["schemas"]["ImageSummary"];
             price: components["schemas"]["Price"];
             website: string | null;
-            /** @description Same object as `metadata` on the full item; its shape depends on `kind` (see the `*Metadata` schemas). */
+            /** @description Same object as `metadata` on the full item; its shape depends on `type` (see the `*Metadata` schemas). */
             metadata: {
                 [key: string]: unknown;
             };
@@ -1265,8 +1263,8 @@ export interface components {
         };
         SearchResult: {
             item: components["schemas"]["ItemSummary"];
-            /** @description The display name from this workspace's kind definition. */
-            kind_name: string;
+            /** @description The display name from this workspace's type definition, `null` when the list has no type. */
+            type_name: string | null;
             path: components["schemas"]["SearchPathSegment"][];
         };
         SearchPage: {
@@ -1279,7 +1277,7 @@ export interface components {
         CreateItemRequest: {
             title: string;
             /**
-             * @description For movie and TV lists, run TMDB lookup during creation. Ignored on other kinds.
+             * @description For movie and TV lists, run TMDB lookup during creation. Ignored on other types.
              * @default true
              */
             lookup: boolean;
@@ -1287,7 +1285,7 @@ export interface components {
             tmdb_id?: number;
             price?: components["schemas"]["PriceInput"];
             website?: string | null;
-            /** @description Free-form here because its shape depends on the list's kind. Validated against that kind: see the `*Metadata` schemas. */
+            /** @description Free-form here because its shape depends on the list's type. Validated against that type: see the `*Metadata` schemas. */
             metadata?: {
                 [key: string]: unknown;
             };
@@ -1296,7 +1294,7 @@ export interface components {
             title?: string;
             price?: components["schemas"]["PriceInput"];
             website?: string | null;
-            /** @description Free-form here because its shape depends on the list's kind. Validated against that kind: see the `*Metadata` schemas. */
+            /** @description Free-form here because its shape depends on the list's type. Validated against that type: see the `*Metadata` schemas. */
             metadata?: {
                 [key: string]: unknown;
             };
@@ -1318,7 +1316,7 @@ export interface components {
             tmdb_id?: number;
         };
         /** @enum {string} */
-        TmdbKind: "movie" | "tv_show";
+        TmdbType: "movie" | "tv_show";
         TmdbSuggestion: {
             tmdb_id: number;
             title: string;
@@ -1340,8 +1338,6 @@ export interface components {
             /** @description Platforms available only through per-title rental or purchase, not subscription, free, or ad-supported offers. Each entry must match (case-insensitively) an entry of `platforms` and is stored with that entry's casing. Unique case-insensitively. Omitted, null or empty means none paid. */
             paid_platforms?: string[];
         };
-        /** @description Must be `{}`. */
-        GenericMetadata: Record<string, never>;
         MovieMetadata: {
             release_year?: number;
             runtime_minutes?: number;
@@ -1514,7 +1510,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description The destination list is missing or trashed, or has another kind than the item's list */
+        /** @description The destination list is missing or trashed, or has another type than the item's list */
         ItemMoveConflict: {
             headers: {
                 [name: string]: unknown;
@@ -1694,7 +1690,7 @@ export interface operations {
             };
         };
     };
-    listKinds: {
+    listTypes: {
         parameters: {
             query?: never;
             header?: never;
@@ -1709,12 +1705,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KindDefinition"][];
+                    "application/json": components["schemas"]["TypeDefinition"][];
                 };
             };
         };
     };
-    createKind: {
+    createType: {
         parameters: {
             query?: never;
             header?: never;
@@ -1723,7 +1719,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateKindRequest"];
+                "application/json": components["schemas"]["CreateTypeRequest"];
             };
         };
         responses: {
@@ -1735,7 +1731,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KindDefinition"];
+                    "application/json": components["schemas"]["TypeDefinition"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -1743,7 +1739,7 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
-    deleteKind: {
+    deleteType: {
         parameters: {
             query?: never;
             header?: {
@@ -1771,7 +1767,7 @@ export interface operations {
             409: components["responses"]["FolderMoveConflict"];
         };
     };
-    updateKind: {
+    updateType: {
         parameters: {
             query?: never;
             header?: {
@@ -1789,7 +1785,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateKindRequest"];
+                "application/json": components["schemas"]["UpdateTypeRequest"];
             };
         };
         responses: {
@@ -1800,13 +1796,13 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KindDefinition"];
+                    "application/json": components["schemas"]["TypeDefinition"];
                 };
             };
             422: components["responses"]["ValidationFailed"];
         };
     };
-    createKindField: {
+    createTypeField: {
         parameters: {
             query?: never;
             header?: {
@@ -1824,7 +1820,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateKindFieldRequest"];
+                "application/json": components["schemas"]["CreateTypeFieldRequest"];
             };
         };
         responses: {
@@ -1835,12 +1831,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KindField"];
+                    "application/json": components["schemas"]["TypeField"];
                 };
             };
         };
     };
-    reorderKindFields: {
+    reorderTypeFields: {
         parameters: {
             query?: never;
             header?: {
@@ -1858,7 +1854,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReorderKindFieldsRequest"];
+                "application/json": components["schemas"]["ReorderTypeFieldsRequest"];
             };
         };
         responses: {
@@ -1872,7 +1868,7 @@ export interface operations {
             };
         };
     };
-    previewDeleteKindField: {
+    previewDeleteTypeField: {
         parameters: {
             query?: never;
             header?: never;
@@ -1890,12 +1886,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KindFieldDeletePreview"];
+                    "application/json": components["schemas"]["TypeFieldDeletePreview"];
                 };
             };
         };
     };
-    deleteKindField: {
+    deleteTypeField: {
         parameters: {
             query?: never;
             header?: {
@@ -1920,12 +1916,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KindFieldDeletePreview"];
+                    "application/json": components["schemas"]["TypeFieldDeletePreview"];
                 };
             };
         };
     };
-    updateKindField: {
+    updateTypeField: {
         parameters: {
             query?: never;
             header?: {
@@ -1944,7 +1940,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateKindFieldRequest"];
+                "application/json": components["schemas"]["UpdateTypeFieldRequest"];
             };
         };
         responses: {
@@ -1955,7 +1951,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KindField"];
+                    "application/json": components["schemas"]["TypeField"];
                 };
             };
         };
@@ -2023,7 +2019,7 @@ export interface operations {
     listTmdbSuggestions: {
         parameters: {
             query: {
-                kind: components["schemas"]["TmdbKind"];
+                type: components["schemas"]["TmdbType"];
                 q: string;
             };
             header?: never;
@@ -2478,11 +2474,11 @@ export interface operations {
     listItems: {
         parameters: {
             query?: {
-                /** @description Defaults to the list's `sort_mode`; may be a field key of the list kind. */
+                /** @description Defaults to the list's `sort_mode`; may be a field key of the list type. */
                 sort?: string;
                 /** @description Case-insensitive title filter; on movie lists it also matches `metadata.director`. */
                 q?: string;
-                /** @description Kind field key to filter. Requires value or range parameters matching the field type. */
+                /** @description Type field key to filter. Requires value or range parameters matching the field type. */
                 filter_field?: string;
                 /** @description Text/link substring or boolean (`true`/`false`) filter value. */
                 filter_value?: string;

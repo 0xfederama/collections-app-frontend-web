@@ -65,7 +65,7 @@ export function RailTree({ onOpenFolder }: { onOpenFolder: () => void }) {
                 <ListIconMark
                   icon={node.list.icon}
                   iconColor={node.list.icon_color}
-                  kind={node.list.kind}
+                  type={node.list.type}
                   className="size-7"
                   iconClassName="size-4"
                 />

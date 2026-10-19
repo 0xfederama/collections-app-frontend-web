@@ -9,7 +9,7 @@ test.describe('AT-11 trash', () => {
     const folderName = uniqueName('Doomed')
     const itemTitle = uniqueName('Keepsake')
     const folder = await createFolder(request, folderName)
-    const list = await createList(request, uniqueName('Inside'), 'generic', folder.id)
+    const list = await createList(request, uniqueName('Inside'), null, folder.id)
     await createItem(request, list.id, itemTitle)
 
     await page.goto('/')
@@ -55,7 +55,7 @@ test.describe('AT-11 trash', () => {
     const previousItems = allPrevious.reduce((total, entry) => total + entry.counts.items, 0)
     const folderName = uniqueName('Emptyable')
     const folder = await createFolder(request, folderName)
-    const list = await createList(request, uniqueName('Inside'), 'generic', folder.id)
+    const list = await createList(request, uniqueName('Inside'), null, folder.id)
     await createItem(request, list.id, uniqueName('Contained'))
 
     await page.goto('/')

@@ -8,7 +8,7 @@ import { searchKeys } from '../search/api'
 import { treeKeys } from '../tree/api'
 
 export type Item = components['schemas']['Item']
-export type ItemKind = components['schemas']['ItemKind']
+export type ItemType = components['schemas']['ItemType']
 export type ItemContent = components['schemas']['Content']
 export type UpdateItemRequest = components['schemas']['UpdateItemRequest']
 export type CreateItemRequest = components['schemas']['CreateItemRequest']
@@ -50,7 +50,7 @@ export function isOwnWriteChain(client: QueryClient, itemId: string, from: numbe
   return at === from
 }
 
-/** `GET /items/{id}`: the full item, with `metadata` shaped by `kind` and the `path` of its list. */
+/** `GET /items/{id}`: the full item, with `metadata` shaped by `type` and the `path` of its list. */
 export function useItem(itemId: string) {
   return useQuery({
     queryKey: itemKeys.detail(itemId),

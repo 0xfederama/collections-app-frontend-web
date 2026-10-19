@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { createItem, createList, itemPanel, itemUrl, uniqueName } from './helpers'
 
-test.describe('F003-W1 item: kind field, website, sort by field key', () => {
+test.describe('F003-W1 item: type field, website, sort by field key', () => {
   test('create a movie item, fill it in, save, reload, values stick', async ({ page, request }) => {
     const listName = uniqueName('Films')
     const title = '[mock] movie name'
@@ -32,7 +32,7 @@ test.describe('F003-W1 item: kind field, website, sort by field key', () => {
     await page.reload()
     const item = itemPanel(page)
     await expect(item.getByRole('heading', { level: 1, name: title })).toBeVisible()
-    // Populated kind fields and the website remain visible after reload.
+    // Populated type fields and the website remain visible after reload.
     await expect(item.getByText(website)).toBeVisible()
     await expect(item.getByText('2001', { exact: true })).toBeVisible()
     await expect(item.getByRole('textbox', { name: 'Release year' })).toBeHidden()
@@ -43,7 +43,7 @@ test.describe('F003-W1 item: kind field, website, sort by field key', () => {
     // Sort by the field key (release year, ascending): 2001 before 2020.
     await page.goto(`/lists/${list.id}`)
     const links = page.getByRole('list', { name: 'Items' }).getByRole('link')
-    // A movie list sorts by its kind's default field (release year) until another is chosen.
+    // A movie list sorts by its type's default field (release year) until another is chosen.
     await expect(links).toHaveText([title, older])
     await page.getByRole('combobox', { name: 'Sort' }).click()
     await page.getByRole('option', { name: 'Manual' }).click()
@@ -142,7 +142,7 @@ test.describe('F011-W1/W2 streaming: no country, several platforms from a dropdo
   })
 })
 
-test.describe('D-085 price only on the kinds that have one', () => {
+test.describe('D-085 price only on the types that have one', () => {
   test('add a price range to a car item, reload, remove it', async ({ page, request }) => {
     const listName = uniqueName('Cars')
     const title = uniqueName('Miata')
@@ -231,6 +231,9 @@ test.describe('F009-W3 pinned fields: up to two, in order', () => {
       await checkbox(name).click()
       await saved
     }
+    // Clear the movie defaults (runtime + streaming) before selecting populated fields.
+    await tick('Runtime')
+    await tick('Streaming')
     // Two fields in a row, in the order they are ticked; a third cannot be added.
     await tick('Release year')
     await tick('Runtime')

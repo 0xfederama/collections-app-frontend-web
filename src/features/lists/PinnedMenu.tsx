@@ -5,15 +5,15 @@ import type { PinnedFields } from './api'
 import { toolbarControl } from './toolbarStyles'
 import { MAX_PINNED, pinnableFields, resolvePinned } from './pinned'
 import type { List } from './api'
-import type { KindDefinition } from '../items/kinds'
+import type { TypeDefinition } from '../items/types'
 
 const itemClass =
   'flex h-9 cursor-pointer items-center gap-2 rounded-md px-3 text-sm outline-none select-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11 [&_svg]:size-4'
 
 /**
- * Toolbar menu "Pinned fields" (F009-W3): a checklist of the fields the list's kind offers, in
+ * Toolbar menu "Pinned fields" (F009-W3): a checklist of the fields the list's type offers, in
  * order — the first pinned field reads next to the title, the second in the right corner. It shows
- * the effective selection (the kind default when the list has none) and its order. A toggle saves
+ * the effective selection (the type default when the list has none) and its order. A toggle saves
  * at once; ticking a field appends it, unticking removes it (so the second becomes the first), and
  * at most two can be pinned. "Reset to default" sends `null`.
  */
@@ -23,8 +23,8 @@ export function PinnedMenu({
   onChange,
   onReset,
 }: {
-  list: Pick<List, 'kind' | 'pinned_fields'>
-  definition: KindDefinition
+  list: Pick<List, 'type' | 'pinned_fields'>
+  definition: TypeDefinition
   onChange: (pinned: PinnedFields) => void
   onReset: () => void
 }) {

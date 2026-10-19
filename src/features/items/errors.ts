@@ -17,7 +17,7 @@ export function classifyItemError(error: unknown): ItemError {
           'Someone else changed this item. The latest version was loaded, please check it and try again.',
       }
     }
-    if (error.code === 'kind_mismatch') {
+    if (error.code === 'type_mismatch') {
       return {
         kind: 'unavailable',
         message:

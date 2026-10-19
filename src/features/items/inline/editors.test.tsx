@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import type { KindField } from '../kinds'
+import type { TypeField } from '../types'
 import { draftFromItem, type Draft } from '../form/draft'
 import type { Item } from '../api'
 import { FieldInputs, type FieldForm } from './editors'
@@ -9,13 +9,13 @@ import type { FieldSpec } from './fields'
 
 const definition = {
   name: 'Board game',
-  fields: [] as KindField[],
+  fields: [] as TypeField[],
 }
 const item: Item = {
   id: 'i1',
   list_id: 'l1',
   title: 'Brass',
-  kind: 'board_game',
+  type: 'board_game',
   image: null,
   price: null,
   website: null,
@@ -27,7 +27,7 @@ const item: Item = {
   updated_at: '2026-10-19T00:00:00Z',
 }
 
-const kindField = (type: KindField['type']): KindField => ({
+const typeField = (type: TypeField['type']): TypeField => ({
   key: 'custom',
   label: 'Custom field',
   type,
@@ -36,8 +36,8 @@ const kindField = (type: KindField['type']): KindField => ({
   version: 1,
 })
 
-function renderField(type: KindField['type']) {
-  const field = kindField(type)
+function renderField(type: TypeField['type']) {
+  const field = typeField(type)
   const draft: Draft = { ...draftFromItem(item, { ...definition, fields: [field] }) }
   const setMeta = vi.fn()
   const form: FieldForm = {

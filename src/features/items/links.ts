@@ -1,4 +1,4 @@
-import type { ItemKind } from './api'
+import type { ItemType } from './api'
 
 export interface ExternalLink {
   id: 'google' | 'letterboxd' | 'imdb' | 'reddit' | 'website'
@@ -9,18 +9,18 @@ export interface ExternalLink {
 
 interface LinkSource {
   title: string
-  kind: ItemKind
+  type: ItemType
   website: string | null
   metadata?: object
 }
 
 /** The search text for the item (PRODUCT §9): movies add year and `film`, TV shows `TV series`. */
-function searchQuery({ title, kind, metadata }: LinkSource): string {
-  if (kind === 'movie') {
+function searchQuery({ title, type, metadata }: LinkSource): string {
+  if (type === 'movie') {
     const year = (metadata as { release_year?: unknown } | undefined)?.release_year
     return [title, typeof year === 'number' ? String(year) : '', 'film'].filter(Boolean).join(' ')
   }
-  if (kind === 'tv_show') return `${title} TV series`
+  if (type === 'tv_show') return `${title} TV series`
   return title
 }
 
@@ -59,7 +59,7 @@ export function safeImdbUrl(url: unknown): string | null {
 
 /**
  * The external controls of AT-13 and F-002, in this order: movies Google, Letterboxd, IMDb; TV
- * shows Google, IMDb; every other kind Google, Reddit, Website. The website is never replaced by a
+ * shows Google, IMDb; every other type Google, Reddit, Website. The website is never replaced by a
  * search; IMDb opens the stored `imdb_url` when valid, else a title search on IMDb. `URLSearchParams`
  * and `encodeURIComponent` do the encoding, so `&`, `#`, quotes and non-ASCII titles cannot change
  * the URL's structure.
@@ -74,7 +74,7 @@ export function buildExternalLinks(item: LinkSource): ExternalLink[] {
       safeImdbUrl((item.metadata as { imdb_url?: unknown } | undefined)?.imdb_url) ??
       `https://www.imdb.com/find/?${new URLSearchParams({ q: item.title, s: 'tt' }).toString()}`,
   }
-  if (item.kind === 'movie') {
+  if (item.type === 'movie') {
     const letterboxd: ExternalLink = {
       id: 'letterboxd',
       label: 'Letterboxd',
@@ -82,7 +82,7 @@ export function buildExternalLinks(item: LinkSource): ExternalLink[] {
     }
     return [googleLink, letterboxd, imdb]
   }
-  if (item.kind === 'tv_show') return [googleLink, imdb]
+  if (item.type === 'tv_show') return [googleLink, imdb]
   return [
     googleLink,
     { id: 'reddit', label: 'Reddit', href: google(`${query} site:reddit.com`) },

@@ -28,7 +28,7 @@ function makeItem(n: number, over: Partial<ItemSummary> = {}): ItemSummary {
     id,
     list_id: LIST,
     title: `Item ${n}`,
-    kind: 'movie',
+    type: 'movie',
     image: null,
     price: null,
     website: null,
@@ -98,7 +98,7 @@ function useBackend(options: Options = {}): Recorded {
         ? state.items.filter(
             (i) =>
               i.title.toLowerCase().includes(q) ||
-              (i.kind === 'movie' &&
+              (i.type === 'movie' &&
                 typeof i.metadata.director === 'string' &&
                 i.metadata.director.toLowerCase().includes(q)),
           )
@@ -160,10 +160,10 @@ function renderList(path: string) {
   return router
 }
 
-/** The sidebar tree with the test list's kind replaced (the header reads the kind from there). */
-function treeWithKind(kind: List['kind']) {
+/** The sidebar tree with the test list's type replaced (the header reads the type from there). */
+function treeWithType(type: List['type']) {
   const tree = { ...(exampleResponses.getTree.body as components['schemas']['Tree']) }
-  tree.lists = tree.lists.map((list) => (list.id === LIST ? { ...list, kind } : list))
+  tree.lists = tree.lists.map((list) => (list.id === LIST ? { ...list, type } : list))
   server.use(http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json(tree)))
 }
 
@@ -173,9 +173,9 @@ const titles = () =>
   within(screen.getByRole('list', { name: 'Items' }))
     .getAllByRole('link')
     .map((a) => a.textContent)
-const filterField = (kind: List['kind'] = 'movie') =>
+const filterField = (type: List['type'] = 'movie') =>
   screen.getByRole('searchbox', {
-    name: kind === 'movie' ? 'Filter items by title or director' : 'Filter items by title',
+    name: type === 'movie' ? 'Filter items by title or director' : 'Filter items by title',
   })
 const sortSelect = () => screen.getByRole('combobox', { name: /Sort/ })
 
@@ -188,17 +188,17 @@ describe('W-06 display modes', () => {
   const rich = [
     makeItem(1, {
       title: 'The Matrix',
-      kind: 'car',
+      type: 'car',
       price: { min: '1200', max: '1500', currency: 'EUR' },
     }),
   ]
 
   it.each(['compact', 'thumbnail', 'grid'] as const)(
-    '%s renders title link and price, no kind label, status or summary (F007-W4, W7)',
+    '%s renders title link and price, no type label, status or summary (F007-W4, W7)',
     async (mode) => {
       // A car list pins price by default, so the row shows it.
-      treeWithKind('car')
-      useBackend({ list: { display_mode: mode, kind: 'car', pinned_fields: null }, items: rich })
+      treeWithType('car')
+      useBackend({ list: { display_mode: mode, type: 'car', pinned_fields: null }, items: rich })
       renderList(at())
       const ul = await itemsList()
       const link = within(ul).getByRole('link', { name: 'The Matrix' })
@@ -348,7 +348,7 @@ describe('W-06 URL state: sort and filter', () => {
   })
 
   it('F013-W3 offers and requests the movie Director sort', async () => {
-    const backend = useBackend({ list: { kind: 'movie' } })
+    const backend = useBackend({ list: { type: 'movie' } })
     const user = userEvent.setup()
     const router = renderList(at())
     await itemsList()
@@ -361,8 +361,8 @@ describe('W-06 URL state: sort and filter', () => {
   })
 
   it('F013-W3 ignores ?sort=director on non-movie lists', async () => {
-    treeWithKind('tv_show')
-    const backend = useBackend({ list: { kind: 'tv_show' } })
+    treeWithType('tv_show')
+    const backend = useBackend({ list: { type: 'tv_show' } })
     const user = userEvent.setup()
     renderList(at('?sort=director'))
     await itemsList()
@@ -374,7 +374,7 @@ describe('W-06 URL state: sort and filter', () => {
 
   it('F014-W4 serializes a type-aware number range and sends the field filter contract', async () => {
     const backend = useBackend({
-      list: { kind: 'movie' },
+      list: { type: 'movie' },
       items: [
         makeItem(1, { title: 'Earlier', metadata: { release_year: 1999 } }),
         makeItem(2, { title: 'Later', metadata: { release_year: 2001 } }),
@@ -399,7 +399,7 @@ describe('W-06 URL state: sort and filter', () => {
   })
 
   it('F014-W4 ignores stale and type-incompatible field filter URLs', async () => {
-    const backend = useBackend({ list: { kind: 'movie' } })
+    const backend = useBackend({ list: { type: 'movie' } })
     const router = renderList(at('?filter_field=missing&filter_value=anything'))
     await itemsList()
     await waitFor(() => expect(router.state.location.search).toBe(''))
@@ -407,8 +407,8 @@ describe('W-06 URL state: sort and filter', () => {
   })
 
   it('F002 a car list offers "Price" and picking it sets ?sort=price', async () => {
-    treeWithKind('car')
-    const backend = useBackend({ list: { kind: 'car' } })
+    treeWithType('car')
+    const backend = useBackend({ list: { type: 'car' } })
     const user = userEvent.setup()
     const router = renderList(at())
     await itemsList()
@@ -419,8 +419,8 @@ describe('W-06 URL state: sort and filter', () => {
   })
 
   it('F009-W2 a movie list has no Price in its sort menu and ignores ?sort=price', async () => {
-    treeWithKind('movie')
-    const backend = useBackend({ list: { kind: 'movie' } })
+    treeWithType('movie')
+    const backend = useBackend({ list: { type: 'movie' } })
     const user = userEvent.setup()
     renderList(at('?sort=price'))
     await itemsList()
@@ -429,13 +429,13 @@ describe('W-06 URL state: sort and filter', () => {
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
     await user.click(sortSelect())
     expect(screen.queryByRole('option', { name: 'Price' })).not.toBeInTheDocument()
-    // The rest of the kind's sort keys are still there.
+    // The rest of the type's sort keys are still there.
     expect(screen.getByRole('option', { name: 'Release year' })).toBeInTheDocument()
   })
 
   it('F009-W2 a movie list cannot pin price, a car list can', async () => {
-    treeWithKind('movie')
-    useBackend({ list: { kind: 'movie' } })
+    treeWithType('movie')
+    useBackend({ list: { type: 'movie' } })
     const user = userEvent.setup()
     renderList(at())
     await itemsList()
@@ -444,18 +444,18 @@ describe('W-06 URL state: sort and filter', () => {
     expect(within(menu).queryByRole('menuitemcheckbox', { name: 'Price' })).not.toBeInTheDocument()
   })
 
-  it('F007-W9 ?sort=kind_key is ignored on a generic list', async () => {
-    treeWithKind('generic')
-    const backend = useBackend({ list: { kind: 'generic' } })
-    renderList(at('?sort=kind_key'))
+  it('F007-W9 ?sort=<field key> is ignored on a list with no type', async () => {
+    treeWithType(null)
+    const backend = useBackend({ list: { type: null } })
+    renderList(at('?sort=release_year'))
     await itemsList()
     expect(sortSelect()).toHaveTextContent('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
   })
 
-  it('F008-W14 ?sort=price is ignored on a generic list, whose sort menu has no Price', async () => {
-    treeWithKind('generic')
-    const backend = useBackend({ list: { kind: 'generic' } })
+  it('F008-W14 ?sort=price is ignored on a list with no type, whose sort menu has no Price', async () => {
+    treeWithType(null)
+    const backend = useBackend({ list: { type: null } })
     const user = userEvent.setup()
     renderList(at('?sort=price'))
     await itemsList()
@@ -482,7 +482,7 @@ describe('W-06 URL state: sort and filter', () => {
 
   it('F013-W3 movie filter matches director names through the q contract', async () => {
     const backend = useBackend({
-      list: { kind: 'movie' },
+      list: { type: 'movie' },
       items: [
         makeItem(1, { title: 'Barbie', metadata: { director: 'Greta Gerwig' } }),
         makeItem(2, { title: 'Alien', metadata: { director: 'Ridley Scott' } }),
@@ -553,16 +553,16 @@ describe('F002-W2 pinned fields', () => {
   })
   const car = makeItem(2, {
     title: 'Miata',
-    kind: 'car',
+    type: 'car',
     price: { min: '1200', max: '1500', currency: 'EUR' },
     metadata: { model_year: 1999 },
   })
 
   it.each(['compact', 'thumbnail', 'grid'] as const)(
-    '%s shows the kind default: runtime next to the title, streaming icon with the paid badge',
+    '%s shows the type default: runtime next to the title, streaming icon with the paid badge',
     async (mode) => {
       useBackend({
-        list: { display_mode: mode, kind: 'movie', pinned_fields: null },
+        list: { display_mode: mode, type: 'movie', pinned_fields: null },
         items: [movie],
       })
       renderList(at())
@@ -573,7 +573,7 @@ describe('F002-W2 pinned fields', () => {
   )
 
   it('a movie row from the API shows runtime and a streaming icon with $ for a paid platform', async () => {
-    useBackend({ list: { kind: 'movie', pinned_fields: null }, items: [movie] })
+    useBackend({ list: { type: 'movie', pinned_fields: null }, items: [movie] })
     renderList(at())
     const ul = await itemsList()
     expect(within(ul).getByText('117 min')).toBeInTheDocument()
@@ -583,7 +583,7 @@ describe('F002-W2 pinned fields', () => {
 
   it('shows the list selection instead of the default, in its order, and [] pins nothing', async () => {
     useBackend({
-      list: { kind: 'car', pinned_fields: ['price'] },
+      list: { type: 'car', pinned_fields: ['price'] },
       items: [car],
     })
     renderList(at())
@@ -594,7 +594,7 @@ describe('F002-W2 pinned fields', () => {
 
   it('the menu shows the effective selection, ticking a field appends it with If-Match', async () => {
     const backend = useBackend({
-      list: { kind: 'movie', pinned_fields: ['runtime_minutes'], version: 4 },
+      list: { type: 'movie', pinned_fields: ['runtime_minutes'], version: 4 },
       items: [movie],
     })
     const user = userEvent.setup()
@@ -613,7 +613,7 @@ describe('F002-W2 pinned fields', () => {
 
   it('Reset to default PATCHes pinned_fields null', async () => {
     const backend = useBackend({
-      list: { kind: 'car', pinned_fields: ['price'], version: 2 },
+      list: { type: 'car', pinned_fields: ['price'], version: 2 },
       items: [car],
     })
     const user = userEvent.setup()
@@ -1111,8 +1111,8 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
 
   it('selecting a TMDB suggestion immediately creates the selected title with its id', async () => {
     mockViewport(1400)
-    useBackend({ list: { kind: 'movie' } })
-    treeWithKind('movie')
+    useBackend({ list: { type: 'movie' } })
+    treeWithType('movie')
     const posts: unknown[] = []
     server.use(
       http.post(createUrl, async ({ request }) => {

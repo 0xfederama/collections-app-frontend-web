@@ -2,22 +2,22 @@ import { expect, test } from '@playwright/test'
 import { itemPanel, uniqueName } from './helpers'
 
 test.describe('F014-W4 custom field list workflow', () => {
-  test('creates a kind and field, adds an item, pins, sorts, and filters by the field', async ({
+  test('creates a type and field, adds an item, pins, sorts, and filters by the field', async ({
     page,
     request,
   }) => {
-    const kindName = uniqueName('Board game')
+    const typeName = uniqueName('Board game')
     await page.goto('/settings')
     const settings = page.getByRole('dialog', { name: 'Settings' })
     await settings.getByRole('button', { name: 'Types & fields' }).click()
     await page.getByRole('button', { name: 'New type' }).click()
-    await page.getByLabel('Type name').fill(kindName)
-    const createKindResponse = page.waitForResponse(
+    await page.getByLabel('Type name').fill(typeName)
+    const createTypeResponse = page.waitForResponse(
       (response) =>
-        response.request().method() === 'POST' && response.url().endsWith('/api/v1/kinds'),
+        response.request().method() === 'POST' && response.url().endsWith('/api/v1/types'),
     )
     await page.getByRole('button', { name: 'Create type' }).click()
-    const kind = await (await createKindResponse).json()
+    const type = await (await createTypeResponse).json()
     const region = page.getByRole('region', { name: 'Types & fields' })
     await region.getByLabel('New field name').fill('Rating')
     await region.getByRole('combobox', { name: 'Field type' }).click()
@@ -25,14 +25,14 @@ test.describe('F014-W4 custom field list workflow', () => {
     const createFieldResponse = page.waitForResponse(
       (response) =>
         response.request().method() === 'POST' &&
-        response.url().endsWith(`/api/v1/kinds/${kind.key}/fields`),
+        response.url().endsWith(`/api/v1/types/${type.key}/fields`),
     )
     await region.getByRole('button', { name: 'Add', exact: true }).click()
     await createFieldResponse
 
     await page.getByRole('button', { name: 'Close' }).click()
     const listResponse = await request.post('/api/v1/lists', {
-      data: { name: uniqueName('Tabletop'), kind: kind.key, folder_id: null },
+      data: { name: uniqueName('Tabletop'), type: type.key, folder_id: null },
     })
     expect(listResponse.status()).toBe(201)
     const list = await listResponse.json()

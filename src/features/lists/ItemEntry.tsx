@@ -7,8 +7,8 @@ import type { DisplayMode, ItemSummary } from './api'
 import { ItemThumb } from './ItemThumb'
 import { pinnedPlacements, pinnedTexts, streamingOf, type PinnedKeys } from './pinned'
 import { ServiceIcon } from '../../components/ServiceIcon'
-import type { ItemKind } from '../items/api'
-import type { KindDefinition } from '../items/kinds'
+import type { ItemType } from '../items/api'
+import type { TypeDefinition } from '../items/types'
 
 /** What an entry needs to be reorderable. Absent when reordering is not available. */
 export interface EntryReorder {
@@ -29,10 +29,10 @@ export interface ItemEntryProps {
   /** Called on click, before navigating (the list saves its scroll position). */
   onOpen: () => void
   reorder?: EntryReorder
-  /** The fields shown beside the title and in the corner (the list's, else the kind default). */
+  /** The fields shown beside the title and in the corner (the list's, else the type default). */
   pinned: PinnedKeys
-  kind: ItemKind
-  definition: KindDefinition
+  type: ItemType
+  definition: TypeDefinition
 }
 
 const linkClass =
@@ -52,7 +52,7 @@ function PinnedSlot({
 }: {
   keys: readonly string[]
   item: ItemSummary
-  definition: KindDefinition
+  definition: TypeDefinition
   iconSize: number
   className?: string
 }) {

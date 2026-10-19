@@ -1,7 +1,7 @@
 import type { components } from '../../../generated/schema'
 import type { FieldError } from '../../../lib/api'
-import type { Item, ItemKind } from '../api'
-import { formatField, isStreamingField, type KindField } from '../kinds'
+import type { Item, ItemType } from '../api'
+import { formatField, isStreamingField, type TypeField } from '../types'
 import { IMDB_URL } from '../links'
 
 /**
@@ -27,10 +27,10 @@ export type PriceMode = 'single' | 'range'
 
 export interface Draft {
   title: string
-  /** The item's kind, derived from its list. Read-only: no input edits it. */
-  kind: ItemKind
-  kindName: string
-  fields: readonly KindField[]
+  /** The item's type, derived from its list. Read-only: no input edits it. */
+  type: ItemType
+  typeName: string
+  fields: readonly TypeField[]
   /** Is the price control shown? A price is never there by default ("+ Add price"). */
   hasPrice: boolean
   priceMode: PriceMode
@@ -41,7 +41,7 @@ export interface Draft {
   priceMax: string
   currency: string
   website: string
-  /** Text of each kind field except `streaming`, by key. Empty = unset. */
+  /** Text of each type field except `streaming`, by key. Empty = unset. */
   meta: Record<string, string>
   streamingCountry: string
   /** Comma-separated. */
@@ -76,11 +76,11 @@ const PRICE = /^\d{1,10}(\.\d{1,2})?$/
 
 const metadataOf = (item: Item) => item.metadata as Metadata
 
-/** The fields of a kind that are plain inputs. `streaming` is two inputs of its own. */
-export const simpleFields = (fields: readonly KindField[]): readonly KindField[] =>
+/** The fields of a type that are plain inputs. `streaming` is two inputs of its own. */
+export const simpleFields = (fields: readonly TypeField[]): readonly TypeField[] =>
   fields.filter((field) => !isStreamingField(field))
 
-export const hasStreaming = (fields: readonly KindField[]) => fields.some(isStreamingField)
+export const hasStreaming = (fields: readonly TypeField[]) => fields.some(isStreamingField)
 
 /**
  * The price inputs for a saved price. `min == max` is a single price; anything else (including an
@@ -110,7 +110,7 @@ function priceDraft(price: ItemPrice) {
 
 export function draftFromItem(
   item: Item,
-  definition: { name: string; fields: readonly KindField[] },
+  definition: { name: string; fields: readonly TypeField[] },
 ): Draft {
   const meta: Record<string, string> = {}
   const stored = metadataOf(item)
@@ -122,8 +122,8 @@ export function draftFromItem(
   const streaming = stored.streaming as Streaming | undefined
   return {
     title: item.title,
-    kind: item.kind,
-    kindName: definition.name,
+    type: item.type,
+    typeName: definition.name,
     fields: definition.fields,
     ...priceDraft(item.price),
     website: item.website ?? '',
@@ -161,7 +161,7 @@ export function parsePlatforms(text: string): string[] {
 }
 
 /** The value a text input stands for, or the raw text when it is not valid (validation reports it). */
-function fieldValue(field: KindField, text: string): unknown {
+function fieldValue(field: TypeField, text: string): unknown {
   const value = text.trim()
   if (!value) return undefined
   switch (field.type) {
@@ -227,12 +227,12 @@ const BASIC_KEYS = ['title', 'price', 'website'] as const
 
 /**
  * The PATCH body: only the fields that differ from the saved item. `metadata` replaces the whole
- * object on the server (D-062), so it goes as the full object whenever any kind field changed. The
- * kind is never sent: it belongs to the list. An unchanged price sends nothing; removing it sends `null`.
+ * object on the server (D-062), so it goes as the full object whenever any type field changed. The
+ * type is never sent: it belongs to the list. An unchanged price sends nothing; removing it sends `null`.
  */
 export function buildPatch(base: Item, draft: Draft, defaults: Defaults): UpdateItemRequest {
   const before = toFields(
-    draftFromItem(base, { name: draft.kindName, fields: draft.fields }),
+    draftFromItem(base, { name: draft.typeName, fields: draft.fields }),
     defaults,
   )
   const after = toFields(draft, defaults)
@@ -255,8 +255,8 @@ export const isDirty = (base: Item, draft: Draft, defaults: Defaults) =>
 /** Error keys are the API's dotted field paths, so a 422 `errors[].field` is looked up directly. */
 export type ErrorMap = Record<string, string>
 
-/** Every input of the form for a kind, in page order (also the order of "focus the first invalid"). */
-export function inputKeys(fields: readonly KindField[]): string[] {
+/** Every input of the form for a type, in page order (also the order of "focus the first invalid"). */
+export function inputKeys(fields: readonly TypeField[]): string[] {
   const keys = ['title', 'price.amount', 'price.min', 'price.max', 'price.currency', 'website']
   for (const field of fields) {
     if (isStreamingField(field)) {
@@ -269,7 +269,7 @@ export function inputKeys(fields: readonly KindField[]): string[] {
 /** The DOM id of the input of an error key. */
 export const inputId = (key: string) => `item-field-${key.replaceAll('.', '-')}`
 
-function validateField(field: KindField, text: string): string | undefined {
+function validateField(field: TypeField, text: string): string | undefined {
   const value = text.trim()
   if (!value) return undefined
   switch (field.type) {
@@ -347,7 +347,7 @@ export function validate(draft: Draft, defaults: Defaults): ErrorMap {
     const message = validateField(field, draft.meta[field.key] ?? '')
     if (message) errors[`metadata.${field.key}`] = message
   }
-  validateKindRules(draft, errors)
+  validateTypeRules(draft, errors)
 
   if (hasStreaming(draft.fields)) {
     const platforms = parsePlatforms(draft.streamingPlatforms)
@@ -368,12 +368,12 @@ export function validate(draft: Draft, defaults: Defaults): ErrorMap {
 }
 
 /** Rules that look at two fields (DATA_MODEL §2.1). Only reported when both fields are valid alone. */
-function validateKindRules(draft: Draft, errors: ErrorMap) {
+function validateTypeRules(draft: Draft, errors: ErrorMap) {
   const num = (key: string) => {
     const text = (draft.meta[key] ?? '').trim()
     return INTEGER.test(text) && !errors[`metadata.${key}`] ? Number(text) : undefined
   }
-  if (draft.kind === 'tv_show') {
+  if (draft.type === 'tv_show') {
     const first = num('first_air_year')
     const end = num('end_year')
     if (first !== undefined && end !== undefined && end < first) {
@@ -400,11 +400,11 @@ const ALIASES: Record<string, string> = {
 /**
  * Maps `errors[].field` to the inputs of the form: `price.max` to the price field, `metadata.power_hp`
  * to the Power input, `metadata.streaming.platforms[2]` to the platforms input. Anything else
- * (or a metadata key the current kind has no input for) goes to `other`.
+ * (or a metadata key the current type has no input for) goes to `other`.
  */
 export function mapServerErrors(
   errors: readonly FieldError[],
-  fields: readonly KindField[],
+  fields: readonly TypeField[],
   priceMode: PriceMode = 'single',
 ): MappedErrors {
   const known = new Set(inputKeys(fields))
@@ -439,7 +439,7 @@ const priceText = (price: PriceInput) => {
   return min !== null ? `from ${min} ${currency}` : `up to ${max} ${currency}`
 }
 
-function metadataText(fields: readonly KindField[], key: string, value: unknown): string {
+function metadataText(fields: readonly TypeField[], key: string, value: unknown): string {
   if (value === undefined) return '(cleared)'
   if (key === 'streaming') {
     const streaming = value as Streaming
@@ -455,7 +455,7 @@ function metadataText(fields: readonly KindField[], key: string, value: unknown)
  */
 export function draftDump(base: Item, draft: Draft, defaults: Defaults): string {
   const before = toFields(
-    draftFromItem(base, { name: draft.kindName, fields: draft.fields }),
+    draftFromItem(base, { name: draft.typeName, fields: draft.fields }),
     defaults,
   )
   const after = toFields(draft, defaults)
@@ -473,6 +473,6 @@ export function draftDump(base: Item, draft: Draft, defaults: Defaults): string 
     const label = draft.fields.find((field) => field.key === key)?.label ?? key
     details.push(`  ${label}: ${metadataText(draft.fields, key, after.metadata[key])}`)
   }
-  if (details.length > 0) lines.push(`${draft.kindName} details:`, ...details)
+  if (details.length > 0) lines.push(`${draft.typeName} details:`, ...details)
   return lines.join('\n')
 }

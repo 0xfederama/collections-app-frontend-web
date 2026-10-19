@@ -1,9 +1,9 @@
-import { kindDisplayName } from '../../components/ui'
+import { NO_TYPE_LABEL } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import { ItemThumb } from '../lists/ItemThumb'
 import { ListIconMark } from '../lists/ListIconMark'
 import type { SearchResult } from './api'
-import type { ItemKind } from '../items/api'
+import type { ItemType } from '../items/api'
 
 /** Where a result opens. The shell decides between the side panel and a full page. */
 export const resultHref = ({ item }: SearchResult) => `/lists/${item.list_id}/items/${item.id}`
@@ -12,11 +12,11 @@ export const resultHref = ({ item }: SearchResult) => `/lists/${item.list_id}/it
 export function ResultPath({
   path,
   className,
-  kind = 'generic',
+  type = null,
 }: {
   path: SearchResult['path']
   className?: string
-  kind?: ItemKind
+  type?: ItemType
 }) {
   return (
     <span className={cx('block truncate text-text-muted', className)}>
@@ -26,7 +26,7 @@ export function ResultPath({
         <ListIconMark
           icon={path.at(-1)?.icon}
           iconColor={path.at(-1)?.icon_color}
-          kind={kind}
+          type={type}
           className="ml-1 inline-grid size-4 align-middle"
           iconClassName="size-3"
         />
@@ -56,14 +56,14 @@ export function SearchResultBody({ result, large }: { result: SearchResult; larg
         >
           {item.title}
         </span>
-        <ResultPath path={path} className="text-xs" kind={item.kind} />
+        <ResultPath path={path} className="text-xs" type={item.type} />
       </span>
       <span
         className="inline-flex shrink-0 text-text-muted"
-        title={kindDisplayName(item.kind, result.kind_name)}
+        title={result.type_name ?? NO_TYPE_LABEL}
       >
-        <ListIconMark kind={item.kind} className="size-5 bg-transparent" iconClassName="size-4" />
-        <span className="sr-only">{kindDisplayName(item.kind, result.kind_name)}</span>
+        <ListIconMark type={item.type} className="size-5 bg-transparent" iconClassName="size-4" />
+        <span className="sr-only">{result.type_name ?? NO_TYPE_LABEL}</span>
       </span>
     </>
   )

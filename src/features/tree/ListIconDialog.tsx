@@ -10,8 +10,8 @@ import { useUpdateListIcon } from './mutations'
 import { treeKeys, type List } from './api'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
-import { kindName } from '../items/kinds'
-import { useKinds } from '../settings/api'
+import { typeName } from '../items/types'
+import { useTypes } from '../settings/api'
 
 const COLOR_LABELS: Record<Exclude<ListIconColor, null>, string> = {
   red: 'Red',
@@ -48,8 +48,8 @@ export function ListIconDialog({
   const queryClient = useQueryClient()
   const action = useAction('list')
   const toast = useToast()
-  const definitions = useKinds()
-  const definition = definitions.data?.find((kind) => kind.key === snapshot.kind)
+  const definitions = useTypes()
+  const definition = definitions.data?.find((type) => type.key === snapshot.type)
 
   const reload = async () => {
     setReloading(true)
@@ -78,7 +78,7 @@ export function ListIconDialog({
     ? (builtinListIcon(parsedChoice.builtin)?.name ?? 'Built-in icon')
     : parsedChoice.emoji
       ? `Emoji ${parsedChoice.emoji}`
-      : `Default ${kindName(definition, snapshot.kind)} icon`
+      : `Default ${typeName(definition, snapshot.type)} icon`
   const draftText = `Icon: ${choiceLabel}\nColor: ${choice.icon_color ? COLOR_LABELS[choice.icon_color] : 'None'}`
 
   const copyDraft = async () => {
@@ -120,7 +120,7 @@ export function ListIconDialog({
             <ListIconMark
               icon={choice.icon ?? definition?.default_icon}
               iconColor={choice.icon_color}
-              kind={snapshot.kind}
+              type={snapshot.type}
               className="size-9"
               iconClassName="size-5"
             />
@@ -188,7 +188,7 @@ export function ListIconDialog({
       {pickerOpen && (
         <ListIconPicker
           value={choice}
-          kind={snapshot.kind}
+          type={snapshot.type}
           onChange={setChoice}
           onClose={() => setPickerOpen(false)}
         />

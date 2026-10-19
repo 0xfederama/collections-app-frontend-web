@@ -6,7 +6,7 @@ import { AppearanceSection } from '../features/settings/AppearanceSection'
 import { useSettings } from '../features/settings/api'
 import { ConnectionSection } from '../features/settings/ConnectionSection'
 import { SettingsForm, type SettingsCloseRequestRef } from '../features/settings/SettingsForm'
-import { KindsFieldsPane } from '../features/settings/KindsFieldsPane'
+import { TypesFieldsPane } from '../features/settings/TypesFieldsPane'
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
@@ -107,8 +107,8 @@ export function SettingsRoute() {
           />
         )}
         <div hidden={pane !== 'Types & fields'}>
-          <Section id="settings-kinds-fields" title="Types & fields">
-            <KindsFieldsPane />
+          <Section id="settings-types-fields" title="Types & fields">
+            <TypesFieldsPane />
           </Section>
         </div>
         <div hidden={pane !== 'About'}>

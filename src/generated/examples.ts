@@ -26,57 +26,57 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     "contentType": "text/plain",
     "body": "ready"
   },
-  "listKinds": {
+  "listTypes": {
     "method": "get",
-    "path": "/api/v1/kinds",
+    "path": "/api/v1/types",
     "status": 200,
     "contentType": "application/json"
   },
-  "createKind": {
+  "createType": {
     "method": "post",
-    "path": "/api/v1/kinds",
+    "path": "/api/v1/types",
     "status": 201,
     "contentType": "application/json"
   },
-  "updateKind": {
+  "updateType": {
     "method": "patch",
-    "path": "/api/v1/kinds/{key}",
+    "path": "/api/v1/types/{key}",
     "status": 200,
     "contentType": "application/json"
   },
-  "deleteKind": {
+  "deleteType": {
     "method": "delete",
-    "path": "/api/v1/kinds/{key}",
+    "path": "/api/v1/types/{key}",
     "status": 204,
     "contentType": null
   },
-  "createKindField": {
+  "createTypeField": {
     "method": "post",
-    "path": "/api/v1/kinds/{key}/fields",
+    "path": "/api/v1/types/{key}/fields",
     "status": 201,
     "contentType": "application/json"
   },
-  "reorderKindFields": {
+  "reorderTypeFields": {
     "method": "put",
-    "path": "/api/v1/kinds/{key}/fields/order",
+    "path": "/api/v1/types/{key}/fields/order",
     "status": 204,
     "contentType": null
   },
-  "previewDeleteKindField": {
+  "previewDeleteTypeField": {
     "method": "get",
-    "path": "/api/v1/kinds/{key}/fields/{fieldKey}",
+    "path": "/api/v1/types/{key}/fields/{fieldKey}",
     "status": 200,
     "contentType": "application/json"
   },
-  "updateKindField": {
+  "updateTypeField": {
     "method": "patch",
-    "path": "/api/v1/kinds/{key}/fields/{fieldKey}",
+    "path": "/api/v1/types/{key}/fields/{fieldKey}",
     "status": 200,
     "contentType": "application/json"
   },
-  "deleteKindField": {
+  "deleteTypeField": {
     "method": "delete",
-    "path": "/api/v1/kinds/{key}/fields/{fieldKey}",
+    "path": "/api/v1/types/{key}/fields/{fieldKey}",
     "status": 200,
     "contentType": "application/json"
   },
@@ -169,7 +169,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "id": "7c1e5a10-0000-4000-8000-000000000011",
           "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
           "name": "Watchlist",
-          "kind": "movie",
+          "type": "movie",
           "description": "Films to watch",
           "display_mode": "thumbnail",
           "sort_mode": "manual",
@@ -189,7 +189,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "id": "7c1e5a10-0000-4000-8000-000000000012",
           "folder_id": "7c1e5a10-0000-4000-8000-000000000003",
           "name": "Motorbikes",
-          "kind": "motorcycle",
+          "type": "motorcycle",
           "description": null,
           "display_mode": "grid",
           "sort_mode": "title",
@@ -286,7 +286,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000011",
       "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
       "name": "Watchlist",
-      "kind": "movie",
+      "type": "movie",
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
@@ -318,7 +318,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000011",
       "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
       "name": "Watchlist",
-      "kind": "movie",
+      "type": "movie",
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
@@ -356,7 +356,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000011",
       "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
       "name": "Watchlist",
-      "kind": "movie",
+      "type": "movie",
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
@@ -388,7 +388,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000011",
       "folder_id": "7c1e5a10-0000-4000-8000-000000000002",
       "name": "Watchlist",
-      "kind": "movie",
+      "type": "movie",
       "description": "Films to watch",
       "display_mode": "thumbnail",
       "sort_mode": "manual",
@@ -416,7 +416,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "id": "7c1e5a10-0000-4000-8000-000000000101",
           "list_id": "7c1e5a10-0000-4000-8000-000000000011",
           "title": "The Matrix",
-          "kind": "movie",
+          "type": "movie",
           "image": {
             "url": "/api/v1/attachments/7c1e5a10-0000-4000-8000-000000000201/file",
             "thumbnail_url": "/api/v1/attachments/7c1e5a10-0000-4000-8000-000000000201/thumbnail"
@@ -447,7 +447,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           "id": "7c1e5a10-0000-4000-8000-000000000103",
           "list_id": "7c1e5a10-0000-4000-8000-000000000011",
           "title": "Blade Runner 2049",
-          "kind": "movie",
+          "type": "movie",
           "image": {
             "url": "https://example.org/images/br2049.jpg"
           },
@@ -477,7 +477,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000101",
       "list_id": "7c1e5a10-0000-4000-8000-000000000011",
       "title": "The Matrix",
-      "kind": "movie",
+      "type": "movie",
       "image": {
         "source": "upload",
         "attachment_id": "7c1e5a10-0000-4000-8000-000000000201",
@@ -526,7 +526,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000101",
       "list_id": "7c1e5a10-0000-4000-8000-000000000011",
       "title": "The Matrix",
-      "kind": "movie",
+      "type": "movie",
       "image": null,
       "price": null,
       "website": null,
@@ -578,7 +578,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000102",
       "list_id": "7c1e5a10-0000-4000-8000-000000000012",
       "title": "Ducati Monster",
-      "kind": "motorcycle",
+      "type": "motorcycle",
       "image": {
         "source": "url",
         "url": "https://example.org/images/monster.jpg"
@@ -617,7 +617,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000101",
       "list_id": "7c1e5a10-0000-4000-8000-000000000011",
       "title": "The Matrix",
-      "kind": "movie",
+      "type": "movie",
       "image": {
         "source": "upload",
         "attachment_id": "7c1e5a10-0000-4000-8000-000000000201",
@@ -660,7 +660,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000102",
       "list_id": "7c1e5a10-0000-4000-8000-000000000012",
       "title": "Ducati Monster",
-      "kind": "motorcycle",
+      "type": "motorcycle",
       "image": {
         "source": "url",
         "url": "https://example.org/images/monster.jpg"
@@ -693,7 +693,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000101",
       "list_id": "7c1e5a10-0000-4000-8000-000000000011",
       "title": "The Matrix",
-      "kind": "movie",
+      "type": "movie",
       "image": {
         "source": "upload",
         "attachment_id": "7c1e5a10-0000-4000-8000-000000000201",
@@ -736,7 +736,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       "id": "7c1e5a10-0000-4000-8000-000000000102",
       "list_id": "7c1e5a10-0000-4000-8000-000000000012",
       "title": "Ducati Monster",
-      "kind": "motorcycle",
+      "type": "motorcycle",
       "image": {
         "source": "url",
         "url": "https://example.org/images/monster.jpg"
@@ -852,7 +852,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "id": "7c1e5a10-0000-4000-8000-000000000101",
             "list_id": "7c1e5a10-0000-4000-8000-000000000011",
             "title": "The Matrix",
-            "kind": "movie",
+            "type": "movie",
             "image": null,
             "price": null,
             "website": null,
@@ -876,7 +876,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "created_at": "2026-10-14T09:31:00Z",
             "updated_at": "2026-10-14T10:00:00Z"
           },
-          "kind_name": "Movie",
+          "type_name": "Movie",
           "path": [
             {
               "type": "folder",
@@ -921,7 +921,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "id": "7c1e5a10-0000-4000-8000-000000000101",
             "list_id": "7c1e5a10-0000-4000-8000-000000000011",
             "title": "The Matrix",
-            "kind": "movie",
+            "type": "movie",
             "image": null,
             "price": null,
             "website": null,
@@ -945,7 +945,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             "created_at": "2026-10-14T09:31:00Z",
             "updated_at": "2026-10-14T10:00:00Z"
           },
-          "kind_name": "Movie",
+          "type_name": "Movie",
           "path": [
             {
               "type": "folder",

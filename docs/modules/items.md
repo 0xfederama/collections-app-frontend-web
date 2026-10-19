@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Item detail and inline editing at `/lists/:listId/items/:itemId`, including image, description, fields, Move and Delete. Field definitions come from the kinds API. TMDB lookup remains available when creating movie and TV items.
+Item detail and inline editing at `/lists/:listId/items/:itemId`, including image, description, fields, Move and Delete. Field definitions come from the types API. TMDB lookup remains available when creating movie and TV items.
 
 ## Key files
 
@@ -10,7 +10,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `image/ImageDialog.tsx`, `ImageSection.tsx`, `api.ts`, `upload.ts`: image changes.
 - `inline/`, `form/draft.ts`: field edits and draft helpers.
 - `content/`: description editor and history.
-- `kinds/index.ts`: helpers over the API kind definitions (no static registry).
+- `types/index.ts`: helpers over the API type definitions (no static registry).
 - `api.ts`, `TmdbTitleField.tsx`, `NewItemDraft.tsx`, `links.ts`: item data, TMDB lookup, inline creation and links.
 
 ## Interfaces
@@ -18,13 +18,13 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `ItemPage()`, `ItemView({ item })`, `ItemHero`.
 - `ImageDialog({ item, onClose, initialFile? })`, `ImageSection({ item, initialFile?, onChanged, onStale })`.
 - `useItem`, `useUpdateItem`, `useCreateItem`, `useLookupItem`, `useDeleteItem`, `useMoveItem`.
-- `kindDefinition(definitions, key)`, `hasPrice(definition)`, `formatField(field, value)`, `kindRows(definition, metadata)`, `kindName`.
+- `typeDefinition(definitions, key)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
 - `TmdbTitleField`, `createLookupSelection`.
 - `DescriptionField({ itemId, listId })`, `InlineField`, `FieldBlock`.
 
 ## Gotchas
 
-- Kind fields, labels, types and price support come from `GET /api/v1/kinds`, not from code; `hasPrice` reads `allows_price` from the definition.
+- Type fields, labels, types and price support come from `GET /api/v1/types`, not from code; `hasPrice` reads `allows_price` from the definition.
 - IMDb is rendered as a link tile and streaming keeps its own editor, so neither is a plain field row (`isHiddenTmdbField`, `isStreamingField`).
 - Pasting an image file while an item's detail page is open opens the image dialog and uploads that file through the normal upload path.
 - Image changes are individual requests using the item's `If-Match`; 412/404 keeps the dialog open with a reload action.

@@ -9,29 +9,30 @@ import {
   Skeleton,
   TextField,
 } from '../../components/ui'
-import { Plus } from '../../components/ui/icons'
+import { Lock, Plus } from '../../components/ui/icons'
 import { SortableProvider, useSortableRow } from '../../components/ui/sortable'
 import { ApiError, NetworkError } from '../../lib/api'
 import { cx } from '../../lib/cx'
+import { NO_TYPE_VALUE, typeOptions, valueToType } from '../items/types'
 import { ListIconMark } from '../lists/ListIconMark'
 import { ListIconPicker } from '../lists/ListIconPicker'
 import type { IconChoice } from '../lists/iconModel'
 import { useUpdateList } from '../tree/mutations'
 import { treeKeys, useTree } from '../tree/api'
 import {
-  kindKeys,
-  useCreateKind,
-  useCreateKindField,
-  useDeleteKind,
-  useDeleteKindField,
-  useKinds,
-  usePreviewKindFieldDelete,
-  useRenameKindField,
-  useReorderKindFields,
-  useUpdateKind,
-  type KindDefinition,
-  type KindField,
-  type UpdateKindRequest,
+  typeKeys,
+  useCreateType,
+  useCreateTypeField,
+  useDeleteType,
+  useDeleteTypeField,
+  useTypes,
+  usePreviewTypeFieldDelete,
+  useRenameTypeField,
+  useReorderTypeFields,
+  useUpdateType,
+  type TypeDefinition,
+  type TypeField,
+  type UpdateTypeRequest,
 } from './api'
 
 const fieldTypes = [
@@ -43,22 +44,21 @@ const fieldTypes = [
 ] as const
 
 const NONE_FIELD = '__none__'
-const GENERIC_KEY = 'generic'
 
-interface KindDefaultsDraft {
-  kindKey: string
+interface TypeDefaultsDraft {
+  typeKey: string
   icon: string | null
   allowsPrice: boolean
   sortField: string | null
   pinnedFields: string[] | null
 }
 
-const defaultsFromKind = (kind: KindDefinition): KindDefaultsDraft => ({
-  kindKey: kind.key,
-  icon: kind.default_icon ?? null,
-  allowsPrice: kind.allows_price,
-  sortField: kind.default_sort_field ?? null,
-  pinnedFields: kind.default_pinned_fields ?? null,
+const defaultsFromType = (type: TypeDefinition): TypeDefaultsDraft => ({
+  typeKey: type.key,
+  icon: type.default_icon ?? null,
+  allowsPrice: type.allows_price,
+  sortField: type.default_sort_field ?? null,
+  pinnedFields: type.default_pinned_fields ?? null,
 })
 
 function sameNullableList(left: string[] | null, right: string[] | null) {
@@ -78,12 +78,12 @@ function errorText(error: unknown) {
   return 'Something went wrong. Your changes are still here; try again.'
 }
 
-function KindRow({
-  kind,
+function TypeRow({
+  type,
   selected,
   onSelect,
 }: {
-  kind: KindDefinition
+  type: TypeDefinition
   selected: boolean
   onSelect: () => void
 }) {
@@ -97,17 +97,13 @@ function KindRow({
         selected ? 'bg-accent/10 text-text' : 'hover:bg-fill',
       )}
     >
-      <ListIconMark
-        icon={kind.default_icon}
-        kind="generic"
-        className="size-9"
-        iconClassName="size-4"
-      />
-      <span className="min-w-0 flex-1 text-sm font-medium break-words">{kind.name}</span>
-      {kind.is_locked && (
-        <span className="shrink-0 rounded-full bg-fill px-2 py-1 text-xs text-text-muted">
-          Built in · locked
-        </span>
+      <ListIconMark icon={type.default_icon} className="size-9" iconClassName="size-4" />
+      <span className="min-w-0 flex-1 text-sm font-medium break-words">{type.name}</span>
+      {type.is_locked && (
+        <>
+          <Lock aria-hidden className="size-3.5 shrink-0 text-text-muted" />
+          <span className="sr-only">Built in · locked</span>
+        </>
       )}
     </button>
   )
@@ -120,7 +116,7 @@ function SortableField({
   onRename,
   onDelete,
 }: {
-  field: KindField
+  field: TypeField
   index: number
   size: number
   onRename: () => void
@@ -128,7 +124,7 @@ function SortableField({
 }) {
   const { ref, isDragging, a11y } = useSortableRow(
     field.key,
-    field.is_locked ? undefined : { group: 'kind-fields', index, size, label: field.label },
+    field.is_locked ? undefined : { group: 'type-fields', index, size, label: field.label },
   )
   return (
     <div
@@ -164,32 +160,30 @@ function SortableField({
   )
 }
 
-export function KindsFieldsPane() {
+export function TypesFieldsPane() {
   const queryClient = useQueryClient()
-  const kindsQuery = useKinds()
+  const typesQuery = useTypes()
   const treeQuery = useTree()
-  const createKind = useCreateKind()
-  const updateKind = useUpdateKind()
-  const deleteKind = useDeleteKind()
+  const createType = useCreateType()
+  const updateType = useUpdateType()
+  const deleteType = useDeleteType()
   const updateList = useUpdateList()
-  const createField = useCreateKindField()
-  const renameField = useRenameKindField()
-  const deleteField = useDeleteKindField()
-  const previewDelete = usePreviewKindFieldDelete()
-  const reorderFields = useReorderKindFields()
-  const allKinds = useMemo(() => kindsQuery.data ?? [], [kindsQuery.data])
-  // The Generic type is the fallback for lists without a type: it is never shown or edited here.
-  const kinds = useMemo(() => allKinds.filter((kind) => kind.key !== GENERIC_KEY), [allKinds])
+  const createField = useCreateTypeField()
+  const renameField = useRenameTypeField()
+  const deleteField = useDeleteTypeField()
+  const previewDelete = usePreviewTypeFieldDelete()
+  const reorderFields = useReorderTypeFields()
+  const types = useMemo(() => typesQuery.data ?? [], [typesQuery.data])
   const [pickedKey, setSelectedKey] = useState<string | null>(null)
-  // Until the user picks one (or after the picked kind is gone), the first kind is selected.
-  const selected = kinds.find((kind) => kind.key === pickedKey) ?? kinds[0] ?? null
+  // Until the user picks one (or after the picked type is gone), the first type is selected.
+  const selected = types.find((type) => type.key === pickedKey) ?? types[0] ?? null
   const selectedKey = selected?.key ?? null
-  const [defaultsDraft, setDefaults] = useState<KindDefaultsDraft | null>(null)
+  const [defaultsDraft, setDefaults] = useState<TypeDefaultsDraft | null>(null)
   const defaults =
-    defaultsDraft && defaultsDraft.kindKey === selectedKey
+    defaultsDraft && defaultsDraft.typeKey === selectedKey
       ? defaultsDraft
       : selected
-        ? defaultsFromKind(selected)
+        ? defaultsFromType(selected)
         : null
   const [renameDraft, setRenameDraft] = useState<{ key: string; name: string } | null>(null)
   const renameName =
@@ -205,25 +199,25 @@ export function KindsFieldsPane() {
   const [allowsPrice, setAllowsPrice] = useState(false)
   const [icon, setIcon] = useState<IconChoice>({ icon: null, icon_color: null })
   const [iconOpen, setIconOpen] = useState(false)
-  const [iconTarget, setIconTarget] = useState<'create' | 'kind'>('create')
-  const [editingField, setEditingField] = useState<KindField | null>(null)
+  const [iconTarget, setIconTarget] = useState<'create' | 'type'>('create')
+  const [editingField, setEditingField] = useState<TypeField | null>(null)
   const [fieldDraft, setFieldDraft] = useState('')
-  const [confirmDeleteKind, setConfirmDeleteKind] = useState<KindDefinition | null>(null)
-  const [confirmChangeLists, setConfirmChangeLists] = useState<KindDefinition | null>(null)
-  const [changeTargetKind, setChangeTargetKind] = useState('')
+  const [confirmDeleteType, setConfirmDeleteType] = useState<TypeDefinition | null>(null)
+  const [confirmChangeLists, setConfirmChangeLists] = useState<TypeDefinition | null>(null)
+  const [changeTargetType, setChangeTargetType] = useState('')
   const [confirmDeleteField, setConfirmDeleteField] = useState<{
-    kind: KindDefinition
-    field: KindField
+    type: TypeDefinition
+    field: TypeField
     count: number
   } | null>(null)
   const [operationError, setOperationError] = useState<unknown>(null)
   const [conflict, setConflict] = useState(false)
   const customFields = selected?.fields.filter((field) => !field.is_locked) ?? []
   const affectedLists =
-    confirmDeleteKind && treeQuery.data
-      ? treeQuery.data.lists.filter((list) => list.kind === confirmDeleteKind.key)
+    confirmDeleteType && treeQuery.data
+      ? treeQuery.data.lists.filter((list) => list.type === confirmDeleteType.key)
       : []
-  const targetKinds = allKinds.filter((kind) => kind.key !== confirmDeleteKind?.key)
+  const targetTypes = types.filter((type) => type.key !== confirmDeleteType?.key)
   const defaultFieldOptions = selected
     ? [
         ...selected.fields.map((field) => ({ value: field.key, label: field.label })),
@@ -252,11 +246,11 @@ export function KindsFieldsPane() {
 
   const reloadLatest = async () => {
     try {
-      await queryClient.refetchQueries({ queryKey: kindKeys.kinds }, { throwOnError: true })
-      const latest = queryClient.getQueryData<KindDefinition[]>(kindKeys.kinds)
-      const latestSelected = latest?.find((kind) => kind.key === selectedKey)
+      await queryClient.refetchQueries({ queryKey: typeKeys.types }, { throwOnError: true })
+      const latest = queryClient.getQueryData<TypeDefinition[]>(typeKeys.types)
+      const latestSelected = latest?.find((type) => type.key === selectedKey)
       if (latestSelected) {
-        setDefaults(defaultsFromKind(latestSelected))
+        setDefaults(defaultsFromType(latestSelected))
         setRenameName(latestSelected.name)
       }
       setOperationError(null)
@@ -266,11 +260,11 @@ export function KindsFieldsPane() {
     }
   }
 
-  const submitKind = async (event: FormEvent) => {
+  const submitType = async (event: FormEvent) => {
     event.preventDefault()
     const trimmed = name.trim()
     if (!trimmed) return
-    const created = await createKind
+    const created = await createType
       .mutateAsync({
         name: trimmed,
         ...(icon.icon ? { default_icon: icon.icon } : {}),
@@ -284,16 +278,16 @@ export function KindsFieldsPane() {
       setName('')
       setIcon({ icon: null, icon_color: null })
       setAllowsPrice(false)
-      setSelectedKey((created as KindDefinition).key)
+      setSelectedKey((created as TypeDefinition).key)
       setOperationError(null)
       setCreateError(null)
       setCreateOpen(false)
     }
   }
 
-  const saveKindDefaults = async () => {
+  const saveTypeDefaults = async () => {
     if (!selected || !defaults || selected.is_locked) return
-    const patch: UpdateKindRequest = {}
+    const patch: UpdateTypeRequest = {}
     if (defaults.icon !== (selected.default_icon ?? null)) patch.default_icon = defaults.icon
     if (defaults.allowsPrice !== selected.allows_price) patch.allows_price = defaults.allowsPrice
     if (defaults.sortField !== (selected.default_sort_field ?? null))
@@ -305,15 +299,15 @@ export function KindsFieldsPane() {
     try {
       setOperationError(null)
       setConflict(false)
-      const updated = await updateKind.mutateAsync({ kind: selected, patch })
-      setDefaults(defaultsFromKind(updated))
+      const updated = await updateType.mutateAsync({ type: selected, patch })
+      setDefaults(defaultsFromType(updated))
     } catch (error) {
       setOperationError(error)
       if (error instanceof ApiError && error.status === 412) setConflict(true)
     }
   }
 
-  if (kindsQuery.isPending)
+  if (typesQuery.isPending)
     return (
       <div role="status" className="flex flex-col gap-3">
         <span className="sr-only">Loading types</span>
@@ -322,11 +316,11 @@ export function KindsFieldsPane() {
         <Skeleton className="h-12" />
       </div>
     )
-  if (kindsQuery.isError)
+  if (typesQuery.isError)
     return (
       <div role="alert" className="flex flex-col items-start gap-2 text-sm">
         <p>Couldn’t load types and fields.</p>
-        <Button variant="secondary" onClick={() => void kindsQuery.refetch()}>
+        <Button variant="secondary" onClick={() => void typesQuery.refetch()}>
           Retry
         </Button>
       </div>
@@ -336,13 +330,13 @@ export function KindsFieldsPane() {
     <div className="flex flex-col gap-5 sm:flex-row">
       <div className="flex min-w-0 flex-col gap-2 sm:w-52 sm:shrink-0">
         <div className="flex flex-col gap-1" role="list" aria-label="Types">
-          {kinds.map((kind) => (
-            <div role="listitem" key={kind.key}>
-              <KindRow
-                kind={kind}
-                selected={selected?.key === kind.key}
+          {types.map((type) => (
+            <div role="listitem" key={type.key}>
+              <TypeRow
+                type={type}
+                selected={selected?.key === type.key}
                 onSelect={() => {
-                  setSelectedKey(kind.key)
+                  setSelectedKey(type.key)
                   setOperationError(null)
                 }}
               />
@@ -380,17 +374,17 @@ export function KindsFieldsPane() {
                   size="sm"
                   disabled={treeQuery.isPending || treeQuery.isError}
                   onClick={() => {
-                    setChangeTargetKind(
-                      kinds.find((kind) => kind.key !== selected.key)?.key ?? GENERIC_KEY,
+                    setChangeTargetType(
+                      types.find((type) => type.key !== selected.key)?.key ?? NO_TYPE_VALUE,
                     )
-                    setConfirmDeleteKind(selected)
+                    setConfirmDeleteType(selected)
                   }}
                 >
                   Delete type
                 </Button>
               )}
             </div>
-            {!selected.is_locked && defaults?.kindKey === selected.key && (
+            {!selected.is_locked && defaults?.typeKey === selected.key && (
               <div className="mt-4 flex flex-col gap-4 border-t border-border pt-4">
                 <div className="flex flex-wrap items-end gap-2">
                   <div className="min-w-40 flex-1">
@@ -405,15 +399,15 @@ export function KindsFieldsPane() {
                     variant="secondary"
                     size="sm"
                     disabled={!renameName.trim() || renameName.trim() === selected.name}
-                    pending={updateKind.isPending}
+                    pending={updateType.isPending}
                     onClick={() =>
                       void run(async () => {
-                        const updated = await updateKind.mutateAsync({
-                          kind: selected,
+                        const updated = await updateType.mutateAsync({
+                          type: selected,
                           patch: { name: renameName.trim() },
                         })
                         setRenameName(updated.name)
-                        setDefaults(defaultsFromKind(updated))
+                        setDefaults(defaultsFromType(updated))
                       })
                     }
                   >
@@ -426,7 +420,7 @@ export function KindsFieldsPane() {
                     variant="secondary"
                     size="sm"
                     onClick={() => {
-                      setIconTarget('kind')
+                      setIconTarget('type')
                       setIconOpen(true)
                     }}
                   >
@@ -547,8 +541,8 @@ export function KindsFieldsPane() {
                     variant="secondary"
                     size="sm"
                     disabled={!defaultsDirty}
-                    pending={updateKind.isPending}
-                    onClick={() => void saveKindDefaults()}
+                    pending={updateType.isPending}
+                    onClick={() => void saveTypeDefaults()}
                   >
                     Save type settings
                   </Button>
@@ -577,7 +571,7 @@ export function KindsFieldsPane() {
                 onClick={() =>
                   void run(async () => {
                     await createField.mutateAsync({
-                      kind: selected,
+                      type: selected,
                       body: { label: fieldLabel.trim(), type: fieldType },
                     })
                     setFieldLabel('')
@@ -597,11 +591,11 @@ export function KindsFieldsPane() {
             {selected.fields.length ? (
               <SortableProvider
                 onMove={(move) => {
-                  if (move.group !== 'kind-fields') return
+                  if (move.group !== 'type-fields') return
                   const keys = customFields.map((field) => field.key)
                   const [moved] = keys.splice(move.from, 1)
                   if (moved) keys.splice(move.to, 0, moved)
-                  void run(() => reorderFields.mutateAsync({ kind: selected, keys }))
+                  void run(() => reorderFields.mutateAsync({ type: selected, keys }))
                 }}
               >
                 <div className="mt-3 flex flex-col gap-2" role="list" aria-label="Fields">
@@ -615,7 +609,7 @@ export function KindsFieldsPane() {
                             const label = fieldDraft.trim()
                             if (label)
                               void run(async () => {
-                                await renameField.mutateAsync({ kind: selected, field, label })
+                                await renameField.mutateAsync({ type: selected, field, label })
                                 setEditingField(null)
                               })
                           }}
@@ -655,11 +649,11 @@ export function KindsFieldsPane() {
                           onDelete={() =>
                             void run(async () => {
                               const preview = await previewDelete.mutateAsync({
-                                kind: selected,
+                                type: selected,
                                 field,
                               })
                               setConfirmDeleteField({
-                                kind: selected,
+                                type: selected,
                                 field,
                                 count: preview.populated_item_count,
                               })
@@ -686,11 +680,11 @@ export function KindsFieldsPane() {
       {createOpen && (
         <Dialog
           open
-          onOpenChange={(open) => !open && !createKind.isPending && setCreateOpen(false)}
+          onOpenChange={(open) => !open && !createType.isPending && setCreateOpen(false)}
           title="New type"
           description="Create the type first, then add its fields and set the default sort and pins in its details."
         >
-          <form onSubmit={(event) => void submitKind(event)} className="flex flex-col gap-3">
+          <form onSubmit={(event) => void submitType(event)} className="flex flex-col gap-3">
             <TextField
               label="Type name"
               value={name}
@@ -728,7 +722,7 @@ export function KindsFieldsPane() {
                   'Choose icon'
                 )}
               </Button>
-              <Button type="submit" pending={createKind.isPending} disabled={!name.trim()}>
+              <Button type="submit" pending={createType.isPending} disabled={!name.trim()}>
                 Create type
               </Button>
             </div>
@@ -763,10 +757,10 @@ export function KindsFieldsPane() {
           )}
         </div>
       )}
-      {confirmDeleteKind && (
+      {confirmDeleteType && (
         <AlertDialog
           open
-          title={`Delete ${confirmDeleteKind.name}?`}
+          title={`Delete ${confirmDeleteType.name}?`}
           description={
             affectedLists.length
               ? `${affectedLists.length} active ${affectedLists.length === 1 ? 'list uses' : 'lists use'} this type: ${affectedLists.map((list) => list.name).join(', ')}. Change them to another type before deleting this definition.`
@@ -774,14 +768,14 @@ export function KindsFieldsPane() {
           }
           confirmLabel={affectedLists.length ? 'Choose target type' : 'Delete type'}
           destructive
-          pending={deleteKind.isPending || treeQuery.isPending}
-          onOpenChange={(open) => !open && !deleteKind.isPending && setConfirmDeleteKind(null)}
+          pending={deleteType.isPending || treeQuery.isPending}
+          onOpenChange={(open) => !open && !deleteType.isPending && setConfirmDeleteType(null)}
           onConfirm={() =>
             affectedLists.length
-              ? (setConfirmDeleteKind(null), setConfirmChangeLists(confirmDeleteKind))
+              ? (setConfirmDeleteType(null), setConfirmChangeLists(confirmDeleteType))
               : void run(async () => {
-                  await deleteKind.mutateAsync(confirmDeleteKind)
-                  setConfirmDeleteKind(null)
+                  await deleteType.mutateAsync(confirmDeleteType)
+                  setConfirmDeleteType(null)
                   setSelectedKey(null)
                 })
           }
@@ -795,38 +789,41 @@ export function KindsFieldsPane() {
           confirmLabel="Change listed types"
           destructive
           keepOpen
-          pending={updateList.isPending || deleteKind.isPending}
+          pending={updateList.isPending || deleteType.isPending}
           onOpenChange={(open) => !open && !updateList.isPending && setConfirmChangeLists(null)}
           onConfirm={() =>
             void run(async () => {
-              if (!changeTargetKind) return
+              if (!changeTargetType) return
               const latestLists =
-                treeQuery.data?.lists.filter((list) => list.kind === confirmChangeLists.key) ?? []
+                treeQuery.data?.lists.filter((list) => list.type === confirmChangeLists.key) ?? []
               if (latestLists.length === 0) {
                 setConfirmChangeLists(null)
-                setConfirmDeleteKind(confirmChangeLists)
+                setConfirmDeleteType(confirmChangeLists)
                 return
               }
               for (const list of latestLists) {
-                await updateList.mutateAsync({ list, patch: { kind: changeTargetKind } })
+                await updateList.mutateAsync({
+                  list,
+                  patch: { type: valueToType(changeTargetType) },
+                })
               }
               await queryClient.refetchQueries({ queryKey: treeKeys.tree, type: 'active' })
               setConfirmChangeLists(null)
-              setConfirmDeleteKind(confirmChangeLists)
+              setConfirmDeleteType(confirmChangeLists)
             })
           }
         >
           <Select
             label="Change listed lists to"
-            options={targetKinds.map((kind) => ({ value: kind.key, label: kind.name }))}
-            value={changeTargetKind}
-            onValueChange={setChangeTargetKind}
-            disabled={updateList.isPending || targetKinds.length === 0}
+            options={typeOptions(targetTypes)}
+            value={changeTargetType}
+            onValueChange={setChangeTargetType}
+            disabled={updateList.isPending}
           />
           <p className="text-sm text-text-muted">
             Lists:{' '}
             {treeQuery.data?.lists
-              .filter((list) => list.kind === confirmChangeLists.key)
+              .filter((list) => list.type === confirmChangeLists.key)
               .map((list) => list.name)
               .join(', ') || 'None'}
           </p>
@@ -856,13 +853,12 @@ export function KindsFieldsPane() {
       {iconOpen && (
         <ListIconPicker
           title="Choose type icon"
-          kind="generic"
           showColorControls={false}
           value={
             iconTarget === 'create'
               ? icon
               : {
-                  icon: defaults && defaults.kindKey === selected?.key ? defaults.icon : null,
+                  icon: defaults && defaults.typeKey === selected?.key ? defaults.icon : null,
                   icon_color: null,
                 }
           }

@@ -1,24 +1,26 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
 import { problemResponse } from './problems'
-import { mockKinds } from './kinds'
+import { mockTypes } from './types'
 
 type Folder = components['schemas']['Folder']
 type List = components['schemas']['List']
 type Tree = components['schemas']['Tree']
 type DisplayMode = components['schemas']['DisplayMode']
 type SortMode = components['schemas']['SortMode']
-type ItemKind = components['schemas']['ItemKind']
+type ItemType = components['schemas']['ItemType']
 
 const DISPLAY_MODES: DisplayMode[] = ['compact', 'thumbnail', 'grid']
-const ITEM_KINDS = mockKinds.map((kind) => kind.key)
-const PRICE_KINDS = new Set(mockKinds.filter((kind) => kind.allows_price).map((kind) => kind.key))
-const supportsSort = (kind: ItemKind, sort: SortMode) =>
+const ITEM_TYPES: ItemType[] = mockTypes.map((type) => type.key)
+const PRICE_TYPES = new Set<ItemType>(
+  mockTypes.filter((type) => type.allows_price).map((type) => type.key),
+)
+const supportsSort = (type: ItemType, sort: SortMode) =>
   ['manual', 'title', 'updated'].includes(sort) ||
-  (sort === 'price' && PRICE_KINDS.has(kind)) ||
-  mockKinds.some(
+  (sort === 'price' && PRICE_TYPES.has(type)) ||
+  mockTypes.some(
     (definition) =>
-      definition.key === kind && definition.fields.some((field) => field.key === sort),
+      definition.key === type && definition.fields.some((field) => field.key === sort),
   )
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
@@ -174,14 +176,19 @@ export function createTreeBackend(initial: Tree) {
     http.post(url('/api/v1/lists'), async ({ request }) => {
       const body = (await request.json()) as {
         name?: unknown
-        kind?: unknown
+        type?: unknown
         folder_id?: string | null
         icon?: string | null
         icon_color?: List['icon_color']
       }
       const name = validName(body.name)
       if (!name) return invalid('name', 'Name must be 1 to 200 characters.')
-      if (!ITEM_KINDS.includes(body.kind as ItemKind)) return invalid('kind', 'Choose a kind.')
+      if (
+        body.type !== undefined &&
+        !ITEM_TYPES.includes(body.type as ItemType) &&
+        body.type !== null
+      )
+        return invalid('type', 'Unknown type.')
       const parent = body.folder_id ?? null
       if (parent !== null && !folderOf(parent))
         return problemResponse(409, 'destination_unavailable')
@@ -189,7 +196,7 @@ export function createTreeBackend(initial: Tree) {
         id: newId(),
         folder_id: parent,
         name,
-        kind: body.kind as ItemKind,
+        type: (body.type ?? null) as ItemType,
         description: null,
         display_mode: 'grid',
         sort_mode: 'manual',
@@ -241,7 +248,7 @@ export function createTreeBackend(initial: Tree) {
       if (mismatch) return mismatch
       const body = (await request.json()) as {
         name?: unknown
-        kind?: unknown
+        type?: unknown
         description?: string | null
         display_mode?: unknown
         sort_mode?: unknown
@@ -250,12 +257,10 @@ export function createTreeBackend(initial: Tree) {
         icon_color?: List['icon_color']
       }
       let changed = false
-      const nextKind = ITEM_KINDS.includes(body.kind as ItemKind)
-        ? (body.kind as ItemKind)
-        : list.kind
+      const nextType = body.type === undefined ? list.type : (body.type as ItemType)
       const nextSort = (body.sort_mode as SortMode | undefined) ?? list.sort_mode
-      if (!supportsSort(nextKind, nextSort))
-        return invalid('sort_mode', 'Sorting by this field is not available on this kind.')
+      if (!supportsSort(nextType, nextSort))
+        return invalid('sort_mode', 'Sorting by this field is not available on this type.')
       if (body.display_mode !== undefined) {
         if (!DISPLAY_MODES.includes(body.display_mode as DisplayMode)) {
           return invalid('display_mode', 'Unknown display mode.')
@@ -264,7 +269,7 @@ export function createTreeBackend(initial: Tree) {
         changed = true
       }
       if (body.sort_mode !== undefined) {
-        if (!supportsSort(nextKind, body.sort_mode as SortMode)) {
+        if (!supportsSort(nextType, body.sort_mode as SortMode)) {
           return invalid('sort_mode', 'Unknown sort mode.')
         }
         list.sort_mode = body.sort_mode as SortMode
@@ -276,10 +281,11 @@ export function createTreeBackend(initial: Tree) {
         list.name = name
         changed = true
       }
-      if (body.kind !== undefined) {
-        if (!ITEM_KINDS.includes(body.kind as ItemKind)) return invalid('kind', 'Unknown kind.')
-        if (body.kind !== list.kind) {
-          list.kind = body.kind as ItemKind
+      if (body.type !== undefined) {
+        if (body.type !== null && !ITEM_TYPES.includes(body.type as ItemType))
+          return invalid('type', 'Unknown type.')
+        if (body.type !== list.type) {
+          list.type = body.type as ItemType
           list.pinned_fields = null
           changed = true
         }

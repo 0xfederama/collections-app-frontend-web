@@ -12,7 +12,7 @@ describe('F013-W1 title lookup', () => {
     const onSuggestionSelect = vi.fn()
     renderWithProviders(
       <TmdbTitleField
-        kind="movie"
+        type="movie"
         title="The Mat"
         onTitleChange={onTitleChange}
         onSelectionChange={onSelectionChange}
@@ -42,7 +42,7 @@ describe('F013-W1 title lookup', () => {
     const onSuggestionSelect = vi.fn()
     renderWithProviders(
       <TmdbTitleField
-        kind="movie"
+        type="movie"
         title="The Mat"
         onTitleChange={onTitleChange}
         onSelectionChange={onSelectionChange}

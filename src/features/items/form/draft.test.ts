@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { Item } from '../api'
-import type { KindDefinition } from '../kinds'
+import type { TypeDefinition } from '../types'
 import { buildPatch, draftDump, draftFromItem, mapServerErrors, toFields, validate } from './draft'
 
-const definition: KindDefinition = {
+const definition: TypeDefinition = {
   key: 'board_game',
   name: 'Board game',
   default_icon: null,
@@ -39,7 +39,7 @@ const item: Item = {
   id: 'i1',
   list_id: 'l1',
   title: 'Brass',
-  kind: definition.key,
+  type: definition.key,
   image: null,
   price: null,
   website: null,
@@ -110,7 +110,7 @@ describe('F014-W3 definition-backed item drafts', () => {
     expect(mapped.other).toEqual(['metadata.unknown: Unknown.'])
   })
 
-  it('uses the API kind and field labels in the conflict-copy text', () => {
+  it('uses the API type and field labels in the conflict-copy text', () => {
     const draft = draftFromItem(item, definition)
     draft.meta.rating = '9'
     expect(draftDump(item, draft, defaults)).toContain('Board game details:\n  Rating: 9')

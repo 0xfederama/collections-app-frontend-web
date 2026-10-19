@@ -22,7 +22,7 @@ function list(n: number, parent: number | null, sort_order = 0, name = `L${n}`):
     id: id(n),
     folder_id: parent === null ? null : id(parent),
     name,
-    kind: 'generic',
+    type: null,
     description: null,
     display_mode: 'grid',
     sort_mode: 'manual',

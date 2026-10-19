@@ -1,27 +1,28 @@
 import { useState } from 'react'
-import { type ItemKind, type MenuItem } from '../../components/ui'
+import { type MenuItem } from '../../components/ui'
+import { typeToValue, valueToType } from '../items/types'
 import { useTreeDialogs } from './useTreeDialogs'
 import { NodeMenu } from './NodeMenu'
 import type { List } from './api'
-import { useChangeKind } from './useChangeKind'
+import { useChangeType } from './useChangeType'
 import { ListIconDialog } from './ListIconDialog'
 
 /**
  * The list's overflow menu for the list header (W-06): Type, rename, move, delete.
  * It owns its dialogs, so it works outside the sidebar. After a delete it navigates home when
- * that list was open. Kind lives here (F008-W5); a change on a list with items asks first.
+ * that list was open. Type lives here (F008-W5); a change on a list with items asks first.
  */
 export function ListActionsMenu({ list }: { list: List }) {
   const [iconOpen, setIconOpen] = useState(false)
   const { actions, dialogs } = useTreeDialogs()
-  const kind = useChangeKind(list)
+  const type = useChangeType(list)
   const leading: MenuItem[] = [
     {
       type: 'radio-submenu',
-      label: `Type: ${kind.currentName}`,
-      value: list.kind,
-      options: kind.options,
-      onValueChange: (value) => kind.pick(value as ItemKind),
+      label: `Type: ${type.currentName}`,
+      value: typeToValue(list.type),
+      options: type.options,
+      onValueChange: (value) => type.pick(valueToType(value)),
     },
     { type: 'separator' },
     { label: 'List icon…', onSelect: () => setIconOpen(true) },
@@ -36,7 +37,7 @@ export function ListActionsMenu({ list }: { list: List }) {
         leading={leading}
       />
       {dialogs}
-      {kind.dialog}
+      {type.dialog}
       {iconOpen && <ListIconDialog list={list} onClose={() => setIconOpen(false)} />}
     </>
   )

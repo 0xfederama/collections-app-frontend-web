@@ -57,8 +57,8 @@ async function openDelete(path = PATH) {
 const CARS = '7c1e5a10-0000-4000-8000-000000000013'
 
 /**
- * The example tree has one list per kind. The move picker only offers lists of the item's kind
- * (F007-W7), so Motorbikes is served as a movie list here, next to a Cars list of another kind.
+ * The example tree has one list per type. The move picker only offers lists of the item's type
+ * (F007-W7), so Motorbikes is served as a movie list here, next to a Cars list of another type.
  */
 function serveMoveTree() {
   const tree = exampleResponses.getTree.body as {
@@ -72,8 +72,8 @@ function serveMoveTree() {
         ...tree,
         lists: [
           ...tree.lists.filter((list) => list.id !== MOTORBIKES),
-          { ...motorbikes, kind: 'movie' },
-          { ...motorbikes, id: CARS, name: 'Cars', kind: 'car', sort_order: 1 },
+          { ...motorbikes, type: 'movie' },
+          { ...motorbikes, id: CARS, name: 'Cars', type: 'car', sort_order: 1 },
         ],
       }),
     ),
@@ -197,7 +197,7 @@ describe('AT-11 delete item (moves it to Trash)', () => {
 })
 
 describe('move item (UI_SPEC §9 errors)', () => {
-  it('F007-W7 offers only lists of the item’s kind, with the current one disabled and labelled', async () => {
+  it('F007-W7 offers only lists of the item’s type, with the current one disabled and labelled', async () => {
     const { user, dialog } = await openMove()
     await user.click(within(dialog).getByRole('combobox', { name: 'Destination list' }))
     const current = await screen.findByRole('option', { name: /\(current list\)/ })
@@ -269,8 +269,8 @@ describe('move item (UI_SPEC §9 errors)', () => {
     expect(router.state.location.pathname).toBe(PATH)
   })
 
-  it('F007-W7 409 kind_mismatch explains that items only move within a kind', async () => {
-    server.use(http.post(moveUrl, () => problemResponse(409, 'kind_mismatch')))
+  it('F007-W7 409 type_mismatch explains that items only move within a type', async () => {
+    server.use(http.post(moveUrl, () => problemResponse(409, 'type_mismatch')))
     const { router, user, dialog } = await openMove()
     await chooseMotorbikes(user, dialog)
     await user.click(within(dialog).getByRole('button', { name: 'Move' }))

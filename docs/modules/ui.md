@@ -7,7 +7,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 ## Key files
 
 - `src/components/ui/index.ts`: barrel; import primitives from `components/ui`.
-- `src/components/ui/icons.ts`: the only Lucide import site; named glyphs, `kindIcons`, `kindLabels`.
+- `src/components/ui/icons.ts`: the only Lucide import site; named glyphs, `typeIcons`, `typeLabels`.
 - `src/components/ui/sortable.tsx`: the only `@dnd-kit` importer (pinned 0.5.0, D-061).
 - `src/components/ui/fieldStyles.ts`, `returnFocus.ts`: shared input chrome; focus return.
 - `src/components/ServiceIcon.tsx`: `ServiceIcon` (streaming) and `LinkIcon` (Google, Letterboxd, IMDb, Reddit) tiles, `TILE_SIZE`.
@@ -20,7 +20,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `Button` (`variant`, `size`, `pending`), `IconButton` (plus required `aria-label`).
 - `TextField` / `TextArea`: `label`, `hint`, `error`; TextField adds `prefix`, `suffix`.
 - `Select`, `Combobox`: `options`, `value`, `onValueChange`. `CountrySelect`, `CurrencySelect` (`IsoSelects.tsx`, not in the barrel).
-- `SegmentedControl`, `Menu` (`trigger`, `items`), `Tooltip`, `Chip` (`tone`, `icon`), `Badge` (`kind`), `Card`, `EmptyState`, `Skeleton`.
+- `SegmentedControl`, `Menu` (`trigger`, `items`), `Tooltip`, `Chip` (`tone`, `icon`), `Badge` (`type`), `Card`, `EmptyState`, `Skeleton`.
 - `Dialog`, `AlertDialog`, `Drawer`: `open` / `onOpenChange`, `initialFocus`; frosted surface.
 - `ToastProvider` / `useToast()`: `(options: { kind?, title, description?, action? })`.
 - `Tree<T>`: `nodes`, `expanded`, `selected`, `renderRow`, `sortable(node)`, `onReorder(move)`, `acceptsDrop(target, sourceId)`.

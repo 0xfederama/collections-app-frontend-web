@@ -1,5 +1,5 @@
 import { Link, Navigate, useLocation, useParams } from 'react-router'
-import { Button, EmptyState, kindIcons } from '../../components/ui'
+import { Button, EmptyState, typeIconFor } from '../../components/ui'
 import { ApiError } from '../../lib/api'
 import { cx } from '../../lib/cx'
 import { useBreakpoint } from '../../lib/breakpoints'
@@ -10,7 +10,7 @@ import { ItemSkeleton } from './ItemSkeleton'
 import { ItemView } from './ItemView'
 import { NEW_ITEM_ID } from './newItem'
 import { NewItemDraft } from './NewItemDraft'
-import type { ItemKind } from './api'
+import type { ItemType } from './api'
 
 function ItemDetail({
   listId,
@@ -33,7 +33,7 @@ function ItemDetail({
     if (item.error instanceof ApiError && item.error.status === 404) {
       return (
         <EmptyState
-          icon={kindIcons.generic!}
+          icon={typeIconFor(null)}
           headingLevel="h1"
           title="Item not found"
           description="It may have been deleted or moved to Trash."
@@ -77,11 +77,11 @@ function ItemDetail({
 function NewItemPage({
   listId,
   listName,
-  kind,
+  type,
 }: {
   listId: string
   listName: string
-  kind: ItemKind
+  type: ItemType
 }) {
   const { search } = useLocation()
   const panel = useBreakpoint() === 'wide'
@@ -95,7 +95,7 @@ function NewItemPage({
           ← Back to {listName}
         </Link>
       )}
-      <NewItemDraft listId={listId} listName={listName} kind={kind} />
+      <NewItemDraft listId={listId} listName={listName} type={type} />
     </div>
   )
 }
@@ -109,7 +109,7 @@ export default function ItemPage() {
         // Keyed by item and list: a move opens the same item in its new list with a fresh guard.
         <EditGuardProvider key={`${listId}/${itemId}`}>
           {itemId === NEW_ITEM_ID ? (
-            <NewItemPage listId={listId} listName={list.name} kind={list.kind} />
+            <NewItemPage listId={listId} listName={list.name} type={list.type} />
           ) : (
             <ItemDetail listId={listId} itemId={itemId} listName={list.name} />
           )}

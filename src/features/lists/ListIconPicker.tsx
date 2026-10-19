@@ -11,7 +11,7 @@ import {
 } from './iconModel'
 import { EMOJI_KEYWORDS } from './emojiKeywords'
 import { ListIconMark } from './ListIconMark'
-import type { ItemKind } from '../items/api'
+import type { ItemType } from '../items/api'
 
 const COLOR_LABELS: Record<ListIconColor, string> = {
   red: 'Red',
@@ -56,15 +56,15 @@ export function ListIconPicker({
   onChange,
   onClose,
   title = 'Choose list icon',
-  kind = 'generic',
+  type = null,
   showColorControls = true,
 }: {
   value: IconChoice
   onChange: (value: IconChoice) => void
   onClose: () => void
   title?: string
-  kind?: ItemKind
-  /** Kind definitions store an icon only; their default icon cannot carry a list icon color. */
+  type?: ItemType
+  /** Type definitions store an icon only; their default icon cannot carry a list icon color. */
   showColorControls?: boolean
 }) {
   const [query, setQuery] = useState('')
@@ -208,7 +208,7 @@ export function ListIconPicker({
             <ListIconMark
               icon={value.icon}
               iconColor={value.icon_color}
-              kind={kind}
+              type={type}
               className="size-9"
               iconClassName="size-5"
             />

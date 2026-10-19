@@ -3,12 +3,12 @@ import { ServiceIcon } from '../../../components/ServiceIcon'
 import { Button, Menu, type MenuItem } from '../../../components/ui'
 import { Plus, TriangleAlert } from '../../../components/ui/icons'
 import { useSettings } from '../../settings/api'
-import { hasPrice, type KindDefinition } from '../kinds'
+import { hasPrice, type TypeDefinition } from '../types'
 import { isWebUrl } from '../form/draft'
 import type { Draft } from '../form/draft'
 import type { Item } from '../api'
 import { InlineField } from './InlineField'
-import { kindSpecs, newPrice, priceSpec, websiteSpec, type FieldSpec } from './fields'
+import { typeSpecs, newPrice, priceSpec, websiteSpec, type FieldSpec } from './fields'
 
 type Streaming = { country: string; platforms?: string[]; paid_platforms?: string[] }
 
@@ -91,14 +91,14 @@ export function FieldBlock({
   addWebsiteRequest = 0,
 }: {
   item: Item
-  definition: KindDefinition
+  definition: TypeDefinition
   /** A counter: each increase opens the website editor (the links row's "Add website"). */
   addWebsiteRequest?: number
 }) {
-  const kind = kindSpecs(definition)
-  // A generic item has no kind fields, and only the kinds with a price get the price field (D-085).
+  const type = typeSpecs(definition)
+  // An item of a list with no type has no type fields, and only the types with a price get the price field (D-085).
   const price = hasPrice(definition) ? [priceSpec] : []
-  const specs = [...kind, ...price, websiteSpec]
+  const specs = [...type, ...price, websiteSpec]
   /** Ids the user added with "+ Add field"; they stay shown until the page is left. */
   const [added, setAdded] = useState<string[]>([])
   const [adding, setAdding] = useState<Adding[]>([])
@@ -125,18 +125,18 @@ export function FieldBlock({
   const streamingSpec = specs.find((spec) => spec.id === STREAMING_ID)
   const showStreaming = streamingSpec !== undefined && isShown(streamingSpec)
   const rows = specs.filter((spec) => spec.id !== STREAMING_ID && isShown(spec))
-  /** Every field of the kind that is not shown yet, set or not: "+ Add field" offers them all. */
+  /** Every field of the type that is not shown yet, set or not: "+ Add field" offers them all. */
   const offerable = (list: FieldSpec[]) => list.filter((spec) => !isShown(spec))
   const entries = (list: FieldSpec[]): MenuItem[] =>
     offerable(list).map((spec) => ({
       label: spec.label,
       onSelect: () => reveal(spec, spec.id === priceSpec.id ? newPrice() : undefined),
     }))
-  const kindEntries = entries(kind)
+  const typeEntries = entries(type)
   const anyEntries = entries([...price, websiteSpec])
   const menu: MenuItem[] = [
-    ...kindEntries,
-    ...(kindEntries.length > 0 && anyEntries.length > 0 ? [{ type: 'separator' as const }] : []),
+    ...typeEntries,
+    ...(typeEntries.length > 0 && anyEntries.length > 0 ? [{ type: 'separator' as const }] : []),
     ...anyEntries,
   ]
 
