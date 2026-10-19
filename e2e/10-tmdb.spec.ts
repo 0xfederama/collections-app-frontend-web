@@ -64,8 +64,8 @@ test.describe('F013-W3 director data and F014-W4 field filter', () => {
   })
 })
 
-test.describe('F016 streaming tiles in a row open JustWatch', () => {
-  test('the tile links to the JustWatch page the lookup stored, in a new tab', async ({
+test.describe('F016 streaming tiles in a row open each service search', () => {
+  test('the tile opens its own search for the title (platform_links), in a new tab', async ({
     page,
     request,
   }) => {
@@ -82,11 +82,8 @@ test.describe('F016 streaming tiles in a row open JustWatch', () => {
     await page.goto(`/lists/${list.id}`)
     await page.getByRole('radio', { name: 'Thumbnail rows' }).check({ force: true })
     const row = page.getByRole('list', { name: 'Items' }).getByRole('listitem')
-    const tile = row.getByRole('link', { name: 'Netflix on JustWatch (opens in a new tab)' })
-    await expect(tile).toHaveAttribute(
-      'href',
-      /^https:\/\/www\.justwatch\.com\/[a-z]{2}\/movie\/mock$/,
-    )
+    const tile = row.getByRole('link', { name: 'Find on Netflix (opens in a new tab)' })
+    await expect(tile).toHaveAttribute('href', /^https:\/\/www\.netflix\.com\/search\?q=/)
     await expect(tile).toHaveAttribute('target', '_blank')
   })
 })

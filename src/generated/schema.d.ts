@@ -1303,7 +1303,7 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item, including the read-only `store_links` for a type with a `stores` field, and the image is reduced. */
+        /** @description An item row in lists, search and recent items: the same `metadata` object as the full item, including the read-only `store_links` for a type with a `stores` field and the read-only `streaming.platform_links` for a streaming item, and the image is reduced. */
         ItemSummary: {
             /** Format: uuid */
             id: string;
@@ -1434,6 +1434,10 @@ export interface components {
              * @description The JustWatch page of the title for `country` (an https://www.justwatch.com URL), filled and refreshed by the TMDB lookup with the other imported streaming values and dropped with them when TMDB data expires (D-089). `null` or absent when there is none. Read-only for clients: a `link` sent in a write is ignored (not rejected), and the stored one is kept while `country` is unchanged, so a client can round-trip the whole `streaming` object. Changing the workspace `streaming_country_code` clears every item's link until its next lookup refresh. TMDB attributes this data to JustWatch.
              */
             readonly link?: string | null;
+            /** @description Computed on read and never stored (since 0.15.0): maps each name in `platforms` (exactly as stored) to an https URL that opens that streaming service's search for the item's title, so clicking a platform finds the title. Built from the title (URL-escaped) and the platform name; a platform that is not in the server's built-in table has no entry (clients fall back to `link`), and an item with an empty title has none. Present on the full item and on the rows of list items, search and recent items, and identical across them; an empty object when no platform has a link. Read-only: a `platform_links` sent in a write is ignored (not rejected) and never persisted, so a client can round-trip the whole `streaming` object. Changing the item's title changes the links. */
+            readonly platform_links?: {
+                [key: string]: string;
+            };
         };
         MovieMetadata: {
             release_year?: number;
