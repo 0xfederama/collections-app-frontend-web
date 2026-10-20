@@ -3,6 +3,8 @@
 //   A. components and lib never import features, layouts, routes, app or mocks.
 //   B. a feature imports another feature only through its index.ts (or its testing.ts test kit).
 //   C. files outside features import a feature only through its index.ts (or its testing.ts test kit).
+// Public entries per feature: index.ts, testing.ts (test kit) and screens.ts (heavy route-level
+// components, imported only by src/routes; screens.ts keeps barrels light for code splitting).
 // Flat config replaces a rule's options per file, so the blocks below are split so that each
 // file matches exactly one block that sets the rule.
 import { readdirSync } from 'node:fs'
@@ -24,10 +26,12 @@ const featureBlocks = FEATURES.map((feature) => ({
       {
         patterns: [
           {
-            // a feature's testing module (its test kit) is the one deep import allowed (F020-W3)
+            // a feature's testing module (its test kit) and screens module are the deep imports allowed
+            // (F020-W3, screens for src/routes)
             group: [
               ...FEATURES.filter((other) => other !== feature).map((other) => `**/${other}/*`),
               ...FEATURES.map((other) => `!**/${other}/testing`),
+              ...FEATURES.map((other) => `!**/${other}/screens`),
             ],
             message: THROUGH_INDEX,
           },
@@ -69,7 +73,10 @@ export default [
         'error',
         {
           patterns: [
-            { group: ['**/features/*/*', '!**/features/*/testing'], message: THROUGH_INDEX },
+            {
+              group: ['**/features/*/*', '!**/features/*/testing', '!**/features/*/screens'],
+              message: THROUGH_INDEX,
+            },
           ],
         },
       ],

@@ -31,6 +31,18 @@ describe('F020-W2 import boundaries', () => {
     ).toBe(false)
   })
 
+  it('B: a feature may import another feature screens module deep', async () => {
+    expect(
+      await reports('src/features/trash/__probe.ts', "import { x } from '../lists/screens'"),
+    ).toBe(false)
+  })
+
+  it('B: a feature may not import another feature list view deep', async () => {
+    expect(
+      await reports('src/features/trash/__probe.ts', "import { x } from '../lists/ListView'"),
+    ).toBe(true)
+  })
+
   it('B: a feature may import its own internals', async () => {
     expect(await reports('src/features/tree/__probe.ts', "import { x } from '../tree/api'")).toBe(
       false,
@@ -74,6 +86,18 @@ describe('F020-W2 import boundaries', () => {
     expect(
       await reports('src/app/__probe.tsx', "import { x } from '../features/tree/testing'"),
     ).toBe(false)
+  })
+
+  it('C: routes may import a feature screens module deep', async () => {
+    expect(
+      await reports('src/routes/__probe.tsx', "import { x } from '../features/settings/screens'"),
+    ).toBe(false)
+  })
+
+  it('C: routes may not import a feature list view deep', async () => {
+    expect(
+      await reports('src/routes/__probe.tsx', "import { x } from '../features/lists/ListView'"),
+    ).toBe(true)
   })
 
   it('legacy: a baseline file is exempt (the same import in a non-baseline sibling reports)', async () => {
