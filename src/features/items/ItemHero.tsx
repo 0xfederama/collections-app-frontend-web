@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Dialog } from '../../components/ui'
+import { Dialog, focusRing } from '../../components/ui'
 import { ImagePlus } from '../../components/ui/icons'
 import { ItemThumb } from '../lists'
 import type { Item } from './api'
 import { ImageDialog } from './image/ImageDialog'
-
-const focusRing =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring'
 
 /**
  * The picture at the top of the item (UI_SPEC §4): the original image (max 16:9, limited to the

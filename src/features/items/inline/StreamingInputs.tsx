@@ -1,3 +1,4 @@
+import { focusRing } from '../../../components/ui'
 import { cx } from '../../../lib/cx'
 import { joinStoreKeys, parseStoreKeys, useStoreProviders } from '../../stores'
 import { StoreChoices } from '../../stores/screens'
@@ -51,7 +52,8 @@ export function StreamingInputs({ form }: { form: FieldForm }) {
                   aria-pressed={isPaid(name)}
                   onClick={() => toggle(name)}
                   className={cx(
-                    'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-sm pointer-coarse:min-h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring',
+                    'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-sm pointer-coarse:min-h-11',
+                    focusRing,
                     isPaid(name)
                       ? 'border-accent bg-accent/10 text-accent-text'
                       : 'border-border-strong bg-surface text-text',

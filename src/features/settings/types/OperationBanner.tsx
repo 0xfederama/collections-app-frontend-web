@@ -18,12 +18,11 @@ export function OperationBanner({
       className="fixed inset-x-6 bottom-6 z-[60] mx-auto max-w-lg rounded-lg border border-warning-border bg-warning-bg p-4 text-sm text-warning-text shadow-float"
     >
       <p>{errorText(error)}</p>
-      {conflict && (
-        <Button size="sm" variant="secondary" className="mt-2" onClick={() => void onReload()}>
+      {conflict ? (
+        <Button size="sm" variant="secondary" className="mt-2" onClick={onReload}>
           Reload latest
         </Button>
-      )}
-      {!conflict && (
+      ) : (
         <Button size="sm" variant="secondary" className="mt-2" onClick={onDismiss}>
           Dismiss
         </Button>

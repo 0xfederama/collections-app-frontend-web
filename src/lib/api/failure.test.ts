@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError, NetworkError } from './errors'
-import { failureKind } from './failure'
+import { errorMessage, failureKind } from './failure'
 
 const apiError = (status: number) =>
   new ApiError({ status, code: 'unknown', title: 'T', raw: undefined })
@@ -31,5 +31,39 @@ describe('failureKind', () => {
     ['null', null],
   ])('maps %s to other', (_label, value) => {
     expect(failureKind(value)).toBe('other')
+  })
+})
+
+describe('errorMessage', () => {
+  it.each([
+    {
+      name: 'ApiError with detail shows the detail',
+      caught: new ApiError({
+        status: 422,
+        code: 'validation',
+        title: 'Invalid',
+        detail: 'Too long',
+        raw: null,
+      }),
+      expected: 'Too long',
+    },
+    {
+      name: 'ApiError without detail shows the title',
+      caught: new ApiError({ status: 500, code: 'unknown', title: 'Server error', raw: null }),
+      expected: 'Server error',
+    },
+    {
+      name: 'plain Error is generic',
+      caught: new Error('boom'),
+      expected: 'Something went wrong.',
+    },
+    { name: 'a string is generic', caught: 'boom', expected: 'Something went wrong.' },
+    { name: 'undefined is generic', caught: undefined, expected: 'Something went wrong.' },
+  ])('$name', ({ caught, expected }) => {
+    expect(errorMessage(caught)).toBe(expected)
+  })
+
+  it('uses the given fallback for a non-ApiError', () => {
+    expect(errorMessage(new NetworkError(), 'Nothing was saved.')).toBe('Nothing was saved.')
   })
 })

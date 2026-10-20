@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Select } from '../../components/ui'
 import { useTree } from '../tree'
 import { sortListChoices } from './model'
@@ -5,7 +6,7 @@ import { sortListChoices } from './model'
 /** The lists of the tree, most recently updated first. */
 export function useListChoices() {
   const tree = useTree()
-  const lists = sortListChoices(tree.data?.lists ?? [])
+  const lists = useMemo(() => sortListChoices(tree.data?.lists ?? []), [tree.data])
   return { lists, loading: tree.isPending }
 }
 

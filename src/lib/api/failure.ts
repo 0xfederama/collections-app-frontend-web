@@ -27,3 +27,11 @@ export function failureKind(error: unknown): FailureKind {
   if (error instanceof NetworkError) return 'unavailable'
   return 'other'
 }
+
+/**
+ * The message to show for a failed call: the server's `detail` (or `title`) for an ApiError,
+ * otherwise `fallback`. Only for failures whose copy is not written per status.
+ */
+export function errorMessage(error: unknown, fallback = 'Something went wrong.'): string {
+  return error instanceof ApiError ? (error.detail ?? error.title) : fallback
+}

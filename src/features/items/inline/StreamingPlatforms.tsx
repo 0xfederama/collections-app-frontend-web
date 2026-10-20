@@ -1,7 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useState } from 'react'
 import { ServiceIcon, STREAMING_SERVICES } from '../../../components/ServiceIcon'
-import { Button, TextField } from '../../../components/ui'
+import { Button, focusRing, TextField } from '../../../components/ui'
 import { Check, Plus } from '../../../components/ui/icons'
 import { cx } from '../../../lib/cx'
 
@@ -74,7 +74,7 @@ export function StreamingPlatforms({ value, onChange, error }: StreamingPlatform
             type="button"
             className={cx(
               'flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-border-strong bg-surface px-3 text-sm',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring',
+              focusRing,
               value.length === 0 ? 'text-text-muted' : 'text-text',
             )}
           >

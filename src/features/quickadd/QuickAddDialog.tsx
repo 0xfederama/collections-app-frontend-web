@@ -14,19 +14,14 @@ import {
   type LookupSelection,
   type LookupTitleSelection,
 } from '../items'
+import { errorMessage } from '../../lib/api'
 import { invalidateContent } from '../../data/invalidate'
 import { itemKeys } from '../../data/keys'
 import { useSettings } from '../settings'
 import { ListPicker, useListChoices } from './ListPicker'
 import { OptionalSections, RevealButtons } from './OptionalFields'
 import { QuickAddFooter, QuickAddStatus } from './QuickAddFooter'
-import {
-  describeCreateFailure,
-  messageOf,
-  resolveListId,
-  validateQuickAdd,
-  type Field,
-} from './model'
+import { describeCreateFailure, resolveListId, validateQuickAdd, type Field } from './model'
 
 /**
  * Quick add (F-002): a title, a destination list and, optionally, a website, a Markdown description
@@ -135,7 +130,7 @@ export function QuickAddDialog({
         })
         queryClient.setQueryData<Item>(itemKeys.detail(created.id), updated)
       } catch (caught) {
-        failed.push(`the image (${messageOf(caught)})`)
+        failed.push(`the image (${errorMessage(caught)})`)
       }
     }
     void invalidateContent(queryClient)

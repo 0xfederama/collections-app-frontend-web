@@ -1,6 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useId } from 'react'
 import { ServiceIcon } from '../../components/ServiceIcon'
+import { focusRing } from '../../components/ui'
 import { Check } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { StoreProvider } from './api'
@@ -61,7 +62,7 @@ export function StoreChoices({
             aria-invalid={error ? true : undefined}
             className={cx(
               'flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-border-strong bg-surface px-3 text-start text-sm',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring',
+              focusRing,
               value.length === 0 ? 'text-text-muted' : 'text-text',
             )}
           >

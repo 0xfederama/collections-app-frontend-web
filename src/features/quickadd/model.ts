@@ -1,4 +1,4 @@
-import { ApiError, NetworkError } from '../../lib/api'
+import { ApiError, errorMessage, NetworkError } from '../../lib/api'
 import { checkImageFile, isLookupUnavailable, isTooLarge, LIMITS } from '../items'
 import type { List } from '../tree'
 
@@ -26,9 +26,6 @@ export function sortListChoices<T extends Pick<List, 'name' | 'updated_at'>>(
     (a, b) => b.updated_at.localeCompare(a.updated_at) || a.name.localeCompare(b.name),
   )
 }
-
-export const messageOf = (caught: unknown) =>
-  caught instanceof ApiError ? (caught.detail ?? caught.title) : 'Something went wrong.'
 
 /** Client-side checks before the create request. `focus` is the first field with an error. */
 export function validateQuickAdd(input: QuickAddInput): {
@@ -106,5 +103,5 @@ export function describeCreateFailure(caught: unknown): CreateFailure {
       formError: 'The server could not be reached. Nothing was created, so you can try again.',
     }
   }
-  return { ...none, formError: messageOf(caught) }
+  return { ...none, formError: errorMessage(caught) }
 }

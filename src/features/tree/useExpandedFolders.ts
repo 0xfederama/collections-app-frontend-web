@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
+import { parseStringArray, readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 import type { TreeIndex } from './api'
 
-const parseIds = (raw: unknown): Set<string> | undefined =>
-  Array.isArray(raw) ? new Set(raw.filter((id): id is string => typeof id === 'string')) : undefined
+const parseIds = (raw: unknown): Set<string> | undefined => {
+  const ids = parseStringArray(raw)
+  return ids ? new Set(ids) : undefined
+}
 
 interface State {
   expanded: Set<string>

@@ -60,3 +60,8 @@ function writeTo(store: Pick<Storage, 'setItem'>, key: string, value: unknown): 
     // Storage can be blocked or full; the preference then lasts for this page load only.
   }
 }
+
+/** Parses a stored list of ids: the string entries of an array, or `undefined` for anything else. */
+export function parseStringArray(raw: unknown): string[] | undefined {
+  return Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : undefined
+}

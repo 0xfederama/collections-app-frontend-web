@@ -3,10 +3,6 @@ import { IconButton } from '../../../components/ui'
 import { Check, Pencil, X } from '../../../components/ui/icons'
 import { cx } from '../../../lib/cx'
 
-/** Pen, ✓ and ✕ are the same on the description, so they are shared. */
-export const focusRing =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring'
-
 /**
  * The pen of an in-place field: invisible until the field is hovered or holds keyboard focus
  * (`group/field`), then fades in. On touch (`hover: none`) it never shows, the field itself is

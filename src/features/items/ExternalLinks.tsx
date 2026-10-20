@@ -1,4 +1,5 @@
 import { LinkIcon, TILE_SIZE } from '../../components/ServiceIcon'
+import { focusRing } from '../../components/ui'
 import { Plus } from '../../components/ui/icons'
 import type { Item } from './api'
 import { buildExternalLinks } from '../links'
@@ -7,8 +8,7 @@ import { buildExternalLinks } from '../links'
 // "+" slot is the same square. The visible name is the tile's tooltip; the accessible name is the
 // sr-only text.
 const SIZE = TILE_SIZE
-const control =
-  'inline-flex shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring'
+const control = `inline-flex shrink-0 rounded-md ${focusRing}`
 
 /**
  * The external links (AT-13, F-002) on one line under the title: Google, Letterboxd, IMDb for

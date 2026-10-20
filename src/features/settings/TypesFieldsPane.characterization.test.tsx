@@ -6,40 +6,12 @@ import { server } from '../../mocks/server'
 import { problemResponse } from '../../mocks/problems'
 import { mockViewport, renderAt } from '../../test-utils'
 import type { TypeDefinition } from './api'
+import { boardGame, movie, openPane, treeUrl, typesUrl } from './typesTestKit'
 
 // Characterization tests (F020): they pin what TypesFieldsPane does today so the split into smaller
-// files can be verified. Fixtures and openPane mirror TypesFieldsPane.test.tsx.
+// files can be verified. Fixtures and openPane come from typesTestKit.ts.
 
-const typesUrl = `${location.origin}/api/v1/types`
-const treeUrl = `${location.origin}/api/v1/tree`
 const listsUrl = `${location.origin}/api/v1/lists`
-const movie: TypeDefinition = {
-  key: 'movie',
-  name: 'Movies',
-  default_icon: null,
-  allows_price: false,
-  default_sort_field: 'title',
-  default_pinned_fields: [],
-  is_locked: true,
-  version: 3,
-  fields: [
-    { key: 'director', label: 'Director', type: 'text', position: 0, is_locked: true, version: 1 },
-  ],
-}
-const boardGame: TypeDefinition = {
-  key: 'board_game',
-  name: 'Board game',
-  default_icon: null,
-  allows_price: false,
-  default_sort_field: null,
-  default_pinned_fields: null,
-  is_locked: false,
-  version: 2,
-  fields: [
-    { key: 'rating', label: 'Rating', type: 'number', position: 0, is_locked: false, version: 1 },
-  ],
-}
-
 function listFixture(id: string, name: string, version: number) {
   return {
     id,
@@ -58,18 +30,6 @@ function listFixture(id: string, name: string, version: number) {
     created_at: '2026-10-14T09:30:00Z',
     updated_at: '2026-10-14T09:30:00Z',
   }
-}
-type ListFixture = ReturnType<typeof listFixture>
-
-async function openPane(types: TypeDefinition[] = [movie, boardGame], lists: ListFixture[] = []) {
-  mockViewport(375)
-  server.use(http.get(typesUrl, () => HttpResponse.json(types)))
-  server.use(http.get(treeUrl, () => HttpResponse.json({ folders: [], lists })))
-  const user = userEvent.setup()
-  renderAt('/settings')
-  await user.click(await screen.findByRole('button', { name: 'Types & fields' }))
-  await screen.findByRole('list', { name: 'Types' })
-  return user
 }
 
 describe('F020 characterization: Types & fields pane', () => {

@@ -2,6 +2,8 @@
 // backend (backend/internal/stores/stores.go). Pure: no I/O, no React.
 // Keep AMAZON_DOMAINS identical to the Go table.
 
+import { queryEscape } from './escape'
+
 export type StoreLinkInput = {
   isbn?: string | null
   title?: string | null
@@ -74,12 +76,4 @@ export function storeLink(provider: string, input: StoreLinkInput): string | nul
 // Drops the separators people type into an ISBN.
 function cleanISBN(value: string): string {
   return value.trim().replace(/[- ]/g, '')
-}
-
-// Same output as Go's url.QueryEscape: encodeURIComponent, but the characters it
-// leaves bare (! ' ( ) *) are escaped too, and a space is '+'.
-function queryEscape(value: string): string {
-  return encodeURIComponent(value)
-    .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
-    .replace(/%20/g, '+')
 }

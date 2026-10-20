@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
-import { useToast } from '../../components/ui'
+import { focusRing, useToast } from '../../components/ui'
 import { type List as TreeList, classifyError, useUpdateList } from '../tree'
 
 const MAX_LENGTH = 200
@@ -83,7 +83,7 @@ export function ListTitle({ list }: { list: TreeList }) {
         setEditing(list)
         setDraft(list.name)
       }}
-      className={`${sameLook} cursor-text break-words hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring`}
+      className={`${sameLook} cursor-text break-words hover:bg-fill ${focusRing}`}
     >
       {list.name}
     </button>

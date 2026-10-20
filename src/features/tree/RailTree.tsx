@@ -3,14 +3,11 @@ import { Tooltip } from '../../components/ui'
 import { Folder } from '../../components/ui/icons'
 import { ListIconMark } from '../lists'
 import { cx } from '../../lib/cx'
-import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
+import { parseStringArray, readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 import { useTreeIndex } from './api'
 
 const itemClass =
   'flex size-11 items-center justify-center rounded-md text-text-muted hover:bg-fill-hover aria-[current]:bg-accent/10 aria-[current]:text-text'
-
-const parseIds = (raw: unknown): string[] | undefined =>
-  Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : undefined
 
 /**
  * The collapsed sidebar's tree: only the top-level entries, as icon buttons. The root folder that
@@ -27,7 +24,7 @@ export function RailTree({ onOpenFolder }: { onOpenFolder: () => void }) {
     : null
 
   const openFolder = (id: string) => {
-    const stored = readStored(STORAGE_KEYS.treeExpanded, parseIds, [])
+    const stored = readStored(STORAGE_KEYS.treeExpanded, parseStringArray, [])
     writeStored(STORAGE_KEYS.treeExpanded, [...new Set([...stored, id])])
     onOpenFolder()
   }
