@@ -22,10 +22,7 @@ import {
   lookupSourceName,
   LookupStatus,
   MAX_CONTENT_BYTES,
-  isTooLarge,
   useSaveContent,
-  LIMITS,
-  checkImageFile,
   ACCEPT,
   putImageFile,
   type Item,
@@ -35,20 +32,14 @@ import {
 import { invalidateContent } from '../invalidateContent'
 import { useTree } from '../tree'
 import { useSettings } from '../settings'
-
-type Field = 'title' | 'website' | 'description' | 'image' | 'list'
+import { messageOf, resolveListId, sortListChoices, validateQuickAdd, type Field } from './model'
 
 /** The lists of the tree, most recently updated first. */
 function useListChoices() {
   const tree = useTree()
-  const lists = [...(tree.data?.lists ?? [])].sort(
-    (a, b) => b.updated_at.localeCompare(a.updated_at) || a.name.localeCompare(b.name),
-  )
+  const lists = sortListChoices(tree.data?.lists ?? [])
   return { lists, loading: tree.isPending }
 }
-
-const messageOf = (caught: unknown) =>
-  caught instanceof ApiError ? (caught.detail ?? caught.title) : 'Something went wrong.'
 
 /**
  * Quick add (F-002): a title, a destination list and, optionally, a website, a Markdown description
@@ -68,10 +59,7 @@ export function QuickAddDialog({
   const toast = useToast()
   const queryClient = useQueryClient()
   const [pickedList, setPickedList] = useState<string>()
-  const listId =
-    pickedList ??
-    (lists.some((l) => l.id === initialListId) ? initialListId : undefined) ??
-    lists[0]?.id
+  const listId = resolveListId(lists, pickedList, initialListId)
   const listType = lists.find((list) => list.id === listId)?.type ?? null
   const sourceName = lookupSourceName(listType)
 
@@ -101,22 +89,19 @@ export function QuickAddDialog({
     if (busy) return
     const trimmed = (selection?.title ?? title).trim()
     const site = website.trim()
-    const next: Partial<Record<Field, string>> = {}
-    if (!trimmed) next.title = 'Enter a title.'
-    else if (trimmed.length > LIMITS.title) next.title = `Use at most ${LIMITS.title} characters.`
-    if (site.length > LIMITS.url) next.website = `Use at most ${LIMITS.url} characters.`
-    if (isTooLarge(description)) next.description = 'The description is over 1 MiB.'
-    if (image) {
-      const problem = checkImageFile(image)
-      if (problem) next.image = problem
-    }
-    if (!listId) next.list = 'Create a list first.'
+    const { errors: next, focus } = validateQuickAdd({
+      title: selection?.title ?? title,
+      website,
+      description,
+      image,
+      listId,
+    })
     setErrors(next)
     setFormError(undefined)
-    if (next.title) return titleRef.current?.focus()
-    if (next.website) return websiteRef.current?.focus()
-    if (next.description) return descriptionRef.current?.focus()
-    if (next.image) return chooseRef.current?.focus()
+    if (focus === 'title') return titleRef.current?.focus()
+    if (focus === 'website') return websiteRef.current?.focus()
+    if (focus === 'description') return descriptionRef.current?.focus()
+    if (focus === 'image') return chooseRef.current?.focus()
     if (next.list || !listId) return
 
     setBusy(true)
