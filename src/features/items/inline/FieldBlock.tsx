@@ -1,7 +1,7 @@
 import { cx } from '../../../lib/cx'
 import { useState, type ReactNode } from 'react'
 import { ServiceIcon } from '../../../components/ServiceIcon'
-import { Button, Menu, type MenuItem } from '../../../components/ui'
+import { Button, focusRing, Menu, type MenuItem } from '../../../components/ui'
 import { Plus, TriangleAlert } from '../../../components/ui/icons'
 import { useSettings } from '../../settings'
 import { storeName, useStoreProviders } from '../../stores'
@@ -89,7 +89,7 @@ function StoresValue({ item, fieldKey }: { item: Item; fieldKey: string }) {
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+                className={`inline-flex rounded-md ${focusRing}`}
               >
                 {tile}
                 <span className="sr-only"> (opens in a new tab)</span>

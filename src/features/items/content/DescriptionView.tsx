@@ -1,6 +1,7 @@
 import type { MouseEvent, RefObject } from 'react'
 import { MarkdownView } from '../../../components/markdown'
-import { focusRing, PenButton } from '../inline/controls'
+import { focusRing } from '../../../components/ui'
+import { PenButton } from '../inline/controls'
 
 export function DescriptionView({
   body,

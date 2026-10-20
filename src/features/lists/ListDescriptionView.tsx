@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { MarkdownView } from '../../components/markdown'
+import { focusRing } from '../../components/ui'
 import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 
 const parseIds = (raw: unknown): string[] | undefined =>
   Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : undefined
-
-const focusRing =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring'
 
 /**
  * Shown expanded unless this list was collapsed on this device. There is no pen: a click on the text

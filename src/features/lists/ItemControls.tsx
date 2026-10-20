@@ -1,5 +1,5 @@
 import type { Ref } from 'react'
-import { IconButton, Menu } from '../../components/ui'
+import { focusRing, IconButton, Menu } from '../../components/ui'
 import { ArrowDown, ArrowUp, Ellipsis } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 
@@ -14,8 +14,7 @@ export interface EntryReorder {
   onMoveBy: (delta: -1 | 1) => void
 }
 
-const controlButton =
-  'relative z-10 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-border hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring pointer-coarse:size-11 [&_svg]:size-5'
+const controlButton = `relative z-10 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-border hover:text-text ${focusRing} pointer-coarse:size-11 [&_svg]:size-5`
 
 export function entryControls(title: string, reorder: EntryReorder) {
   return {

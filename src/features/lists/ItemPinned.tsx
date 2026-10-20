@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ServiceIcon } from '../../components/ServiceIcon'
+import { focusRing } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import type { ItemSummary } from './api'
 import { pinnedTexts, storesOf, streamingOf } from './pinned'
@@ -30,7 +31,7 @@ function TileLink({
       rel="noopener noreferrer"
       title={`${label} (opens in a new tab)`}
       aria-label={`${label} (opens in a new tab)`}
-      className="relative z-10 inline-flex rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+      className={`relative z-10 inline-flex rounded-md ${focusRing}`}
     >
       {children}
     </a>

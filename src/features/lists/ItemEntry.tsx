@@ -6,6 +6,7 @@ import { pinnedPlacements, type PinnedKeys } from './pinned'
 import type { ItemType, TypeDefinition } from '../items'
 import { PinnedSlot } from './ItemPinned'
 import { entryControls, type EntryReorder } from './ItemControls'
+import { focusRing } from '../../components/ui'
 
 export interface ItemEntryProps {
   item: ItemSummary
@@ -21,8 +22,7 @@ export interface ItemEntryProps {
   definition: TypeDefinition
 }
 
-const linkClass =
-  'rounded-sm font-semibold text-text after:absolute after:inset-0 after:rounded-[inherit] after:content-[""] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring'
+const linkClass = `rounded-sm font-semibold text-text after:absolute after:inset-0 after:rounded-[inherit] after:content-[""] ${focusRing}`
 
 /** Whole row or card is the click target (the title link stretches over it); hover and focus show on the shell. */
 const surface =
