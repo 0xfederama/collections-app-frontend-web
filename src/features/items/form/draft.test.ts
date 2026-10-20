@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { Item } from '../api'
 import type { TypeDefinition } from '../types'
-import { buildPatch, draftDump, draftFromItem, mapServerErrors, toFields, validate } from './draft'
+import { draftFromItem } from './draft'
+import { draftDump } from './dump'
+import { buildPatch, toFields } from './patch'
+import { mapServerErrors } from './serverErrors'
+import { validate } from './validate'
 
 const definition: TypeDefinition = {
   key: 'board_game',

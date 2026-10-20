@@ -13,17 +13,11 @@ import { Check, Pencil, X } from '../../../components/ui/icons'
 import { ApiError, NetworkError } from '../../../lib/api'
 import { cx } from '../../../lib/cx'
 import { isOwnWriteChain, itemKeys, useUpdateItem, type Item } from '../api'
-import {
-  buildPatch,
-  draftDump,
-  draftFromItem,
-  inputId,
-  isDirty,
-  mapServerErrors,
-  validate,
-  type Draft,
-  type ErrorMap,
-} from '../form/draft'
+import { draftFromItem, type Draft } from '../form/draft'
+import { draftDump } from '../form/dump'
+import { buildPatch, isDirty } from '../form/patch'
+import { mapServerErrors } from '../form/serverErrors'
+import { inputId, validate, type ErrorMap } from '../form/validate'
 import { ConflictBanner, GoneBanner, MessageBanner, NetworkBanner } from './Banners'
 import { FieldInputs, type FieldForm } from './editors'
 import type { FieldSpec } from './fields'

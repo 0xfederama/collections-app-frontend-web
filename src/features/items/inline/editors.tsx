@@ -7,14 +7,8 @@ import { StreamingPlatforms } from './StreamingPlatforms'
 import { joinStoreKeys, parseStoreKeys, useStoreProviders } from '../../stores'
 import { StoreChoices } from '../../stores/screens'
 import type { TypeField } from '../types'
-import {
-  INITIAL_CURRENCY,
-  inputId,
-  parsePlatforms,
-  type Defaults,
-  type Draft,
-  type ErrorMap,
-} from '../form/draft'
+import { INITIAL_CURRENCY, parsePlatforms, type Defaults, type Draft } from '../form/draft'
+import { inputId, type ErrorMap } from '../form/validate'
 import type { FieldSpec } from './fields'
 
 /** What an editor needs from the field it edits: values, errors and setters. */
