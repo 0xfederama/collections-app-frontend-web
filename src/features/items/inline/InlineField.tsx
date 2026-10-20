@@ -390,22 +390,30 @@ function FieldEditor({
     }
   }
 
-  // Several inputs (price, years, streaming) would be crushed by the buttons beside them in the
+  // Several inputs (years, streaming) would be crushed by the buttons beside them in the
   // narrow item panel: their ✓ and ✕ go below the inputs instead of at the end of one input.
   const stacked = STACKED.includes(spec.id)
+  const buttons = (
+    <EditorButtons
+      label={spec.label.toLowerCase()}
+      onSave={() => void save()}
+      onCancel={onDone}
+      pending={update.isPending}
+      disabled={busy || failure?.kind === 'conflict' || failure?.kind === 'gone'}
+    />
+  )
   return (
     <div ref={box} onKeyDown={onKeyDown} className={cx('flex flex-col gap-2', className)}>
       <div className={stacked ? 'flex flex-col gap-3' : 'flex flex-nowrap items-center gap-2'}>
         <div className={cx('min-w-0', !stacked && 'flex-1')}>
-          <FieldInputs spec={spec} form={form} canRemovePrice={item.price !== null} />
+          <FieldInputs
+            spec={spec}
+            form={form}
+            canRemovePrice={item.price !== null}
+            priceActions={buttons}
+          />
         </div>
-        <EditorButtons
-          label={spec.label.toLowerCase()}
-          onSave={() => void save()}
-          onCancel={onDone}
-          pending={update.isPending}
-          disabled={busy || failure?.kind === 'conflict' || failure?.kind === 'gone'}
-        />
+        {spec.id !== 'price' && buttons}
       </div>
       {failure?.kind === 'conflict' && (
         <ConflictBanner
