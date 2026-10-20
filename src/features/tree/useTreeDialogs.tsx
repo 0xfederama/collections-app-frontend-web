@@ -1,12 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useMatch, useNavigate } from 'react-router'
 import { useToast } from '../../components/ui'
-import { arrayMove, type SortableMove } from '../../components/ui/sortable'
-import { readSession, STORAGE_KEYS, writeSession } from '../../lib/storage'
-import { treeKeys, useTreeIndex, type TreeData, type TreeNode } from './api'
+import type { SortableMove } from '../../components/ui/sortable'
+import { treeKeys, useTreeIndex, type TreeData } from './api'
 import { DeleteDialog } from './DeleteDialog'
+import { findNode, isOpenWithin, nameOf } from './treeLookup'
+import { Vanished } from './Vanished'
 import { ListIconDialog } from './ListIconDialog'
+import { readLastListFolder, rememberListFolder } from './listFolderMemory'
+import { useTreeMoves } from './useTreeMoves'
 import {
   useCreateFolder,
   useCreateList,
@@ -21,7 +24,7 @@ import {
 import { MoveDialog, listPathOptions } from './MoveDialog'
 import { NameDialog } from './NameDialog'
 import { countsText } from '../trash'
-import { buildSortable, canDropInto, subtreeCounts } from './order'
+import { buildSortable, subtreeCounts } from './order'
 
 type DialogState =
   | { type: 'create'; kind: 'folder' | 'list'; parentId: string | null }
@@ -45,19 +48,6 @@ export interface TreeActions {
   /** Whether dropping the node `sourceId` onto folder `folderId` is a valid move. */
   canDropInto: (sourceId: string, folderId: string) => boolean
 }
-
-const nameOf = (node: TreeNode) => (node.kind === 'folder' ? node.folder.name : node.list.name)
-
-/**
- * The folder the last created list went into, so the next "New list" opens there. Session
- * storage: gone when the tab closes, never sent anywhere. `null` means the top level.
- */
-const lastListFolder = () =>
-  readSession<string | null>(
-    STORAGE_KEYS.listFolder,
-    (raw) => (raw === null || typeof raw === 'string' ? raw : undefined),
-    null,
-  )
 
 /**
  * All the tree's write flows: create, rename, move, delete, move up/down and drag
@@ -113,39 +103,15 @@ export function useTreeDialogs({
     return queryClient.getQueryData<TreeData>(treeKeys.tree)
   }
 
-  const applyMove = ({ id, group, from, to, into }: SortableMove) => {
-    if (into !== undefined) {
-      // Dropped onto a folder: a real move, appended last by the server (D-060). The body always names the parent.
-      const folder = index?.folders.get(id)
-      const list = index?.lists.get(id)
-      const target = index?.folders.get(into)
-      if (!index || !target || !canDropInto(index, id, into)) return
-      const onError = () =>
-        toast({
-          kind: 'error',
-          title: 'Couldn’t move it',
-          description: 'The folders and lists were refreshed. Please try again.',
-        })
-      const done = () => {
-        onCreatedFolder?.(into)
-        toast({
-          kind: 'success',
-          title: `“${(folder ?? list)?.name}” moved`,
-          description: `Now inside “${target.name}”.`,
-        })
-      }
-      if (folder) moveFolder.mutate({ folder, parentId: into }, { onSuccess: done, onError })
-      else if (list) moveList.mutate({ list, folderId: into }, { onSuccess: done, onError })
-      return
-    }
-    const siblings = sortable?.groups.get(group)
-    if (!siblings || from === to) return
-    reorder.mutate({
-      kind: siblings.kind,
-      parentId: siblings.parentId,
-      ids: arrayMove(siblings.ids, from, to),
-    })
-  }
+  const { position, applyMove, canDropInto, nudge } = useTreeMoves({
+    index,
+    sortable,
+    toast,
+    onCreatedFolder,
+    moveFolder,
+    moveList,
+    reorder,
+  })
 
   const actions: TreeActions = {
     createFolder: (parentId) => setDialog({ type: 'create', kind: 'folder', parentId }),
@@ -154,24 +120,10 @@ export function useTreeDialogs({
     move: (id) => setDialog({ type: 'move', id }),
     remove: (id) => setDialog({ type: 'delete', id }),
     changeIcon: (id) => setDialog({ type: 'icon', id }),
-    position: (id) => {
-      const slot = sortable?.slots.get(id)
-      return slot && { index: slot.index, size: slot.size }
-    },
+    position,
     applyMove,
-    canDropInto: (sourceId, folderId) => !!index && canDropInto(index, sourceId, folderId),
-    nudge: (id, delta) => {
-      const slot = sortable?.slots.get(id)
-      if (!slot) return
-      const to = slot.index + delta
-      if (to < 0 || to >= slot.size) return
-      applyMove({ id, group: slot.group, from: slot.index, to })
-      toast({
-        kind: 'success',
-        title: `${slot.label} moved ${delta < 0 ? 'up' : 'down'}`,
-        description: `Position ${to + 1} of ${slot.size}.`,
-      })
-    },
+    canDropInto,
+    nudge,
   }
 
   let content: ReactNode = null
@@ -196,7 +148,10 @@ export function useTreeDialogs({
           path={
             isFolder
               ? undefined
-              : { options: listPathOptions(index), initial: dialog.parentId ?? lastListFolder() }
+              : {
+                  options: listPathOptions(index),
+                  initial: dialog.parentId ?? readLastListFolder(),
+                }
           }
           onClose={close}
           onNewType={isFolder ? undefined : openTypesSettings}
@@ -219,7 +174,7 @@ export function useTreeDialogs({
               created.current = list.id
               onCreated?.(list.id)
               // The next "New list" opens on the folder this one went into (session only).
-              writeSession(STORAGE_KEYS.listFolder, folderId)
+              rememberListFolder(folderId)
               toast({ kind: 'success', title: `List “${name}” created` })
               void navigate(`/lists/${list.id}`)
             }
@@ -298,21 +253,16 @@ export function useTreeDialogs({
           if (node.kind === 'list')
             content = <ListIconDialog key={`icon-${node.id}`} list={node.list} onClose={close} />
         } else if (dialog.type === 'delete') {
-          const counts = subtreeCounts(node)
-          const contents = countsText(counts)
           content = (
             <DeleteDialog
               key={`delete-${node.id}`}
               noun={node.kind}
               name={name}
-              contents={contents}
+              contents={countsText(subtreeCounts(node))}
               onClose={close}
               onReload={reload}
               onConfirm={async () => {
-                const wasActive =
-                  activeListId !== null &&
-                  (activeListId === node.id ||
-                    index.ancestorsOf(activeListId).some((a) => a.id === node.id))
+                const wasActive = isOpenWithin(index, activeListId, node.id)
                 if (node.kind === 'folder') await deleteFolder.mutateAsync(node.folder)
                 else await deleteList.mutateAsync(node.list)
                 toast({ kind: 'success', title: `“${name}” moved to Trash` })
@@ -326,21 +276,4 @@ export function useTreeDialogs({
   }
 
   return { actions, dialogs: content }
-}
-
-function findNode(nodes: readonly TreeNode[], id: string): TreeNode | undefined {
-  for (const node of nodes) {
-    if (node.id === id) return node
-    if (node.kind === 'folder') {
-      const found = findNode(node.children, id)
-      if (found) return found
-    }
-  }
-  return undefined
-}
-
-/** Renders nothing; tells its owner once that the dialog's target is gone. */
-function Vanished({ onGone }: { onGone: () => void }) {
-  useEffect(() => onGone(), [onGone])
-  return null
 }

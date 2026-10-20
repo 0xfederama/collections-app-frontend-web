@@ -1,26 +1,11 @@
-import type { ReactNode, Ref } from 'react'
 import { Link } from 'react-router'
-import { IconButton, Menu } from '../../components/ui'
-import { ArrowDown, ArrowUp, Ellipsis } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { DisplayMode, ItemSummary } from './api'
 import { ItemThumb } from './ItemThumb'
-import { pinnedPlacements, pinnedTexts, storesOf, streamingOf, type PinnedKeys } from './pinned'
-import { ServiceIcon } from '../../components/ServiceIcon'
-import { storeName, useStoreProviders } from '../stores'
+import { pinnedPlacements, type PinnedKeys } from './pinned'
 import type { ItemType, TypeDefinition } from '../items'
-import { safeWebsiteUrl, storeLink, streamingSearchLink } from '../links'
-import { useSettings } from '../settings'
-/** What an entry needs to be reorderable. Absent when reordering is not available. */
-export interface EntryReorder {
-  rowRef: Ref<HTMLLIElement>
-  /** Extra attributes for the row element (the keyboard instructions). */
-  rowProps: { 'aria-describedby'?: string }
-  isDragging: boolean
-  canMoveUp: boolean
-  canMoveDown: boolean
-  onMoveBy: (delta: -1 | 1) => void
-}
+import { PinnedSlot } from './ItemPinned'
+import { entryControls, type EntryReorder } from './ItemControls'
 
 export interface ItemEntryProps {
   item: ItemSummary
@@ -42,122 +27,6 @@ const linkClass =
 /** Whole row or card is the click target (the title link stretches over it); hover and focus show on the shell. */
 const surface =
   'border border-border bg-surface shadow-sm transition-shadow hover:shadow-md hover:bg-surface-raised has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-focus-ring'
-
-/**
- * A store or streaming tile that opens its page in a new tab. It sits above the row's stretched
- * title link (`relative z-10`), so a click on it never opens the item; without a usable https URL
- * it is the plain tile.
- */
-function TileLink({
-  href,
-  label,
-  children,
-}: {
-  href: string | null
-  label: string
-  children: ReactNode
-}) {
-  if (!href) return <>{children}</>
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={`${label} (opens in a new tab)`}
-      aria-label={`${label} (opens in a new tab)`}
-      className="relative z-10 inline-flex rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
-    >
-      {children}
-    </a>
-  )
-}
-
-/** One placement of the pinned fields: text pieces joined with ` · `, streaming as service icons. */
-function PinnedSlot({
-  keys,
-  item,
-  definition,
-  iconSize,
-  className,
-}: {
-  keys: readonly string[]
-  item: ItemSummary
-  definition: TypeDefinition
-  iconSize: number
-  className?: string
-}) {
-  const providers = useStoreProviders()
-  const settings = useSettings()
-  const parts: ReactNode[] = []
-  let run: string[] = []
-  const flush = () => {
-    const texts = pinnedTexts(run, item, definition)
-    if (texts.length) {
-      parts.push(
-        <span key={`t${parts.length}`} className="whitespace-nowrap tabular-nums">
-          {texts.join(' · ')}
-        </span>,
-      )
-    }
-    run = []
-  }
-  for (const key of keys) {
-    // Store links are tiles like streaming; a provider with no logo gets the letter tile.
-    if (definition.fields.find((f) => f.key === key)?.type === 'stores') {
-      flush()
-      const stores = storesOf(item, key)
-      const isbn = typeof item.metadata.isbn === 'string' ? item.metadata.isbn : null
-      const country = settings.data?.streaming_country_code
-      if (stores.length) {
-        parts.push(
-          <span key={`k${parts.length}`} className="inline-flex flex-wrap items-center gap-1.5">
-            {stores.map((store) => {
-              const label = storeName(providers.data, store)
-              const href = storeLink(store, { isbn, title: item.title, country })
-              return (
-                <TileLink key={store} href={safeWebsiteUrl(href)} label={label}>
-                  <ServiceIcon name={store} label={label} size={iconSize} />
-                </TileLink>
-              )
-            })}
-          </span>,
-        )
-      }
-      continue
-    }
-    if (key !== 'streaming') {
-      run.push(key)
-      continue
-    }
-    flush()
-    const services = streamingOf(item)
-    const streaming = item.metadata.streaming as { link?: string | null } | null | undefined
-    // Each service the web knows opens its own search for the title; one without a search falls back
-    // to the title's JustWatch page (`streaming.link`), and without either stays plain.
-    const justWatch = safeWebsiteUrl(streaming?.link ?? null)
-    if (services.length) {
-      parts.push(
-        <span key={`s${parts.length}`} className="inline-flex items-center gap-1.5">
-          {services.map((s) => {
-            const search = streamingSearchLink(s.name, item.title)
-            return (
-              <TileLink
-                key={s.name}
-                href={safeWebsiteUrl(search) ?? justWatch}
-                label={search ? `Find on ${s.name}` : `${s.name} on JustWatch`}
-              >
-                <ServiceIcon name={s.name} paid={s.paid} size={iconSize} />
-              </TileLink>
-            )
-          })}
-        </span>,
-      )
-    }
-  }
-  flush()
-  if (parts.length === 0) return null
-  return <div className={cx('flex flex-wrap items-center gap-x-2 gap-y-1', className)}>{parts}</div>
-}
 
 /** One item of the list in the given display mode: a row (compact, thumbnail) or a card (grid). */
 export function ItemEntry({
@@ -270,41 +139,4 @@ export function ItemEntry({
       {controls && <div className="absolute top-2.5 right-2.5">{controls.menu}</div>}
     </li>
   )
-}
-
-const controlButton =
-  'relative z-10 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-border hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring pointer-coarse:size-11 [&_svg]:size-5'
-
-function entryControls(title: string, reorder: EntryReorder) {
-  return {
-    menu: (
-      <Menu
-        trigger={
-          <IconButton
-            aria-label={`Actions for ${title}`}
-            className={cx(
-              controlButton,
-              'bg-surface/80 opacity-0 transition-opacity duration-150 group-focus-within/entry:opacity-100 group-hover/entry:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 [@media(hover:none)]:opacity-100',
-            )}
-          >
-            <Ellipsis aria-hidden />
-          </IconButton>
-        }
-        items={[
-          {
-            label: 'Move up',
-            icon: <ArrowUp />,
-            disabled: !reorder.canMoveUp,
-            onSelect: () => reorder.onMoveBy(-1),
-          },
-          {
-            label: 'Move down',
-            icon: <ArrowDown />,
-            disabled: !reorder.canMoveDown,
-            onSelect: () => reorder.onMoveBy(1),
-          },
-        ]}
-      />
-    ),
-  }
 }
