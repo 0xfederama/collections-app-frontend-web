@@ -33,6 +33,8 @@ To fix a violation, export the symbol from the feature's `index.ts` and import i
 
 `src/data/` holds the query keys of every server resource (`keys.ts`, the cache identities; values never change) and the shared invalidation (`invalidate.ts`: `invalidateContent` for any write that changes what exists or where, `invalidateItemWrite` for an item PATCH). Features import keys from `data/keys` and never re-export them from their barrels. The API client is `src/lib/api` (openapi-fetch, `ApiError` / `NetworkError`, `ifMatch`).
 
+`lib/api/failure.ts` is the one place that maps an HTTP failure to a kind (`failureKind`: precondition, not_found, conflict, too_large, validation, unavailable, other). Each feature's classifier (tree, trash, items, settings save) switches on that kind and adds its own wording and sub-codes (for example `cycle_detected`); the wording stays in the feature, and no feature re-derives statuses.
+
 ## Size and purity
 
 - Pure logic goes in `model/` (or `*.ts` next to the feature) with table-driven tests; components stay thin and call it.

@@ -1,4 +1,4 @@
-import { ApiError, NetworkError } from '../../lib/api'
+import { ApiError, failureKind } from '../../lib/api'
 
 type TrashErrorKind =
   | 'gone' // 404: already restored or purged elsewhere
@@ -19,43 +19,52 @@ export const GONE_MESSAGE =
 
 /** Turns a failed restore or purge into the message UI_SPEC §9 asks for. */
 export function classifyTrashError(error: unknown): TrashError {
-  if (error instanceof ApiError) {
-    if (error.status === 404) {
+  switch (failureKind(error)) {
+    case 'not_found':
       return { kind: 'gone', message: GONE_MESSAGE }
-    }
-    if (error.status === 409 && error.code === 'parent_in_trash') {
-      return {
-        kind: 'parent_in_trash',
-        message: 'Its parent is in Trash, so it can’t go back there. Choose where to restore it.',
+    case 'conflict':
+      if (error instanceof ApiError && error.code === 'parent_in_trash') {
+        return {
+          kind: 'parent_in_trash',
+          message: 'Its parent is in Trash, so it can’t go back there. Choose where to restore it.',
+        }
       }
-    }
-    if (error.status === 409 && error.code === 'cycle_detected') {
-      return {
-        kind: 'cycle',
-        message: 'A folder can’t be restored into itself or one of its own subfolders.',
+      if (error instanceof ApiError && error.code === 'cycle_detected') {
+        return {
+          kind: 'cycle',
+          message: 'A folder can’t be restored into itself or one of its own subfolders.',
+        }
       }
-    }
-    if (error.status === 409) {
       return {
         kind: 'unavailable',
         message:
           'That destination no longer exists or is in Trash. The list of destinations was refreshed, please choose again.',
       }
-    }
-    if (error.status === 422) {
-      return {
-        kind: 'validation',
-        message: error.errors?.[0]?.message ?? error.detail ?? 'The destination is not valid.',
+    case 'validation':
+      if (error instanceof ApiError) {
+        return {
+          kind: 'validation',
+          message: error.errors?.[0]?.message ?? error.detail ?? 'The destination is not valid.',
+        }
       }
-    }
-    if (error.status >= 500) return networkError()
-    return { kind: 'other', message: error.detail ?? error.title }
+      return serverOrGenericError(error)
+    case 'unavailable':
+      return networkError()
+    // Trash has no wording for 412 or 413: they show the server's text, like any other failure.
+    case 'precondition':
+    case 'too_large':
+    case 'other':
+      return serverOrGenericError(error)
   }
-  if (error instanceof NetworkError) return networkError()
-  return { kind: 'other', message: 'Something went wrong. Please try again.' }
 }
 
 const networkError = (): TrashError => ({
   kind: 'network',
   message: 'The server could not be reached. Nothing was changed, so you can try again.',
 })
+
+/** The server's own text when the failure came from HTTP, else the generic message. */
+const serverOrGenericError = (error: unknown): TrashError =>
+  error instanceof ApiError
+    ? { kind: 'other', message: error.detail ?? error.title }
+    : { kind: 'other', message: 'Something went wrong. Please try again.' }
