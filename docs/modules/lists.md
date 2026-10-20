@@ -7,11 +7,11 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 ## Key files
 
 - `src/features/lists/ListView.tsx`: list screen and URL state (`?q=`, `?sort=`, `filter_*`).
-- `FieldFilter.tsx`: per-field filter control and `parseFieldFilter` for URL params.
+- `FieldFilter.tsx`: per-field filter control, `parseFieldFilter` for URL params, `FieldFilterMenu` (the "+ Filter" popover) and `FieldFilterChip` (the applied filter, removable, under the bar).
 - `ListIconPicker.tsx`, `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices and parsing.
 - `ListIconMark.tsx`: shared list mark renderer.
 - `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`: header, sort options and item rows.
-- `pinned.ts`, `PinnedMenu.tsx`, `toolbarStyles.ts`: pinned fields and toolbar.
+- `pinned.ts`, `PinnedMenu.tsx`, `toolbarStyles.ts`: pinned fields and toolbar. The bar is: search ("Search by title"), "+ Filter", sort, display mode; the Pinned fields icon button sits in the title row beside the list "…" menu.
 - `api.ts`: list and item queries/mutations.
 
 ## Interfaces

@@ -1,5 +1,5 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Check, ChevronDown, SlidersHorizontal } from '../../components/ui/icons'
+import { Check, SlidersHorizontal } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import type { PinnedFields } from './api'
 import { toolbarControl } from './toolbarStyles'
@@ -42,22 +42,17 @@ export function PinnedMenu({
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        {/* Narrow toolbars (container below 44rem) show the icon only; the name stays. */}
         <button
           type="button"
-          className={cx(
-            toolbarControl,
-            '@max-[44rem]:w-9 @max-[44rem]:px-0 pointer-coarse:@max-[44rem]:w-11',
-          )}
+          aria-label="Pinned fields"
+          className={cx(toolbarControl, 'w-9 px-0 pointer-coarse:w-11')}
         >
-          <SlidersHorizontal aria-hidden className="size-4 @[44rem]:hidden" />
-          <span className="@max-[44rem]:sr-only">Pinned fields</span>
-          <ChevronDown aria-hidden className="size-4 @max-[44rem]:hidden" />
+          <SlidersHorizontal aria-hidden className="size-4" />
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          align="start"
+          align="end"
           sideOffset={6}
           className="bg-surface-raised z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-60 overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
         >

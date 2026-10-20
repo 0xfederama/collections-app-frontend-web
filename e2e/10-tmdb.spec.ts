@@ -46,6 +46,7 @@ test.describe('F013-W3 director data and F014-W4 field filter', () => {
     const rows = page.getByRole('list', { name: 'Items' }).getByRole('link')
     await expect(rows).toHaveText([zetaTitle, alphaTitle])
 
+    await page.getByRole('button', { name: 'Filter', exact: true }).click()
     await page.getByRole('combobox', { name: 'Filter field' }).click()
     await page.getByRole('option', { name: 'Director' }).click()
     const filter = page.getByRole('searchbox', { name: 'Filter Director' })
@@ -54,7 +55,8 @@ test.describe('F013-W3 director data and F014-W4 field filter', () => {
     await expect(rows).toHaveCount(1)
     await expect(rows.first()).toContainText(alphaTitle)
 
-    await page.getByRole('button', { name: 'Clear field filter' }).click()
+    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: /Remove filter Director/ }).click()
     await expect(rows).toHaveCount(2)
     await page.getByRole('combobox', { name: 'Sort' }).click()
     await page.getByRole('option', { name: 'Director' }).click()
