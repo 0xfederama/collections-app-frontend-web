@@ -118,13 +118,14 @@ function PriceInputs({
             />
           </div>
         )}
-        <div className="min-w-0 flex-1">
+        <div className="w-24 shrink-0">
           <CurrencySelect
             id={inputId('price.currency')}
             label="Currency"
             value={draft.currency || INITIAL_CURRENCY}
             onValueChange={(value) => set('currency', value, 'price.currency')}
             placeholder="Currency"
+            compact
             error={errors['price.currency']}
           />
         </div>
