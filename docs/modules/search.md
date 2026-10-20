@@ -6,7 +6,8 @@ Global item search in the sidebar dropdown and `/search?q=` results page.
 
 ## Key files
 
-- `src/features/search/api.ts`: query hooks and keys.
+- `src/features/search/index.ts`: public face; `api.ts`: query hooks; `searchKeys` is in `src/data/keys.ts`.
+- `useSearchShortcut.ts`: the `/` shortcut.
 - `SidebarSearch.tsx`: sidebar combobox and popup.
 - `SearchResultRow.tsx`: result body, type name, path and list mark.
 - `src/routes/SearchRoute.tsx`: results page.
@@ -14,7 +15,7 @@ Global item search in the sidebar dropdown and `/search?q=` results page.
 
 ## Interfaces
 
-- `useSearch(q, options)`, `useSearchResults(q)`, `searchKeys`.
+- `useSearch(q, options)`, `useSearchResults(q)` (`api.ts`); `searchKeys` from `src/data/keys.ts`.
 - `normalizeQuery(q)`: trims and caps the query at 200 characters.
 - `SidebarSearch({ inputRef })`, `SearchResultBody({ result, large })`, `resultHref(result)`.
 - `SearchRoute()`, `useSearchShortcut(onTrigger)`.

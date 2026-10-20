@@ -10,14 +10,15 @@ The `/trash` page lists deleted batches and supports restore, permanent deletion
 - `TrashPage.tsx`: rows, pagination and empty-trash flow.
 - `EmptyTrashDialog.tsx`, `PurgeDialog.tsx`: destructive confirmations.
 - `RestoreToDialog.tsx`, `model.ts`: destination rules and row counts.
-- `keys.ts`, `errors.ts`, `devTrash.ts`: query keys, errors and dev fake.
+- `errors.ts`, `devTrash.ts`: errors and dev fake; `trashKeys` is in `src/data/keys.ts`.
+- `index.ts` (public face, `countsText`), `screens.ts` (page for `TrashRoute`), `useRestoreFeedback.ts`.
 
 ## Interfaces
 
 - `useTrash()`: infinite query in 50-entry pages.
 - `useRestoreTrash()`, `usePurgeTrash()`, `useEmptyTrash()`.
 - `EmptyTrashDialog({ entries, itemCount, onClose, onDone })`.
-- `TrashPage()`, `trashKeys`, `countsText(counts)`.
+- `TrashPage()`, `countsText(counts)`, `trashKeys` (`src/data/keys.ts`).
 
 ## Gotchas
 

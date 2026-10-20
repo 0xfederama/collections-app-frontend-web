@@ -6,10 +6,13 @@ The folder/list tree, its query and index, and folder and list writes including 
 
 ## Key files
 
-- `src/features/tree/api.ts`: tree query, types and index.
+- `index.ts`: public face; `treeKeys` is in `src/data/keys.ts`.
+- `api.ts`: tree query, types and index; `treeLookup.ts`: `findNode`, `nameOf`, `isOpenWithin`.
 - `SidebarTree.tsx`, `RailTree.tsx`: sidebar and collapsed rail.
-- `mutations.ts`: folder/list writes, including icon updates.
-- `useTreeDialogs.tsx`, `NameDialog.tsx`: create flows and dialogs.
+- `mutations.ts`: folder/list writes, reorder and icon updates; success calls `invalidateContent`.
+- `useTreeMoves.ts`: move actions behind the menus and dialogs.
+- `useTreeDialogs.tsx`, `NameDialog.tsx`: create flows and dialogs; `Vanished.tsx` tells a dialog its target is gone.
+- `listFolderMemory.ts`: folder a new list goes into (session only).
 - `ListIconDialog.tsx`: edit a list mark with a version snapshot.
 - `ListActionsMenu.tsx`, `NodeMenu.tsx`: list and node actions.
 - `order.ts`, `ListGate.tsx`: ordering rules and list route gate.
@@ -17,7 +20,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 ## Interfaces
 
 - `useTree()`, `useTreeIndex()`, `createTreeIndex(data)`: tree data and index.
-- `useCreateList()`, `useUpdateListIcon()`, `useMoveList()`, `useDeleteList()`: list mutations.
+- `useCreateList()`, `useUpdateListIcon()`, `useMoveList()`, `useDeleteList()`, `useReorderSiblings()`: mutations.
 - `useTreeDialogs()`: tree actions and dialogs.
 - `ListIconDialog({ list, onClose })`: list icon editor.
 - `ListActionsMenu({ list })`, `SidebarTree()`, `ListGate({ listId, children })`.
