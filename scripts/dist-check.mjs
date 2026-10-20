@@ -6,9 +6,9 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { basename, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
+import { isForbiddenName } from './dist-check-lib.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
-const FORBIDDEN_NAME = /mockServiceWorker|msw|DevUi/i
 const FORBIDDEN_TEXT = ['setupWorker', 'createTreeBackend', 'DevUiRoute', '/dev/ui']
 
 function walk(dir) {
@@ -22,7 +22,7 @@ function findProblems(dir) {
   const problems = []
   for (const file of walk(dir)) {
     const name = relative(dir, file)
-    if (FORBIDDEN_NAME.test(basename(file))) {
+    if (isForbiddenName(basename(file))) {
       problems.push(`${name}: the file name is dev-only code`)
     }
     if (file.endsWith('.js')) {
