@@ -23,7 +23,6 @@ export function ListActionsMenu({ list }: { list: List }) {
       onValueChange: (value) => type.pick(valueToType(value)),
     },
     { type: 'separator' },
-    { type: 'separator' },
   ]
   return (
     <>
