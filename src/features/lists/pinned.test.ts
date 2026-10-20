@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TypeDefinition } from '../items/types'
+import type { TypeDefinition } from '../items'
 import type { ItemSummary } from './api'
 import {
   defaultPinned,

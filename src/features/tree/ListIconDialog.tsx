@@ -10,7 +10,7 @@ import { useUpdateListIcon } from './mutations'
 import { treeKeys, type List } from './api'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
-import { typeName } from '../items/types'
+import { typeName } from '../items'
 import { useTypes } from '../settings/api'
 
 const COLOR_LABELS: Record<Exclude<ListIconColor, null>, string> = {

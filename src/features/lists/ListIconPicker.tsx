@@ -11,8 +11,7 @@ import {
 } from './iconModel'
 import { EMOJI_KEYWORDS } from './emojiKeywords'
 import { ListIconMark } from './ListIconMark'
-import type { ItemType } from '../items/api'
-
+import type { ItemType } from '../items'
 const COLOR_LABELS: Record<ListIconColor, string> = {
   red: 'Red',
   orange: 'Orange',

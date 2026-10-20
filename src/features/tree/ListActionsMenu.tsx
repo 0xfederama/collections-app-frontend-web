@@ -1,5 +1,5 @@
 import { type MenuItem } from '../../components/ui'
-import { typeToValue, valueToType } from '../items/types'
+import { typeToValue, valueToType } from '../items'
 import { useTreeDialogs } from './useTreeDialogs'
 import { NodeMenu } from './NodeMenu'
 import type { List } from './api'

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ItemType } from '../../items/api'
+import type { ItemType } from '../../items'
 import { buildExternalLinks, safeImdbUrl } from './external'
 
 describe('F006-W5 safeImdbUrl', () => {

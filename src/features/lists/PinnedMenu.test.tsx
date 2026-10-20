@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { PinnedMenu } from './PinnedMenu'
 import type { List } from './api'
-import type { ItemType } from '../items/api'
+import type { ItemType } from '../items'
 import { mockTypes } from '../../mocks/types'
 
 type Pinned = List['pinned_fields']

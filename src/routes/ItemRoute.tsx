@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { ItemSkeleton } from '../features/items/ItemSkeleton'
-
+import { ItemSkeleton } from '../features/items'
 // The item view pulls in the Markdown renderer, so it loads on first use, not with the shell.
 const ItemPage = lazy(() => import('../features/items/ItemPage'))
 

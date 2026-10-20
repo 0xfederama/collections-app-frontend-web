@@ -8,8 +8,7 @@ import { problemResponse } from '../../mocks/problems'
 import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from '../../app/router'
 import { mockViewport, renderWithProviders } from '../../test-utils'
-import type { Item } from '../items/api'
-
+import type { Item } from '../items'
 const LIST = '7c1e5a10-0000-4000-8000-000000000011'
 const NEW_ID = '7c1e5a10-0000-4000-8000-000000000999'
 const origin = location.origin

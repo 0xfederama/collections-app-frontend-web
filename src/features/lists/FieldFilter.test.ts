@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TypeField } from '../items/types'
+import type { TypeField } from '../items'
 import { describeFieldFilter, parseFieldFilter } from './FieldFilter'
 
 const fields: TypeField[] = [

@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { ItemEntry } from './ItemEntry'
 import type { ItemSummary } from './api'
-import type { TypeDefinition } from '../items/types'
+import type { TypeDefinition } from '../items'
 import { mockTypes } from '../../mocks/types'
 import { renderWithProviders } from '../../test-utils'
 

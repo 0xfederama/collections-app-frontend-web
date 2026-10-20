@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { AlertDialog, useToast, type ItemType, type SelectEntry } from '../../components/ui'
-import { typeDefinition, typeName, typeOptions } from '../items/types'
+import { typeDefinition, typeName, typeOptions } from '../items'
 import { useTypes } from '../settings/api'
 import type { List as TreeList } from './api'
 import { classifyError } from './errors'

@@ -12,7 +12,7 @@ import { MarkdownView } from '../../components/markdown'
 import { Button, IconButton, Skeleton, useToast } from '../../components/ui'
 import { Check, X } from '../../components/ui/icons'
 import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
-import { byteLength, formatBytes } from '../items/content/limits'
+import { byteLength, formatBytes } from '../items'
 import {
   treeKeys,
   type List as TreeList,

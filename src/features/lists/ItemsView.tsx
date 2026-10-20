@@ -12,8 +12,7 @@ import {
   type ItemsParams,
   type SortMode,
 } from './api'
-import type { ItemType } from '../items/api'
-import type { TypeDefinition } from '../items/types'
+import type { ItemType, TypeDefinition } from '../items'
 import { ItemEntry } from './ItemEntry'
 import type { PinnedKeys } from './pinned'
 import {

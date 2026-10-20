@@ -18,7 +18,7 @@ import {
   Search,
 } from '../../components/ui/icons'
 import { type List as TreeList, ListActionsMenu, ListIconDialog } from '../tree'
-import { hasPrice, type TypeDefinition } from '../items/types'
+import { hasPrice, type TypeDefinition } from '../items'
 import type { DisplayMode, List, PinnedFields, SortMode } from './api'
 import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
