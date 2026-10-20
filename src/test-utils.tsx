@@ -5,11 +5,6 @@ import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from './app/router'
 import { ToastProvider } from './components/ui'
 
-// Re-exported for lib tests, which may not import mocks (F020 boundaries): the shared Node server and
-// the Problem helper. test-setup.ts still starts the server for every test.
-export { problemResponse } from './mocks/problems'
-export { server } from './mocks/server'
-
 /** A fresh client per render, with no retries and no cache sharing between tests. */
 export function createTestQueryClient() {
   return new QueryClient({

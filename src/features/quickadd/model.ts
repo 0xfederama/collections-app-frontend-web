@@ -66,13 +66,15 @@ export function resolveListId(
 
 /**
  * How a failed create is shown. `errors: null` leaves the field errors untouched (only a 422 sets
- * them). `formError: 'keep'` leaves the banner untouched: the 422 branch sets it only when the
- * messages have no field to sit under, and the other branches always set it (or clear it).
+ * them). `keepFormError` leaves the banner untouched: it is true only for a 422 whose messages all
+ * sit under a title or website field, so the banner has nothing to show. The other branches set
+ * `formError` (undefined clears it).
  */
 export type CreateFailure = {
   errors: Partial<Record<Field, string>> | null
   focus: 'title' | 'website' | null
-  formError: string | undefined | 'keep'
+  formError: string | undefined
+  keepFormError: boolean
   lookupUnavailable: boolean
 }
 
@@ -89,13 +91,11 @@ export function describeCreateFailure(caught: unknown): CreateFailure {
     let focus: CreateFailure['focus'] = null
     if (mapped.title) focus = 'title'
     else if (mapped.website) focus = 'website'
-    let formError: CreateFailure['formError'] = 'keep'
-    if (rest.length || (!mapped.title && !mapped.website)) {
-      formError = rest.join(' ') || caught.title
-    }
-    return { errors: mapped, focus, formError, lookupUnavailable }
+    const keepFormError = !rest.length && (!!mapped.title || !!mapped.website)
+    const formError = keepFormError ? undefined : rest.join(' ') || caught.title
+    return { errors: mapped, focus, formError, keepFormError, lookupUnavailable }
   }
-  const none = { errors: null, focus: null, lookupUnavailable }
+  const none = { errors: null, focus: null, keepFormError: false, lookupUnavailable }
   if (caught instanceof ApiError && caught.status === 409) {
     return { ...none, formError: 'This list no longer exists or is in Trash.' }
   }

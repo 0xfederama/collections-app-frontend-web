@@ -10,7 +10,7 @@ import { findNode, isOpenWithin, nameOf } from './treeLookup'
 import { Vanished } from './Vanished'
 import { ListIconDialog } from './ListIconDialog'
 import { readLastListFolder, rememberListFolder } from './listFolderMemory'
-import { useTreeMoves } from './useTreeMoves'
+import { createTreeMoves } from './treeMoves'
 import {
   useCreateFolder,
   useCreateList,
@@ -104,7 +104,7 @@ export function useTreeDialogs({
     return queryClient.getQueryData<TreeData>(treeKeys.tree)
   }
 
-  const { position, applyMove, canDropInto, nudge } = useTreeMoves({
+  const { position, applyMove, canDropInto, nudge } = createTreeMoves({
     index,
     sortable,
     toast,

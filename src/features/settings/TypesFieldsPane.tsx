@@ -20,6 +20,7 @@ import { DeleteFieldDialog } from './types/DeleteFieldDialog'
 import { OperationBanner } from './types/OperationBanner'
 import { ChangeListsDialog } from './types/ChangeListsDialog'
 import { FieldsSection } from './types/FieldsSection'
+import { useFieldDrafts } from './types/useFieldDrafts'
 import { TypeHeader } from './types/TypeHeader'
 import { DefaultsSection } from './types/DefaultsSection'
 
@@ -58,6 +59,7 @@ export function TypesFieldsPane() {
   } | null>(null)
   const [operationError, setOperationError] = useState<unknown>(null)
   const [conflict, setConflict] = useState(false)
+  const fieldDrafts = useFieldDrafts()
   const targetTypes = types.filter((type) => type.key !== confirmDeleteType?.key)
   const fieldOptions = defaultFieldOptions(selected, defaults?.allowsPrice ?? false)
   const defaultsDirty = isDefaultsDirty(selected, defaults)
@@ -170,6 +172,7 @@ export function TypesFieldsPane() {
               selected={selected}
               run={run}
               onConfirmDeleteField={setConfirmDeleteField}
+              drafts={fieldDrafts}
             />
           </>
         ) : (

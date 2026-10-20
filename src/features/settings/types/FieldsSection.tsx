@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Button, Select, TextField } from '../../../components/ui'
 import { SortableProvider } from '../../../components/ui/sortable'
 import {
@@ -11,24 +10,34 @@ import {
 } from '../api'
 import { FieldRow } from './FieldRow'
 import { fieldTypes } from './model'
+import type { FieldDrafts } from './useFieldDrafts'
 
 export function FieldsSection({
   selected,
   run,
   onConfirmDeleteField,
+  drafts,
 }: {
   selected: TypeDefinition
   run: (operation: () => Promise<unknown>) => Promise<void>
   onConfirmDeleteField: (target: { type: TypeDefinition; field: TypeField; count: number }) => void
+  /** Owned by the pane, so the drafts survive its loading and no-selection views. */
+  drafts: FieldDrafts
 }) {
   const createField = useCreateTypeField()
   const renameField = useRenameTypeField()
   const previewDelete = usePreviewTypeFieldDelete()
   const reorderFields = useReorderTypeFields()
-  const [fieldLabel, setFieldLabel] = useState('')
-  const [fieldType, setFieldType] = useState<(typeof fieldTypes)[number]['value']>('text')
-  const [editingField, setEditingField] = useState<TypeField | null>(null)
-  const [fieldDraft, setFieldDraft] = useState('')
+  const {
+    fieldLabel,
+    setFieldLabel,
+    fieldType,
+    setFieldType,
+    editingField,
+    setEditingField,
+    fieldDraft,
+    setFieldDraft,
+  } = drafts
   const customFields = selected.fields.filter((field) => !field.is_locked)
 
   return (
