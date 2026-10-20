@@ -684,22 +684,23 @@ describe('F016-W1 book item detail', () => {
       metadata: {
         author: 'Frank Herbert',
         pages: 412,
-        stores: ['amazon', 'kobo'],
-        store_links: { amazon: 'https://www.amazon.it/s?k=Dune' },
+        stores: ['amazon', 'bookfinder'],
+        store_links: { amazon: 'https://evil.example' },
       },
     })
 
     expect(screen.getByText('Frank Herbert')).toBeVisible()
     expect(screen.getByText('412 p.')).toBeVisible()
     const stores = within(await screen.findByRole('list', { name: 'Where to get it' }))
-    // F016-W4: the display names, and a link only where the server stored one.
+    // F016-W4: the display names, and a link only where the web can build one (the Settings country
+    // is IT, so Amazon is amazon.it; the server's store_links is ignored).
     expect(stores.getByRole('img', { name: 'Amazon' })).toBeInTheDocument()
-    expect(stores.getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
-    expect(stores.getByRole('link', { name: /Amazon/ })).toHaveAttribute(
+    expect(stores.getByRole('img', { name: 'bookfinder' })).toBeInTheDocument()
+    expect(await stores.findByRole('link', { name: /Amazon/ })).toHaveAttribute(
       'href',
       'https://www.amazon.it/s?k=Dune',
     )
-    expect(stores.queryByRole('link', { name: /Kobo/ })).not.toBeInTheDocument()
+    expect(stores.queryByRole('link', { name: /bookfinder/ })).not.toBeInTheDocument()
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: 'Add field' }))
