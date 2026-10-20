@@ -2,7 +2,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import { homeKeys } from './home/api'
 import { searchKeys } from './search/api'
 import { ITEMS_KEY_ROOT, LISTS_KEY_ROOT, trashKeys } from './trash/keys'
-import { treeKeys } from './tree/api'
+import { treeKeys } from './tree'
 
 /**
  * The one invalidation for any write that changes WHAT EXISTS or WHERE it is (create, trash,

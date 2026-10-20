@@ -29,7 +29,7 @@ import { LIMITS } from '../items/form/draft'
 import { checkImageFile, ACCEPT } from '../items/image/checks'
 import { putImageFile } from '../items/image/upload'
 import { invalidateContent } from '../invalidateContent'
-import { useTree } from '../tree/api'
+import { useTree } from '../tree'
 import { useSettings } from '../settings/api'
 
 type Field = 'title' | 'website' | 'description' | 'image' | 'list'

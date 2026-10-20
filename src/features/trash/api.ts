@@ -7,7 +7,7 @@ import {
 import type { components } from '../../generated/schema'
 import { ApiError, api, unwrap } from '../../lib/api'
 import { invalidateContent } from '../invalidateContent'
-import { treeKeys } from '../tree/api'
+import { treeKeys } from '../tree'
 import { trashKeys } from './keys'
 
 export { trashKeys, LISTS_KEY_ROOT, ITEMS_KEY_ROOT } from './keys'

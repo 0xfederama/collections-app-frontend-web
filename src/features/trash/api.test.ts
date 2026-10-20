@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { itemKeys } from '../items/api'
 import { listKeys } from '../lists/api'
 import { searchKeys } from '../search/api'
-import { treeKeys } from '../tree/api'
+import { treeKeys } from '../tree'
 import {
   ITEMS_KEY_ROOT,
   LISTS_KEY_ROOT,

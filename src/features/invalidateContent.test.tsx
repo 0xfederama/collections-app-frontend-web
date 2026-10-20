@@ -13,8 +13,15 @@ import { listKeys } from './lists/api'
 import { searchKeys } from './search/api'
 import { trashKeys } from './trash/keys'
 import { useRestoreTrash, usePurgeTrash } from './trash/api'
-import { useCreateFolder, useDeleteFolder, useDeleteList, useMoveList } from './tree/mutations'
-import { treeKeys, type Folder, type List } from './tree/api'
+import {
+  useCreateFolder,
+  useDeleteFolder,
+  useDeleteList,
+  useMoveList,
+  treeKeys,
+  type Folder,
+  type List,
+} from './tree'
 
 const wrapperFor =
   (client: QueryClient) =>

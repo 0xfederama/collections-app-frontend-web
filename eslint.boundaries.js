@@ -1,8 +1,8 @@
 // F020 import boundaries, enforced with the built-in no-restricted-imports (decision F020-Q3).
 // Imported by eslint.config.js. Rules:
 //   A. components and lib never import features, layouts, routes, app or mocks.
-//   B. a feature imports another feature only through its index.ts.
-//   C. files outside features import a feature only through its index.ts.
+//   B. a feature imports another feature only through its index.ts (or its testing.ts test kit).
+//   C. files outside features import a feature only through its index.ts (or its testing.ts test kit).
 // Flat config replaces a rule's options per file, so the blocks below are split so that each
 // file matches exactly one block that sets the rule.
 import { readdirSync } from 'node:fs'
@@ -24,7 +24,11 @@ const featureBlocks = FEATURES.map((feature) => ({
       {
         patterns: [
           {
-            group: FEATURES.filter((other) => other !== feature).map((other) => `**/${other}/*`),
+            // a feature's testing module (its test kit) is the one deep import allowed (F020-W3)
+            group: [
+              ...FEATURES.filter((other) => other !== feature).map((other) => `**/${other}/*`),
+              ...FEATURES.map((other) => `!**/${other}/testing`),
+            ],
             message: THROUGH_INDEX,
           },
         ],
@@ -64,7 +68,9 @@ export default [
       'no-restricted-imports': [
         'error',
         {
-          patterns: [{ group: ['**/features/*/*'], message: THROUGH_INDEX }],
+          patterns: [
+            { group: ['**/features/*/*', '!**/features/*/testing'], message: THROUGH_INDEX },
+          ],
         },
       ],
     },

@@ -1,7 +1,6 @@
 import { EmptyState, Button } from '../../components/ui'
 import { ListPlus } from '../../components/ui/icons'
-import { useTreeIndex } from '../tree/api'
-import { useTreeDialogs } from '../tree/useTreeDialogs'
+import { useTreeIndex, useTreeDialogs } from '../tree'
 import { QuickLinks, QuickLinksError, QuickLinksSkeleton } from './QuickLinks'
 import { RecentItems } from './RecentItems'
 

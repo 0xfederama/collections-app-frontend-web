@@ -5,7 +5,7 @@ import { homeKeys } from '../home/api'
 import { invalidateContent } from '../invalidateContent'
 import { listKeys } from '../lists/api'
 import { searchKeys } from '../search/api'
-import { treeKeys } from '../tree/api'
+import { treeKeys } from '../tree'
 
 export type Item = components['schemas']['Item']
 export type ItemType = components['schemas']['ItemType']

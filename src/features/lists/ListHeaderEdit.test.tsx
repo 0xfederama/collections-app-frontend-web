@@ -1,6 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { ID, openTree, pickRowAction, seedTree, sidebar } from '../tree/treeTestKit'
+import { ID, openTree, pickRowAction, seedTree, sidebar } from '../tree/testing'
 
 const main = () => screen.getByRole('main')
 

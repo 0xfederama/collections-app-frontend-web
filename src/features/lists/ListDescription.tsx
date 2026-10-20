@@ -13,9 +13,14 @@ import { Button, IconButton, Skeleton, useToast } from '../../components/ui'
 import { Check, X } from '../../components/ui/icons'
 import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 import { byteLength, formatBytes } from '../items/content/limits'
-import { treeKeys, type List as TreeList, type TreeData } from '../tree/api'
-import { classifyError, type TreeError } from '../tree/errors'
-import { useUpdateList } from '../tree/mutations'
+import {
+  treeKeys,
+  type List as TreeList,
+  type TreeData,
+  classifyError,
+  type TreeError,
+  useUpdateList,
+} from '../tree'
 
 // The CodeMirror chunk downloads when the editor first opens, like the item description editor.
 const MarkdownEditor = lazy(() => import('../items/content/MarkdownEditor'))

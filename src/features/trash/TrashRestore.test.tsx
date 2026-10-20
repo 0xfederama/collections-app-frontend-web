@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it, vi } from 'vitest'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
-import { ID } from '../tree/treeTestKit'
+import { ID } from '../tree/testing'
 import { buttonName, entry, openTrash, rowOf, T, waitForRows } from './trashTestKit'
 
 const restoreUrl = (batchId?: string) =>

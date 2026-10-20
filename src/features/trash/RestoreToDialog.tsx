@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import { Button, Dialog, Skeleton } from '../../components/ui'
-import type { TreeIndex, TreeNode } from '../tree/api'
-import { useTreeIndex } from '../tree/api'
-import { DestinationPicker, type DestinationOption } from '../tree/DestinationPicker'
-import { flattenFolders } from '../tree/order'
+import {
+  type TreeIndex,
+  type TreeNode,
+  useTreeIndex,
+  DestinationPicker,
+  type DestinationOption,
+  flattenFolders,
+} from '../tree'
 import {
   useRestoreTrash,
   type RestoreDestination,

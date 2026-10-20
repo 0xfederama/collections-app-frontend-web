@@ -5,7 +5,7 @@ import { devTree } from '../../mocks/devData'
 import { createTrashBackend, devTrash } from '../../mocks/devTrash'
 import { server } from '../../mocks/server'
 import { createTestQueryClient, renderAt } from '../../test-utils'
-import { installTreeBackend } from '../tree/treeTestKit'
+import { installTreeBackend } from '../tree/testing'
 import type { TrashEntry } from './api'
 
 /** Shared setup for the W-12 trash tests (not a test file itself). */

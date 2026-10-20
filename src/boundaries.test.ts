@@ -25,6 +25,12 @@ describe('F020-W2 import boundaries', () => {
     )
   })
 
+  it('B: a feature may import another feature test kit (testing) deep', async () => {
+    expect(
+      await reports('src/features/trash/__probe.ts', "import { x } from '../tree/testing'"),
+    ).toBe(false)
+  })
+
   it('B: a feature may import its own internals', async () => {
     expect(await reports('src/features/tree/__probe.ts', "import { x } from '../tree/api'")).toBe(
       false,
@@ -62,6 +68,12 @@ describe('F020-W2 import boundaries', () => {
     expect(await reports('src/app/__probe.tsx', "import { x } from '../features/links'")).toBe(
       false,
     )
+  })
+
+  it('C: outside features, a feature test kit (testing) import is allowed', async () => {
+    expect(
+      await reports('src/app/__probe.tsx', "import { x } from '../features/tree/testing'"),
+    ).toBe(false)
   })
 
   it('legacy: a baseline file is exempt (the same import in a non-baseline sibling reports)', async () => {

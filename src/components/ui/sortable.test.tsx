@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ID, openTree, rowNames, sidebar } from '../../features/tree/treeTestKit'
+import { ID, openTree, rowNames, sidebar } from '../../features/tree/testing'
 import { mockViewport } from '../../test-utils'
 import { Tree, type TreeNodeBase } from './Tree'
 

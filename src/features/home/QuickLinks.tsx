@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { Button, Skeleton } from '../../components/ui'
 import { List as ListIcon } from '../../components/ui/icons'
-import type { List, TreeIndex } from '../tree/api'
+import type { List, TreeIndex } from '../tree'
 
 /** Every list, most recently updated first (ties by name), with the folders that hold it. */
 function listsByRecency(index: TreeIndex): { list: List; where: string }[] {

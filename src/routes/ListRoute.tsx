@@ -1,6 +1,6 @@
 import { useParams } from 'react-router'
 import { ListView } from '../features/lists/ListView'
-import { ListGate } from '../features/tree/ListGate'
+import { ListGate } from '../features/tree'
 
 /**
  * `/lists/:listId`. The list view lives in `src/features/lists/*`.

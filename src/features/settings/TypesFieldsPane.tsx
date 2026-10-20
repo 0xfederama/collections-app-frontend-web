@@ -9,8 +9,7 @@ import { NO_TYPE_VALUE, typeOptions, valueToType } from '../items/types'
 import { ListIconMark } from '../lists/ListIconMark'
 import { ListIconPicker } from '../lists/ListIconPicker'
 import type { IconChoice } from '../lists/iconModel'
-import { useUpdateList } from '../tree/mutations'
-import { treeKeys, useTree } from '../tree/api'
+import { useUpdateList, treeKeys, useTree } from '../tree'
 import {
   typeKeys,
   useCreateType,
