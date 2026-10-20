@@ -107,7 +107,7 @@ export function QuickAddDialog({
       if (failure.errors) setErrors(failure.errors)
       if (failure.focus === 'title') titleRef.current?.focus()
       else if (failure.focus === 'website') websiteRef.current?.focus()
-      if (failure.formError !== 'keep') setFormError(failure.formError)
+      if (!failure.keepFormError) setFormError(failure.formError)
       return
     }
 
