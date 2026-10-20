@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { FileText } from '../../components/ui/icons'
-import { SearchResultBody, resultHref } from '../search/SearchResultRow'
+import { SearchResultBody, resultHref } from '../search'
 import { RECENT_LIMIT, useRecentItems } from './api'
 
 function RecentSkeleton() {

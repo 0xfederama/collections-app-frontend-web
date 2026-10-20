@@ -4,7 +4,7 @@ import { createElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { itemKeys } from '../items'
 import { listKeys } from '../lists'
-import { searchKeys } from '../search/api'
+import { searchKeys } from '../search'
 import { treeKeys } from '../tree'
 import {
   ITEMS_KEY_ROOT,

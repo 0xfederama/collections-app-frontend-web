@@ -1,5 +1,5 @@
 // F020 import boundaries, enforced with the built-in no-restricted-imports (decision F020-Q3).
-// Imported by eslint.config.js. Rules:
+// Imported by eslint.config.js. Rules (no exemption list: they apply to every file):
 //   A. components and lib never import features, layouts, routes, app or mocks.
 //   B. a feature imports another feature only through its index.ts (or its testing.ts test kit).
 //   C. files outside features import a feature only through its index.ts (or its testing.ts test kit).
@@ -9,7 +9,6 @@
 // file matches exactly one block that sets the rule.
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import baseline from './eslint.boundaries.baseline.js'
 
 const FEATURES = readdirSync(join(import.meta.dirname, 'src/features'), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
@@ -83,6 +82,4 @@ export default [
     },
   },
   ...featureBlocks,
-  // legacy, shrinks as F020-W3 splits each area; never add a file here
-  ...(baseline.length > 0 ? [{ files: baseline, rules: { 'no-restricted-imports': 'off' } }] : []),
 ]

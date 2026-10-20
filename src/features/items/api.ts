@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { api, ifMatch, unwrap } from '../../lib/api'
-import { homeKeys } from '../home/api'
+import { homeKeys } from '../home'
 import { invalidateContent } from '../invalidateContent'
 import { listKeys } from '../lists'
-import { searchKeys } from '../search/api'
+import { searchKeys } from '../search'
 import { treeKeys } from '../tree'
 
 export type Item = components['schemas']['Item']

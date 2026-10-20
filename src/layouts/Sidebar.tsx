@@ -10,8 +10,8 @@ import {
   Trash2,
   type LucideIcon,
 } from '../components/ui/icons'
-import { useQuickAdd } from '../features/quickadd/QuickAddContext'
-import { SidebarSearch } from '../features/search/SidebarSearch'
+import { useQuickAdd } from '../features/quickadd'
+import { SidebarSearch } from '../features/search'
 import { useWorkspaceName } from '../features/settings'
 import { RailTree, SidebarTree } from '../features/tree'
 import { cx } from '../lib/cx'

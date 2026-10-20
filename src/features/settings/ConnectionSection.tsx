@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Button } from '../../components/ui'
 import { CircleAlert, CircleCheck, LoaderCircle } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
-import { useBackendCheck, type BackendStatus } from '../health/api'
+import { useBackendCheck, type BackendStatus } from '../health'
 
 const statusView: Record<BackendStatus, { text: string; Icon: typeof CircleCheck; tone: string }> =
   {

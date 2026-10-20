@@ -20,7 +20,7 @@ import {
 } from './mutations'
 import { MoveDialog, listPathOptions } from './MoveDialog'
 import { NameDialog } from './NameDialog'
-import { countsText } from '../trash/model'
+import { countsText } from '../trash'
 import { buildSortable, canDropInto, subtreeCounts } from './order'
 
 type DialogState =

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
-import { server } from '../../mocks/server'
+import { server } from '../../test-utils'
 import { api } from './client'
 import { etag, ifMatch } from './etag'
 

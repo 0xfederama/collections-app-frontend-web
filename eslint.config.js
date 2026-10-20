@@ -62,6 +62,6 @@ export default defineConfig(
     ],
     languageOptions: { globals: globals.node },
   },
-  // F020 import boundaries; its legacy baseline block must stay last.
+  // F020 import boundaries (eslint.boundaries.js).
   ...boundaries,
 )

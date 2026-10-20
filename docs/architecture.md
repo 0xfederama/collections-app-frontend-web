@@ -22,9 +22,9 @@ Defined in `eslint.boundaries.js`, using `no-restricted-imports`:
 - **B.** A feature imports another feature only through that feature's `index.ts`.
 - **C.** Files outside `features/`, `components/` and `lib/` import a feature only through its `index.ts`.
 
-Public entries per feature: `index.ts`, `testing.ts` (test kits) and `screens.ts` (heavy route-level components, imported only by `src/routes`; keeps the barrels light for code splitting). The rule does not check `import()` calls, so they stay for genuinely lazy components (`ItemPage`, `MarkdownEditor`), not for route screens.
+Public entries per feature: `index.ts`, `testing.ts` (test kits) and `screens.ts` (heavy route-level components, imported by `src/routes`, or by the one lazy module that uses a heavy component (`stores/screens.ts`: the store picker, used by `items/inline/editors.tsx`); keeps the barrels light for code splitting). The rule does not check `import()` calls, so they stay for genuinely lazy components (`ItemPage`, `MarkdownEditor`), not for route screens.
 
-`eslint.boundaries.baseline.js` lists legacy files exempt from these rules. It is generated and must only shrink. Never add a file to it; fix the import instead.
+There is no legacy baseline any more (F020-W3): the rules apply to every file. Never add an exemption list; fix the import instead.
 
 To fix a violation, export the symbol from the feature's `index.ts` and import it from there. Do not reach into a feature's internal file.
 
