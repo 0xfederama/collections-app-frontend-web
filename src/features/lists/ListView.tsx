@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { Button, EmptyState, Skeleton, useToast } from '../../components/ui'
 import { List as ListIcon } from '../../components/ui/icons'
@@ -23,12 +23,8 @@ import { ListHeader } from './ListHeader'
 import { resolvePinned } from './pinned'
 import { useScrollRestore } from './scrollRestore'
 import { parseFieldFilter, type FieldFilterValue } from './FieldFilter'
-
-const FILTER_DEBOUNCE_MS = 250
-
-function parseSort(value: string | null): SortMode | null {
-  return value?.trim() || null
-}
+import { activeFieldFilter, buildItemsParams, parseSort, resolveSortOverride } from './listParams'
+import { useDebouncedFilter } from './useDebouncedFilter'
 
 /**
  * The list screen in the shell. URL state (UI_SPEC §1, D-063): `?q=` is the title
@@ -44,28 +40,13 @@ export function ListView({ treeList }: { treeList: List }) {
   const definition = typeDefinition(definitions.data, treeList.type)
   const q = (searchParams.get('q') ?? '').trim()
   const fieldFilter = parseFieldFilter(searchParams, definition?.fields ?? [])
-  const activeFieldFilter =
-    fieldFilter && (fieldFilter.value !== '' || fieldFilter.min !== '' || fieldFilter.max !== '')
-      ? fieldFilter
-      : null
+  const activeFilter = activeFieldFilter(fieldFilter)
   // Links to items keep the list's `?q=` and `?sort=`.
   const search = searchParams.size > 0 ? `?${searchParams.toString()}` : ''
 
   const listQuery = useList(listId)
   const list = listQuery.data
-  // A sort the list's type does not define falls back to the list's mode, so a stale bookmark (or a
-  // type change) cannot put the list in a sort the server rejects: a type field on a list with no type
-  // (F007-W9), `price` where the type has no price (D-085), or `director` off movie lists (F013).
-  const supportedSorts = definition
-    ? new Set([
-        'manual',
-        'title',
-        'updated',
-        ...(definition.allows_price ? ['price'] : []),
-        ...definition.fields.map((field) => field.key),
-      ])
-    : new Set<string>()
-  const sortOverride = parsedSort && supportedSorts.has(parsedSort) ? parsedSort : null
+  const sortOverride = resolveSortOverride(parsedSort, definition)
   // The tree is the source of truth for renames, moves and description edits (W-05 refetches it
   // after each one). When it holds a newer version than our detail, refetch the detail, or the
   // next `If-Match` would be stale and fail with a 412.
@@ -76,23 +57,7 @@ export function ListView({ treeList }: { treeList: List }) {
       void client.invalidateQueries({ queryKey: listKeys.detail(listId) })
     }
   }, [client, listId, treeVersion])
-  const filterDefinitionField = definition?.fields.find(
-    (field) => field.key === activeFieldFilter?.field,
-  )
-  const params = {
-    sort: sortOverride,
-    q,
-    filterField: activeFieldFilter?.field ?? null,
-    filterValue:
-      activeFieldFilter &&
-      (filterDefinitionField?.type === 'text' ||
-        filterDefinitionField?.type === 'link' ||
-        filterDefinitionField?.type === 'boolean')
-        ? activeFieldFilter.value
-        : null,
-    filterMin: activeFieldFilter?.min || null,
-    filterMax: activeFieldFilter?.max || null,
-  }
+  const params = buildItemsParams({ sortOverride, q, filter: fieldFilter, definition })
   const itemsQuery = useListItems(listId, params)
   const { items, total } = flattenItems(itemsQuery.data)
   const updateList = useUpdateList(listId)
@@ -100,29 +65,7 @@ export function ListView({ treeList }: { treeList: List }) {
   const root = useRef<HTMLDivElement>(null)
   const remember = useScrollRestore(root, itemsQuery.isSuccess)
 
-  // The filter field updates at once; the URL follows after a pause.
-  const [filter, setFilter] = useState(q)
-  useEffect(() => {
-    if (filter.trim() === q) return
-    const timer = setTimeout(() => {
-      setSearchParams(
-        (current) => {
-          const next = new URLSearchParams(current)
-          if (filter.trim()) next.set('q', filter.trim())
-          else next.delete('q')
-          return next
-        },
-        { replace: true },
-      )
-    }, FILTER_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [filter, q, setSearchParams])
-  // The URL changed elsewhere (back/forward): the field follows it.
-  const [seenQ, setSeenQ] = useState(q)
-  if (q !== seenQ) {
-    setSeenQ(q)
-    if (filter.trim() !== q) setFilter(q)
-  }
+  const [filter, setFilter] = useDebouncedFilter(q, setSearchParams)
 
   const effectiveSort = sortOverride ?? list?.sort_mode ?? 'manual'
   const setSort = (sort: SortMode) =>
@@ -239,7 +182,7 @@ export function ListView({ treeList }: { treeList: List }) {
   }
 
   const mode = list?.display_mode ?? 'grid'
-  const filtered = q !== '' || activeFieldFilter !== null
+  const filtered = q !== '' || activeFilter !== null
   const countLabel = !list
     ? ''
     : filtered && itemsQuery.isSuccess
