@@ -209,3 +209,9 @@
     }
   }
 }
+
+/* The last input was the pointer: a ring left by a closed menu returning focus to its trigger is
+   noise (`lib/inputModality.ts`). Text entry keeps its own. Unlayered, so it beats the utilities. */
+:root[data-pointer] :focus-visible:not(input, textarea, [contenteditable]) {
+  outline: none !important;
+}
