@@ -2,47 +2,31 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Button, Select, Skeleton, TextField } from '../../components/ui'
 import { Plus } from '../../components/ui/icons'
-import { SortableProvider } from '../../components/ui/sortable'
 import { ApiError } from '../../lib/api'
 import { ListIconMark, ListIconPicker, type IconChoice } from '../lists'
 import { useTree } from '../tree'
-import {
-  typeKeys,
-  useCreateTypeField,
-  useTypes,
-  usePreviewTypeFieldDelete,
-  useRenameTypeField,
-  useReorderTypeFields,
-  useUpdateType,
-  type TypeDefinition,
-  type TypeField,
-} from './api'
+import { typeKeys, useTypes, useUpdateType, type TypeDefinition, type TypeField } from './api'
 import {
   NONE_FIELD,
   defaultFieldOptions,
   defaultsFromType,
   defaultsPatch,
-  fieldTypes,
   isDefaultsDirty,
   type TypeDefaultsDraft,
 } from './types/model'
-import { FieldRow } from './types/FieldRow'
 import { TypeRow } from './types/TypeRow'
 import { CreateTypeDialog } from './types/CreateTypeDialog'
 import { DeleteTypeDialog } from './types/DeleteTypeDialog'
 import { DeleteFieldDialog } from './types/DeleteFieldDialog'
 import { OperationBanner } from './types/OperationBanner'
 import { ChangeListsDialog } from './types/ChangeListsDialog'
+import { FieldsSection } from './types/FieldsSection'
 
 export function TypesFieldsPane() {
   const queryClient = useQueryClient()
   const typesQuery = useTypes()
   const treeQuery = useTree()
   const updateType = useUpdateType()
-  const createField = useCreateTypeField()
-  const renameField = useRenameTypeField()
-  const previewDelete = usePreviewTypeFieldDelete()
-  const reorderFields = useReorderTypeFields()
   const types = useMemo(() => typesQuery.data ?? [], [typesQuery.data])
   const [pickedKey, setSelectedKey] = useState<string | null>(null)
   // Until the user picks one (or after the picked type is gone), the first type is selected.
@@ -62,13 +46,9 @@ export function TypesFieldsPane() {
     if (selectedKey) setRenameDraft({ key: selectedKey, name: value })
   }
   const [createOpen, setCreateOpen] = useState(false)
-  const [fieldLabel, setFieldLabel] = useState('')
-  const [fieldType, setFieldType] = useState<(typeof fieldTypes)[number]['value']>('text')
   const [icon, setIcon] = useState<IconChoice>({ icon: null, icon_color: null })
   const [iconOpen, setIconOpen] = useState(false)
   const [iconTarget, setIconTarget] = useState<'create' | 'type'>('create')
-  const [editingField, setEditingField] = useState<TypeField | null>(null)
-  const [fieldDraft, setFieldDraft] = useState('')
   const [confirmDeleteType, setConfirmDeleteType] = useState<TypeDefinition | null>(null)
   const [confirmChangeLists, setConfirmChangeLists] = useState<TypeDefinition | null>(null)
   const [confirmDeleteField, setConfirmDeleteField] = useState<{
@@ -78,7 +58,6 @@ export function TypesFieldsPane() {
   } | null>(null)
   const [operationError, setOperationError] = useState<unknown>(null)
   const [conflict, setConflict] = useState(false)
-  const customFields = selected?.fields.filter((field) => !field.is_locked) ?? []
   const targetTypes = types.filter((type) => type.key !== confirmDeleteType?.key)
   const fieldOptions = defaultFieldOptions(selected, defaults?.allowsPrice ?? false)
   const defaultsDirty = isDefaultsDirty(selected, defaults)
@@ -362,127 +341,11 @@ export function TypesFieldsPane() {
                 </div>
               </div>
             )}
-            <div className="mt-5 flex flex-wrap items-end gap-2 border-t border-border pt-4">
-              <div className="min-w-32 flex-1">
-                <TextField
-                  label="New field name"
-                  value={fieldLabel}
-                  onChange={(event) => setFieldLabel(event.target.value)}
-                  maxLength={100}
-                />
-              </div>
-              <div className="min-w-28 flex-1">
-                <Select
-                  label="Field type"
-                  options={[...fieldTypes]}
-                  value={fieldType}
-                  onValueChange={(value) => setFieldType(value as typeof fieldType)}
-                />
-              </div>
-              <Button
-                size="sm"
-                onClick={() =>
-                  void run(async () => {
-                    await createField.mutateAsync({
-                      type: selected,
-                      body: { label: fieldLabel.trim(), type: fieldType },
-                    })
-                    setFieldLabel('')
-                  })
-                }
-                disabled={!fieldLabel.trim()}
-                pending={createField.isPending}
-              >
-                Add
-              </Button>
-            </div>
-            {selected.is_locked && (
-              <p className="mt-2 text-xs text-text-muted">
-                Built in fields are locked. You can add your own fields to this type.
-              </p>
-            )}
-            {selected.fields.length ? (
-              <SortableProvider
-                onMove={(move) => {
-                  if (move.group !== 'type-fields') return
-                  const keys = customFields.map((field) => field.key)
-                  const [moved] = keys.splice(move.from, 1)
-                  if (moved) keys.splice(move.to, 0, moved)
-                  void run(() => reorderFields.mutateAsync({ type: selected, keys }))
-                }}
-              >
-                <div className="mt-3 flex flex-col gap-2" role="list" aria-label="Fields">
-                  {selected.fields.map((field) => (
-                    <div key={field.key} className="contents">
-                      {editingField?.key === field.key ? (
-                        <form
-                          className="flex min-h-14 items-center gap-2 rounded-md border border-border px-3"
-                          onSubmit={(event) => {
-                            event.preventDefault()
-                            const label = fieldDraft.trim()
-                            if (label)
-                              void run(async () => {
-                                await renameField.mutateAsync({ type: selected, field, label })
-                                setEditingField(null)
-                              })
-                          }}
-                        >
-                          <TextField
-                            label="Field label"
-                            value={fieldDraft}
-                            onChange={(event) => setFieldDraft(event.target.value)}
-                            className="min-w-0 flex-1"
-                          />
-                          <Button
-                            type="submit"
-                            size="sm"
-                            disabled={!fieldDraft.trim()}
-                            pending={renameField.isPending}
-                          >
-                            Save
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setEditingField(null)}
-                          >
-                            Cancel
-                          </Button>
-                        </form>
-                      ) : (
-                        <FieldRow
-                          field={field}
-                          index={customFields.findIndex((entry) => entry.key === field.key)}
-                          size={customFields.length}
-                          onRename={() => {
-                            setEditingField(field)
-                            setFieldDraft(field.label)
-                          }}
-                          onDelete={() =>
-                            void run(async () => {
-                              const preview = await previewDelete.mutateAsync({
-                                type: selected,
-                                field,
-                              })
-                              setConfirmDeleteField({
-                                type: selected,
-                                field,
-                                count: preview.populated_item_count,
-                              })
-                            })
-                          }
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </SortableProvider>
-            ) : (
-              <p className="mt-4 rounded-md bg-fill p-3 text-sm text-text-muted">
-                No fields yet. Add a field above.
-              </p>
-            )}
+            <FieldsSection
+              selected={selected}
+              run={run}
+              onConfirmDeleteField={setConfirmDeleteField}
+            />
           </>
         ) : (
           <div className="grid min-h-40 place-items-center text-center text-sm text-text-muted">
