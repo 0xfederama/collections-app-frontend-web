@@ -1,7 +1,8 @@
 import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { exampleResponses } from '../../generated/examples'
-import { problemResponse, server } from '../../test-utils'
+import { problemResponse } from '../../mocks/problems'
+import { server } from '../../mocks/server'
 import { api, unwrap } from './client'
 import { ApiError, NetworkError } from './errors'
 

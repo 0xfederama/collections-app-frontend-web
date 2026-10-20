@@ -75,6 +75,36 @@ describe('F020-W2 import boundaries', () => {
     expect(await reports('src/lib/__probe.ts', "import { x } from '../mocks/server'")).toBe(true)
   })
 
+  it('A: a lib test may import the mocks (MSW server), but not a feature', async () => {
+    expect(
+      await reports('src/lib/api/__probe.test.ts', "import { server } from '../../mocks/server'"),
+    ).toBe(false)
+    expect(
+      await reports('src/lib/api/__probe.test.ts', "import { x } from '../../features/links'"),
+    ).toBe(true)
+  })
+
+  it('A: a component test may import the mocks, but not a feature', async () => {
+    expect(
+      await reports(
+        'src/components/ui/__probe.test.tsx',
+        "import { problemResponse } from '../../mocks/problems'",
+      ),
+    ).toBe(false)
+    expect(
+      await reports(
+        'src/components/ui/__probe.test.tsx',
+        "import { x } from '../../layouts/AppShell'",
+      ),
+    ).toBe(true)
+  })
+
+  it('A: a lib non-test file may not import the mocks', async () => {
+    expect(
+      await reports('src/lib/api/__probe.ts', "import { server } from '../../mocks/server'"),
+    ).toBe(true)
+  })
+
   it('C: outside features, a deep feature import is forbidden', async () => {
     expect(await reports('src/app/__probe.tsx', "import { x } from '../features/tree/api'")).toBe(
       true,

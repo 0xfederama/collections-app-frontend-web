@@ -19,7 +19,7 @@ Work in progress: F-020 W3-W5 (splitting the flat feature folders into `api/ mod
 
 Defined in `eslint.boundaries.js`, using `no-restricted-imports`:
 
-- **A.** `components` and `lib` never import `features`, `layouts`, `routes`, `app` or `mocks`; `data` never imports `features`, `layouts`, `routes`, `app`, `mocks` or `components`.
+- **A.** `components` and `lib` never import `features`, `layouts`, `routes`, `app` or `mocks` (their `*.test` files may import `mocks`, the MSW server and Problem helper, but still no features or app layers); `data` never imports `features`, `layouts`, `routes`, `app`, `mocks` or `components`.
 - **B.** A feature imports another feature only through that feature's `index.ts`.
 - **C.** Files outside `features/`, `components/` and `lib/` import a feature only through its `index.ts`.
 

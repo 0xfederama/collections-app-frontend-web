@@ -1,6 +1,7 @@
 // F020 import boundaries, enforced with the built-in no-restricted-imports (decision F020-Q3).
 // Imported by eslint.config.js. Rules (no exemption list: they apply to every file):
-//   A. components and lib never import features, layouts, routes, app or mocks; data (src/data:
+//   A. components and lib never import features, layouts, routes, app or mocks (their *.test files may
+//      import mocks: the MSW server); data (src/data:
 //      query keys and invalidation, F020-W4) never imports features, layouts, routes, app, mocks or components.
 //   B. a feature imports another feature only through its index.ts (or its testing.ts test kit).
 //   C. files outside features import a feature only through its index.ts (or its testing.ts test kit).
@@ -44,6 +45,8 @@ const featureBlocks = FEATURES.map((feature) => ({
 }))
 
 const APP_LAYERS = ['**/features/**', '**/layouts/**', '**/routes/**', '**/app/**', '**/mocks/**']
+// Tests of components and lib may use the MSW server and Problem helper (mocks/), nothing else of the app.
+const TEST_APP_LAYERS = APP_LAYERS.filter((layer) => layer !== '**/mocks/**')
 
 export default [
   {
@@ -57,6 +60,24 @@ export default [
               group: APP_LAYERS,
               message:
                 'components and lib never import features, layouts, routes, app or mocks (F020 boundaries)',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Later block, so it replaces the rule above for test files only (flat config): mocks allowed.
+    files: ['src/components/**/*.test.{ts,tsx}', 'src/lib/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: TEST_APP_LAYERS,
+              message:
+                'component and lib tests never import features, layouts, routes or app; mocks are allowed (F020 boundaries)',
             },
           ],
         },
