@@ -57,6 +57,7 @@ export function ListTitle({ list }: { list: TreeList }) {
     return (
       <input
         aria-label="List name"
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- renaming starts with a click on the title, so the name field takes focus
         autoFocus
         value={draft}
         maxLength={MAX_LENGTH}
@@ -69,6 +70,7 @@ export function ListTitle({ list }: { list: TreeList }) {
     )
   }
   return (
+    // eslint-disable-next-line jsx-a11y/role-supports-aria-props -- aria-description ("Click to rename") is a global property in ARIA 1.3, which this rule's role table predates
     <button
       ref={(node) => {
         button.current = node

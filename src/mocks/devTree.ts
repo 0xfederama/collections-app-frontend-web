@@ -124,7 +124,10 @@ export function createTreeBackend(initial: Tree) {
       ) {
         return problemResponse(409, 'order_stale')
       }
-      body.ids.forEach((id, i) => (siblings.find((s) => s.id === id)!.sort_order = i))
+      body.ids.forEach((id, i) => {
+        const sibling = siblings.find((s) => s.id === id)
+        if (sibling) sibling.sort_order = i
+      })
       return new HttpResponse(null, { status: 204 })
     }),
     http.patch(url('/api/v1/folders/:id'), async ({ request, params }) => {
@@ -225,7 +228,10 @@ export function createTreeBackend(initial: Tree) {
       ) {
         return problemResponse(409, 'order_stale')
       }
-      body.ids.forEach((id, i) => (siblings.find((s) => s.id === id)!.sort_order = i))
+      body.ids.forEach((id, i) => {
+        const sibling = siblings.find((s) => s.id === id)
+        if (sibling) sibling.sort_order = i
+      })
       return new HttpResponse(null, { status: 204 })
     }),
     http.get(url('/api/v1/lists/:id'), ({ params }) => {

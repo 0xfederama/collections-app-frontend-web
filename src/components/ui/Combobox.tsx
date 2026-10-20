@@ -168,6 +168,7 @@ export function Combobox({
           >
             <ul id={listId} role="listbox" aria-label={label}>
               {filtered.map((option, index) => (
+                // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- a pointer shortcut; the keyboard picks options from the input (onKeyDown, aria-activedescendant)
                 <li
                   key={option.value}
                   id={optionId(index)}

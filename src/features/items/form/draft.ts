@@ -78,10 +78,10 @@ const PRICE = /^\d{1,10}(\.\d{1,2})?$/
 const metadataOf = (item: Item) => item.metadata as Metadata
 
 /** The fields of a type that are plain inputs. `streaming` is two inputs of its own. */
-export const simpleFields = (fields: readonly TypeField[]): readonly TypeField[] =>
+const simpleFields = (fields: readonly TypeField[]): readonly TypeField[] =>
   fields.filter((field) => !isStreamingField(field))
 
-export const hasStreaming = (fields: readonly TypeField[]) => fields.some(isStreamingField)
+const hasStreaming = (fields: readonly TypeField[]) => fields.some(isStreamingField)
 
 /**
  * The price inputs for a saved price. `min == max` is a single price; anything else (including an
@@ -139,7 +139,7 @@ export function draftFromItem(
 }
 
 /** `"12.5"` becomes `"12.50"`; anything that is not a price of at most 2 decimals is `null`. */
-export function normalizePrice(text: string): string | null {
+function normalizePrice(text: string): string | null {
   const value = text.trim()
   if (!PRICE.test(value)) return null
   const [whole = '0', cents = ''] = value.split('.')
@@ -264,7 +264,7 @@ export const isDirty = (base: Item, draft: Draft, defaults: Defaults) =>
 export type ErrorMap = Record<string, string>
 
 /** Every input of the form for a type, in page order (also the order of "focus the first invalid"). */
-export function inputKeys(fields: readonly TypeField[]): string[] {
+function inputKeys(fields: readonly TypeField[]): string[] {
   const keys = ['title', 'price.amount', 'price.min', 'price.max', 'price.currency', 'website']
   for (const field of fields) {
     if (isStreamingField(field)) {

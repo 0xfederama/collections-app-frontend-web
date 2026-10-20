@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "entry": ["e2e/**/*.spec.ts", "scripts/*.mjs"],
+  "ignoreIssues": {
+    "src/components/ui/index.ts": ["types"],
+    "src/components/ui/Button.tsx": ["types"],
+    "src/components/ui/Chip.tsx": ["types"],
+    "src/components/ui/Select.tsx": ["types"],
+    "src/components/ui/Toast.tsx": ["types"],
+    "src/features/links/index.ts": ["exports", "types"]
+  }
+}

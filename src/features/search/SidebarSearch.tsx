@@ -203,6 +203,7 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
           >
             <ul id={listId} role="listbox" aria-label="Search results">
               {results.map((result, index) => (
+                // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- a pointer shortcut; the keyboard moves through results from the search input (aria-activedescendant)
                 <li
                   key={result.item.id}
                   id={optionId(index)}

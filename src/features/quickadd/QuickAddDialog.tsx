@@ -218,6 +218,7 @@ export function QuickAddDialog({
       className="max-w-xl"
       initialFocus={titleRef}
     >
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the form is only a wrapper: Enter from the inputs inside is forwarded here, and the controls are the keyboard path */}
       <form
         id="quick-add-form"
         onSubmit={(event) => void submit(event)}

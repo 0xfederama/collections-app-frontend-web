@@ -6,7 +6,7 @@ import { countsText, typeLabel } from './model'
 import { TrashErrorMessage } from './TrashError'
 
 /** PRODUCT §10: states what goes, that image files go with it, and that nested older entries do too. */
-export function purgeDescription(entry: TrashEntry): string {
+function purgeDescription(entry: TrashEntry): string {
   const name = `“${entry.root_name}”`
   if (entry.root_type === 'item') {
     return `This permanently deletes the item ${name} and its image files. This can’t be undone.`

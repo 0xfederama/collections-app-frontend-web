@@ -151,6 +151,7 @@ function DescriptionView({
   }
   return (
     <div className="group/desc relative">
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- the Edit description pen beside this text is the keyboard path to the editor; a click on the text is a pointer shortcut */}
       <div onClick={onClick} className="cursor-text rounded-sm pr-9 pointer-coarse:pr-12">
         <MarkdownView source={body} />
       </div>
@@ -258,6 +259,7 @@ function DescriptionEditor({
               onChange={setDraft}
               label="Description (Markdown)"
               placeholderText="Write in Markdown…"
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- the user asked to edit, so the editor takes focus when it opens
               autoFocus
             />
           </Suspense>

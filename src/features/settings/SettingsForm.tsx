@@ -41,7 +41,7 @@ const metadataLanguageOptions = [
  * opened: `If-Match` comes from that snapshot, so a refetch in the background can never turn into a
  * silent overwrite. Whatever goes wrong, the draft stays.
  */
-export type SettingsCloseRequest = (onClosed: () => void) => void
+type SettingsCloseRequest = (onClosed: () => void) => void
 export type SettingsCloseRequestRef = { current: SettingsCloseRequest | null }
 
 export function SettingsForm({

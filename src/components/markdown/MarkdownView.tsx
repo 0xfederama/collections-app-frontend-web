@@ -28,6 +28,7 @@ const components = {
     // A link the sanitizer emptied is shown as plain text, not as a dead anchor.
     if (!href) return <span>{props.children}</span>
     return (
+      // eslint-disable-next-line jsx-a11y/anchor-has-content -- the link text arrives in props.children (spread below from react-markdown), not as JSX children
       <a
         {...props}
         href={href}

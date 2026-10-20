@@ -44,6 +44,7 @@ export function SidebarResizer({
   }
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a focusable window splitter (WAI-ARIA separator); the arrow keys resize it in onKeyDown
     <div
       role="separator"
       aria-orientation="vertical"
@@ -52,6 +53,7 @@ export function SidebarResizer({
       aria-valuenow={width}
       aria-valuemin={SIDEBAR_WIDTH.min}
       aria-valuemax={SIDEBAR_WIDTH.max}
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- the separator is focusable on purpose (WAI-ARIA window splitter), so keyboard users can resize the sidebar
       tabIndex={0}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

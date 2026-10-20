@@ -99,6 +99,7 @@ export function TitleLookupField({
   const suggestions = useQuery({
     queryKey: ['lookup', 'suggestions', active ?? null, query],
     enabled: !!active && query.length >= 2,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `enabled` is false when `active` is undefined, so queryFn never runs without it
     queryFn: ({ signal }) => fetchSuggestions(active!, query, signal),
   })
   const results = suggestions.data?.available ? suggestions.data.rows : []
@@ -152,6 +153,7 @@ export function TitleLookupField({
         aria-haspopup={active ? 'listbox' : undefined}
         aria-expanded={active ? showList : undefined}
         aria-activedescendant={showList ? `${listboxId}-${activeRow}` : undefined}
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- focus is the caller's choice (the autoFocus prop; the new-item draft and Quick add set it)
         autoFocus={autoFocus}
         autoComplete="off"
         placeholder={placeholder}
@@ -175,6 +177,7 @@ export function TitleLookupField({
           className="absolute inset-x-0 top-full z-50 mt-1 max-h-72 overflow-auto rounded-md border border-border bg-surface p-1 shadow-float"
         >
           {results.map((row, index) => (
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- a pointer shortcut; the keyboard picks a suggestion from the title input (onKeyDown, aria-activedescendant)
             <li
               key={row.key}
               id={`${listboxId}-${index}`}

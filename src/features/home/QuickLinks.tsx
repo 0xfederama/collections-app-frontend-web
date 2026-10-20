@@ -4,7 +4,7 @@ import { List as ListIcon } from '../../components/ui/icons'
 import type { List, TreeIndex } from '../tree/api'
 
 /** Every list, most recently updated first (ties by name), with the folders that hold it. */
-export function listsByRecency(index: TreeIndex): { list: List; where: string }[] {
+function listsByRecency(index: TreeIndex): { list: List; where: string }[] {
   return [...index.lists.values()]
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at) || a.name.localeCompare(b.name))
     .map((list) => ({

@@ -18,7 +18,7 @@ const icon = (node: ReactNode) => node
  * Menu entries for one folder or list. Reordering is the drag handle (F007-W3), not the menu.
  * "Change icon" is offered only where `changeIcon` is set (the sidebar row, F018-W1), not in the list header.
  */
-export function nodeMenuItems(
+function nodeMenuItems(
   node: TreeNode,
   actions: TreeActions,
   { changeIcon = false }: { changeIcon?: boolean } = {},

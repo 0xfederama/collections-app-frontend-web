@@ -7,7 +7,7 @@ const PREFIX = {
   settings: 's',
 } as const
 
-export type EtagResource = keyof typeof PREFIX
+type EtagResource = keyof typeof PREFIX
 
 /** The ETag string of a resource version, e.g. `etag('item', 3)` is `"i-3"` (with the quotes). */
 export function etag(resource: EtagResource, version: number): string {

@@ -19,7 +19,7 @@ const ROOT = 'root'
  * Folder and list roots go to a folder (or the top level); an item goes to a list, shown under
  * the folders that hold it (folders are labels there, not choices).
  */
-export function destinationOptions(entry: TrashEntry, index: TreeIndex): DestinationOption[] {
+function destinationOptions(entry: TrashEntry, index: TreeIndex): DestinationOption[] {
   if (entry.root_type === 'item') {
     const out: DestinationOption[] = []
     const visit = (nodes: readonly TreeNode[], depth: number) => {

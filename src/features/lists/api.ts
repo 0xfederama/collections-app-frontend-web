@@ -11,7 +11,7 @@ import { treeKeys } from '../tree/api'
 
 export type List = components['schemas']['List']
 export type ItemSummary = components['schemas']['ItemSummary']
-export type ItemPage = components['schemas']['ItemPage']
+type ItemPage = components['schemas']['ItemPage']
 export type DisplayMode = components['schemas']['DisplayMode']
 export type SortMode = components['schemas']['SortMode']
 export type PinnedFields = components['schemas']['PinnedFields']
@@ -172,7 +172,7 @@ export function useReorderItems(listId: string) {
 export type ItemsKey = ReturnType<typeof listKeys.itemsQuery>
 
 /** `data` with the loaded items rearranged into `order`; page boundaries are kept. */
-export function applyOrder(data: ItemsData, order: readonly string[]): ItemsData {
+function applyOrder(data: ItemsData, order: readonly string[]): ItemsData {
   const byId = new Map(data.pages.flatMap((page) => page.data).map((item) => [item.id, item]))
   let cursor = 0
   return {

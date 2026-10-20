@@ -65,7 +65,7 @@ function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
 function makeItems(list: List, count: number): ItemSummary[] {
   return Array.from({ length: count }, (_, i) => {
     const type = list.type
-    const pool = (type === null ? TITLES.none : TITLES[type]) ?? TITLES.none!
+    const pool = (type === null ? TITLES.none : TITLES[type]) ?? TITLES.none ?? []
     const title = `${pool[i % pool.length]}${i >= pool.length ? ` (${Math.floor(i / pool.length) + 1})` : ''}`
     const image =
       i % 7 === 3
@@ -108,7 +108,7 @@ function makeItems(list: List, count: number): ItemSummary[] {
  * The list record itself (`GET`/`PATCH /lists/:id`, display and sort mode) belongs to the tree
  * backend (`devTree.ts`), so a rename and a display-mode change use the same version.
  */
-export function createItemsBackend(tree: Tree, findList: (id: string) => List | undefined) {
+function createItemsBackend(tree: Tree, findList: (id: string) => List | undefined) {
   const items = new Map<string, ItemSummary[]>()
   for (const list of tree.lists) items.set(list.id, makeItems(list, Math.min(list.item_count, 48)))
 

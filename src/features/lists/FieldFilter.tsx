@@ -61,7 +61,7 @@ export interface FieldFilterProps {
 }
 
 /** A compact, keyboard reachable field filter that follows the field's declared type. */
-export function FieldFilter({ fields, value, onChange }: FieldFilterProps) {
+function FieldFilter({ fields, value, onChange }: FieldFilterProps) {
   const options: SelectOption[] = fields
     .filter(filterable)
     .map(({ key, label }) => ({ value: key, label }))

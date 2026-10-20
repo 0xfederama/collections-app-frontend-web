@@ -17,7 +17,7 @@ const origin = () => globalThis.location.origin
 export const apiUrl = (path: string) => `${origin()}${path}`
 
 /** Ids of `devTree` (see `src/mocks/devData.ts`). */
-export const id = (n: number) => `7c1e5a10-0000-4000-8000-${String(n).padStart(12, '0')}`
+const id = (n: number) => `7c1e5a10-0000-4000-8000-${String(n).padStart(12, '0')}`
 export const ID = {
   media: id(1),
   movies: id(2),
@@ -48,7 +48,7 @@ export function seedTree(): TreeData {
   return tree
 }
 
-export interface RecordedRequest {
+interface RecordedRequest {
   method: string
   path: string
   ifMatch: string | null
@@ -84,12 +84,12 @@ export function installTreeBackend(tree: TreeData = seedTree()) {
 }
 
 /** Opens every folder in the sidebar (persisted state the tree reads on mount). */
-export function expandAll(tree: TreeData) {
+function expandAll(tree: TreeData) {
   localStorage.setItem('collection:tree-expanded', JSON.stringify(tree.folders.map((f) => f.id)))
 }
 
 /** Renders the real app at `path`; hands back the router so tests can read the location. */
-export function renderRouter(path: string) {
+function renderRouter(path: string) {
   const router = createTestRouter([path])
   const utils = render(
     <QueryClientProvider client={createTestQueryClient()}>

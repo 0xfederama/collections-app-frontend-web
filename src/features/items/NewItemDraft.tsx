@@ -135,6 +135,7 @@ export function NewItemDraft({
           />
           {typeName(definition, type)} · New item (draft)
         </p>
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Enter and Escape from the title field bubble here to the draft handlers; the title input is the focusable control */}
         <div
           ref={box}
           onKeyDown={onKeyDown}
@@ -147,6 +148,7 @@ export function NewItemDraft({
             onTitleChange={changeTitle}
             onSelectionChange={setChosen}
             onSuggestionSelect={(selection) => void commit(undefined, selection)}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- the new-item draft exists to type a title, so the title takes focus when it opens
             autoFocus
             placeholder="Title of the new item"
             error={error}

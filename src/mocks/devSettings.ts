@@ -106,5 +106,4 @@ export function createSettingsBackend(start: Settings = initial()) {
 }
 
 const devSettings = createSettingsBackend()
-export const devSettingsBackend = devSettings
 export const devSettingsHandlers = devSettings.handlers

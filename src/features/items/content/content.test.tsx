@@ -28,6 +28,7 @@ vi.mock('./MarkdownEditor', () => ({
   }) => (
     <textarea
       aria-label={label}
+      // eslint-disable-next-line jsx-a11y/no-autofocus -- test double for MarkdownEditor: it forwards the caller's autoFocus, as the real editor does
       autoFocus={autoFocus}
       value={value}
       onChange={(e) => onChange(e.target.value)}

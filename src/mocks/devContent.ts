@@ -7,7 +7,7 @@ const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 type Version = { version: number; body: string; created_at: string }
 
 /** Retention of the dev fake; the latest version is never pruned (D-052). */
-export const DEV_HISTORY_LIMIT = 5
+const DEV_HISTORY_LIMIT = 5
 const MAX_BYTES = 1024 * 1024
 
 const store = new Map<string, Version[]>()
