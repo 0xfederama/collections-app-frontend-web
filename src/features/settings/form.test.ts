@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { ApiError, NetworkError } from '../../lib/api'
 import type { Settings } from './api'
 import {
   buildPatch,
+  classifySaveFailure,
   draftDump,
   draftFromSettings,
   firstInvalid,
@@ -174,5 +176,87 @@ describe('F016 default store in the settings model', () => {
     expect(
       mapServerErrors([{ field: 'preferred_store', message: 'unknown store' }]).fields,
     ).toEqual({ preferred_store: 'unknown store' })
+  })
+})
+
+const apiError = (init: {
+  status: number
+  detail?: string
+  errors?: { field: string; message: string }[]
+}) => new ApiError({ code: 'invalid', title: 'Title', raw: null, ...init })
+
+describe('F020 save failure classification', () => {
+  it.each([
+    [
+      '412 is a conflict banner',
+      apiError({ status: 412 }),
+      { failure: { kind: 'conflict' }, fields: null, other: null },
+    ],
+    [
+      '422 with field errors maps them onto inputs and keeps other messages, no banner',
+      apiError({
+        status: 422,
+        errors: [
+          { field: 'workspace_name', message: 'too long' },
+          { field: 'nope', message: 'bad' },
+        ],
+      }),
+      {
+        failure: null,
+        fields: { workspace_name: 'too long' },
+        other: ['nope: bad'],
+      },
+    ],
+    [
+      '422 with only unknown fields gives no input errors, just messages',
+      apiError({ status: 422, errors: [{ field: '', message: 'general' }] }),
+      { failure: null, fields: {}, other: ['general'] },
+    ],
+    [
+      '422 without field errors is a plain failure with the detail',
+      apiError({ status: 422, detail: 'Invalid request' }),
+      { failure: { kind: 'other', message: 'Invalid request' }, fields: null, other: null },
+    ],
+    [
+      '422 with an empty error list falls back to the title',
+      apiError({ status: 422, errors: [] }),
+      { failure: { kind: 'other', message: 'Title' }, fields: null, other: null },
+    ],
+    [
+      '500 is a network failure',
+      apiError({ status: 500 }),
+      { failure: { kind: 'network' }, fields: null, other: null },
+    ],
+    [
+      '503 is a network failure',
+      apiError({ status: 503, detail: 'down' }),
+      { failure: { kind: 'network' }, fields: null, other: null },
+    ],
+    [
+      'other API errors show the detail',
+      apiError({ status: 404, detail: 'Settings not found' }),
+      { failure: { kind: 'other', message: 'Settings not found' }, fields: null, other: null },
+    ],
+    [
+      'other API errors without detail show the title',
+      apiError({ status: 400 }),
+      { failure: { kind: 'other', message: 'Title' }, fields: null, other: null },
+    ],
+    [
+      'a NetworkError is a network failure',
+      new NetworkError(),
+      { failure: { kind: 'network' }, fields: null, other: null },
+    ],
+    [
+      'anything else keeps the draft and says so',
+      new Error('boom'),
+      {
+        failure: { kind: 'other', message: 'Something went wrong. Your changes are kept.' },
+        fields: null,
+        other: null,
+      },
+    ],
+  ])('AT-14 %s', (_label, caught, expected) => {
+    expect(classifySaveFailure(caught)).toEqual(expected)
   })
 })

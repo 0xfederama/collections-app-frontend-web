@@ -1,4 +1,4 @@
-import type { FieldError } from '../../lib/api'
+import { ApiError, NetworkError, type FieldError } from '../../lib/api'
 import type { Settings, UpdateSettingsRequest } from './api'
 
 /** API.md Settings: `markdown_history_limit` is 0–200, the name 1–200 characters. */
@@ -39,6 +39,17 @@ const FIELD_LABELS: Record<SettingsField, string> = {
   markdown_history_limit: 'Description history limit',
   preferred_store: 'Default store',
 }
+
+export const metadataLanguageOptions = [
+  { value: 'en-US', label: 'English (United States)' },
+  { value: 'it-IT', label: 'Italiano (Italia)' },
+  { value: 'fr-FR', label: 'Français (France)' },
+  { value: 'de-DE', label: 'Deutsch (Deutschland)' },
+  { value: 'es-ES', label: 'Español (España)' },
+]
+
+/** Why the last save did not go through, other than field errors. */
+export type Failure = { kind: 'conflict' | 'network' } | { kind: 'other'; message: string }
 
 export function draftFromSettings(settings: Settings): SettingsDraft {
   return {
@@ -164,6 +175,38 @@ export function mapServerErrors(errors: readonly FieldError[]): {
 }
 
 export const firstInvalid = (errors: ErrorMap) => FIELD_ORDER.find((field) => errors[field])
+
+/**
+ * What a failed save shows. A 422 with field errors is not a banner: `fields` (mapped onto the inputs)
+ * and `other` (plain messages) are set and `failure` is null. Every other case sets `failure` only.
+ */
+export function classifySaveFailure(caught: unknown): {
+  failure: Failure | null
+  fields: ErrorMap | null
+  other: string[] | null
+} {
+  if (caught instanceof ApiError) {
+    if (caught.status === 412) return { failure: { kind: 'conflict' }, fields: null, other: null }
+    if (caught.status === 422 && caught.errors?.length) {
+      const mapped = mapServerErrors(caught.errors)
+      return { failure: null, fields: mapped.fields, other: mapped.other }
+    }
+    if (caught.status >= 500) return { failure: { kind: 'network' }, fields: null, other: null }
+    return {
+      failure: { kind: 'other', message: caught.detail ?? caught.title },
+      fields: null,
+      other: null,
+    }
+  }
+  if (caught instanceof NetworkError) {
+    return { failure: { kind: 'network' }, fields: null, other: null }
+  }
+  return {
+    failure: { kind: 'other', message: 'Something went wrong. Your changes are kept.' },
+    fields: null,
+    other: null,
+  }
+}
 
 /** A readable dump of the changed fields, for "Copy my draft". */
 export function draftDump(base: Settings, draft: SettingsDraft): string {
