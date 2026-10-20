@@ -1,7 +1,7 @@
 import { useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button } from '../../components/ui'
-import { ApiError, NetworkError } from '../../lib/api'
+import { ApiError, errorMessage, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemType } from './api'
 import { TitleLookupField } from './TitleLookupField'
 import {
@@ -96,9 +96,7 @@ export function NewItemDraft({
       ) {
         setFailure('The server could not be reached. Nothing was added, so you can try again.')
       } else {
-        setFailure(
-          caught instanceof ApiError ? (caught.detail ?? caught.title) : 'Something went wrong.',
-        )
+        setFailure(errorMessage(caught))
       }
     }
   }

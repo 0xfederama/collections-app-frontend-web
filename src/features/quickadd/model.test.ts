@@ -3,7 +3,6 @@ import { ApiError, NetworkError } from '../../lib/api'
 import { LIMITS, MAX_CONTENT_BYTES } from '../items'
 import {
   describeCreateFailure,
-  messageOf,
   resolveListId,
   sortListChoices,
   validateQuickAdd,
@@ -39,36 +38,6 @@ describe('F020 quickadd model', () => {
       const sorted = sortListChoices(input)
       expect(sorted).not.toBe(input)
       expect(input.map((l) => l.id)).toEqual(['old', 'new'])
-    })
-  })
-
-  describe('messageOf', () => {
-    it.each([
-      {
-        name: 'ApiError with detail shows the detail',
-        caught: new ApiError({
-          status: 422,
-          code: 'validation',
-          title: 'Invalid',
-          detail: 'Too long',
-          raw: null,
-        }),
-        expected: 'Too long',
-      },
-      {
-        name: 'ApiError without detail shows the title',
-        caught: new ApiError({ status: 500, code: 'unknown', title: 'Server error', raw: null }),
-        expected: 'Server error',
-      },
-      {
-        name: 'plain Error is generic',
-        caught: new Error('boom'),
-        expected: 'Something went wrong.',
-      },
-      { name: 'a string is generic', caught: 'boom', expected: 'Something went wrong.' },
-      { name: 'undefined is generic', caught: undefined, expected: 'Something went wrong.' },
-    ])('$name', ({ caught, expected }) => {
-      expect(messageOf(caught)).toBe(expected)
     })
   })
 
