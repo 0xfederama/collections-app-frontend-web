@@ -105,7 +105,7 @@ function PriceInputs({
             </div>
           </>
         ) : (
-          <div className="w-28 shrink-0">
+          <div className="min-w-0 flex-1">
             <TextField
               id={inputId('price.amount')}
               label="Price"
