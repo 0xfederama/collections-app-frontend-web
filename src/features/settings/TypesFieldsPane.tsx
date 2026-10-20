@@ -4,13 +4,11 @@ import { AlertDialog, Button, Select, Skeleton, TextField } from '../../componen
 import { Plus } from '../../components/ui/icons'
 import { SortableProvider } from '../../components/ui/sortable'
 import { ApiError } from '../../lib/api'
-import { NO_TYPE_VALUE, typeOptions, valueToType } from '../items'
 import { ListIconMark, ListIconPicker, type IconChoice } from '../lists'
-import { useUpdateList, treeKeys, useTree } from '../tree'
+import { useTree } from '../tree'
 import {
   typeKeys,
   useCreateTypeField,
-  useDeleteType,
   useDeleteTypeField,
   useTypes,
   usePreviewTypeFieldDelete,
@@ -33,14 +31,14 @@ import {
 import { FieldRow } from './types/FieldRow'
 import { TypeRow } from './types/TypeRow'
 import { CreateTypeDialog } from './types/CreateTypeDialog'
+import { DeleteTypeDialog } from './types/DeleteTypeDialog'
+import { ChangeListsDialog } from './types/ChangeListsDialog'
 
 export function TypesFieldsPane() {
   const queryClient = useQueryClient()
   const typesQuery = useTypes()
   const treeQuery = useTree()
   const updateType = useUpdateType()
-  const deleteType = useDeleteType()
-  const updateList = useUpdateList()
   const createField = useCreateTypeField()
   const renameField = useRenameTypeField()
   const deleteField = useDeleteTypeField()
@@ -74,7 +72,6 @@ export function TypesFieldsPane() {
   const [fieldDraft, setFieldDraft] = useState('')
   const [confirmDeleteType, setConfirmDeleteType] = useState<TypeDefinition | null>(null)
   const [confirmChangeLists, setConfirmChangeLists] = useState<TypeDefinition | null>(null)
-  const [changeTargetType, setChangeTargetType] = useState('')
   const [confirmDeleteField, setConfirmDeleteField] = useState<{
     type: TypeDefinition
     field: TypeField
@@ -83,10 +80,6 @@ export function TypesFieldsPane() {
   const [operationError, setOperationError] = useState<unknown>(null)
   const [conflict, setConflict] = useState(false)
   const customFields = selected?.fields.filter((field) => !field.is_locked) ?? []
-  const affectedLists =
-    confirmDeleteType && treeQuery.data
-      ? treeQuery.data.lists.filter((list) => list.type === confirmDeleteType.key)
-      : []
   const targetTypes = types.filter((type) => type.key !== confirmDeleteType?.key)
   const fieldOptions = defaultFieldOptions(selected, defaults?.allowsPrice ?? false)
   const defaultsDirty = isDefaultsDirty(selected, defaults)
@@ -199,12 +192,7 @@ export function TypesFieldsPane() {
                   variant="danger"
                   size="sm"
                   disabled={treeQuery.isPending || treeQuery.isError}
-                  onClick={() => {
-                    setChangeTargetType(
-                      types.find((type) => type.key !== selected.key)?.key ?? NO_TYPE_VALUE,
-                    )
-                    setConfirmDeleteType(selected)
-                  }}
+                  onClick={() => setConfirmDeleteType(selected)}
                 >
                   Delete type
                 </Button>
@@ -547,76 +535,34 @@ export function TypesFieldsPane() {
         </div>
       )}
       {confirmDeleteType && (
-        <AlertDialog
-          open
-          title={`Delete ${confirmDeleteType.name}?`}
-          description={
-            affectedLists.length
-              ? `${affectedLists.length} active ${affectedLists.length === 1 ? 'list uses' : 'lists use'} this type: ${affectedLists.map((list) => list.name).join(', ')}. Change them to another type before deleting this definition.`
-              : 'No active lists use this type. Deleting the definition cannot be undone.'
-          }
-          confirmLabel={affectedLists.length ? 'Choose target type' : 'Delete type'}
-          destructive
-          pending={deleteType.isPending || treeQuery.isPending}
-          onOpenChange={(open) => !open && !deleteType.isPending && setConfirmDeleteType(null)}
-          onConfirm={() =>
-            affectedLists.length
-              ? (setConfirmDeleteType(null), setConfirmChangeLists(confirmDeleteType))
-              : void run(async () => {
-                  await deleteType.mutateAsync(confirmDeleteType)
-                  setConfirmDeleteType(null)
-                  setSelectedKey(null)
-                })
-          }
+        <DeleteTypeDialog
+          type={confirmDeleteType}
+          lists={treeQuery.data?.lists ?? []}
+          treePending={treeQuery.isPending}
+          onChangeLists={() => {
+            setConfirmDeleteType(null)
+            setConfirmChangeLists(confirmDeleteType)
+          }}
+          onClose={() => setConfirmDeleteType(null)}
+          run={run}
+          onDeleted={() => {
+            setConfirmDeleteType(null)
+            setSelectedKey(null)
+          }}
         />
       )}
       {confirmChangeLists && (
-        <AlertDialog
-          open
-          title={`Change lists from ${confirmChangeLists.name}?`}
-          description="Changing a list's type permanently clears the old type's custom fields and price from all its items, including trashed items. Titles, images, descriptions and history stay. There is no undo."
-          confirmLabel="Change listed types"
-          destructive
-          keepOpen
-          pending={updateList.isPending || deleteType.isPending}
-          onOpenChange={(open) => !open && !updateList.isPending && setConfirmChangeLists(null)}
-          onConfirm={() =>
-            void run(async () => {
-              if (!changeTargetType) return
-              const latestLists =
-                treeQuery.data?.lists.filter((list) => list.type === confirmChangeLists.key) ?? []
-              if (latestLists.length === 0) {
-                setConfirmChangeLists(null)
-                setConfirmDeleteType(confirmChangeLists)
-                return
-              }
-              for (const list of latestLists) {
-                await updateList.mutateAsync({
-                  list,
-                  patch: { type: valueToType(changeTargetType) },
-                })
-              }
-              await queryClient.refetchQueries({ queryKey: treeKeys.tree, type: 'active' })
-              setConfirmChangeLists(null)
-              setConfirmDeleteType(confirmChangeLists)
-            })
-          }
-        >
-          <Select
-            label="Change listed lists to"
-            options={typeOptions(targetTypes)}
-            value={changeTargetType}
-            onValueChange={setChangeTargetType}
-            disabled={updateList.isPending}
-          />
-          <p className="text-sm text-text-muted">
-            Lists:{' '}
-            {treeQuery.data?.lists
-              .filter((list) => list.type === confirmChangeLists.key)
-              .map((list) => list.name)
-              .join(', ') || 'None'}
-          </p>
-        </AlertDialog>
+        <ChangeListsDialog
+          type={confirmChangeLists}
+          lists={treeQuery.data?.lists ?? []}
+          targetTypes={targetTypes}
+          onCancel={() => setConfirmChangeLists(null)}
+          onDone={() => {
+            setConfirmChangeLists(null)
+            setConfirmDeleteType(confirmChangeLists)
+          }}
+          run={run}
+        />
       )}
       {confirmDeleteField && (
         <AlertDialog
