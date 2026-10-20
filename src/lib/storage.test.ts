@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { readStored, STORAGE_KEYS, writeStored } from './storage'
+import { parseStringArray, readStored, STORAGE_KEYS, writeStored } from './storage'
 
 const parseNumber = (raw: unknown) => (typeof raw === 'number' ? raw : undefined)
 
@@ -56,5 +56,20 @@ describe('W-04 storage', () => {
       throw new DOMException('full', 'QuotaExceededError')
     })
     expect(() => writeStored('collection:test', 1)).not.toThrow()
+  })
+})
+
+describe('parseStringArray', () => {
+  it.each([
+    ['an array of ids', ['a', 'b'], ['a', 'b']],
+    ['an empty array', [], []],
+    ['drops non-string entries', ['a', 1, null, { id: 'b' }, 'c'], ['a', 'c']],
+    ['keeps duplicates as stored', ['a', 'a'], ['a', 'a']],
+    ['a string is rejected', 'a', undefined],
+    ['an object is rejected', { a: true }, undefined],
+    ['null is rejected', null, undefined],
+    ['undefined is rejected', undefined, undefined],
+  ])('%s', (_name, raw, expected) => {
+    expect(parseStringArray(raw)).toEqual(expected)
   })
 })

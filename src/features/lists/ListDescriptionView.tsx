@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { MarkdownView } from '../../components/markdown'
 import { focusRing } from '../../components/ui'
-import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
-
-const parseIds = (raw: unknown): string[] | undefined =>
-  Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : undefined
+import { parseStringArray, readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 
 /**
  * Shown expanded unless this list was collapsed on this device. There is no pen: a click on the text
@@ -26,12 +23,12 @@ export function DescriptionView({
     if (restoreFocus) entryRef.current?.focus()
   }, [restoreFocus])
   const [collapsed, setCollapsed] = useState(() =>
-    readStored(STORAGE_KEYS.listDescriptionCollapsed, parseIds, []).includes(listId),
+    readStored(STORAGE_KEYS.listDescriptionCollapsed, parseStringArray, []).includes(listId),
   )
   const toggle = () => {
     const next = !collapsed
     setCollapsed(next)
-    const others = readStored(STORAGE_KEYS.listDescriptionCollapsed, parseIds, []).filter(
+    const others = readStored(STORAGE_KEYS.listDescriptionCollapsed, parseStringArray, []).filter(
       (id) => id !== listId,
     )
     writeStored(STORAGE_KEYS.listDescriptionCollapsed, next ? [...others, listId] : others)

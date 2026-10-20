@@ -2,6 +2,8 @@
 // internal/streamlinks (docs/modules/streamlinks.md): same table, same URLs, same
 // escaping as Go's url.QueryEscape. Pure, no I/O.
 
+import { queryEscape } from './escape'
+
 const NETFLIX = 'https://www.netflix.com/search?q='
 const PRIME_VIDEO = 'https://www.primevideo.com/search/?phrase='
 const DISNEY = 'https://www.disneyplus.com/search?q='
@@ -51,14 +53,6 @@ export function normalizePlatform(name: string): string {
     .toLowerCase()
     .replace(/\+/g, 'plus')
     .replace(/[^\p{L}\p{N}]/gu, '')
-}
-
-// Like Go's url.QueryEscape: spaces become "+", and the characters encodeURIComponent
-// leaves alone but Go escapes (! ' ( ) *) are percent-encoded. "~" stays as is.
-function queryEscape(value: string): string {
-  return encodeURIComponent(value)
-    .replace(/%20/g, '+')
-    .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
 }
 
 function lookup(platform: string): string | null {

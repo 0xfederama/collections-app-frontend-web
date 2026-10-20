@@ -1,51 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { server } from '../../mocks/server'
-import { mockViewport, renderAt } from '../../test-utils'
 import type { TypeDefinition } from './api'
-
-const typesUrl = `${location.origin}/api/v1/types`
-const movie: TypeDefinition = {
-  key: 'movie',
-  name: 'Movies',
-  default_icon: null,
-  allows_price: false,
-  default_sort_field: 'title',
-  default_pinned_fields: [],
-  is_locked: true,
-  version: 3,
-  fields: [
-    { key: 'director', label: 'Director', type: 'text', position: 0, is_locked: true, version: 1 },
-  ],
-}
-const boardGame: TypeDefinition = {
-  key: 'board_game',
-  name: 'Board game',
-  default_icon: null,
-  allows_price: false,
-  default_sort_field: null,
-  default_pinned_fields: null,
-  is_locked: false,
-  version: 2,
-  fields: [
-    { key: 'rating', label: 'Rating', type: 'number', position: 0, is_locked: false, version: 1 },
-  ],
-}
-
-async function openPane(types: TypeDefinition[] = [movie, boardGame], lists: object[] = []) {
-  mockViewport(375)
-  server.use(http.get(typesUrl, () => HttpResponse.json(types)))
-  server.use(
-    http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json({ folders: [], lists })),
-  )
-  const user = userEvent.setup()
-  renderAt('/settings')
-  await user.click(await screen.findByRole('button', { name: 'Types & fields' }))
-  await screen.findByRole('list', { name: 'Types' })
-  return user
-}
+import { boardGame, movie, openPane, typesUrl } from './typesTestKit'
 
 describe('F014-W2 Types & fields pane', () => {
   it('marks built in types and fields read only while allowing an added field', async () => {

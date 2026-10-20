@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { MarkdownView } from '../../../components/markdown'
 import { AlertDialog, Button, Drawer, Skeleton, useToast } from '../../../components/ui'
-import { ApiError, NetworkError } from '../../../lib/api'
+import { ApiError, errorMessage, NetworkError } from '../../../lib/api'
 import { contentKeys, itemKeys } from '../../../data/keys'
 import type { ItemContent } from '../api'
 import { useContentVersion, useContentVersions, useRestoreContent } from './api'
@@ -83,9 +83,7 @@ export function HistoryDrawer({
       ) {
         setProblem('The server could not be reached. Nothing was restored.')
       } else {
-        setProblem(
-          caught instanceof ApiError ? (caught.detail ?? caught.title) : 'Something went wrong.',
-        )
+        setProblem(errorMessage(caught))
       }
     }
   }
