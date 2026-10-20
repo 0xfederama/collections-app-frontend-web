@@ -179,8 +179,9 @@ export function ListHeader(props: ListHeaderProps) {
             value={props.fieldFilter}
             onChange={props.onFieldFilter}
           />
-          {/* Icon only (the sort name is the accessible name; the open list shows the choices). */}
-          <div className="relative size-9 pointer-coarse:size-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:w-9! pointer-coarse:[&_button]:h-11! pointer-coarse:[&_button]:w-11! [&_button]:justify-center [&_button]:border-transparent! [&_button]:bg-fill! [&_button]:px-0 [&_button]:hover:border-transparent! [&_button]:hover:bg-fill-hover [&_button>span:first-child]:sr-only [&_button>span:last-child]:hidden">
+          {/* Like "+ Filter": the sort icon and the current choice; below 44rem of bar width only the
+              icon stays (the name is still "Sort" for assistive tech). */}
+          <div className="relative w-44 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! pointer-coarse:[&_button]:h-11! [&_button]:border-transparent! [&_button]:bg-fill! [&_button]:pr-3 [&_button]:pl-9 [&_button]:font-medium [&_button]:hover:border-transparent! [&_button]:hover:bg-fill-hover! [&_button>span:last-child]:hidden @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only">
             <Select
               label="Sort"
               options={sortOptionsFor(props.definition)}
@@ -189,7 +190,7 @@ export function ListHeader(props: ListHeaderProps) {
             />
             <ArrowUpDown
               aria-hidden
-              className="pointer-events-none absolute inset-0 m-auto size-4 text-text-muted"
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text @max-[44rem]:inset-0 @max-[44rem]:left-0 @max-[44rem]:m-auto @max-[44rem]:translate-y-0"
             />
           </div>
           {props.canMakeDefault && (
