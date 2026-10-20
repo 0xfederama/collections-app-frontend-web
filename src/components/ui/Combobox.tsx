@@ -15,6 +15,8 @@ export interface ComboboxProps extends FieldChromeProps {
   disabled?: boolean
   required?: boolean
   id?: string
+  /** Shows only the option's value (e.g. `EUR`) when not typing; the list keeps the full labels. */
+  compact?: boolean
 }
 
 /** Filterable select: ARIA 1.2 combobox (input + listbox) in a Radix Popover; focus stays in the input. */
@@ -30,6 +32,7 @@ export function Combobox({
   disabled,
   required,
   id: idProp,
+  compact,
 }: ComboboxProps) {
   const generated = useId()
   const id = idProp ?? generated
@@ -132,7 +135,7 @@ export function Combobox({
               disabled={disabled}
               required={required}
               placeholder={placeholder}
-              value={typed ?? selected?.label ?? ''}
+              value={typed ?? (compact ? selected?.value : selected?.label) ?? ''}
               onChange={(e) => {
                 setTyped(e.target.value)
                 setActive(0)
