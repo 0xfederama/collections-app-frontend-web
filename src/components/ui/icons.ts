@@ -77,6 +77,7 @@ export {
   Rows3,
   Search,
   Settings,
+  Smile,
   ShoppingBag,
   Smartphone,
   SlidersHorizontal,
