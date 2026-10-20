@@ -179,22 +179,18 @@ export function ListHeader(props: ListHeaderProps) {
             value={props.fieldFilter}
             onChange={props.onFieldFilter}
           />
-          <div className="flex items-center gap-1.5">
-            <span aria-hidden className="text-sm text-text-muted @max-[44rem]:hidden">
-              Sort
-            </span>
-            <div className="relative w-44 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:border-transparent! [&_button]:hover:border-transparent! [&_button]:hover:bg-fill-hover @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only @max-[44rem]:[&_button>span:last-child]:hidden">
-              <Select
-                label="Sort"
-                options={sortOptionsFor(props.definition)}
-                value={props.sort}
-                onValueChange={(value) => props.onSort(value as SortMode)}
-              />
-              <ArrowUpDown
-                aria-hidden
-                className="pointer-events-none absolute inset-0 m-auto size-4 text-text-muted @[44rem]:hidden"
-              />
-            </div>
+          {/* Icon only (the sort name is the accessible name; the open list shows the choices). */}
+          <div className="relative size-9 pointer-coarse:size-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:w-9! pointer-coarse:[&_button]:h-11! pointer-coarse:[&_button]:w-11! [&_button]:justify-center [&_button]:border-transparent! [&_button]:bg-fill! [&_button]:px-0 [&_button]:hover:border-transparent! [&_button]:hover:bg-fill-hover [&_button>span:first-child]:sr-only [&_button>span:last-child]:hidden">
+            <Select
+              label="Sort"
+              options={sortOptionsFor(props.definition)}
+              value={props.sort}
+              onValueChange={(value) => props.onSort(value as SortMode)}
+            />
+            <ArrowUpDown
+              aria-hidden
+              className="pointer-events-none absolute inset-0 m-auto size-4 text-text-muted"
+            />
           </div>
           {props.canMakeDefault && (
             <button
