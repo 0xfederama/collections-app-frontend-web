@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { ItemType } from './api'
-import { buildExternalLinks, safeImdbUrl } from './links'
+import type { ItemType } from '../../items/api'
+import { buildExternalLinks, safeImdbUrl } from './external'
 
 describe('F006-W5 safeImdbUrl', () => {
   it.each([

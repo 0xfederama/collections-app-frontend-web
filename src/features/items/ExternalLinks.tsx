@@ -1,7 +1,7 @@
 import { LinkIcon, TILE_SIZE } from '../../components/ServiceIcon'
 import { Plus } from '../../components/ui/icons'
 import type { Item } from './api'
-import { buildExternalLinks } from './links'
+import { buildExternalLinks } from '../links'
 
 // Every link is the same icon tile as the streaming row (F009-W5), one shared size, and the empty
 // "+" slot is the same square. The visible name is the tile's tooltip; the accessible name is the

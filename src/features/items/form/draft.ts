@@ -2,7 +2,7 @@ import type { components } from '../../../generated/schema'
 import type { FieldError } from '../../../lib/api'
 import type { Item, ItemType } from '../api'
 import { formatField, isStreamingField, type TypeField } from '../types'
-import { IMDB_URL } from '../links'
+import { IMDB_URL } from '../../links'
 import { joinStoreKeys, parseStoreKeys } from '../../stores/providers'
 
 /**

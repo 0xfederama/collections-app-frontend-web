@@ -10,7 +10,7 @@ import { ServiceIcon } from '../../components/ServiceIcon'
 import { useStoreProviders } from '../stores/api'
 import { storeName } from '../stores/providers'
 import type { ItemType } from '../items/api'
-import { safeWebsiteUrl } from '../items/links'
+import { safeWebsiteUrl } from '../links'
 import type { TypeDefinition } from '../items/types'
 
 /** What an entry needs to be reorderable. Absent when reordering is not available. */
