@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { AlertDialog, Button, Select, Skeleton, TextField } from '../../components/ui'
+import { Button, Select, Skeleton, TextField } from '../../components/ui'
 import { Plus } from '../../components/ui/icons'
 import { SortableProvider } from '../../components/ui/sortable'
 import { ApiError } from '../../lib/api'
@@ -9,7 +9,6 @@ import { useTree } from '../tree'
 import {
   typeKeys,
   useCreateTypeField,
-  useDeleteTypeField,
   useTypes,
   usePreviewTypeFieldDelete,
   useRenameTypeField,
@@ -23,7 +22,6 @@ import {
   defaultFieldOptions,
   defaultsFromType,
   defaultsPatch,
-  errorText,
   fieldTypes,
   isDefaultsDirty,
   type TypeDefaultsDraft,
@@ -32,6 +30,8 @@ import { FieldRow } from './types/FieldRow'
 import { TypeRow } from './types/TypeRow'
 import { CreateTypeDialog } from './types/CreateTypeDialog'
 import { DeleteTypeDialog } from './types/DeleteTypeDialog'
+import { DeleteFieldDialog } from './types/DeleteFieldDialog'
+import { OperationBanner } from './types/OperationBanner'
 import { ChangeListsDialog } from './types/ChangeListsDialog'
 
 export function TypesFieldsPane() {
@@ -41,7 +41,6 @@ export function TypesFieldsPane() {
   const updateType = useUpdateType()
   const createField = useCreateTypeField()
   const renameField = useRenameTypeField()
-  const deleteField = useDeleteTypeField()
   const previewDelete = usePreviewTypeFieldDelete()
   const reorderFields = useReorderTypeFields()
   const types = useMemo(() => typesQuery.data ?? [], [typesQuery.data])
@@ -507,32 +506,12 @@ export function TypesFieldsPane() {
         />
       )}
       {operationError !== null && (
-        <div
-          role="alert"
-          className="fixed inset-x-6 bottom-6 z-[60] mx-auto max-w-lg rounded-lg border border-warning-border bg-warning-bg p-4 text-sm text-warning-text shadow-float"
-        >
-          <p>{errorText(operationError)}</p>
-          {conflict && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="mt-2"
-              onClick={() => void reloadLatest()}
-            >
-              Reload latest
-            </Button>
-          )}
-          {!conflict && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="mt-2"
-              onClick={() => setOperationError(null)}
-            >
-              Dismiss
-            </Button>
-          )}
-        </div>
+        <OperationBanner
+          error={operationError}
+          conflict={conflict}
+          onReload={reloadLatest}
+          onDismiss={() => setOperationError(null)}
+        />
       )}
       {confirmDeleteType && (
         <DeleteTypeDialog
@@ -565,24 +544,10 @@ export function TypesFieldsPane() {
         />
       )}
       {confirmDeleteField && (
-        <AlertDialog
-          open
-          title={`Delete ${confirmDeleteField.field.label}?`}
-          description={
-            confirmDeleteField.count === 0
-              ? 'No items have a value for this field.'
-              : `${confirmDeleteField.count} ${confirmDeleteField.count === 1 ? 'item has' : 'items have'} a value (including trashed items). Deleting the field removes those values, and any sort or pin that uses it falls back to the type defaults.`
-          }
-          confirmLabel="Delete field"
-          destructive
-          onOpenChange={(open) => !open && setConfirmDeleteField(null)}
-          onConfirm={() =>
-            void run(async () => {
-              await deleteField.mutateAsync(confirmDeleteField)
-              setConfirmDeleteField(null)
-            })
-          }
-          pending={deleteField.isPending}
+        <DeleteFieldDialog
+          target={confirmDeleteField}
+          onClose={() => setConfirmDeleteField(null)}
+          run={run}
         />
       )}
       {iconOpen && (
