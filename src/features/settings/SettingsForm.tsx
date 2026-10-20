@@ -1,13 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { AlertDialog, Button, Dialog, Select, TextField, useToast } from '../../components/ui'
-import { CountrySelect } from '../../components/ui/IsoSelects'
+import { useToast } from '../../components/ui'
 import { useStoreProviders } from '../stores'
 import { ApiError, NetworkError } from '../../lib/api'
 import { settingsKeys, useUpdateSettings, type Settings } from './api'
 import {
-  HISTORY_LIMIT_MAX,
-  NAME_MAX,
   buildPatch,
   classifySaveFailure,
   draftDump,
@@ -16,7 +13,6 @@ import {
   inputId,
   isDirty,
   isRetentionDirty,
-  metadataLanguageOptions,
   validate,
   type ErrorMap,
   type Failure,
@@ -24,8 +20,11 @@ import {
   type SettingsField,
 } from './form'
 import { useLeaveGuard } from './useLeaveGuard'
-
-const bannerBase = 'flex flex-col gap-3 rounded-md border p-3 text-sm'
+import { CollectionFields } from './CollectionFields'
+import { CopyDraftDialog, SettingsBanners } from './SettingsBanners'
+import { MediaFields } from './MediaFields'
+import { ReloadDialog } from './ReloadDialog'
+import { DiscardChangesDialog } from './DiscardChangesDialog'
 
 /**
  * The workspace settings form (UI_SPEC §8, §9). Like the item form it edits a snapshot taken when it
@@ -268,215 +267,51 @@ export function SettingsForm({
 
   return (
     <form onSubmit={(event) => event.preventDefault()} noValidate className="flex flex-col gap-4">
-      <div role="group" aria-label="Messages" className="flex flex-col gap-4 empty:hidden">
-        {failure?.kind === 'conflict' && (
-          <div
-            role="alert"
-            className={`${bannerBase} border-warning-border bg-warning-bg text-warning-text`}
-          >
-            <p>
-              Someone else changed the settings while you were editing. Your changes have not been
-              saved.
-            </p>
-            {reloadFailed && <p>The latest settings could not be loaded. Try again.</p>}
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" onClick={() => void copyDraft()}>
-                Copy my draft
-              </Button>
-              <Button size="sm" variant="secondary" onClick={() => setDialog('reload')}>
-                Reload latest
-              </Button>
-            </div>
-          </div>
-        )}
-        {failure?.kind === 'network' && (
-          <div
-            role="alert"
-            className={`${bannerBase} border-danger-border bg-danger-bg text-danger-text`}
-          >
-            <p>
-              The server could not be reached. Nothing was saved, and your changes are still here.
-            </p>
-            <div>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => retryAction.current()}
-                pending={isPending}
-              >
-                Retry
-              </Button>
-            </div>
-          </div>
-        )}
-        {failure?.kind === 'other' && (
-          <div
-            role="alert"
-            className={`${bannerBase} border-danger-border bg-danger-bg text-danger-text`}
-          >
-            <p>{failure.message}</p>
-          </div>
-        )}
-        {otherErrors.length > 0 && (
-          <div
-            role="alert"
-            className={`${bannerBase} border-danger-border bg-danger-bg text-danger-text`}
-          >
-            <p>Some details need attention:</p>
-            <ul className="list-disc pl-5">
-              {otherErrors.map((message) => (
-                <li key={message}>{message}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      <section
-        aria-labelledby="settings-general"
+      <SettingsBanners
+        failure={failure}
+        otherErrors={otherErrors}
+        reloadFailed={reloadFailed}
+        isPending={isPending}
+        onCopyDraft={() => void copyDraft()}
+        onReload={() => setDialog('reload')}
+        onRetry={() => retryAction.current()}
+      />
+      <CollectionFields
         hidden={pane !== 'General'}
-        className={`flex flex-col gap-4 ${pane !== 'General' ? 'hidden' : ''}`}
-      >
-        <h2 id="settings-general" className="text-sm font-semibold text-text-muted">
-          General
-        </h2>
-        <TextField
-          id={inputId('workspace_name')}
-          label="Workspace name"
-          required
-          autoComplete="off"
-          maxLength={NAME_MAX + 50}
-          value={draft.workspace_name}
-          onChange={(event) => set('workspace_name', event.target.value)}
-          error={errors.workspace_name}
-        />
-        <Select
-          id={inputId('trash_retention_days')}
-          label="Delete trash automatically"
-          hint="Automatically and permanently delete trashed items after the selected number of days. This runs daily; it doesn’t empty the trash immediately."
-          value={draft.trash_retention_days}
-          onValueChange={(value) => void saveRetention(value)}
-          error={errors.trash_retention_days}
-          disabled={isPending}
-          options={[
-            { value: 'off', label: 'Off' },
-            { value: '7', label: '7 days' },
-            { value: '30', label: '30 days' },
-            { value: '90', label: '90 days' },
-            ...(!['off', '7', '30', '90'].includes(draft.trash_retention_days)
-              ? [
-                  {
-                    value: draft.trash_retention_days,
-                    label: `Current: ${draft.trash_retention_days} days`,
-                  },
-                ]
-              : []),
-          ]}
-        />
-        <TextField
-          id={inputId('markdown_history_limit')}
-          label="Description history limit"
-          inputMode="numeric"
-          autoComplete="off"
-          hint={`How many earlier versions of an item's description to keep, 0 to ${HISTORY_LIMIT_MAX}. Lowering it removes the extra versions the next time each description is saved.`}
-          value={draft.markdown_history_limit}
-          onChange={(event) => set('markdown_history_limit', event.target.value)}
-          error={errors.markdown_history_limit}
-        />
-        {appearance}
-      </section>
-
-      <section
-        aria-labelledby="settings-movies-tv"
+        draft={draft}
+        errors={errors}
+        isPending={isPending}
+        set={set}
+        onRetentionChange={(value) => void saveRetention(value)}
+        appearance={appearance}
+      />
+      <MediaFields
         hidden={pane !== 'Media'}
-        className={`flex flex-col gap-4 ${pane !== 'Media' ? 'hidden' : ''}`}
-      >
-        <h2 id="settings-movies-tv" className="text-sm font-semibold text-text-muted">
-          Country &amp; language
-        </h2>
-        <CountrySelect
-          id={inputId('streaming_country_code')}
-          label="Country"
-          hint="Streaming platforms on a movie or TV show, and the book store links (Amazon and others), are for this country."
-          placeholder="Country"
-          value={draft.streaming_country_code}
-          onValueChange={(value) => set('streaming_country_code', value)}
-          error={errors.streaming_country_code}
-        />
-        <Select
-          id={inputId('metadata_language')}
-          label="Metadata language"
-          hint="Titles and other details filled from online sources use this language."
-          value={draft.metadata_language}
-          onValueChange={(value) => set('metadata_language', value)}
-          error={errors.metadata_language}
-          disabled={isPending}
-          options={metadataLanguageOptions}
-        />
-        <h2 id="settings-books" className="pt-2 text-sm font-semibold text-text-muted">
-          Books
-        </h2>
-        <Select
-          id={inputId('preferred_store')}
-          label="Default store"
-          hint="New books start with this store. Each book can pick other stores. Store links are for your country."
-          value={draft.preferred_store}
-          onValueChange={(value) => set('preferred_store', value)}
-          error={errors.preferred_store}
-          disabled={isPending}
-          options={(providers.data ?? []).map((provider) => ({
-            value: provider.key,
-            label: provider.name,
-          }))}
-        />
-      </section>
+        draft={draft}
+        errors={errors}
+        isPending={isPending}
+        set={set}
+        providers={providers.data ?? []}
+      />
 
       {blocker.state === 'blocked' && (
-        <AlertDialog
-          open
-          title="Discard changes?"
-          description="You have unsaved settings. If you leave now, they are lost."
-          confirmLabel="Discard changes"
-          cancelLabel="Keep editing"
-          destructive
-          keepOpen
-          onOpenChange={(open) => !open && blocker.reset()}
-          onConfirm={() => blocker.proceed()}
+        <DiscardChangesDialog
+          onKeepEditing={() => blocker.reset()}
+          onDiscard={() => blocker.proceed()}
         />
       )}
       {dialog === 'reload' && (
-        <AlertDialog
-          open
-          title="Replace your unsaved changes with the latest settings?"
-          description="Your draft is discarded. Use Copy my draft first if you want to keep it."
-          confirmLabel="Reload latest"
-          cancelLabel="Keep my draft"
-          keepOpen
-          pending={reloading}
-          onOpenChange={(open) => !open && setDialog(null)}
+        <ReloadDialog
+          reloading={reloading}
+          onClose={() => setDialog(null)}
           onConfirm={() => void reloadLatest()}
         />
       )}
-      {copyFallback !== null && (
-        <Dialog
-          open
-          onOpenChange={(open) => !open && setCopyFallback(null)}
-          title="Copy your draft"
-          description="Your browser would not copy it for you. Select the text below and copy it."
-          initialFocus={copyRef}
-          footer={<Button onClick={() => setCopyFallback(null)}>Done</Button>}
-        >
-          <textarea
-            ref={copyRef}
-            readOnly
-            aria-label="Your draft"
-            rows={6}
-            value={copyFallback}
-            onFocus={(event) => event.currentTarget.select()}
-            className="w-full rounded-sm border border-border-strong bg-surface p-3 font-mono text-sm text-text"
-          />
-        </Dialog>
-      )}
+      <CopyDraftDialog
+        copyFallback={copyFallback}
+        copyRef={copyRef}
+        onClose={() => setCopyFallback(null)}
+      />
     </form>
   )
 }
