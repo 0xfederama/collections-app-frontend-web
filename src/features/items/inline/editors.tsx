@@ -118,7 +118,7 @@ function PriceInputs({
             />
           </div>
         )}
-        <div className="w-24 shrink-0">
+        <div className="ml-auto w-24 shrink-0">
           <CurrencySelect
             id={inputId('price.currency')}
             label="Currency"

@@ -15,7 +15,7 @@ export interface ComboboxProps extends FieldChromeProps {
   disabled?: boolean
   required?: boolean
   id?: string
-  /** Shows only the option's value (e.g. `EUR`) when not typing; the list keeps the full labels. */
+  /** Shows only the option's value (e.g. `EUR`) when not typing; the list is wider and keeps the full labels. */
   compact?: boolean
 }
 
@@ -152,14 +152,19 @@ export function Combobox({
         </Popover.Anchor>
         <Popover.Portal>
           <Popover.Content
-            align="start"
+            align={compact ? 'end' : 'start'}
             sideOffset={4}
+            collisionPadding={8}
             onOpenAutoFocus={(e) => e.preventDefault()}
             onCloseAutoFocus={(e) => e.preventDefault()}
             onInteractOutside={(e) => {
               if ((e.target as HTMLElement | null)?.id === id) e.preventDefault()
             }}
-            className="z-50 max-h-72 w-(--radix-popover-trigger-width) bg-surface-raised overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+            className={cx(
+              'z-50 max-h-72 bg-surface-raised overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in',
+              // A compact trigger is too narrow for "EUR · Euro": the list opens wider, to its left.
+              compact ? 'w-80 max-w-[calc(100vw-1rem)]' : 'w-(--radix-popover-trigger-width)',
+            )}
           >
             <ul id={listId} role="listbox" aria-label={label}>
               {filtered.map((option, index) => (
@@ -173,7 +178,7 @@ export function Combobox({
                   onMouseMove={() => setActive(index)}
                   onClick={() => choose(option)}
                   className={cx(
-                    'relative flex h-9 cursor-pointer items-center rounded-md pr-3 pl-8 text-sm aria-disabled:cursor-not-allowed aria-disabled:opacity-50 pointer-coarse:min-h-11',
+                    'relative flex min-h-9 cursor-pointer py-1 items-center rounded-md pr-3 pl-8 text-sm aria-disabled:cursor-not-allowed aria-disabled:opacity-50 pointer-coarse:min-h-11',
                     index === activeIndex && 'bg-accent/10',
                   )}
                 >
