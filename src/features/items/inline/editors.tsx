@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Button, Select, TextField } from '../../../components/ui'
 import { Plus, X } from '../../../components/ui/icons'
 import { CurrencySelect } from '../../../components/ui/IsoSelects'
@@ -41,7 +42,15 @@ const PRICE_KEYS = ['price.amount', 'price.min', 'price.max', 'price.currency']
  * inside the same field; removing that second amount goes back to a single price. The saved shape
  * is unchanged (`amount`, or `min` / `max` for a range).
  */
-function PriceInputs({ form, canRemove }: { form: FieldForm; canRemove: boolean }) {
+function PriceInputs({
+  form,
+  canRemove,
+  actions,
+}: {
+  form: FieldForm
+  canRemove: boolean
+  actions: ReactNode
+}) {
   const { draft, errors, set } = form
   const range = draft.priceMode === 'range'
   const clearErrors = () => PRICE_KEYS.forEach(form.clearError)
@@ -58,10 +67,16 @@ function PriceInputs({ form, canRemove }: { form: FieldForm; canRemove: boolean 
   }
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-start gap-2">
+      {/* One line: the row label already says "Price", so the inputs keep theirs for assistive tech only. */}
+      <div
+        className={cx(
+          'relative flex items-start gap-2 [&_label]:sr-only',
+          range ? 'flex-wrap' : 'flex-nowrap',
+        )}
+      >
         {range ? (
           <>
-            <div className="w-32">
+            <div className="w-28 shrink-0">
               <TextField
                 id={inputId('price.min')}
                 label="Minimum price"
@@ -76,7 +91,7 @@ function PriceInputs({ form, canRemove }: { form: FieldForm; canRemove: boolean 
             <span aria-hidden className="mt-2 text-text-muted">
               –
             </span>
-            <div className="w-32">
+            <div className="w-28 shrink-0">
               <TextField
                 id={inputId('price.max')}
                 label="Maximum price"
@@ -90,7 +105,7 @@ function PriceInputs({ form, canRemove }: { form: FieldForm; canRemove: boolean 
             </div>
           </>
         ) : (
-          <div className="w-32">
+          <div className="w-28 shrink-0">
             <TextField
               id={inputId('price.amount')}
               label="Price"
@@ -103,7 +118,7 @@ function PriceInputs({ form, canRemove }: { form: FieldForm; canRemove: boolean 
             />
           </div>
         )}
-        <div className="min-w-40 flex-1">
+        <div className="min-w-0 flex-1">
           <CurrencySelect
             id={inputId('price.currency')}
             label="Currency"
@@ -132,6 +147,7 @@ function PriceInputs({ form, canRemove }: { form: FieldForm; canRemove: boolean 
             Remove price
           </Button>
         )}
+        <div className="ml-auto">{actions}</div>
       </div>
     </div>
   )
@@ -219,10 +235,13 @@ export function FieldInputs({
   spec,
   form,
   canRemovePrice,
+  priceActions,
 }: {
   spec: FieldSpec
   form: FieldForm
   canRemovePrice: boolean
+  /** The ✓ and ✕ of the price editor, which sit on its second line (after "Add range"). */
+  priceActions?: ReactNode
 }) {
   const { draft, errors, set, setMeta } = form
   switch (spec.id) {
@@ -241,7 +260,7 @@ export function FieldInputs({
         </div>
       )
     case 'price':
-      return <PriceInputs form={form} canRemove={canRemovePrice} />
+      return <PriceInputs form={form} canRemove={canRemovePrice} actions={priceActions} />
     case 'website':
       return (
         <div className={singleInput}>

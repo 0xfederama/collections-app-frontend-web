@@ -1,3 +1,4 @@
+import { cx } from '../../../lib/cx'
 import { useState, type ReactNode } from 'react'
 import { ServiceIcon } from '../../../components/ServiceIcon'
 import { Button, Menu, type MenuItem } from '../../../components/ui'
@@ -218,7 +219,13 @@ export function FieldBlock({
                   >
                     {/* F011-W5: the label takes the same height as the value row, so the name and
                         its value sit on one line instead of drifting apart. */}
-                    <dt className="flex min-h-8 min-w-0 items-center text-text-muted">
+                    <dt
+                      className={cx(
+                        'flex min-h-8 min-w-0 items-center text-text-muted',
+                        // The price editor is taller than one line: the name stays on the first.
+                        spec.id === 'price' && 'self-start',
+                      )}
+                    >
                       {spec.label}
                     </dt>
                     <dd className="min-w-0">{editor(spec, <Value item={item} spec={spec} />)}</dd>
