@@ -1,5 +1,5 @@
-import { ApiError } from '../../lib/api'
-import { checkImageFile, isTooLarge, LIMITS } from '../items'
+import { ApiError, NetworkError } from '../../lib/api'
+import { checkImageFile, isLookupUnavailable, isTooLarge, LIMITS } from '../items'
 import type { List } from '../tree'
 
 /** The fields of the quick add form that can carry an error. */
@@ -62,4 +62,49 @@ export function resolveListId(
     (lists.some((l) => l.id === initialListId) ? initialListId : undefined) ??
     lists[0]?.id
   )
+}
+
+/**
+ * How a failed create is shown. `errors: null` leaves the field errors untouched (only a 422 sets
+ * them). `formError: 'keep'` leaves the banner untouched: the 422 branch sets it only when the
+ * messages have no field to sit under, and the other branches always set it (or clear it).
+ */
+export type CreateFailure = {
+  errors: Partial<Record<Field, string>> | null
+  focus: 'title' | 'website' | null
+  formError: string | undefined | 'keep'
+  lookupUnavailable: boolean
+}
+
+/** What the quick add form shows after the create request failed. Pure: the caller applies it. */
+export function describeCreateFailure(caught: unknown): CreateFailure {
+  const lookupUnavailable = isLookupUnavailable(caught)
+  if (caught instanceof ApiError && caught.status === 422) {
+    const mapped: Partial<Record<Field, string>> = {}
+    const rest: string[] = []
+    for (const e of caught.errors ?? []) {
+      if (e.field === 'title' || e.field === 'website') mapped[e.field] ??= e.message
+      else rest.push(e.message)
+    }
+    let focus: CreateFailure['focus'] = null
+    if (mapped.title) focus = 'title'
+    else if (mapped.website) focus = 'website'
+    let formError: CreateFailure['formError'] = 'keep'
+    if (rest.length || (!mapped.title && !mapped.website)) {
+      formError = rest.join(' ') || caught.title
+    }
+    return { errors: mapped, focus, formError, lookupUnavailable }
+  }
+  const none = { errors: null, focus: null, lookupUnavailable }
+  if (caught instanceof ApiError && caught.status === 409) {
+    return { ...none, formError: 'This list no longer exists or is in Trash.' }
+  }
+  if (lookupUnavailable) return { ...none, formError: undefined }
+  if (caught instanceof NetworkError || (caught instanceof ApiError && caught.status >= 500)) {
+    return {
+      ...none,
+      formError: 'The server could not be reached. Nothing was created, so you can try again.',
+    }
+  }
+  return { ...none, formError: messageOf(caught) }
 }

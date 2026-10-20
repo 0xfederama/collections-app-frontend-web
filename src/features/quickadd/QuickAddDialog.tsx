@@ -11,14 +11,12 @@ import {
   useToast,
 } from '../../components/ui'
 import { ImagePlus, Plus, X } from '../../components/ui/icons'
-import { ApiError, NetworkError } from '../../lib/api'
 import {
   itemKeys,
   useCreateItem,
   TitleLookupField,
   createLookupSelection,
   isBookLookup,
-  isLookupUnavailable,
   lookupSourceName,
   LookupStatus,
   MAX_CONTENT_BYTES,
@@ -32,7 +30,14 @@ import {
 import { invalidateContent } from '../invalidateContent'
 import { useTree } from '../tree'
 import { useSettings } from '../settings'
-import { messageOf, resolveListId, sortListChoices, validateQuickAdd, type Field } from './model'
+import {
+  describeCreateFailure,
+  messageOf,
+  resolveListId,
+  sortListChoices,
+  validateQuickAdd,
+  type Field,
+} from './model'
 
 /** The lists of the tree, most recently updated first. */
 function useListChoices() {
@@ -115,33 +120,12 @@ export function QuickAddDialog({
       })
     } catch (caught) {
       setBusy(false)
-      const unavailable = isLookupUnavailable(caught)
-      setLookupUnavailable(unavailable)
-      if (caught instanceof ApiError && caught.status === 422) {
-        const mapped: Partial<Record<Field, string>> = {}
-        const rest: string[] = []
-        for (const e of caught.errors ?? []) {
-          if (e.field === 'title' || e.field === 'website') mapped[e.field] ??= e.message
-          else rest.push(e.message)
-        }
-        setErrors(mapped)
-        if (mapped.title) titleRef.current?.focus()
-        else if (mapped.website) websiteRef.current?.focus()
-        if (rest.length || (!mapped.title && !mapped.website)) {
-          setFormError(rest.join(' ') || caught.title)
-        }
-      } else if (caught instanceof ApiError && caught.status === 409) {
-        setFormError('This list no longer exists or is in Trash.')
-      } else if (unavailable) {
-        setFormError(undefined)
-      } else if (
-        caught instanceof NetworkError ||
-        (caught instanceof ApiError && caught.status >= 500)
-      ) {
-        setFormError('The server could not be reached. Nothing was created, so you can try again.')
-      } else {
-        setFormError(messageOf(caught))
-      }
+      const failure = describeCreateFailure(caught)
+      setLookupUnavailable(failure.lookupUnavailable)
+      if (failure.errors) setErrors(failure.errors)
+      if (failure.focus === 'title') titleRef.current?.focus()
+      else if (failure.focus === 'website') websiteRef.current?.focus()
+      if (failure.formError !== 'keep') setFormError(failure.formError)
       return
     }
 

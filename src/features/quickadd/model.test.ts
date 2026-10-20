@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { ApiError } from '../../lib/api'
+import { ApiError, NetworkError } from '../../lib/api'
 import { LIMITS, MAX_CONTENT_BYTES } from '../items'
 import {
+  describeCreateFailure,
   messageOf,
   resolveListId,
   sortListChoices,
@@ -250,6 +251,164 @@ describe('F020 quickadd model', () => {
       },
     ])('$name', ({ lists, picked, initial, expected }) => {
       expect(resolveListId(lists, picked, initial)).toBe(expected)
+    })
+  })
+
+  describe('describeCreateFailure', () => {
+    const unprocessable = (errors: { field: string; message: string }[]) =>
+      new ApiError({ status: 422, code: 'validation', title: 'Invalid', errors, raw: null })
+
+    it.each<{
+      name: string
+      caught: unknown
+      expected: ReturnType<typeof describeCreateFailure>
+    }>([
+      {
+        name: '422 with title, website and other field errors: other messages in the banner',
+        caught: unprocessable([
+          { field: 'title', message: 'Title is taken.' },
+          { field: 'website', message: 'Not a URL.' },
+          { field: 'type', message: 'Unknown type.' },
+        ]),
+        expected: {
+          errors: { title: 'Title is taken.', website: 'Not a URL.' },
+          focus: 'title',
+          formError: 'Unknown type.',
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: '422 with a website error and other field errors: the website takes the focus',
+        caught: unprocessable([
+          { field: 'website', message: 'Not a URL.' },
+          { field: 'type', message: 'Unknown type.' },
+        ]),
+        expected: {
+          errors: { website: 'Not a URL.' },
+          focus: 'website',
+          formError: 'Unknown type.',
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: '422 with only other field errors: all joined into the banner, no field error',
+        caught: unprocessable([
+          { field: 'type', message: 'Unknown type.' },
+          { field: 'image', message: 'Too big.' },
+        ]),
+        expected: {
+          errors: {},
+          focus: null,
+          formError: 'Unknown type. Too big.',
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: '422 with no field errors: the title of the problem is the banner',
+        caught: unprocessable([]),
+        expected: { errors: {}, focus: null, formError: 'Invalid', lookupUnavailable: false },
+      },
+      {
+        name: '422 with a title error only: the banner is kept as it is',
+        caught: unprocessable([{ field: 'title', message: 'Title is taken.' }]),
+        expected: {
+          errors: { title: 'Title is taken.' },
+          focus: 'title',
+          formError: 'keep',
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: '422 with two title errors: the first one is shown',
+        caught: unprocessable([
+          { field: 'title', message: 'First.' },
+          { field: 'title', message: 'Second.' },
+        ]),
+        expected: {
+          errors: { title: 'First.' },
+          focus: 'title',
+          formError: 'keep',
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: '409: the list is gone or in Trash',
+        caught: new ApiError({ status: 409, code: 'conflict', title: 'Conflict', raw: null }),
+        expected: {
+          errors: null,
+          focus: null,
+          formError: 'This list no longer exists or is in Trash.',
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: 'lookup unavailable (503 upstream_unavailable): no banner text, the lookup alert shows',
+        caught: new ApiError({
+          status: 503,
+          code: 'upstream_unavailable',
+          title: 'Unavailable',
+          raw: null,
+        }),
+        expected: { errors: null, focus: null, formError: undefined, lookupUnavailable: true },
+      },
+      {
+        name: 'lookup unavailable (503 lookup_disabled): same as upstream_unavailable',
+        caught: new ApiError({
+          status: 503,
+          code: 'lookup_disabled',
+          title: 'Disabled',
+          raw: null,
+        }),
+        expected: { errors: null, focus: null, formError: undefined, lookupUnavailable: true },
+      },
+      {
+        name: 'network error: nothing was created',
+        caught: new NetworkError(),
+        expected: {
+          errors: null,
+          focus: null,
+          formError: 'The server could not be reached. Nothing was created, so you can try again.',
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: '500: nothing was created',
+        caught: new ApiError({ status: 500, code: 'unknown', title: 'Server error', raw: null }),
+        expected: {
+          errors: null,
+          focus: null,
+          formError: 'The server could not be reached. Nothing was created, so you can try again.',
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: '400 with a detail: the detail is the banner',
+        caught: new ApiError({
+          status: 400,
+          code: 'bad_request',
+          title: 'Bad request',
+          detail: 'Malformed body.',
+          raw: null,
+        }),
+        expected: {
+          errors: null,
+          focus: null,
+          formError: 'Malformed body.',
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: 'a plain Error: the generic message',
+        caught: new Error('boom'),
+        expected: {
+          errors: null,
+          focus: null,
+          formError: 'Something went wrong.',
+          lookupUnavailable: false,
+        },
+      },
+    ])('$name', ({ caught, expected }) => {
+      expect(describeCreateFailure(caught)).toEqual(expected)
     })
   })
 })
