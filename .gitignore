@@ -6,3 +6,4 @@ coverage
 *.local
 test-results
 playwright-report
+tsconfig.tsbuildinfo

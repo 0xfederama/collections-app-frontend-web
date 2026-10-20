@@ -1,4 +1,4 @@
-import type { ItemType } from './api'
+import type { ItemType } from '../../items/api'
 
 export interface ExternalLink {
   id: 'google' | 'letterboxd' | 'imdb' | 'reddit' | 'website' | 'goodreads' | 'openlibrary'

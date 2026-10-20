@@ -145,22 +145,37 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
 })
 
 describe('F016 row tiles open their page without opening the item', () => {
-  it('a store tile links to its store_links URL in a new tab, one without a link stays plain', async () => {
+  it('a store tile links to the search the web builds for the Settings country, in a new tab', async () => {
     const row = entry(['author', 'pages', 'stores'], 'thumbnail', {
       type: 'book',
       title: 'Dune',
       metadata: {
         author: 'Frank Herbert',
-        stores: ['amazon', 'kobo'],
-        store_links: { amazon: 'https://www.amazon.it/s?k=Dune' },
+        stores: ['amazon', 'bookfinder'],
       },
     })
+    // The default settings mock has streaming_country_code IT.
     const amazon = await within(row).findByRole('link', { name: 'Amazon (opens in a new tab)' })
     expect(amazon).toHaveAttribute('href', 'https://www.amazon.it/s?k=Dune')
     expect(amazon).toHaveAttribute('target', '_blank')
     expect(amazon).toHaveAttribute('rel', 'noopener noreferrer')
-    expect(within(row).queryByRole('link', { name: /Kobo/ })).not.toBeInTheDocument()
-    expect(within(row).getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
+    // An unknown provider has no builder: its tile stays plain.
+    expect(within(row).queryByRole('link', { name: /bookfinder/ })).not.toBeInTheDocument()
+    expect(within(row).getByRole('img', { name: 'bookfinder' })).toBeInTheDocument()
+  })
+
+  it('a store link ignores a store_links field the server might send', async () => {
+    const row = entry(['author', 'pages', 'stores'], 'thumbnail', {
+      type: 'book',
+      title: 'Dune',
+      metadata: {
+        author: 'Frank Herbert',
+        stores: ['bookfinder'],
+        store_links: { bookfinder: 'https://evil.example' },
+      },
+    })
+    await within(row).findByRole('img', { name: 'bookfinder' })
+    expect(within(row).queryByRole('link', { name: /opens in a new tab/ })).not.toBeInTheDocument()
   })
 
   it('streaming tiles link to the JustWatch page when the item has one, never to a bad URL', () => {
@@ -168,31 +183,30 @@ describe('F016 row tiles open their page without opening the item', () => {
       metadata: {
         release_year: 1979,
         streaming: {
-          platforms: ['Netflix'],
+          platforms: ['Sky'],
           link: 'https://www.justwatch.com/it/movie/alien',
         },
       },
     })
     expect(
-      within(row).getByRole('link', { name: 'Netflix on JustWatch (opens in a new tab)' }),
+      within(row).getByRole('link', { name: 'Sky on JustWatch (opens in a new tab)' }),
     ).toHaveAttribute('href', 'https://www.justwatch.com/it/movie/alien')
   })
 
-  it('each service opens its own search when the server gives platform_links, else the JustWatch page', () => {
+  it('each known service opens its own search for the title, others fall back to the JustWatch page', () => {
     const row = entry(['release_year', 'streaming'], 'thumbnail', {
       metadata: {
         release_year: 1979,
         streaming: {
           platforms: ['Netflix', 'Sky'],
           link: 'https://www.justwatch.com/it/movie/alien',
-          platform_links: { Netflix: 'https://www.netflix.com/search?q=Alien' },
         },
       },
     })
     expect(
       within(row).getByRole('link', { name: 'Find on Netflix (opens in a new tab)' }),
     ).toHaveAttribute('href', 'https://www.netflix.com/search?q=Alien')
-    // Sky has no entry: it falls back to the title's JustWatch page.
+    // Sky is not in the table: it falls back to the title's JustWatch page.
     expect(
       within(row).getByRole('link', { name: 'Sky on JustWatch (opens in a new tab)' }),
     ).toHaveAttribute('href', 'https://www.justwatch.com/it/movie/alien')

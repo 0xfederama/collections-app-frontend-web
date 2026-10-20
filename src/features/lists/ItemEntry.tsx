@@ -10,7 +10,8 @@ import { ServiceIcon } from '../../components/ServiceIcon'
 import { useStoreProviders } from '../stores/api'
 import { storeName } from '../stores/providers'
 import type { ItemType } from '../items/api'
-import { safeWebsiteUrl } from '../items/links'
+import { safeWebsiteUrl, storeLink, streamingSearchLink } from '../links'
+import { useSettings } from '../settings/api'
 import type { TypeDefinition } from '../items/types'
 
 /** What an entry needs to be reorderable. Absent when reordering is not available. */
@@ -89,6 +90,7 @@ function PinnedSlot({
   className?: string
 }) {
   const providers = useStoreProviders()
+  const settings = useSettings()
   const parts: ReactNode[] = []
   let run: string[] = []
   const flush = () => {
@@ -107,19 +109,16 @@ function PinnedSlot({
     if (definition.fields.find((f) => f.key === key)?.type === 'stores') {
       flush()
       const stores = storesOf(item, key)
-      const links = (item.metadata.store_links ?? {}) as Record<string, unknown>
+      const isbn = typeof item.metadata.isbn === 'string' ? item.metadata.isbn : null
+      const country = settings.data?.streaming_country_code
       if (stores.length) {
         parts.push(
           <span key={`k${parts.length}`} className="inline-flex flex-wrap items-center gap-1.5">
             {stores.map((store) => {
               const label = storeName(providers.data, store)
-              const href = links[store]
+              const href = storeLink(store, { isbn, title: item.title, country })
               return (
-                <TileLink
-                  key={store}
-                  href={safeWebsiteUrl(typeof href === 'string' ? href : null)}
-                  label={label}
-                >
+                <TileLink key={store} href={safeWebsiteUrl(href)} label={label}>
                   <ServiceIcon name={store} label={label} size={iconSize} />
                 </TileLink>
               )
@@ -135,25 +134,25 @@ function PinnedSlot({
     }
     flush()
     const services = streamingOf(item)
-    const streaming = item.metadata.streaming as
-      { link?: string | null; platform_links?: Record<string, string> } | null | undefined
-    // Each service opens its own search for the title (`platform_links`, built by the server); one
-    // without an entry falls back to the title's JustWatch page, and without either stays plain.
+    const streaming = item.metadata.streaming as { link?: string | null } | null | undefined
+    // Each service the web knows opens its own search for the title; one without a search falls back
+    // to the title's JustWatch page (`streaming.link`), and without either stays plain.
     const justWatch = safeWebsiteUrl(streaming?.link ?? null)
     if (services.length) {
       parts.push(
         <span key={`s${parts.length}`} className="inline-flex items-center gap-1.5">
-          {services.map((s) => (
-            <TileLink
-              key={s.name}
-              href={safeWebsiteUrl(streaming?.platform_links?.[s.name] ?? null) ?? justWatch}
-              label={
-                streaming?.platform_links?.[s.name] ? `Find on ${s.name}` : `${s.name} on JustWatch`
-              }
-            >
-              <ServiceIcon name={s.name} paid={s.paid} size={iconSize} />
-            </TileLink>
-          ))}
+          {services.map((s) => {
+            const search = streamingSearchLink(s.name, item.title)
+            return (
+              <TileLink
+                key={s.name}
+                href={safeWebsiteUrl(search) ?? justWatch}
+                label={search ? `Find on ${s.name}` : `${s.name} on JustWatch`}
+              >
+                <ServiceIcon name={s.name} paid={s.paid} size={iconSize} />
+              </TileLink>
+            )
+          })}
         </span>,
       )
     }
