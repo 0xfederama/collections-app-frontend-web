@@ -1,26 +1,11 @@
 import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
 import { Button, TextField, useToast } from '../../../components/ui'
 import { cx } from '../../../lib/cx'
-import { ItemThumb } from '../../lists'
 import type { Item } from '../api'
 import { useItemImage } from './api'
 import { ACCEPT, checkImageFile, checkImageUrl } from './checks'
 import { describeImageError } from './messages'
-
-type Busy =
-  { kind: 'upload'; name: string; fraction: number } | { kind: 'url' } | { kind: 'remove' }
-
-/** What the section is showing about the current image. */
-function describeCurrent(image: NonNullable<Item['image']>) {
-  if (image.source === 'upload') {
-    return image.original_filename ? `Uploaded file: ${image.original_filename}` : 'Uploaded file'
-  }
-  try {
-    return `From ${new URL(image.url).host}`
-  } catch {
-    return 'From an address'
-  }
-}
+import { CurrentImage, UploadProgress, type Busy } from './ImageStatus'
 
 /**
  * Set, replace or remove the item's image by drop, file picker or URL (UI_SPEC §4). It lives in
@@ -169,27 +154,10 @@ export function ImageSection({
   }
 
   const uploading = busy?.kind === 'upload' ? busy : null
-  const percent = uploading ? Math.round(uploading.fraction * 100) : 0
 
   return (
     <div className="flex flex-col gap-4">
-      {item.image && (
-        <div className="flex flex-wrap items-center gap-4">
-          <ItemThumb item={item} className="aspect-video w-40 shrink-0 rounded-lg" />
-          <div className="flex min-w-0 flex-col items-start gap-2">
-            <p className="text-sm break-all text-text-muted">{describeCurrent(item.image)}</p>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => void remove()}
-              pending={busy?.kind === 'remove'}
-              disabled={busy !== null}
-            >
-              Remove image
-            </Button>
-          </div>
-        </div>
-      )}
+      <CurrentImage item={item} busy={busy} onRemove={() => void remove()} />
 
       <div
         {...dragProps}
@@ -200,31 +168,11 @@ export function ImageSection({
         )}
       >
         {uploading ? (
-          <div className="flex w-full max-w-sm flex-col items-center gap-2">
-            <div
-              role="progressbar"
-              aria-label={`Uploading ${uploading.name}`}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={percent}
-              className="h-2 w-full overflow-hidden rounded-full bg-border"
-            >
-              <div
-                className="h-full bg-accent transition-[width]"
-                style={{ width: `${percent}%` }}
-              />
-            </div>
-            <p aria-live="polite" className="break-all text-text-muted">
-              {uploading.fraction >= 1
-                ? `Processing ${uploading.name}…`
-                : `Uploading ${uploading.name}… ${percent}%`}
-            </p>
-            {uploading.fraction < 1 && (
-              <Button size="sm" variant="secondary" onClick={() => abort.current?.abort()}>
-                Cancel upload
-              </Button>
-            )}
-          </div>
+          <UploadProgress
+            name={uploading.name}
+            fraction={uploading.fraction}
+            onCancel={() => abort.current?.abort()}
+          />
         ) : (
           <>
             <p>
