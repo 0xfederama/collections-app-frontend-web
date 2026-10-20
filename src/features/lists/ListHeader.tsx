@@ -173,7 +173,7 @@ export function ListHeader(props: ListHeaderProps) {
           />
           {/* Like "+ Filter": the sort icon and the current choice; below 44rem of bar width only the
               icon stays (the name is still "Sort" for assistive tech). */}
-          <div className="relative w-44 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! pointer-coarse:[&_button]:h-11! [&_button]:border-transparent! [&_button]:bg-fill! [&_button]:pr-3 [&_button]:pl-9 [&_button]:font-medium [&_button]:hover:border-transparent! [&_button]:hover:bg-fill-hover! [&_button>span:last-child]:hidden @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only">
+          <div className="relative shrink-0 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:w-auto! @max-[44rem]:[&_button]:w-full! pointer-coarse:[&_button]:h-11! [&_button]:border-transparent! [&_button]:bg-fill! [&_button]:pr-3 [&_button]:pl-9 [&_button]:font-medium [&_button]:hover:border-transparent! [&_button]:hover:bg-fill-hover! [&_button>span:last-child]:hidden @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only">
             <Select
               label="Sort"
               options={sortOptionsFor(props.definition)}
