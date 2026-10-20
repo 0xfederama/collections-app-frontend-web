@@ -1,7 +1,6 @@
 import { ESLint } from 'eslint'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import baseline from '../eslint.boundaries.baseline.js'
 
 // Lints in-memory code against the repo's eslint.config.js (F020 boundaries). The probe files
 // need not exist: only the path decides which config block applies.
@@ -23,6 +22,24 @@ describe('F020-W2 import boundaries', () => {
     expect(await reports('src/features/trash/__probe.ts', "import { x } from '../tree'")).toBe(
       false,
     )
+  })
+
+  it('B: a feature may import another feature test kit (testing) deep', async () => {
+    expect(
+      await reports('src/features/trash/__probe.ts', "import { x } from '../tree/testing'"),
+    ).toBe(false)
+  })
+
+  it('B: a feature may import another feature screens module deep', async () => {
+    expect(
+      await reports('src/features/trash/__probe.ts', "import { x } from '../lists/screens'"),
+    ).toBe(false)
+  })
+
+  it('B: a feature may not import another feature list view deep', async () => {
+    expect(
+      await reports('src/features/trash/__probe.ts', "import { x } from '../lists/ListView'"),
+    ).toBe(true)
   })
 
   it('B: a feature may import its own internals', async () => {
@@ -64,12 +81,21 @@ describe('F020-W2 import boundaries', () => {
     )
   })
 
-  it('legacy: a baseline file is exempt (the same import in a non-baseline sibling reports)', async () => {
-    const legacy = baseline.find((file) => file.startsWith('src/features/'))
-    expect(legacy).toBeDefined()
-    const sibling = legacy!.replace(/[^/]+$/, '__probe.tsx')
-    const code = "import { x } from '../tree/api'"
-    expect(await reports(legacy!, code)).toBe(false)
-    expect(await reports(sibling, code)).toBe(true)
+  it('C: outside features, a feature test kit (testing) import is allowed', async () => {
+    expect(
+      await reports('src/app/__probe.tsx', "import { x } from '../features/tree/testing'"),
+    ).toBe(false)
+  })
+
+  it('C: routes may import a feature screens module deep', async () => {
+    expect(
+      await reports('src/routes/__probe.tsx', "import { x } from '../features/settings/screens'"),
+    ).toBe(false)
+  })
+
+  it('C: routes may not import a feature list view deep', async () => {
+    expect(
+      await reports('src/routes/__probe.tsx', "import { x } from '../features/lists/ListView'"),
+    ).toBe(true)
   })
 })

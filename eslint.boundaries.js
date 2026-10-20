@@ -1,13 +1,14 @@
 // F020 import boundaries, enforced with the built-in no-restricted-imports (decision F020-Q3).
-// Imported by eslint.config.js. Rules:
+// Imported by eslint.config.js. Rules (no exemption list: they apply to every file):
 //   A. components and lib never import features, layouts, routes, app or mocks.
-//   B. a feature imports another feature only through its index.ts.
-//   C. files outside features import a feature only through its index.ts.
+//   B. a feature imports another feature only through its index.ts (or its testing.ts test kit).
+//   C. files outside features import a feature only through its index.ts (or its testing.ts test kit).
+// Public entries per feature: index.ts, testing.ts (test kit) and screens.ts (heavy route-level
+// components, imported only by src/routes; screens.ts keeps barrels light for code splitting).
 // Flat config replaces a rule's options per file, so the blocks below are split so that each
 // file matches exactly one block that sets the rule.
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import baseline from './eslint.boundaries.baseline.js'
 
 const FEATURES = readdirSync(join(import.meta.dirname, 'src/features'), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
@@ -24,7 +25,13 @@ const featureBlocks = FEATURES.map((feature) => ({
       {
         patterns: [
           {
-            group: FEATURES.filter((other) => other !== feature).map((other) => `**/${other}/*`),
+            // a feature's testing module (its test kit) and screens module are the deep imports allowed
+            // (F020-W3, screens for src/routes)
+            group: [
+              ...FEATURES.filter((other) => other !== feature).map((other) => `**/${other}/*`),
+              ...FEATURES.map((other) => `!**/${other}/testing`),
+              ...FEATURES.map((other) => `!**/${other}/screens`),
+            ],
             message: THROUGH_INDEX,
           },
         ],
@@ -64,12 +71,15 @@ export default [
       'no-restricted-imports': [
         'error',
         {
-          patterns: [{ group: ['**/features/*/*'], message: THROUGH_INDEX }],
+          patterns: [
+            {
+              group: ['**/features/*/*', '!**/features/*/testing', '!**/features/*/screens'],
+              message: THROUGH_INDEX,
+            },
+          ],
         },
       ],
     },
   },
   ...featureBlocks,
-  // legacy, shrinks as F020-W3 splits each area; never add a file here
-  ...(baseline.length > 0 ? [{ files: baseline, rules: { 'no-restricted-imports': 'off' } }] : []),
 ]

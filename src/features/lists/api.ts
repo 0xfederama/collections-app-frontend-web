@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { ApiError, api, ifMatch, unwrap } from '../../lib/api'
-import { treeKeys } from '../tree/api'
+import { treeKeys } from '../tree'
 
 export type List = components['schemas']['List']
 export type ItemSummary = components['schemas']['ItemSummary']

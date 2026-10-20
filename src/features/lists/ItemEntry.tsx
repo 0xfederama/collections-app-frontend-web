@@ -7,13 +7,10 @@ import type { DisplayMode, ItemSummary } from './api'
 import { ItemThumb } from './ItemThumb'
 import { pinnedPlacements, pinnedTexts, storesOf, streamingOf, type PinnedKeys } from './pinned'
 import { ServiceIcon } from '../../components/ServiceIcon'
-import { useStoreProviders } from '../stores/api'
-import { storeName } from '../stores/providers'
-import type { ItemType } from '../items/api'
+import { storeName, useStoreProviders } from '../stores'
+import type { ItemType, TypeDefinition } from '../items'
 import { safeWebsiteUrl, storeLink, streamingSearchLink } from '../links'
-import { useSettings } from '../settings/api'
-import type { TypeDefinition } from '../items/types'
-
+import { useSettings } from '../settings'
 /** What an entry needs to be reorderable. Absent when reordering is not available. */
 export interface EntryReorder {
   rowRef: Ref<HTMLLIElement>

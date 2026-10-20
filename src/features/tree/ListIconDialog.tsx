@@ -2,16 +2,20 @@ import { useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { AlertDialog, Button, Dialog, useToast } from '../../components/ui'
 import { api, unwrap } from '../../lib/api'
-import { builtinListIcon, parseListIcon } from '../lists/iconModel'
-import type { IconChoice, ListIconColor } from '../lists/iconModel'
-import { ListIconPicker } from '../lists/ListIconPicker'
-import { ListIconMark } from '../lists/ListIconMark'
+import {
+  builtinListIcon,
+  parseListIcon,
+  type IconChoice,
+  type ListIconColor,
+  ListIconPicker,
+  ListIconMark,
+} from '../lists'
 import { useUpdateListIcon } from './mutations'
 import { treeKeys, type List } from './api'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
-import { typeName } from '../items/types'
-import { useTypes } from '../settings/api'
+import { typeName } from '../items'
+import { useTypes } from '../settings'
 
 const COLOR_LABELS: Record<Exclude<ListIconColor, null>, string> = {
   red: 'Red',

@@ -15,9 +15,8 @@ import {
   type PinnedFields,
   type SortMode,
 } from './api'
-import { NEW_ITEM_ID } from '../items/newItem'
-import { typeDefinition } from '../items/types'
-import { useTypes } from '../settings/api'
+import { NEW_ITEM_ID, typeDefinition } from '../items'
+import { useTypes } from '../settings'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { resolvePinned } from './pinned'

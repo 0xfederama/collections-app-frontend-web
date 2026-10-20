@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Dialog } from '../../components/ui'
 import { ImagePlus } from '../../components/ui/icons'
-import { ItemThumb } from '../lists/ItemThumb'
+import { ItemThumb } from '../lists'
 import type { Item } from './api'
 import { ImageDialog } from './image/ImageDialog'
 

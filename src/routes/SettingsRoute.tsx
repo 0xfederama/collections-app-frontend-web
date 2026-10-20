@@ -1,12 +1,14 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button, Dialog, Skeleton } from '../components/ui'
-import { AboutSection } from '../features/settings/AboutSection'
-import { AppearanceSection } from '../features/settings/AppearanceSection'
-import { useSettings } from '../features/settings/api'
-import { ConnectionSection } from '../features/settings/ConnectionSection'
-import { SettingsForm, type SettingsCloseRequestRef } from '../features/settings/SettingsForm'
-import { TypesFieldsPane } from '../features/settings/TypesFieldsPane'
+import { useSettings, type SettingsCloseRequestRef } from '../features/settings'
+import {
+  AboutSection,
+  AppearanceSection,
+  ConnectionSection,
+  SettingsForm,
+  TypesFieldsPane,
+} from '../features/settings/screens'
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (

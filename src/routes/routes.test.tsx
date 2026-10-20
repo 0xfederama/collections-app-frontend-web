@@ -9,7 +9,7 @@ import { createTestRouter } from '../app/router'
 import { exampleResponses } from '../generated/examples'
 import { problemResponse } from '../mocks/problems'
 import { server } from '../mocks/server'
-import type { TreeData } from '../features/tree/api'
+import type { TreeData } from '../features/tree'
 import { createTestQueryClient, mockViewport, renderAt } from '../test-utils'
 
 const treeUrl = `${location.origin}/api/v1/tree`

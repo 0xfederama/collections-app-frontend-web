@@ -2,8 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Button, EmptyState, Skeleton, TextField } from '../components/ui'
 import { Search } from '../components/ui/icons'
-import { MAX_QUERY_LENGTH, normalizeQuery, useSearchResults } from '../features/search/api'
-import { SearchResultBody, resultHref } from '../features/search/SearchResultRow'
+import {
+  MAX_QUERY_LENGTH,
+  normalizeQuery,
+  resultHref,
+  SearchResultBody,
+  useSearchResults,
+} from '../features/search'
 
 const URL_DEBOUNCE_MS = 250
 

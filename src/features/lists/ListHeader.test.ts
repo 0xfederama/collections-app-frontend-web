@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TypeDefinition, TypeField } from '../items/types'
+import type { TypeDefinition, TypeField } from '../items'
 import { sortOptionsFor } from './ListHeader'
 
 const field = (key: string, type: TypeField['type'], label: string): TypeField =>

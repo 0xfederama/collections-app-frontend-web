@@ -3,7 +3,7 @@ import type { FieldError } from '../../../lib/api'
 import type { Item, ItemType } from '../api'
 import { formatField, isStreamingField, type TypeField } from '../types'
 import { IMDB_URL } from '../../links'
-import { joinStoreKeys, parseStoreKeys } from '../../stores/providers'
+import { joinStoreKeys, parseStoreKeys } from '../../stores'
 
 /**
  * The form state of the item editor and everything derived from it, as pure functions: validation,

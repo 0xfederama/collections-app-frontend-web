@@ -1,10 +1,8 @@
 import { NO_TYPE_LABEL } from '../../components/ui'
 import { cx } from '../../lib/cx'
-import { ItemThumb } from '../lists/ItemThumb'
-import { ListIconMark } from '../lists/ListIconMark'
+import { ItemThumb, ListIconMark } from '../lists'
 import type { SearchResult } from './api'
-import type { ItemType } from '../items/api'
-
+import type { ItemType } from '../items'
 /** Where a result opens. The shell decides between the side panel and a full page. */
 export const resultHref = ({ item }: SearchResult) => `/lists/${item.list_id}/items/${item.id}`
 

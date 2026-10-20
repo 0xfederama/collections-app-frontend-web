@@ -1,4 +1,4 @@
-import { HomePage } from '../features/home/HomePage'
+import { HomePage } from '../features/home/screens'
 
 /** `/`: Home (`src/features/home/*`). */
 export function HomeRoute() {

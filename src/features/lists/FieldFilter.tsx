@@ -1,7 +1,7 @@
 import * as Popover from '@radix-ui/react-popover'
 import { Button, Select, TextField, type SelectOption } from '../../components/ui'
 import { Plus, X } from '../../components/ui/icons'
-import type { TypeField } from '../items/types'
+import type { TypeField } from '../items'
 import { toolbarControl } from './toolbarStyles'
 
 export interface FieldFilterValue {

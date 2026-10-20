@@ -2,10 +2,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
-import { itemKeys } from '../items/api'
-import { listKeys } from '../lists/api'
-import { searchKeys } from '../search/api'
-import { treeKeys } from '../tree/api'
+import { itemKeys } from '../items'
+import { listKeys } from '../lists'
+import { searchKeys } from '../search'
+import { treeKeys } from '../tree'
 import {
   ITEMS_KEY_ROOT,
   LISTS_KEY_ROOT,

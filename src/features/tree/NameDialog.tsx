@@ -13,17 +13,9 @@ import { cx } from '../../lib/cx'
 import { destinationId, destinationKey } from './MoveDialog'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
-import { ListIconPicker } from '../lists/ListIconPicker'
-import { ListIconMark } from '../lists/ListIconMark'
-import type { IconChoice } from '../lists/iconModel'
-import { useTypes } from '../settings/api'
-import {
-  typeDefinition,
-  typeOptions as buildTypeOptions,
-  typeToValue,
-  valueToType,
-} from '../items/types'
-
+import { ListIconPicker, ListIconMark, type IconChoice } from '../lists'
+import { useTypes } from '../settings'
+import { typeDefinition, typeOptions as buildTypeOptions, typeToValue, valueToType } from '../items'
 export interface NameDialogProps {
   title: string
   description?: string

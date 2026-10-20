@@ -4,9 +4,8 @@ import { Plus, X } from '../../../components/ui/icons'
 import { CurrencySelect } from '../../../components/ui/IsoSelects'
 import { cx } from '../../../lib/cx'
 import { StreamingPlatforms } from './StreamingPlatforms'
-import { StoreChoices } from '../../stores/StoreChoices'
-import { useStoreProviders } from '../../stores/api'
-import { joinStoreKeys, parseStoreKeys } from '../../stores/providers'
+import { joinStoreKeys, parseStoreKeys, useStoreProviders } from '../../stores'
+import { StoreChoices } from '../../stores/screens'
 import type { TypeField } from '../types'
 import {
   INITIAL_CURRENCY,

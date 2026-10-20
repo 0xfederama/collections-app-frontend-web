@@ -38,7 +38,7 @@ strict TypeScript, ESLint, Prettier, Vitest + Testing Library.
 
 Layers, import rules (ESLint boundaries), size and strictness rules are in [`docs/architecture.md`](docs/architecture.md).
 Features are `src/features/<name>/`, imported from other code only through their `index.ts`.
-Violations fail `npm run lint`; legacy files in `eslint.boundaries.baseline.js` must only shrink.
+Violations fail `npm run lint`. There is no exemption list: the legacy baseline is gone (F020-W3).
 
 ## Layout
 

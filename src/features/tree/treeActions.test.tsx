@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import { countsText } from '../trash/model'
+import { countsText } from '../trash'
 import { http } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { problemResponse } from '../../mocks/problems'

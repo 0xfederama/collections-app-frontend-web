@@ -17,8 +17,8 @@ import { LookupStatus } from './LookupStatus'
 import { MessageBanner } from './inline/Banners'
 import { useEditGuard } from './inline/guard'
 import { EditorButtons } from './inline/InlineField'
-import { useTypes, useSettings } from '../settings/api'
-import { ListIconMark } from '../lists/ListIconMark'
+import { useTypes, useSettings } from '../settings'
+import { ListIconMark } from '../lists'
 import { typeDefinition, typeName } from './types'
 
 /**

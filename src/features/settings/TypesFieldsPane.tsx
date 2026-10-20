@@ -5,12 +5,9 @@ import { Lock, Plus } from '../../components/ui/icons'
 import { SortableProvider, useSortableRow } from '../../components/ui/sortable'
 import { ApiError, NetworkError } from '../../lib/api'
 import { cx } from '../../lib/cx'
-import { NO_TYPE_VALUE, typeOptions, valueToType } from '../items/types'
-import { ListIconMark } from '../lists/ListIconMark'
-import { ListIconPicker } from '../lists/ListIconPicker'
-import type { IconChoice } from '../lists/iconModel'
-import { useUpdateList } from '../tree/mutations'
-import { treeKeys, useTree } from '../tree/api'
+import { NO_TYPE_VALUE, typeOptions, valueToType } from '../items'
+import { ListIconMark, ListIconPicker, type IconChoice } from '../lists'
+import { useUpdateList, treeKeys, useTree } from '../tree'
 import {
   typeKeys,
   useCreateType,

@@ -1,7 +1,7 @@
 import { Link, useMatch } from 'react-router'
 import { Tooltip } from '../../components/ui'
 import { Folder } from '../../components/ui/icons'
-import { ListIconMark } from '../lists/ListIconMark'
+import { ListIconMark } from '../lists'
 import { cx } from '../../lib/cx'
 import { readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 import { useTreeIndex } from './api'

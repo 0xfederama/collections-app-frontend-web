@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { exampleResponses } from '../../generated/examples'
 import { server } from '../../mocks/server'
 import { createTestQueryClient, renderWithProviders } from '../../test-utils'
-import { settingsKeys } from '../settings/api'
+import { settingsKeys } from '../settings'
 import { TitleLookupField } from './TitleLookupField'
 
 const origin = location.origin

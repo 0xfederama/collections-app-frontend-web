@@ -8,13 +8,20 @@ import { server } from '../mocks/server'
 import { createTestQueryClient } from '../test-utils'
 import { homeKeys } from './home/api'
 import { invalidateContent } from './invalidateContent'
-import { useCreateItem, useDeleteItem, useMoveItem, type Item } from './items/api'
-import { listKeys } from './lists/api'
+import { useCreateItem, useDeleteItem, useMoveItem, type Item } from './items'
+import { listKeys } from './lists'
 import { searchKeys } from './search/api'
 import { trashKeys } from './trash/keys'
 import { useRestoreTrash, usePurgeTrash } from './trash/api'
-import { useCreateFolder, useDeleteFolder, useDeleteList, useMoveList } from './tree/mutations'
-import { treeKeys, type Folder, type List } from './tree/api'
+import {
+  useCreateFolder,
+  useDeleteFolder,
+  useDeleteList,
+  useMoveList,
+  treeKeys,
+  type Folder,
+  type List,
+} from './tree'
 
 const wrapperFor =
   (client: QueryClient) =>

@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { api, ifMatch, unwrap } from '../../../lib/api'
-import { listKeys } from '../../lists/api'
+import { listKeys } from '../../lists'
 import { itemKeys, recordOwnWrite, type Item } from '../api'
 import { putImageFile } from './upload'
 

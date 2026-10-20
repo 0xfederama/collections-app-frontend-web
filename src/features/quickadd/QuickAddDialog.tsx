@@ -12,25 +12,29 @@ import {
 } from '../../components/ui'
 import { ImagePlus, Plus, X } from '../../components/ui/icons'
 import { ApiError, NetworkError } from '../../lib/api'
-import { itemKeys, useCreateItem, type Item } from '../items/api'
-import { TitleLookupField } from '../items/TitleLookupField'
 import {
+  itemKeys,
+  useCreateItem,
+  TitleLookupField,
   createLookupSelection,
   isBookLookup,
   isLookupUnavailable,
   lookupSourceName,
+  LookupStatus,
+  MAX_CONTENT_BYTES,
+  isTooLarge,
+  useSaveContent,
+  LIMITS,
+  checkImageFile,
+  ACCEPT,
+  putImageFile,
+  type Item,
   type LookupSelection,
   type LookupTitleSelection,
-} from '../items/lookup'
-import { LookupStatus } from '../items/LookupStatus'
-import { MAX_CONTENT_BYTES, isTooLarge } from '../items/content/limits'
-import { useSaveContent } from '../items/content/api'
-import { LIMITS } from '../items/form/draft'
-import { checkImageFile, ACCEPT } from '../items/image/checks'
-import { putImageFile } from '../items/image/upload'
+} from '../items'
 import { invalidateContent } from '../invalidateContent'
-import { useTree } from '../tree/api'
-import { useSettings } from '../settings/api'
+import { useTree } from '../tree'
+import { useSettings } from '../settings'
 
 type Field = 'title' | 'website' | 'description' | 'image' | 'list'
 
