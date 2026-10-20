@@ -9,7 +9,7 @@ import { buildSortable, canDropInto } from './order'
  * and the keyboard up/down (`nudge`), plus the position and drop checks the menus read. The mutations and toast are passed in so the owning hook
  * keeps its hook call order unchanged.
  */
-export function useTreeMoves({
+export function createTreeMoves({
   index,
   sortable,
   toast,

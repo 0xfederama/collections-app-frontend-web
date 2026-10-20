@@ -10,7 +10,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 - `api.ts`: tree query, types and index; `treeLookup.ts`: `findNode`, `nameOf`, `isOpenWithin`.
 - `SidebarTree.tsx`, `RailTree.tsx`: sidebar and collapsed rail.
 - `mutations.ts`: folder/list writes, reorder and icon updates; success calls `invalidateContent`.
-- `useTreeMoves.ts`: move actions behind the menus and dialogs.
+- `treeMoves.ts`: move actions behind the menus and dialogs.
 - `useTreeDialogs.tsx`, `NameDialog.tsx`: create flows and dialogs; `Vanished.tsx` tells a dialog its target is gone.
 - `listFolderMemory.ts`: folder a new list goes into (session only).
 - `ListIconDialog.tsx`: edit a list mark with a version snapshot.
