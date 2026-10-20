@@ -4,6 +4,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y'
 import reactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import boundaries from './eslint.boundaries.js'
 
 export default defineConfig(
   {
@@ -61,4 +62,6 @@ export default defineConfig(
     ],
     languageOptions: { globals: globals.node },
   },
+  // F020 import boundaries; its legacy baseline block must stay last.
+  ...boundaries,
 )

@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/knip/schema.json",
-  "entry": ["e2e/**/*.spec.ts", "scripts/*.mjs"],
+  "entry": ["e2e/**/*.spec.ts", "scripts/*.mjs", "eslint.boundaries.baseline.d.ts"],
   "ignoreIssues": {
     "src/components/ui/index.ts": ["types"],
     "src/components/ui/Button.tsx": ["types"],
