@@ -64,7 +64,7 @@ function queryEscape(value: string): string {
 function lookup(platform: string): string | null {
   const n = normalizePlatform(platform)
   if (Object.prototype.hasOwnProperty.call(EXACT, n)) {
-    return EXACT[n]
+    return EXACT[n] ?? null
   }
   for (const [prefix, url] of PREFIXES) {
     if (n.startsWith(prefix)) {
