@@ -6,6 +6,7 @@ import {
   FolderPlus,
   ListPlus,
   Pencil,
+  Smile,
   Trash2,
 } from '../../components/ui/icons'
 import type { TreeNode } from './api'
@@ -41,7 +42,11 @@ export function nodeMenuItems(
   }
   items.push({ label: 'Rename', icon: icon(<Pencil />), onSelect: () => actions.rename(id) })
   if (changeIcon && node.kind === 'list')
-    items.push({ label: 'Change icon', onSelect: () => actions.changeIcon(id) })
+    items.push({
+      label: 'Change icon',
+      icon: icon(<Smile />),
+      onSelect: () => actions.changeIcon(id),
+    })
   items.push({ label: 'Move…', icon: icon(<FolderInput />), onSelect: () => actions.move(id) })
   items.push(
     { type: 'separator' },

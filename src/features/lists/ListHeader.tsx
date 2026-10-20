@@ -24,6 +24,7 @@ import { hasPrice, type TypeDefinition } from '../items/types'
 import type { DisplayMode, List, PinnedFields, SortMode } from './api'
 import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
+import { ListTitle } from './ListTitle'
 import { PinnedMenu } from './PinnedMenu'
 import { toolbarControl } from './toolbarStyles'
 import {
@@ -124,7 +125,7 @@ export function ListHeader(props: ListHeaderProps) {
         <div className="flex flex-wrap items-center gap-3">
           <ListIconButton list={props.treeList} defaultIcon={props.definition.default_icon} />
           <h1 className="min-w-0 flex-1 text-3xl leading-tight font-bold tracking-tight break-words">
-            {props.treeList.name}
+            <ListTitle list={props.treeList} />
           </h1>
           {props.showAddItem && (
             <Button

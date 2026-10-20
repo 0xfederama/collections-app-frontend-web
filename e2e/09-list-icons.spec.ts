@@ -242,3 +242,22 @@ test.describe('F018-W1 list icon edit from the header and the sidebar row', () =
     expect(await response.json()).toMatchObject({ icon: '🪿', icon_color: null })
   })
 })
+
+test.describe('F019 list title', () => {
+  test('click the title to rename it; the sidebar follows', async ({ page, request }) => {
+    const name = uniqueName('Title list')
+    const renamed = `${name} renamed`
+    const list = await createList(request, name)
+    await page.goto(`/lists/${list.id}`)
+    await page.getByRole('main').getByRole('button', { name, exact: true }).click()
+    const field = page.getByRole('textbox', { name: 'List name' })
+    await field.fill(renamed)
+    await field.press('Enter')
+    await expect(
+      page.getByRole('main').getByRole('button', { name: renamed, exact: true }),
+    ).toBeVisible()
+    await expect(
+      sidebarTree(page).getByRole('treeitem', { name: new RegExp(renamed) }),
+    ).toBeVisible()
+  })
+})

@@ -232,3 +232,25 @@ describe('F018-W1 list icon from the header and the sidebar', () => {
     await user.keyboard('{Escape}')
   })
 })
+
+describe('F019 list title renamed in place', () => {
+  it('click the title, type, Enter: one PATCH of the name; Esc sends nothing', async () => {
+    const { user, backend } = await openList(ID.watchlist)
+
+    await user.click(within(main()).getByRole('button', { name: /^Watchlist/ }))
+    const input = await within(main()).findByRole('textbox', { name: 'List name' })
+    await user.keyboard('{Escape}')
+    expect(backend.writes()).toHaveLength(0)
+    expect(input).not.toBeInTheDocument()
+
+    await user.click(within(main()).getByRole('button', { name: /^Watchlist/ }))
+    const field = await within(main()).findByRole('textbox', { name: 'List name' })
+    await user.clear(field)
+    await user.type(field, 'To watch{Enter}')
+    await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(1))
+    const [patch] = backend.writes('PATCH')
+    expect(patch?.path).toBe(`/api/v1/lists/${ID.watchlist}`)
+    expect(patch?.body).toEqual({ name: 'To watch' })
+    expect(await within(main()).findByRole('button', { name: /^To watch/ })).toBeInTheDocument()
+  })
+})

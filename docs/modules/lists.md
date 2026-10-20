@@ -7,6 +7,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 ## Key files
 
 - `src/features/lists/ListView.tsx`: list screen and URL state (`?q=`, `?sort=`, `filter_*`).
+- `ListTitle.tsx`: the list title, renamed in place by clicking it.
 - `FieldFilter.tsx`: per-field filter control, `parseFieldFilter` for URL params, `FieldFilterMenu` (the "+ Filter" popover) and `FieldFilterChip` (the applied filter, removable, under the bar).
 - `ListIconPicker.tsx`, `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices and parsing.
 - `ListIconMark.tsx`: shared list mark renderer.
