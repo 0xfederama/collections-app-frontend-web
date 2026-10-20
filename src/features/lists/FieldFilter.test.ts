@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { TypeField } from '../items/types'
-import { parseFieldFilter } from './FieldFilter'
+import { describeFieldFilter, parseFieldFilter } from './FieldFilter'
 
 const fields: TypeField[] = [
   { key: 'name', label: 'Name', type: 'text', position: 0, is_locked: false, version: 1 },
@@ -72,5 +72,21 @@ describe('F016-W4 store keys are not a filter', () => {
       version: 1,
     }
     expect(parseFieldFilter(params('filter_field=stores&filter_value=kobo'), [stores])).toBeNull()
+  })
+})
+
+describe('describeFieldFilter', () => {
+  it('reads an applied filter for its chip and is null while empty', () => {
+    expect(describeFieldFilter(fields, null)).toBeNull()
+    expect(describeFieldFilter(fields, { field: 'name', value: '', min: '', max: '' })).toBeNull()
+    expect(describeFieldFilter(fields, { field: 'name', value: 'Ada', min: '', max: '' })).toBe(
+      'Name: Ada',
+    )
+    expect(describeFieldFilter(fields, { field: 'rating', value: '', min: '7', max: '' })).toBe(
+      'Rating: 7–',
+    )
+    expect(describeFieldFilter(fields, { field: 'owned', value: 'true', min: '', max: '' })).toBe(
+      'Owned: Yes',
+    )
   })
 })

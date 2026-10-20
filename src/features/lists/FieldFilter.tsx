@@ -1,5 +1,8 @@
+import * as Popover from '@radix-ui/react-popover'
 import { Button, Select, TextField, type SelectOption } from '../../components/ui'
+import { Plus, X } from '../../components/ui/icons'
 import type { TypeField } from '../items/types'
+import { toolbarControl } from './toolbarStyles'
 
 export interface FieldFilterValue {
   field: string
@@ -147,5 +150,65 @@ export function FieldFilter({ fields, value, onChange }: FieldFilterProps) {
         </Button>
       )}
     </fieldset>
+  )
+}
+
+/** What an applied field filter reads as on its chip, e.g. `Director: Nolan` or `Release year: 2000–`; null while it has no value yet. */
+export function describeFieldFilter(
+  fields: readonly TypeField[],
+  value: FieldFilterValue | null,
+): string | null {
+  const field = fields.find((candidate) => candidate.key === value?.field)
+  if (!field || !value) return null
+  let text = value.value
+  if (field.type === 'boolean')
+    text = value.value === 'true' ? 'Yes' : value.value === 'false' ? 'No' : ''
+  if (field.type === 'number' || field.type === 'date') {
+    text = value.min || value.max ? `${value.min}–${value.max}` : ''
+  }
+  return text ? `${field.label}: ${text}` : null
+}
+
+/** "+ Filter" opens the field filter in a popover; an applied filter then shows as a chip (`FieldFilterChip`). */
+export function FieldFilterMenu(props: FieldFilterProps) {
+  if (!props.fields.some(filterable)) return null
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button type="button" className={toolbarControl}>
+          <Plus aria-hidden className="size-4" />
+          Filter
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={6}
+          collisionPadding={8}
+          className="bg-surface-raised z-50 max-w-[calc(100vw-1rem)] rounded-lg p-3 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
+        >
+          <FieldFilter {...props} />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  )
+}
+
+/** The applied field filter as a removable chip, or nothing while none is applied. */
+export function FieldFilterChip({ fields, value, onChange }: FieldFilterProps) {
+  const text = describeFieldFilter(fields, value)
+  if (!text) return null
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 py-0.5 pr-1 pl-3 text-sm text-accent-text">
+      {text}
+      <button
+        type="button"
+        aria-label={`Remove filter ${text}`}
+        onClick={() => onChange(null)}
+        className="grid size-6 place-items-center rounded-full hover:bg-accent/15 focus-visible:outline-2 focus-visible:outline-focus-ring pointer-coarse:size-8"
+      >
+        <X aria-hidden className="size-3.5" />
+      </button>
+    </span>
   )
 }

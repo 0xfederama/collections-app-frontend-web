@@ -175,7 +175,7 @@ const titles = () =>
     .map((a) => a.textContent)
 const filterField = (type: List['type'] = 'movie') =>
   screen.getByRole('searchbox', {
-    name: type === 'movie' ? 'Filter items by title or director' : 'Filter items by title',
+    name: type === 'movie' ? 'Search items by title or director' : 'Search items by title',
   })
 const sortSelect = () => screen.getByRole('combobox', { name: /Sort/ })
 
@@ -386,7 +386,8 @@ describe('W-06 URL state: sort and filter', () => {
     const user = userEvent.setup()
     const router = renderList(at())
     await itemsList()
-    await user.click(screen.getByRole('combobox', { name: 'Filter field' }))
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    await user.click(await screen.findByRole('combobox', { name: 'Filter field' }))
     await user.click(await screen.findByRole('option', { name: 'Release year' }))
     await user.type(screen.getByRole('spinbutton', { name: 'Release year minimum' }), '2000')
     await waitFor(() =>
@@ -397,7 +398,8 @@ describe('W-06 URL state: sort and filter', () => {
       expect(backend.itemRequests.at(-1)!.searchParams.get('filter_min')).toBe('2000')
     })
     expect(titles()).toEqual(['Later'])
-    await user.click(screen.getByRole('button', { name: 'Clear field filter' }))
+    await user.keyboard('{Escape}')
+    await user.click(await screen.findByRole('button', { name: /Remove filter Release year/ }))
     await waitFor(() => expect(router.state.location.search).toBe(''))
   })
 

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   Button,
-  IconButton,
   Select,
   SegmentedControl,
   Skeleton,
@@ -27,7 +26,12 @@ import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
 import { PinnedMenu } from './PinnedMenu'
 import { toolbarControl } from './toolbarStyles'
-import { FieldFilter, type FieldFilterValue } from './FieldFilter'
+import {
+  FieldFilterChip,
+  FieldFilterMenu,
+  describeFieldFilter,
+  type FieldFilterValue,
+} from './FieldFilter'
 
 const modeOptions: SegmentedOption[] = [
   { value: 'compact', label: 'Compact rows', icon: <ListIcon />, iconOnly: true },
@@ -114,10 +118,6 @@ function ListIconButton({ list, defaultIcon }: { list: TreeList; defaultIcon?: s
 /** Name, New item (once the list has items), description, then the floating display mode / sort / filter toolbar (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
-  // Below 44rem of toolbar width the filter is an icon that opens the field (CSS container query);
-  // a filter that is already set stays visible.
-  const [filterOpen, setFilterOpen] = useState(props.filter !== '')
-  const filterShown = filterOpen || props.filter !== ''
   return (
     <>
       <header className="flex flex-col gap-2">
@@ -136,6 +136,14 @@ export function ListHeader(props: ListHeaderProps) {
               <span className="max-sm:sr-only">New item</span>
             </Button>
           )}
+          {list && (props.definition.fields.length > 0 || props.definition.allows_price) && (
+            <PinnedMenu
+              list={list}
+              definition={props.definition}
+              onChange={props.onPinned}
+              onReset={props.onResetPinned}
+            />
+          )}
           <ListActionsMenu list={props.treeList} />
         </div>
         {list ? (
@@ -145,14 +153,31 @@ export function ListHeader(props: ListHeaderProps) {
         )}
       </header>
       {/* Sticky inside the scrolling `main`: it blurs the items that pass behind it. The wrapper is the
-          container the narrow variants measure. */}
+          container the narrow variants measure. Option 4 (F019): search and "+ Filter" first, then
+          sort and display; an applied field filter is a chip under the bar. */}
       <div className="@container z-10 sm:sticky sm:top-0">
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border material p-1.5 shadow-float">
-          <SegmentedControl
-            aria-label="Display mode"
-            options={modeOptions}
-            value={props.displayMode}
-            onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
+          <div className="min-w-40 flex-1 [&_label]:sr-only">
+            <TextField
+              label={
+                props.treeList.type === 'movie'
+                  ? 'Search items by title or director'
+                  : 'Search items by title'
+              }
+              type="search"
+              placeholder={
+                props.treeList.type === 'movie' ? 'Search by title or director' : 'Search by title'
+              }
+              value={props.filter}
+              onChange={(event) => props.onFilter(event.target.value)}
+              prefix={<Search aria-hidden className="size-4" />}
+              className="h-9! border-transparent! hover:border-transparent! focus-within:border-accent!"
+            />
+          </div>
+          <FieldFilterMenu
+            fields={props.definition.fields}
+            value={props.fieldFilter}
+            onChange={props.onFieldFilter}
           />
           <div className="flex items-center gap-1.5">
             <span aria-hidden className="text-sm text-text-muted @max-[44rem]:hidden">
@@ -181,57 +206,22 @@ export function ListHeader(props: ListHeaderProps) {
               Make this the default sort
             </button>
           )}
-          {/* Pinned fields and the filter sit together at the right end (the filter field follows). */}
-          <div className="ml-auto flex items-center gap-2">
-            {list && (props.definition.fields.length > 0 || props.definition.allows_price) && (
-              <PinnedMenu
-                list={list}
-                definition={props.definition}
-                onChange={props.onPinned}
-                onReset={props.onResetPinned}
-              />
-            )}
-            <IconButton
-              aria-label="Filter by title"
-              aria-expanded={filterShown}
-              aria-controls="list-filter"
-              variant="ghost"
-              onClick={() => setFilterOpen((open) => !open)}
-              className="size-9 bg-fill hover:bg-fill-hover pointer-coarse:size-11 @[44rem]:hidden"
-            >
-              <Search aria-hidden />
-            </IconButton>
-          </div>
-          <div
-            id="list-filter"
-            className={
-              filterShown
-                ? 'min-w-40 flex-1 @max-[44rem]:order-last @max-[44rem]:basis-full @[44rem]:max-w-xs [&_label]:sr-only'
-                : 'hidden min-w-40 flex-1 @[44rem]:block @[44rem]:max-w-xs [&_label]:sr-only'
-            }
-          >
-            <TextField
-              label={
-                props.treeList.type === 'movie'
-                  ? 'Filter items by title or director'
-                  : 'Filter items by title'
-              }
-              type="search"
-              placeholder={
-                props.treeList.type === 'movie' ? 'Filter by title or director' : 'Filter by title'
-              }
-              value={props.filter}
-              onChange={(event) => props.onFilter(event.target.value)}
-              prefix={<Search aria-hidden className="size-4" />}
-              className="h-9! border-transparent! hover:border-transparent! focus-within:border-accent!"
-            />
-          </div>
-          <FieldFilter
-            fields={props.definition.fields}
-            value={props.fieldFilter}
-            onChange={props.onFieldFilter}
+          <SegmentedControl
+            aria-label="Display mode"
+            options={modeOptions}
+            value={props.displayMode}
+            onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
           />
         </div>
+        {describeFieldFilter(props.definition.fields, props.fieldFilter) && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            <FieldFilterChip
+              fields={props.definition.fields}
+              value={props.fieldFilter}
+              onChange={props.onFieldFilter}
+            />
+          </div>
+        )}
       </div>
     </>
   )
