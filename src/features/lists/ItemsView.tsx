@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, EmptyState, Skeleton, useToast } from '../../components/ui'
+import { Button, EmptyState, useToast } from '../../components/ui'
 import { List as ListIcon, Search } from '../../components/ui/icons'
 import { ApiError } from '../../lib/api'
 import { cx } from '../../lib/cx'
@@ -15,55 +15,9 @@ import {
 import type { ItemType, TypeDefinition } from '../items'
 import { ItemEntry } from './ItemEntry'
 import type { PinnedKeys } from './pinned'
-import {
-  SortableProvider,
-  arrayMove,
-  useSortableRow,
-  type SortableMove,
-} from '../../components/ui/sortable'
-
-/** Container classes per mode. Grid: 2 columns on mobile, 3 on tablet, then auto-fill (UI_SPEC §2). */
-const containerClass: Record<DisplayMode, string> = {
-  compact: 'flex flex-col gap-1.5',
-  thumbnail: 'flex flex-col gap-2',
-  grid: 'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-[repeat(auto-fill,minmax(11.25rem,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(13.75rem,1fr))]',
-}
-
-export function ItemsSkeleton({ mode }: { mode: DisplayMode }) {
-  const count = mode === 'grid' ? 6 : 5
-  return (
-    <div role="status" data-testid="items-skeleton" className={containerClass[mode]}>
-      <span className="sr-only">Loading items</span>
-      {Array.from({ length: count }, (_, i) =>
-        mode === 'grid' ? (
-          <div
-            key={i}
-            aria-hidden
-            className="flex flex-col gap-2 rounded-lg border border-border p-0"
-          >
-            <Skeleton className="aspect-4/3 w-full rounded-b-none" />
-            <div className="flex flex-col gap-2 p-3">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/3" />
-            </div>
-          </div>
-        ) : (
-          <div
-            key={i}
-            aria-hidden
-            className="flex items-center gap-3 rounded-lg border border-border p-1.5"
-          >
-            <Skeleton className={mode === 'compact' ? 'size-10' : 'aspect-4/3 w-24'} />
-            <div className="flex flex-1 flex-col gap-2">
-              <Skeleton className="h-4 w-1/2" />
-              {mode === 'thumbnail' && <Skeleton className="h-4 w-3/4" />}
-            </div>
-          </div>
-        ),
-      )}
-    </div>
-  )
-}
+import { SortableProvider, arrayMove, type SortableMove } from '../../components/ui/sortable'
+import { containerClass } from './ItemsSkeleton'
+import { DraftRow, SortableEntry } from './ItemRows'
 
 export interface ItemsViewProps {
   listId: string
@@ -247,74 +201,5 @@ export function ItemsView(props: ItemsViewProps) {
       )}
       <p className="text-sm text-text-muted">{props.countLabel}</p>
     </div>
-  )
-}
-
-/** The not-yet-created item: dashed and muted, so it never reads as a saved row (nor as Quick add). */
-function DraftRow({ mode }: { mode: DisplayMode }) {
-  return (
-    <li
-      aria-label="New item (draft)"
-      aria-current="true"
-      className={cx(
-        'flex items-center gap-3 rounded-lg border border-dashed border-accent bg-fill/40 p-3 text-text-muted',
-        mode === 'grid' && 'aspect-4/3 flex-col justify-center text-center',
-      )}
-    >
-      <span className="rounded-sm bg-fill px-1.5 py-0.5 text-xs font-medium text-text-muted">
-        Draft
-      </span>
-      <span className="italic">Untitled item</span>
-    </li>
-  )
-}
-
-function SortableEntry({
-  item,
-  index,
-  size,
-  mode,
-  type,
-  definition,
-  pinned,
-  search,
-  onOpen,
-  onMoveBy,
-}: {
-  item: ItemSummary
-  index: number
-  size: number
-  mode: DisplayMode
-  type: ItemType
-  definition: TypeDefinition
-  pinned: PinnedKeys
-  search: string
-  onOpen: () => void
-  onMoveBy: (delta: -1 | 1) => void
-}) {
-  const { ref, isDragging, a11y } = useSortableRow(item.id, {
-    group: 'items',
-    index,
-    size,
-    label: item.title,
-  })
-  return (
-    <ItemEntry
-      item={item}
-      mode={mode}
-      type={type}
-      definition={definition}
-      pinned={pinned}
-      search={search}
-      onOpen={onOpen}
-      reorder={{
-        rowRef: ref,
-        rowProps: a11y,
-        isDragging,
-        canMoveUp: index > 0,
-        canMoveDown: index < size - 1,
-        onMoveBy,
-      }}
-    />
   )
 }
