@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- the one place that adapts the pre-1.0 @dnd-kit API; splitting it would spread the dnd-kit imports (D-061) */
 import {
   Accessibility,
   KeyboardSensor,

@@ -42,6 +42,13 @@ To fix a violation, export the symbol from the feature's `index.ts` and import i
 - `jsx-a11y` recommended is on. Every `eslint-disable` needs a `-- reason` on the same line.
 - `knip` runs in `npm run check` and fails on unused files, exports or dependencies. `src/features/links/index.ts` is exempt from export checks in `knip.json`.
 
+## Build and dev code
+
+- `/dev/ui` (the component gallery) is registered only under `import.meta.env.DEV` (`src/app/router.tsx`). The MSW worker starts only when `VITE_API_MOCKS=1` (`src/main.tsx`). Both flags are fixed at build time, so the dead branches are dropped.
+- `npm run dist:check` (after `vite build`, part of `npm run check`) fails if dev code reaches `dist/`: a file named like the MSW worker or `DevUi*`, or a JS file containing `setupWorker`, `createTreeBackend`, `DevUiRoute` or `/dev/ui`. It also prints the asset sizes (raw and gzip). There is no size budget (D-034).
+- MSW stays (F020-Q2). About 100 unit-test files use the handlers built from `src/generated/examples.ts` and the stateful dev fakes in `src/mocks/`; removing MSW would mean rewriting those tests. The same fakes give the backend-less `VITE_API_MOCKS=1 npm run dev` mode.
+- React Compiler (evaluated 2026-10-20, not adopted). The repo has about 24 lines of manual memoisation. Adoption needs `@rolldown/plugin-babel`, `babel-plugin-react-compiler` and `@babel/core` alongside `@vitejs/plugin-react` 6 (`reactCompilerPreset()`). The react-hooks 7 `recommended` lint already runs the compiler diagnostics. dnd-kit 0.5.0 and CodeMirror are untested with it. Revisit when re-render cost is measured; the trial is `npm run check` plus the e2e drag specs.
+
 ## Links
 
 - URL building lives in `src/features/links/` (`buildExternalLinks`, `storeLink`, `streamingSearchLink`, `safeImdbUrl`, `safeWebsiteUrl`).
