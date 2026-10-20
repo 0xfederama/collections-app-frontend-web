@@ -11,7 +11,7 @@ import { useStoreProviders } from '../stores/api'
 import { storeName } from '../stores/providers'
 import type { ItemType, TypeDefinition } from '../items'
 import { safeWebsiteUrl, storeLink, streamingSearchLink } from '../links'
-import { useSettings } from '../settings/api'
+import { useSettings } from '../settings'
 /** What an entry needs to be reorderable. Absent when reordering is not available. */
 export interface EntryReorder {
   rowRef: Ref<HTMLLIElement>

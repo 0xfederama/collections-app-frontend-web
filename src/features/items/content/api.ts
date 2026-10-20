@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, ifMatch, unwrap } from '../../../lib/api'
-import { listKeys } from '../../lists/api'
+import { listKeys } from '../../lists'
 import { itemKeys, type ItemContent } from '../api'
 
 export const contentKeys = {

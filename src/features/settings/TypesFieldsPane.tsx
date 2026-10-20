@@ -6,9 +6,7 @@ import { SortableProvider, useSortableRow } from '../../components/ui/sortable'
 import { ApiError, NetworkError } from '../../lib/api'
 import { cx } from '../../lib/cx'
 import { NO_TYPE_VALUE, typeOptions, valueToType } from '../items'
-import { ListIconMark } from '../lists/ListIconMark'
-import { ListIconPicker } from '../lists/ListIconPicker'
-import type { IconChoice } from '../lists/iconModel'
+import { ListIconMark, ListIconPicker, type IconChoice } from '../lists'
 import { useUpdateList, treeKeys, useTree } from '../tree'
 import {
   typeKeys,

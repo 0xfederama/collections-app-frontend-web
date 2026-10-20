@@ -1,4 +1,4 @@
-import { formatPrice } from '../../lists/price'
+import { formatPrice } from '../../lists'
 import type { Item } from '../api'
 import { INITIAL_CURRENCY, type Draft } from '../form/draft'
 import {

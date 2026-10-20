@@ -2,7 +2,7 @@ import { useEffect, useId, useState, type KeyboardEvent, type Ref } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { api, unwrap } from '../../lib/api'
-import { useSettings } from '../settings/api'
+import { useSettings } from '../settings'
 import type { ItemType } from './api'
 import {
   hasSuggestions,

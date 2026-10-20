@@ -16,7 +16,7 @@ import {
   type SortMode,
 } from './api'
 import { NEW_ITEM_ID, typeDefinition } from '../items'
-import { useTypes } from '../settings/api'
+import { useTypes } from '../settings'
 import { ItemsSkeleton, ItemsView } from './ItemsView'
 import { ListHeader } from './ListHeader'
 import { resolvePinned } from './pinned'

@@ -3,7 +3,7 @@ import type { components } from '../../generated/schema'
 import { api, ifMatch, unwrap } from '../../lib/api'
 import { homeKeys } from '../home/api'
 import { invalidateContent } from '../invalidateContent'
-import { listKeys } from '../lists/api'
+import { listKeys } from '../lists'
 import { searchKeys } from '../search/api'
 import { treeKeys } from '../tree'
 

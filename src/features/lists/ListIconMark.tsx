@@ -3,7 +3,7 @@ import { cx } from '../../lib/cx'
 import { builtinListIcon, parseListIcon } from './iconModel'
 import type { ListIconColor } from './iconModel'
 import { typeDefinition, type ItemType } from '../items'
-import { useTypes } from '../settings/api'
+import { useTypes } from '../settings'
 
 const ICON_COLOR_CLASSES: Record<ListIconColor, string> = {
   red: 'text-list-icon-red',

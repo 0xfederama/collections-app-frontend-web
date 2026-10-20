@@ -1,5 +1,5 @@
 import { NO_TYPE_LABEL, type ItemType, type SelectEntry } from '../../../components/ui'
-import type { TypeDefinition, TypeField } from '../../settings/api'
+import type { TypeDefinition, TypeField } from '../../settings'
 
 export type { TypeDefinition, TypeField }
 

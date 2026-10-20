@@ -7,7 +7,7 @@ import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { mockViewport, renderAt } from '../../test-utils'
 import type { Item } from './api'
-import type { TypeDefinition } from '../settings/api'
+import type { TypeDefinition } from '../settings'
 import { createContentBackend } from './content/contentTestBackend'
 import { mockTypes } from '../../mocks/types'
 

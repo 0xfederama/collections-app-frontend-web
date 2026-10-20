@@ -12,7 +12,7 @@ import {
 } from '../components/ui/icons'
 import { useQuickAdd } from '../features/quickadd/QuickAddContext'
 import { SidebarSearch } from '../features/search/SidebarSearch'
-import { useWorkspaceName } from '../features/settings/api'
+import { useWorkspaceName } from '../features/settings'
 import { RailTree, SidebarTree } from '../features/tree'
 import { cx } from '../lib/cx'
 

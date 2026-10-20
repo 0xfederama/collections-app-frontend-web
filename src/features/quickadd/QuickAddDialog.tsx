@@ -34,7 +34,7 @@ import {
 } from '../items'
 import { invalidateContent } from '../invalidateContent'
 import { useTree } from '../tree'
-import { useSettings } from '../settings/api'
+import { useSettings } from '../settings'
 
 type Field = 'title' | 'website' | 'description' | 'image' | 'list'
 

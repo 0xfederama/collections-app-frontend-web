@@ -3,7 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { itemKeys } from '../items'
-import { listKeys } from '../lists/api'
+import { listKeys } from '../lists'
 import { searchKeys } from '../search/api'
 import { treeKeys } from '../tree'
 import {

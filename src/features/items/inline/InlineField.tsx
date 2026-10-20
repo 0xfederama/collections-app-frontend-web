@@ -28,7 +28,7 @@ import { ConflictBanner, GoneBanner, MessageBanner, NetworkBanner } from './Bann
 import { FieldInputs, type FieldForm } from './editors'
 import type { FieldSpec } from './fields'
 import { useEditGuard } from './guard'
-import { useSettings } from '../../settings/api'
+import { useSettings } from '../../settings'
 import type { TypeDefinition } from '../types'
 
 /** Pen, ✓ and ✕ are the same on the description, so they are shared. */

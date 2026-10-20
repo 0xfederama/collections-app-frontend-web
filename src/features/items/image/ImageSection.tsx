@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
 import { Button, TextField, useToast } from '../../../components/ui'
 import { cx } from '../../../lib/cx'
-import { ItemThumb } from '../../lists/ItemThumb'
+import { ItemThumb } from '../../lists'
 import type { Item } from '../api'
 import { useItemImage } from './api'
 import { ACCEPT, checkImageFile, checkImageUrl } from './checks'
