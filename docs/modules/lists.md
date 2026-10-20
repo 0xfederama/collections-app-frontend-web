@@ -11,7 +11,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListIconPicker.tsx`, `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices and parsing.
 - `ListIconMark.tsx`: shared list mark renderer.
 - `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`: header, sort options and item rows.
-- `pinned.ts`, `PinnedMenu.tsx`, `toolbarStyles.ts`: pinned fields and toolbar. The bar is: search ("Search by title"), "+ Filter", sort, display mode; the Pinned fields icon button sits in the title row beside the list "…" menu.
+- `pinned.ts`, `PinnedMenu.tsx`, `toolbarStyles.ts`: pinned fields and toolbar. The bar is: search ("Search by title"), "+ Filter", sort, Pinned, display mode.
 - `api.ts`: list and item queries/mutations.
 
 ## Interfaces

@@ -136,14 +136,6 @@ export function ListHeader(props: ListHeaderProps) {
               <span className="max-sm:sr-only">New item</span>
             </Button>
           )}
-          {list && (props.definition.fields.length > 0 || props.definition.allows_price) && (
-            <PinnedMenu
-              list={list}
-              definition={props.definition}
-              onChange={props.onPinned}
-              onReset={props.onResetPinned}
-            />
-          )}
           <ListActionsMenu list={props.treeList} />
         </div>
         {list ? (
@@ -202,6 +194,14 @@ export function ListHeader(props: ListHeaderProps) {
             >
               Make this the default sort
             </button>
+          )}
+          {list && (props.definition.fields.length > 0 || props.definition.allows_price) && (
+            <PinnedMenu
+              list={list}
+              definition={props.definition}
+              onChange={props.onPinned}
+              onReset={props.onResetPinned}
+            />
           )}
           <SegmentedControl
             aria-label="Display mode"

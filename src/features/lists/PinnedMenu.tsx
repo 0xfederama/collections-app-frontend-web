@@ -45,19 +45,26 @@ export function PinnedMenu({
         <button
           type="button"
           aria-label="Pinned fields"
-          className={cx(toolbarControl, 'w-9 px-0 pointer-coarse:w-11')}
+          className={cx(
+            toolbarControl,
+            '@max-[44rem]:w-9 @max-[44rem]:px-0 pointer-coarse:@max-[44rem]:w-11',
+          )}
         >
           <SlidersHorizontal aria-hidden className="size-4" />
+          {/* The name stays "Pinned fields" for assistive tech; the bar shows the short word, and only the icon when narrow. */}
+          <span aria-hidden className="@max-[44rem]:hidden">
+            Pinned
+          </span>
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          align="end"
+          align="start"
           sideOffset={6}
           className="bg-surface-raised z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-60 overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
         >
           <DropdownMenu.Label className="px-3 pt-2 pb-1 text-xs font-semibold text-text-muted">
-            Up to two, in order
+            Up to three, in order
           </DropdownMenu.Label>
           {fields.map((field) => {
             const position = current.indexOf(field.key)
