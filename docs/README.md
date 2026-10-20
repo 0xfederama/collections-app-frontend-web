@@ -1,5 +1,6 @@
 # Docs index
 
+- [architecture](architecture.md): Layers, import boundaries (ESLint), size and strictness rules, and where link building lives.
 - [api](modules/api.md): Pinned OpenAPI contract, generated types, `lib/api` client, TanStack Query defaults, metadata lookup endpoints and MSW mocks.
 - [deploy](modules/deploy.md): Production web image: Caddy static server and `/api` proxy, CSP hash, `npm run docker:build`.
 - [health](modules/health.md): Backend readiness probe (`/readyz`), shown in Settings > Connection.
