@@ -1,6 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { useBlocker } from 'react-router'
 import { AlertDialog, Button, Dialog, Select, TextField, useToast } from '../../components/ui'
 import { CountrySelect } from '../../components/ui/IsoSelects'
 import { useStoreProviders } from '../stores'
@@ -10,31 +9,23 @@ import {
   HISTORY_LIMIT_MAX,
   NAME_MAX,
   buildPatch,
+  classifySaveFailure,
   draftDump,
   draftFromSettings,
   firstInvalid,
   inputId,
   isDirty,
   isRetentionDirty,
-  mapServerErrors,
+  metadataLanguageOptions,
   validate,
   type ErrorMap,
+  type Failure,
   type SettingsDraft,
   type SettingsField,
 } from './form'
-
-/** Why the last save did not go through, other than field errors. */
-type Failure = { kind: 'conflict' | 'network' } | { kind: 'other'; message: string }
+import { useLeaveGuard } from './useLeaveGuard'
 
 const bannerBase = 'flex flex-col gap-3 rounded-md border p-3 text-sm'
-
-const metadataLanguageOptions = [
-  { value: 'en-US', label: 'English (United States)' },
-  { value: 'it-IT', label: 'Italiano (Italia)' },
-  { value: 'fr-FR', label: 'Français (France)' },
-  { value: 'de-DE', label: 'Deutsch (Deutschland)' },
-  { value: 'es-ES', label: 'Español (España)' },
-]
 
 /**
  * The workspace settings form (UI_SPEC §8, §9). Like the item form it edits a snapshot taken when it
@@ -85,24 +76,7 @@ export function SettingsForm({
   const retentionDirty = isRetentionDirty(base, draft)
 
   // Block leaving the page with unsaved changes (router navigation and closing the tab).
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
-    if (allowLeave.current) return false
-    if (!dirty) return false
-    return (
-      currentLocation.pathname !== nextLocation.pathname ||
-      currentLocation.search !== nextLocation.search
-    )
-  })
-  useEffect(() => {
-    if (!dirty) return
-    const warn = (event: BeforeUnloadEvent) => {
-      if (allowLeave.current) return
-      event.preventDefault()
-      event.returnValue = ''
-    }
-    window.addEventListener('beforeunload', warn)
-    return () => window.removeEventListener('beforeunload', warn)
-  }, [dirty])
+  const blocker = useLeaveGuard(dirty, allowLeave)
 
   useEffect(() => {
     if (focusRequest) document.getElementById(focusRequest.id)?.focus()
@@ -136,19 +110,13 @@ export function SettingsForm({
 
   const fail = useCallback(
     (caught: unknown) => {
-      if (caught instanceof ApiError) {
-        if (caught.status === 412) return setFailure({ kind: 'conflict' })
-        if (caught.status === 422 && caught.errors?.length) {
-          const mapped = mapServerErrors(caught.errors)
-          setErrors(mapped.fields)
-          setOtherErrors(mapped.other)
-          return focusFirst(mapped.fields)
-        }
-        if (caught.status >= 500) return setFailure({ kind: 'network' })
-        return setFailure({ kind: 'other', message: caught.detail ?? caught.title })
+      const { failure: next, fields, other } = classifySaveFailure(caught)
+      if (fields) {
+        setErrors(fields)
+        setOtherErrors(other ?? [])
+        return focusFirst(fields)
       }
-      if (caught instanceof NetworkError) return setFailure({ kind: 'network' })
-      setFailure({ kind: 'other', message: 'Something went wrong. Your changes are kept.' })
+      if (next) setFailure(next)
     },
     [focusFirst],
   )
