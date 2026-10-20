@@ -3,8 +3,9 @@ import { useState } from 'react'
 import { MarkdownView } from '../../../components/markdown'
 import { AlertDialog, Button, Drawer, Skeleton, useToast } from '../../../components/ui'
 import { ApiError, NetworkError } from '../../../lib/api'
-import { itemKeys, type ItemContent } from '../api'
-import { contentKeys, useContentVersion, useContentVersions, useRestoreContent } from './api'
+import { contentKeys, itemKeys } from '../../../data/keys'
+import type { ItemContent } from '../api'
+import { useContentVersion, useContentVersions, useRestoreContent } from './api'
 import { formatBytes, relativeTime } from './limits'
 
 interface Props {

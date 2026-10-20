@@ -6,15 +6,17 @@ Quick add (F-002): one dialog to create an item from anywhere: a title, destinat
 
 ## Key files
 
-- `src/features/quickadd/QuickAddProvider.tsx`: mounted once in `AppShell`; owns the dialog, the `N` shortcut and `open()`.
+- `index.ts`: public face (`useQuickAdd`, `QuickAddProvider`).
+- `QuickAddProvider.tsx`: mounted once in `AppShell`; owns the dialog, the `N` shortcut and `open()`.
 - `QuickAddContext.tsx`: `QuickAddContext`, `useQuickAdd()`.
 - `QuickAddDialog.tsx`: the form, title suggestions, validation, create-then-attach submit and navigation to the new item.
+- `model.ts`: pure form model (`QuickAddInput`, error `Field`); `ListPicker.tsx` ("In [list]", `useListChoices`); `OptionalFields.tsx` (website, description, image); `QuickAddFooter.tsx` (lookup status, errors, buttons).
 - `QuickAdd.test.tsx`: shortcut and submit tests.
 
 ## Interfaces
 
 - `QuickAddProvider({ children })`: context provider plus the dialog; mounted by `layouts/AppShell.tsx`.
-- `useQuickAdd(): { open(listId?) }`: opens the dialog; the top-bar "Quick add" button calls it. A list's "New item" uses the inline draft instead (see [items](items.md)).
+- `useQuickAdd(): { open(listId?) }`: opens the dialog; the sidebar "Quick add" button calls it. A list's "New item" uses the inline draft instead (see [items](items.md)).
 - `QuickAddDialog({ initialListId?, onClose })`: rendered by the provider only while open.
 
 ## Gotchas

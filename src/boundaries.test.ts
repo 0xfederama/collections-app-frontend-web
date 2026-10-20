@@ -93,6 +93,21 @@ describe('F020-W2 import boundaries', () => {
     ).toBe(false)
   })
 
+  it('A: data may not import a feature (F020-W4)', async () => {
+    expect(await reports('src/data/__probe.ts', "import { x } from '../features/tree'")).toBe(true)
+  })
+
+  it('A: data may not import components, layouts, routes, app or mocks (F020-W4)', async () => {
+    expect(await reports('src/data/__probe.ts', "import { x } from '../components/ui'")).toBe(true)
+    expect(await reports('src/data/__probe.ts', "import { x } from '../mocks/server'")).toBe(true)
+  })
+
+  it('A: a feature may import the query keys in data (F020-W4)', async () => {
+    expect(
+      await reports('src/features/tree/__probe.ts', "import { x } from '../../data/keys'"),
+    ).toBe(false)
+  })
+
   it('C: routes may not import a feature list view deep', async () => {
     expect(
       await reports('src/routes/__probe.tsx', "import { x } from '../features/lists/ListView'"),

@@ -9,12 +9,12 @@ import {
   useList,
   useListItems,
   useUpdateList,
-  listKeys,
   type DisplayMode,
   type List,
   type PinnedFields,
   type SortMode,
 } from './api'
+import { listKeys } from '../../data/keys'
 import { NEW_ITEM_ID, typeDefinition } from '../items'
 import { useTypes } from '../settings'
 import { ItemsView } from './ItemsView'

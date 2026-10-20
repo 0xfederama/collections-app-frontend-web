@@ -1,4 +1,4 @@
-import { ApiError, NetworkError, type FieldError } from '../../lib/api'
+import { ApiError, failureKind, type FieldError } from '../../lib/api'
 import type { Settings, UpdateSettingsRequest } from './api'
 
 /** API.md Settings: `markdown_history_limit` is 0–200, the name 1–200 characters. */
@@ -185,28 +185,30 @@ export function classifySaveFailure(caught: unknown): {
   fields: ErrorMap | null
   other: string[] | null
 } {
-  if (caught instanceof ApiError) {
-    if (caught.status === 412) return { failure: { kind: 'conflict' }, fields: null, other: null }
-    if (caught.status === 422 && caught.errors?.length) {
-      const mapped = mapServerErrors(caught.errors)
-      return { failure: null, fields: mapped.fields, other: mapped.other }
-    }
-    if (caught.status >= 500) return { failure: { kind: 'network' }, fields: null, other: null }
-    return {
-      failure: { kind: 'other', message: caught.detail ?? caught.title },
-      fields: null,
-      other: null,
-    }
-  }
-  if (caught instanceof NetworkError) {
-    return { failure: { kind: 'network' }, fields: null, other: null }
-  }
-  return {
-    failure: { kind: 'other', message: 'Something went wrong. Your changes are kept.' },
-    fields: null,
-    other: null,
+  switch (failureKind(caught)) {
+    case 'precondition':
+      return { failure: { kind: 'conflict' }, fields: null, other: null }
+    case 'validation':
+      if (caught instanceof ApiError && caught.errors?.length) {
+        const mapped = mapServerErrors(caught.errors)
+        return { failure: null, fields: mapped.fields, other: mapped.other }
+      }
+      return { failure: serverOrGenericFailure(caught), fields: null, other: null }
+    case 'unavailable':
+      return { failure: { kind: 'network' }, fields: null, other: null }
+    case 'not_found':
+    case 'conflict':
+    case 'too_large':
+    case 'other':
+      return { failure: serverOrGenericFailure(caught), fields: null, other: null }
   }
 }
+
+/** The server's own text when the failure came from HTTP, else the generic message. */
+const serverOrGenericFailure = (caught: unknown): Failure =>
+  caught instanceof ApiError
+    ? { kind: 'other', message: caught.detail ?? caught.title }
+    : { kind: 'other', message: 'Something went wrong. Your changes are kept.' }
 
 /** A readable dump of the changed fields, for "Copy my draft". */
 export function draftDump(base: Settings, draft: SettingsDraft): string {

@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { api, ifMatch, unwrap } from '../../lib/api'
-import { invalidateContent } from '../invalidateContent'
+import { invalidateContent } from '../../data/invalidate'
+import { settingsKeys, typeKeys } from '../../data/keys'
 
 export type Settings = components['schemas']['Settings']
 export type UpdateSettingsRequest = components['schemas']['UpdateSettingsRequest']
@@ -10,9 +11,6 @@ export type TypeField = components['schemas']['TypeField']
 export type CreateTypeRequest = components['schemas']['CreateTypeRequest']
 export type CreateTypeFieldRequest = components['schemas']['CreateTypeFieldRequest']
 export type UpdateTypeRequest = components['schemas']['UpdateTypeRequest']
-
-export const settingsKeys = { settings: ['settings'] as const }
-export const typeKeys = { types: ['types'] as const }
 
 // Type definitions and fields have their own typed ETags ("k-N" and "kf-N").
 const typeMatch = (version: number) => ({ 'If-Match': `"k-${version}"` })

@@ -1,5 +1,5 @@
 // Public face of the tree feature (F020 boundaries): code outside features/tree imports only from here.
-export { treeKeys, useTree, useTreeIndex } from './api'
+export { useTree, useTreeIndex } from './api'
 export type { Folder, List, TreeData, TreeIndex, TreeNode } from './api'
 export { classifyError } from './errors'
 export type { TreeError } from './errors'

@@ -10,16 +10,19 @@ Pins the backend OpenAPI contract, generates TypeScript types/examples, and prov
 - `scripts/api-sync.mjs`, `api-check.mjs`: sync and offline drift check.
 - `src/generated/schema.d.ts`, `examples.ts`: generated API types and examples.
 - `src/lib/api/`: openapi-fetch client, errors and ETag helpers.
-- `src/features/invalidateContent.ts`: shared content invalidation.
+- `src/data/keys.ts`: query keys of every resource (`treeKeys`, `listKeys`, `itemKeys`, ..., `healthKeys`).
+- `src/data/invalidate.ts`: `invalidateContent` (creates, trash, move) and `invalidateItemWrite` (item PATCH).
+- `src/app/queryClient.ts`: `createQueryClient`, `shouldRetry`.
 - `src/mocks/`: test handlers and dev fakes.
 
 ## Interfaces
 
 - `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]`, `npm run api:check`.
-- `api`, `createApiClient()`, `unwrap(call)`, `ApiError`, `NetworkError`.
+- `api`, `unwrap(call)`, `ApiError`, `NetworkError`, `failureKind` (`lib/api`).
 - `GET /api/v1/tmdb/suggestions`, `POST /api/v1/items/{id}/lookup`, `GET /api/v1/store-providers`.
 - `GET|POST /api/v1/types`, `PATCH|DELETE /api/v1/types/{key}`, field routes under `/fields` (see `features/settings/api.ts`).
-- `etag(resource, version)`, `ifMatch(resource, version)`, `invalidateContent(queryClient)`.
+- `etag(resource, version)`, `ifMatch(resource, version)`.
+- `invalidateContent(queryClient)`, `invalidateItemWrite(queryClient, listId)` (`data/invalidate.ts`).
 - `createQueryClient()`, `shouldRetry(failureCount, error)`.
 
 ## Gotchas
@@ -30,4 +33,5 @@ Pins the backend OpenAPI contract, generates TypeScript types/examples, and prov
 - F013 adds TMDB suggestions and item lookup, movie `director`, the movie-only `director` sort, settings `metadata_language`, and read-only `lookup_available`.
 - Setting retention to `null` disables it; changing the value does not purge immediately. The API accepts 1–365 days; the UI offers Off, 7, 30 and 90.
 - Mutations use ETags; 412 is not retried. Network and 5xx failures can retry once.
+- Features import keys from `data/keys` and never re-export them; invalidate by key, never by string literal.
 - See [API design docs](/Users/federico/Developer/collections-app/design-docs/API.md) for the contract.

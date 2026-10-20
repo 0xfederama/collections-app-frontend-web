@@ -7,16 +7,19 @@
 ## Key files
 
 - `src/routes/SettingsRoute.tsx`: dialog, pane switcher and save-before-close flow.
-- `src/features/settings/api.ts`: settings and types hooks, query keys and ETag helpers.
-- `form.ts`, `SettingsForm.tsx`: Collection and Media draft, retention selector and conflicts.
-- `TypesFieldsPane.tsx`: type and field management (create, rename, reorder, delete, defaults).
+- `src/features/settings/index.ts`: public face (`useSettings`, `useTypes`, `useWorkspaceName`); `screens.ts` holds the panes for `SettingsRoute`.
+- `src/features/settings/api.ts`: settings and types hooks and ETag helpers; `settingsKeys` and `typeKeys` are in `src/data/keys.ts`.
+- `form.ts`: Collection and Media draft, validation, `buildPatch`, `classifySaveFailure`.
+- `useSettingsForm.ts`, `useLeaveGuard.ts`: save and close state machine; blocks leaving with unsaved changes.
+- `SettingsForm.tsx`, `SettingsBanners.tsx`, `CollectionFields.tsx`, `MediaFields.tsx`: Collection and Media panes and their failure banners.
+- `TypesFieldsPane.tsx`, `types/`: Types & fields pane (`model.ts` pure helpers, `TypeList`, `TypeRow`, `TypeHeader`, `FieldsSection`, `FieldRow`, `DefaultsSection`, `OperationBanner`, create, delete and change-lists dialogs).
 - `AppearanceSection.tsx`, `ConnectionSection.tsx`, `AboutSection.tsx`: the other panes.
 - `src/mocks/devSettings.ts`, `src/mocks/types.ts`: dev and test fakes (types are read-only).
 
 ## Interfaces
 
 - `useSettings()`, `useWorkspaceName()`, `useUpdateSettings()`.
-- `useTypes()`, `useCreateType()`, `useUpdateType()`, `useDeleteType()`, `useCreateTypeField()`, `useRenameTypeField()`, `useDeleteTypeField()`, `usePreviewTypeFieldDelete()`, `useReorderTypeFields()`, `typeKeys`.
+- `useTypes()`, `useCreateType()`, `useUpdateType()`, `useDeleteType()`, `useCreateTypeField()`, `useRenameTypeField()`, `useDeleteTypeField()`, `usePreviewTypeFieldDelete()`, `useReorderTypeFields()`.
 - `SettingsRoute()`, `SettingsForm({ settings, pane, onPaneChange, closeRequestRef })`, `TypesFieldsPane()`.
 - `validate`, `buildPatch`, `draftFromSettings` (`form.ts`).
 

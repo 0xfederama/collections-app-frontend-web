@@ -11,7 +11,8 @@ import {
   ListIconMark,
 } from '../lists'
 import { useUpdateListIcon } from './mutations'
-import { treeKeys, type List } from './api'
+import { treeKeys } from '../../data/keys'
+import type { List } from './api'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
 import { typeName } from '../items'

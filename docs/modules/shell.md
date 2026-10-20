@@ -38,6 +38,6 @@ Top-level providers, router, and the responsive frame every route renders into: 
 - The drawer is open for one `location.key`, so any navigation closes it.
 - Sidebar state persists as `collection:sidebar` (`{ collapsed, width }`); `collapsed` applies at every breakpoint from 768 px.
 - Resizer: `role="separator"` "Resize sidebar", `aria-controls="app-sidebar"`; ←/→ move 16 px, Home/End jump to min/max.
-- `/` focuses the top-bar search field (`searchRef` in `AppShell`).
-- The sidebar has no search or Quick add of its own; "+ New" under the tree appears only when the tree has nodes.
+- `/` focuses the sidebar search field (`searchRef` in `AppShell`).
+- The sidebar holds search and Quick add above the tree; "+ New" under the tree appears only when the tree has nodes.
 - Route owners: `/` Home; `/lists/:listId` ListRoute; `/lists/:listId/items/:itemId` ItemRoute; `/search`; `/trash`; `/settings`. `*` is NotFoundRoute.

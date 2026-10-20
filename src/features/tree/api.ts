@@ -1,15 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { components } from '../../generated/schema'
+import { treeKeys } from '../../data/keys'
 import { api, unwrap } from '../../lib/api'
 import type { TreeNodeBase } from '../../components/ui'
 
 export type Folder = components['schemas']['Folder']
 export type List = components['schemas']['List']
 export type TreeData = components['schemas']['Tree']
-
-/** Exported so mutations (W-05, W-06) invalidate by key, not by string literal. */
-export const treeKeys = { tree: ['tree'] as const }
 
 export function useTree() {
   return useQuery({

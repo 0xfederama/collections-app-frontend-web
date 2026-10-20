@@ -2,9 +2,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useState, type KeyboardEvent } from 'react'
 import { Button, IconButton, Skeleton, useToast } from '../../components/ui'
 import { Check, X } from '../../components/ui/icons'
+import { treeKeys } from '../../data/keys'
 import { byteLength, formatBytes } from '../items'
 import {
-  treeKeys,
   type List as TreeList,
   type TreeData,
   classifyError,

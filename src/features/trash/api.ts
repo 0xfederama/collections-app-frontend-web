@@ -6,11 +6,8 @@ import {
 } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { ApiError, api, unwrap } from '../../lib/api'
-import { invalidateContent } from '../invalidateContent'
-import { treeKeys } from '../tree'
-import { trashKeys } from './keys'
-
-export { trashKeys, LISTS_KEY_ROOT, ITEMS_KEY_ROOT } from './keys'
+import { invalidateContent } from '../../data/invalidate'
+import { trashKeys, treeKeys } from '../../data/keys'
 
 export type TrashEntry = components['schemas']['TrashEntry']
 export type RestoreResult = components['schemas']['RestoreResult']

@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Dialog } from '../../../components/ui'
-import { itemKeys, type Item } from '../api'
+import { itemKeys } from '../../../data/keys'
+import type { Item } from '../api'
 import { ConflictBanner, GoneBanner } from '../inline/Banners'
 import { ImageSection } from './ImageSection'
 

@@ -9,8 +9,8 @@
 - `src/features/home/HomePage.tsx`: page body, empty state, own `useTreeDialogs()` copy for New list / New folder.
 - `src/features/home/QuickLinks.tsx`: `listsByRecency`, link grid, skeleton and error states.
 - `src/features/home/RecentItems.tsx`: "Recently updated" list, rows from search's `SearchResultBody`.
-- `src/features/home/api.ts`: `useRecentItems`, `homeKeys`, `RECENT_LIMIT`.
-- `src/routes/HomeRoute.tsx`: route wrapper (not lazy).
+- `src/features/home/api.ts`: `useRecentItems`, `RECENT_LIMIT`; `homeKeys` is in `src/data/keys.ts`.
+- `src/features/home/screens.ts`: the only export (no `index.ts`), imported by `src/routes/HomeRoute.tsx` (not lazy).
 - `src/mocks/devRecent.ts`: dev-worker fake of `GET /api/v1/recent-items`.
 
 ## Interfaces
@@ -20,7 +20,7 @@
 - `listsByRecency(index)`: lists sorted by `updated_at` descending (ties by name), with their folder path.
 - `RecentItems()`: the "Recently updated" section.
 - `useRecentItems(limit = 12)`: `GET /api/v1/recent-items`, `staleTime: 0`.
-- `homeKeys.recent`: `['recent-items']`, prefix for the query key.
+- `homeKeys.recent` (`src/data/keys.ts`): `['recent-items']`, prefix for the query key.
 
 ## Gotchas
 

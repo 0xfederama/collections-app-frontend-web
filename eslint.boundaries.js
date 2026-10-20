@@ -1,6 +1,7 @@
 // F020 import boundaries, enforced with the built-in no-restricted-imports (decision F020-Q3).
 // Imported by eslint.config.js. Rules (no exemption list: they apply to every file):
-//   A. components and lib never import features, layouts, routes, app or mocks.
+//   A. components and lib never import features, layouts, routes, app or mocks; data (src/data:
+//      query keys and invalidation, F020-W4) never imports features, layouts, routes, app, mocks or components.
 //   B. a feature imports another feature only through its index.ts (or its testing.ts test kit).
 //   C. files outside features import a feature only through its index.ts (or its testing.ts test kit).
 // Public entries per feature: index.ts, testing.ts (test kit) and screens.ts (heavy route-level
@@ -40,6 +41,8 @@ const featureBlocks = FEATURES.map((feature) => ({
   },
 }))
 
+const APP_LAYERS = ['**/features/**', '**/layouts/**', '**/routes/**', '**/app/**', '**/mocks/**']
+
 export default [
   {
     files: ['src/components/**/*.{ts,tsx}', 'src/lib/**/*.{ts,tsx}'],
@@ -49,13 +52,7 @@ export default [
         {
           patterns: [
             {
-              group: [
-                '**/features/**',
-                '**/layouts/**',
-                '**/routes/**',
-                '**/app/**',
-                '**/mocks/**',
-              ],
+              group: APP_LAYERS,
               message:
                 'components and lib never import features, layouts, routes, app or mocks (F020 boundaries)',
             },
@@ -65,8 +62,26 @@ export default [
     },
   },
   {
+    // One block per file: data is not in the block C files below, so this is its only restriction.
+    files: ['src/data/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [...APP_LAYERS, '**/components/**'],
+              message:
+                'data never imports features, layouts, routes, app, mocks or components (F020-W4 boundaries)',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/features/**', 'src/components/**', 'src/lib/**'],
+    ignores: ['src/features/**', 'src/components/**', 'src/lib/**', 'src/data/**'],
     rules: {
       'no-restricted-imports': [
         'error',

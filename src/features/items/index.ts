@@ -1,5 +1,5 @@
 // Public face of the items feature (F020 boundaries): code outside features/items imports only from here.
-export { itemKeys, useCreateItem, useDeleteItem, useMoveItem } from './api'
+export { useCreateItem, useDeleteItem, useMoveItem } from './api'
 export type { Item, ItemType } from './api'
 export { ItemSkeleton } from './ItemSkeleton'
 export { LookupStatus } from './LookupStatus'

@@ -6,7 +6,7 @@ Backend readiness probe. Queries `GET /readyz` through `lib/api` and maps the re
 
 ## Key files
 
-- `src/features/health/api.ts`: `useBackendCheck` hook, `healthKeys`, `BackendStatus` type.
+- `src/features/health/api.ts`: `useBackendCheck` hook and `BackendStatus` type; `index.ts` is the public face.
 - `src/features/settings/ConnectionSection.tsx`: renders the status and "Check again" (see [settings](settings.md)).
 - `src/features/settings/ConnectionSection.test.tsx`: status and re-check tests with MSW `/readyz` overrides.
 
@@ -14,7 +14,7 @@ Backend readiness probe. Queries `GET /readyz` through `lib/api` and maps the re
 
 - `useBackendCheck(): { status: BackendStatus; check: () => void }`: `status` is `'checking'` while pending or refetching, `'ready'` on success, `'down'` on any error; `check()` re-runs the probe.
 - `BackendStatus`: `'checking' | 'ready' | 'down'`.
-- `healthKeys.ready`: query key `['health', 'readyz']`.
+- `healthKeys.ready` (`src/data/keys.ts`): query key `['health', 'readyz']`.
 
 ## Gotchas
 

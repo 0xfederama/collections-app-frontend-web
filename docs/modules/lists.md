@@ -11,9 +11,12 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `FieldFilter.tsx`: per-field filter control, `parseFieldFilter` for URL params, `FieldFilterMenu` (the "+ Filter" popover) and `FieldFilterChip` (the applied filter, removable, under the bar).
 - `ListIconPicker.tsx`, `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices and parsing.
 - `ListIconMark.tsx`: shared list mark renderer.
-- `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`: header, sort options and item rows.
+- `index.ts`: public face; `screens.ts` holds `ListView` for the route only.
+- `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`, `ItemRows.tsx` (`DraftRow`, `SortableEntry`), `ItemControls.tsx`, `ItemPinned.tsx`, `ItemsSkeleton.tsx`: header, rows and their parts.
+- `listParams.ts`: URL parsing (`parseSort`, `buildItemsParams`); `useDebouncedFilter.ts`: debounced `?q=`.
+- `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
 - `pinned.ts`, `PinnedMenu.tsx`, `toolbarStyles.ts`: pinned fields and toolbar. The bar is: search ("Search by title"), "+ Filter", sort, Pinned, display mode.
-- `api.ts`: list and item queries/mutations.
+- `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
 ## Interfaces
 
@@ -21,7 +24,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListIconMark({ icon, iconColor, type, className, iconClassName })`: list mark.
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
 - `FieldFilter({ fields, value, onChange })`, `parseFieldFilter(params, fields)`.
-- `useListItems`, `useUpdateList`, `useReorderItems`, `listKeys`: list API hooks and query keys.
+- `useList`, `useListItems`, `useUpdateList`, `useReorderItems` (`api.ts`); `listKeys` from `src/data/keys.ts`.
 - `resolvePinned`, `defaultPinned`, `pinnableFields`, `pinnedPlacements`, `formatPrice`, `sortOptionsFor`: display helpers.
 
 ## Gotchas
