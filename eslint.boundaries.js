@@ -6,6 +6,8 @@
 //   C. files outside features import a feature only through its index.ts (or its testing.ts test kit).
 // Public entries per feature: index.ts, testing.ts (test kit) and screens.ts (heavy route-level
 // components, imported only by src/routes; screens.ts keeps barrels light for code splitting).
+// One exception: a feature may import stores/screens (StoreChoices, used by items/inline/StreamingInputs.tsx
+// inside the lazy item editor), so the ServiceIcon logos stay out of the eager bundle.
 // Flat config replaces a rule's options per file, so the blocks below are split so that each
 // file matches exactly one block that sets the rule.
 import { readdirSync } from 'node:fs'
@@ -26,12 +28,12 @@ const featureBlocks = FEATURES.map((feature) => ({
       {
         patterns: [
           {
-            // a feature's testing module (its test kit) and screens module are the deep imports allowed
-            // (F020-W3, screens for src/routes)
+            // a feature's testing module (its test kit) is the deep import allowed; screens modules are for
+            // src/routes only (F020-W3), except stores/screens (the store picker, see the header)
             group: [
               ...FEATURES.filter((other) => other !== feature).map((other) => `**/${other}/*`),
               ...FEATURES.map((other) => `!**/${other}/testing`),
-              ...FEATURES.map((other) => `!**/${other}/screens`),
+              '!**/stores/screens',
             ],
             message: THROUGH_INDEX,
           },

@@ -9,7 +9,7 @@ The fixed list of online stores (F-016) that a `stores` field (on books) and the
 - `src/features/stores/api.ts`: `useStoreProviders()`; `storeKeys` is in `src/data/keys.ts`.
 - `src/features/stores/providers.ts`: `storeName`, `parseStoreKeys`, `joinStoreKeys`.
 - `src/features/stores/StoreChoices.tsx`: multi-choice dropdown of providers.
-- `src/features/stores/index.ts`: public face; `screens.ts` is the lazy picker used by `items/inline/editors.tsx`.
+- `src/features/stores/index.ts`: public face; `screens.ts` is the lazy picker used by `items/inline/StreamingInputs.tsx` (the one screens module a feature may import, see `docs/architecture.md`).
 - `src/components/ServiceIcon.tsx`: store icon tiles (display name, letter fallback).
 
 ## Interfaces

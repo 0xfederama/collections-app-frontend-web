@@ -30,9 +30,15 @@ describe('F020-W2 import boundaries', () => {
     ).toBe(false)
   })
 
-  it('B: a feature may import another feature screens module deep', async () => {
+  it('B: a feature may not import another feature screens module deep', async () => {
     expect(
       await reports('src/features/trash/__probe.ts', "import { x } from '../lists/screens'"),
+    ).toBe(true)
+  })
+
+  it('B: a feature may import the stores screens module (the store picker) deep', async () => {
+    expect(
+      await reports('src/features/items/__probe.ts', "import { x } from '../stores/screens'"),
     ).toBe(false)
   })
 
