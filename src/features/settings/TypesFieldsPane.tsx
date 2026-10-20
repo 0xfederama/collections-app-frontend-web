@@ -1,10 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState, type FormEvent } from 'react'
 import { AlertDialog, Button, Dialog, Select, Skeleton, TextField } from '../../components/ui'
-import { Lock, Plus } from '../../components/ui/icons'
-import { SortableProvider, useSortableRow } from '../../components/ui/sortable'
+import { Plus } from '../../components/ui/icons'
+import { SortableProvider } from '../../components/ui/sortable'
 import { ApiError } from '../../lib/api'
-import { cx } from '../../lib/cx'
 import { NO_TYPE_VALUE, typeOptions, valueToType } from '../items'
 import { ListIconMark, ListIconPicker, type IconChoice } from '../lists'
 import { useUpdateList, treeKeys, useTree } from '../tree'
@@ -28,98 +27,12 @@ import {
   defaultsFromType,
   defaultsPatch,
   errorText,
-  fieldTypeWord,
   fieldTypes,
   isDefaultsDirty,
   type TypeDefaultsDraft,
 } from './types/model'
-
-function TypeRow({
-  type,
-  selected,
-  onSelect,
-}: {
-  type: TypeDefinition
-  selected: boolean
-  onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-current={selected ? 'true' : undefined}
-      onClick={onSelect}
-      className={cx(
-        'flex min-h-12 w-full items-center gap-3 rounded-md px-3 py-2 text-left focus-visible:outline-2 focus-visible:outline-focus-ring',
-        selected ? 'bg-accent/10 text-text' : 'hover:bg-fill',
-      )}
-    >
-      <ListIconMark
-        icon={type.default_icon}
-        type={type.key}
-        className="size-9"
-        iconClassName="size-4"
-      />
-      <span className="min-w-0 flex-1 text-sm font-medium break-words">{type.name}</span>
-      {type.is_locked && (
-        <>
-          <Lock aria-hidden className="size-3.5 shrink-0 text-text-muted" />
-          <span className="sr-only">Built in · locked</span>
-        </>
-      )}
-    </button>
-  )
-}
-
-function SortableField({
-  field,
-  index,
-  size,
-  onRename,
-  onDelete,
-}: {
-  field: TypeField
-  index: number
-  size: number
-  onRename: () => void
-  onDelete: () => void
-}) {
-  const { ref, isDragging, a11y } = useSortableRow(
-    field.key,
-    field.is_locked ? undefined : { group: 'type-fields', index, size, label: field.label },
-  )
-  return (
-    <div
-      ref={ref}
-      role="listitem"
-      tabIndex={field.is_locked ? undefined : 0}
-      aria-label={`${field.label}, ${field.type === 'boolean' ? 'yes or no' : fieldTypeWord(field.type)}`}
-      aria-describedby={a11y['aria-describedby']}
-      className={cx(
-        'flex min-h-14 flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 focus-visible:outline-2 focus-visible:outline-focus-ring',
-        isDragging && 'opacity-50',
-      )}
-    >
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium break-words">{field.label}</span>
-        <span className="text-xs text-text-muted">
-          {field.key} · {field.type === 'boolean' ? 'yes / no' : fieldTypeWord(field.type)}
-          {field.is_locked ? ' · built in, read only' : ''}
-        </span>
-      </span>
-      {!field.is_locked && (
-        <>
-          <Button variant="ghost" size="sm" onClick={onRename} aria-label={`Rename ${field.label}`}>
-            Rename
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onDelete} aria-label={`Delete ${field.label}`}>
-            Delete
-          </Button>
-        </>
-      )}
-      {field.is_locked && <span className="text-xs text-text-muted">Locked</span>}
-    </div>
-  )
-}
+import { FieldRow } from './types/FieldRow'
+import { TypeRow } from './types/TypeRow'
 
 export function TypesFieldsPane() {
   const queryClient = useQueryClient()
@@ -583,7 +496,7 @@ export function TypesFieldsPane() {
                           </Button>
                         </form>
                       ) : (
-                        <SortableField
+                        <FieldRow
                           field={field}
                           index={customFields.findIndex((entry) => entry.key === field.key)}
                           size={customFields.length}
