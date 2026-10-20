@@ -1,26 +1,26 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { Button, Select, Skeleton, TextField } from '../../components/ui'
-import { Plus } from '../../components/ui/icons'
+import { Button, Skeleton } from '../../components/ui'
 import { ApiError } from '../../lib/api'
-import { ListIconMark, ListIconPicker, type IconChoice } from '../lists'
+import { ListIconPicker, type IconChoice } from '../lists'
 import { useTree } from '../tree'
 import { typeKeys, useTypes, useUpdateType, type TypeDefinition, type TypeField } from './api'
 import {
-  NONE_FIELD,
   defaultFieldOptions,
   defaultsFromType,
   defaultsPatch,
   isDefaultsDirty,
   type TypeDefaultsDraft,
 } from './types/model'
-import { TypeRow } from './types/TypeRow'
+import { TypeList } from './types/TypeList'
 import { CreateTypeDialog } from './types/CreateTypeDialog'
 import { DeleteTypeDialog } from './types/DeleteTypeDialog'
 import { DeleteFieldDialog } from './types/DeleteFieldDialog'
 import { OperationBanner } from './types/OperationBanner'
 import { ChangeListsDialog } from './types/ChangeListsDialog'
 import { FieldsSection } from './types/FieldsSection'
+import { TypeHeader } from './types/TypeHeader'
+import { DefaultsSection } from './types/DefaultsSection'
 
 export function TypesFieldsPane() {
   const queryClient = useQueryClient()
@@ -48,7 +48,6 @@ export function TypesFieldsPane() {
   const [createOpen, setCreateOpen] = useState(false)
   const [icon, setIcon] = useState<IconChoice>({ icon: null, icon_color: null })
   const [iconOpen, setIconOpen] = useState(false)
-  const [iconTarget, setIconTarget] = useState<'create' | 'type'>('create')
   const [confirmDeleteType, setConfirmDeleteType] = useState<TypeDefinition | null>(null)
   const [confirmChangeLists, setConfirmChangeLists] = useState<TypeDefinition | null>(null)
   const [confirmDeleteField, setConfirmDeleteField] = useState<{
@@ -126,220 +125,45 @@ export function TypesFieldsPane() {
 
   return (
     <div className="flex flex-col gap-5 sm:flex-row">
-      <div className="flex min-w-0 flex-col gap-1 sm:w-52 sm:shrink-0">
-        <div className="flex flex-col gap-1" role="list" aria-label="Types">
-          {types.map((type) => (
-            <div role="listitem" key={type.key}>
-              <TypeRow
-                type={type}
-                selected={selected?.key === type.key}
-                onSelect={() => {
-                  setSelectedKey(type.key)
-                  setOperationError(null)
-                }}
-              />
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          title="New type"
-          onClick={() => setCreateOpen(true)}
-          className="flex min-h-12 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-text-muted hover:bg-fill hover:text-text focus-visible:outline-2 focus-visible:outline-focus-ring"
-        >
-          <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-md bg-fill">
-            <Plus className="size-4" />
-          </span>
-          <span className="min-w-0 flex-1 text-sm font-medium">New type</span>
-        </button>
-      </div>
+      <TypeList
+        types={types}
+        selectedKey={selectedKey}
+        onSelect={(key) => {
+          setSelectedKey(key)
+          setOperationError(null)
+        }}
+        onCreate={() => setCreateOpen(true)}
+      />
       <div className="min-w-0 flex-1 sm:border-l sm:border-border sm:pl-5">
         {selected ? (
           <>
-            <div className="flex flex-wrap items-start gap-3">
-              <div className="min-w-0 flex-1 basis-40">
-                <h3 className="text-base font-semibold break-words">{selected.name}</h3>
-                <p className="text-xs text-text-muted">
-                  {selected.is_locked
-                    ? 'Built in type · settings are read only'
-                    : `Key: ${selected.key}`}
-                </p>
-              </div>
-              {!selected.is_locked && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  disabled={treeQuery.isPending || treeQuery.isError}
-                  onClick={() => setConfirmDeleteType(selected)}
-                >
-                  Delete type
-                </Button>
-              )}
-            </div>
+            <TypeHeader
+              selected={selected}
+              deleteDisabled={treeQuery.isPending || treeQuery.isError}
+              onDelete={() => setConfirmDeleteType(selected)}
+            />
             {!selected.is_locked && defaults?.typeKey === selected.key && (
-              <div className="mt-4 flex flex-col gap-4 border-t border-border pt-4">
-                <div className="flex flex-wrap items-end gap-2">
-                  <div className="min-w-40 flex-1">
-                    <TextField
-                      label="Rename type"
-                      value={renameName}
-                      onChange={(event) => setRenameName(event.target.value)}
-                      maxLength={100}
-                    />
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={!renameName.trim() || renameName.trim() === selected.name}
-                    pending={updateType.isPending}
-                    onClick={() =>
-                      void run(async () => {
-                        const updated = await updateType.mutateAsync({
-                          type: selected,
-                          patch: { name: renameName.trim() },
-                        })
-                        setRenameName(updated.name)
-                        setDefaults(defaultsFromType(updated))
-                      })
-                    }
-                  >
-                    Save name
-                  </Button>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <ListIconMark icon={defaults.icon} className="size-9" iconClassName="size-4" />
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setIconTarget('type')
-                      setIconOpen(true)
-                    }}
-                  >
-                    {defaults.icon ? 'Change icon' : 'Choose icon'}
-                  </Button>
-                  {defaults.icon && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-label="Clear type icon"
-                      onClick={() => setDefaults({ ...defaults, icon: null })}
-                    >
-                      Clear icon
-                    </Button>
-                  )}
-                  <label className="ml-1 flex min-h-10 items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      aria-label="Allow prices for items"
-                      checked={defaults.allowsPrice}
-                      onChange={(event) => {
-                        const allows = event.target.checked
-                        setDefaults({
-                          ...defaults,
-                          allowsPrice: allows,
-                          sortField:
-                            allows || defaults.sortField !== 'price' ? defaults.sortField : null,
-                          pinnedFields:
-                            allows || defaults.pinnedFields === null
-                              ? defaults.pinnedFields
-                              : defaults.pinnedFields.filter((field) => field !== 'price'),
-                        })
-                      }}
-                    />
-                    Allows a price
-                  </label>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
-                  <Select
-                    label="Default sort field"
-                    options={[{ value: NONE_FIELD, label: 'None' }, ...fieldOptions]}
-                    value={defaults.sortField ?? NONE_FIELD}
-                    onValueChange={(value) =>
-                      setDefaults({
-                        ...defaults,
-                        sortField: value === NONE_FIELD ? null : value,
-                      })
-                    }
-                    disabled={fieldOptions.length === 0}
-                  />
-                  <fieldset className="min-w-0">
-                    <legend className="mb-2 text-sm font-medium">Default pinned fields</legend>
-                    {fieldOptions.length === 0 ? (
-                      <p className="text-sm text-text-muted">
-                        Add fields to choose up to three pins.
-                      </p>
-                    ) : (
-                      <div className="flex flex-col gap-1">
-                        {fieldOptions.map((field) => {
-                          const pins = defaults.pinnedFields ?? []
-                          const position = pins.indexOf(field.value)
-                          const checked = position !== -1
-                          return (
-                            <label
-                              key={field.value}
-                              className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm hover:bg-fill"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                disabled={!checked && pins.length >= 3}
-                                onChange={(event) => {
-                                  const next = event.target.checked
-                                    ? [...pins, field.value]
-                                    : pins.filter((pin) => pin !== field.value)
-                                  setDefaults({ ...defaults, pinnedFields: next })
-                                }}
-                              />
-                              <span className="min-w-0 flex-1 break-words">{field.label}</span>
-                              {checked && (
-                                <span className="text-xs text-text-muted">{position + 1}</span>
-                              )}
-                            </label>
-                          )
-                        })}
-                      </div>
-                    )}
-                    <p className="mt-1 text-xs text-text-muted">
-                      {defaults.pinnedFields === null
-                        ? 'No type-specific pin default is set.'
-                        : defaults.pinnedFields.length === 0
-                          ? 'No fields are pinned by default.'
-                          : 'Pin order follows the numbers shown.'}
-                    </p>
-                    {defaults.pinnedFields === null ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-1"
-                        onClick={() => setDefaults({ ...defaults, pinnedFields: [] })}
-                      >
-                        Set no pins
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-1"
-                        onClick={() => setDefaults({ ...defaults, pinnedFields: null })}
-                      >
-                        Reset pins
-                      </Button>
-                    )}
-                  </fieldset>
-                </div>
-                <div className="flex justify-end">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={!defaultsDirty}
-                    pending={updateType.isPending}
-                    onClick={() => void saveTypeDefaults()}
-                  >
-                    Save type settings
-                  </Button>
-                </div>
-              </div>
+              <DefaultsSection
+                selected={selected}
+                defaults={defaults}
+                onChange={setDefaults}
+                renameName={renameName}
+                onRenameChange={setRenameName}
+                onRename={() =>
+                  void run(async () => {
+                    const updated = await updateType.mutateAsync({
+                      type: selected,
+                      patch: { name: renameName.trim() },
+                    })
+                    setRenameName(updated.name)
+                    setDefaults(defaultsFromType(updated))
+                  })
+                }
+                dirty={defaultsDirty}
+                onSave={() => void saveTypeDefaults()}
+                pending={updateType.isPending}
+                fieldOptions={fieldOptions}
+              />
             )}
             <FieldsSection
               selected={selected}
@@ -362,10 +186,7 @@ export function TypesFieldsPane() {
             setOperationError(null)
           }}
           icon={icon}
-          onPickIcon={() => {
-            setIconTarget('create')
-            setIconOpen(true)
-          }}
+          onPickIcon={() => setIconOpen(true)}
         />
       )}
       {operationError !== null && (
@@ -417,18 +238,8 @@ export function TypesFieldsPane() {
         <ListIconPicker
           title="Choose type icon"
           showColorControls={false}
-          value={
-            iconTarget === 'create'
-              ? icon
-              : {
-                  icon: defaults && defaults.typeKey === selected?.key ? defaults.icon : null,
-                  icon_color: null,
-                }
-          }
-          onChange={(choice) => {
-            if (iconTarget === 'create') setIcon({ icon: choice.icon, icon_color: null })
-            else if (defaults) setDefaults({ ...defaults, icon: choice.icon })
-          }}
+          value={icon}
+          onChange={(choice) => setIcon({ icon: choice.icon, icon_color: null })}
           onClose={() => setIconOpen(false)}
         />
       )}
