@@ -3,7 +3,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { AlertDialog, Button, Dialog, Select, Skeleton, TextField } from '../../components/ui'
 import { Lock, Plus } from '../../components/ui/icons'
 import { SortableProvider, useSortableRow } from '../../components/ui/sortable'
-import { ApiError, NetworkError } from '../../lib/api'
+import { ApiError } from '../../lib/api'
 import { cx } from '../../lib/cx'
 import { NO_TYPE_VALUE, typeOptions, valueToType } from '../items'
 import { ListIconMark, ListIconPicker, type IconChoice } from '../lists'
@@ -21,54 +21,18 @@ import {
   useUpdateType,
   type TypeDefinition,
   type TypeField,
-  type UpdateTypeRequest,
 } from './api'
-
-const fieldTypes = [
-  { value: 'text', label: 'Text' },
-  { value: 'number', label: 'Number' },
-  { value: 'date', label: 'Date' },
-  { value: 'boolean', label: 'Yes / no' },
-  { value: 'link', label: 'Link' },
-] as const
-
-const NONE_FIELD = '__none__'
-
-/** The friendly name of a field type where the raw API word reads badly (`stores` is "Where to get it"'s type, F016-W4). */
-const fieldTypeWord = (type: TypeField['type']) => (type === 'stores' ? 'Stores' : type)
-
-interface TypeDefaultsDraft {
-  typeKey: string
-  icon: string | null
-  allowsPrice: boolean
-  sortField: string | null
-  pinnedFields: string[] | null
-}
-
-const defaultsFromType = (type: TypeDefinition): TypeDefaultsDraft => ({
-  typeKey: type.key,
-  icon: type.default_icon ?? null,
-  allowsPrice: type.allows_price,
-  sortField: type.default_sort_field ?? null,
-  pinnedFields: type.default_pinned_fields ?? null,
-})
-
-function sameNullableList(left: string[] | null, right: string[] | null) {
-  if (left === null || right === null) return left === right
-  return left.length === right.length && left.every((value, index) => value === right[index])
-}
-
-function errorText(error: unknown) {
-  if (error instanceof ApiError) {
-    if (error.status === 412)
-      return 'This definition changed while you were editing. Reload the latest version and try again.'
-    if (error.errors?.length) return error.errors.map((entry) => entry.message).join(' ')
-    return error.detail ?? error.title
-  }
-  if (error instanceof NetworkError)
-    return 'Could not reach the server. Your changes are still here; try again.'
-  return 'Something went wrong. Your changes are still here; try again.'
-}
+import {
+  NONE_FIELD,
+  defaultFieldOptions,
+  defaultsFromType,
+  defaultsPatch,
+  errorText,
+  fieldTypeWord,
+  fieldTypes,
+  isDefaultsDirty,
+  type TypeDefaultsDraft,
+} from './types/model'
 
 function TypeRow({
   type,
@@ -215,20 +179,8 @@ export function TypesFieldsPane() {
       ? treeQuery.data.lists.filter((list) => list.type === confirmDeleteType.key)
       : []
   const targetTypes = types.filter((type) => type.key !== confirmDeleteType?.key)
-  const defaultFieldOptions = selected
-    ? [
-        ...selected.fields.map((field) => ({ value: field.key, label: field.label })),
-        ...(defaults?.allowsPrice ? [{ value: 'price', label: 'Price' }] : []),
-      ]
-    : []
-  const defaultsDirty =
-    !!selected &&
-    !!defaults &&
-    !selected.is_locked &&
-    (defaults.icon !== (selected.default_icon ?? null) ||
-      defaults.allowsPrice !== selected.allows_price ||
-      defaults.sortField !== (selected.default_sort_field ?? null) ||
-      !sameNullableList(defaults.pinnedFields, selected.default_pinned_fields ?? null))
+  const fieldOptions = defaultFieldOptions(selected, defaults?.allowsPrice ?? false)
+  const defaultsDirty = isDefaultsDirty(selected, defaults)
 
   const run = async (operation: () => Promise<unknown>) => {
     setOperationError(null)
@@ -284,13 +236,7 @@ export function TypesFieldsPane() {
 
   const saveTypeDefaults = async () => {
     if (!selected || !defaults || selected.is_locked) return
-    const patch: UpdateTypeRequest = {}
-    if (defaults.icon !== (selected.default_icon ?? null)) patch.default_icon = defaults.icon
-    if (defaults.allowsPrice !== selected.allows_price) patch.allows_price = defaults.allowsPrice
-    if (defaults.sortField !== (selected.default_sort_field ?? null))
-      patch.default_sort_field = defaults.sortField
-    if (!sameNullableList(defaults.pinnedFields, selected.default_pinned_fields ?? null))
-      patch.default_pinned_fields = defaults.pinnedFields
+    const patch = defaultsPatch(selected, defaults)
     if (Object.keys(patch).length === 0) return
 
     try {
@@ -460,7 +406,7 @@ export function TypesFieldsPane() {
                 <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
                   <Select
                     label="Default sort field"
-                    options={[{ value: NONE_FIELD, label: 'None' }, ...defaultFieldOptions]}
+                    options={[{ value: NONE_FIELD, label: 'None' }, ...fieldOptions]}
                     value={defaults.sortField ?? NONE_FIELD}
                     onValueChange={(value) =>
                       setDefaults({
@@ -468,17 +414,17 @@ export function TypesFieldsPane() {
                         sortField: value === NONE_FIELD ? null : value,
                       })
                     }
-                    disabled={defaultFieldOptions.length === 0}
+                    disabled={fieldOptions.length === 0}
                   />
                   <fieldset className="min-w-0">
                     <legend className="mb-2 text-sm font-medium">Default pinned fields</legend>
-                    {defaultFieldOptions.length === 0 ? (
+                    {fieldOptions.length === 0 ? (
                       <p className="text-sm text-text-muted">
                         Add fields to choose up to three pins.
                       </p>
                     ) : (
                       <div className="flex flex-col gap-1">
-                        {defaultFieldOptions.map((field) => {
+                        {fieldOptions.map((field) => {
                           const pins = defaults.pinnedFields ?? []
                           const position = pins.indexOf(field.value)
                           const checked = position !== -1
