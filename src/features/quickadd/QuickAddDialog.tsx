@@ -1,54 +1,32 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router'
-import {
-  Button,
-  Dialog,
-  IconButton,
-  Select,
-  TextArea,
-  TextField,
-  useToast,
-} from '../../components/ui'
-import { ImagePlus, Plus, X } from '../../components/ui/icons'
-import { ApiError, NetworkError } from '../../lib/api'
+import { Dialog, useToast } from '../../components/ui'
 import {
   itemKeys,
   useCreateItem,
   TitleLookupField,
   createLookupSelection,
   isBookLookup,
-  isLookupUnavailable,
   lookupSourceName,
-  LookupStatus,
-  MAX_CONTENT_BYTES,
-  isTooLarge,
   useSaveContent,
-  LIMITS,
-  checkImageFile,
-  ACCEPT,
   putImageFile,
   type Item,
   type LookupSelection,
   type LookupTitleSelection,
 } from '../items'
 import { invalidateContent } from '../invalidateContent'
-import { useTree } from '../tree'
 import { useSettings } from '../settings'
-
-type Field = 'title' | 'website' | 'description' | 'image' | 'list'
-
-/** The lists of the tree, most recently updated first. */
-function useListChoices() {
-  const tree = useTree()
-  const lists = [...(tree.data?.lists ?? [])].sort(
-    (a, b) => b.updated_at.localeCompare(a.updated_at) || a.name.localeCompare(b.name),
-  )
-  return { lists, loading: tree.isPending }
-}
-
-const messageOf = (caught: unknown) =>
-  caught instanceof ApiError ? (caught.detail ?? caught.title) : 'Something went wrong.'
+import { ListPicker, useListChoices } from './ListPicker'
+import { OptionalSections, RevealButtons } from './OptionalFields'
+import { QuickAddFooter, QuickAddStatus } from './QuickAddFooter'
+import {
+  describeCreateFailure,
+  messageOf,
+  resolveListId,
+  validateQuickAdd,
+  type Field,
+} from './model'
 
 /**
  * Quick add (F-002): a title, a destination list and, optionally, a website, a Markdown description
@@ -68,10 +46,7 @@ export function QuickAddDialog({
   const toast = useToast()
   const queryClient = useQueryClient()
   const [pickedList, setPickedList] = useState<string>()
-  const listId =
-    pickedList ??
-    (lists.some((l) => l.id === initialListId) ? initialListId : undefined) ??
-    lists[0]?.id
+  const listId = resolveListId(lists, pickedList, initialListId)
   const listType = lists.find((list) => list.id === listId)?.type ?? null
   const sourceName = lookupSourceName(listType)
 
@@ -101,22 +76,19 @@ export function QuickAddDialog({
     if (busy) return
     const trimmed = (selection?.title ?? title).trim()
     const site = website.trim()
-    const next: Partial<Record<Field, string>> = {}
-    if (!trimmed) next.title = 'Enter a title.'
-    else if (trimmed.length > LIMITS.title) next.title = `Use at most ${LIMITS.title} characters.`
-    if (site.length > LIMITS.url) next.website = `Use at most ${LIMITS.url} characters.`
-    if (isTooLarge(description)) next.description = 'The description is over 1 MiB.'
-    if (image) {
-      const problem = checkImageFile(image)
-      if (problem) next.image = problem
-    }
-    if (!listId) next.list = 'Create a list first.'
+    const { errors: next, focus } = validateQuickAdd({
+      title: selection?.title ?? title,
+      website,
+      description,
+      image,
+      listId,
+    })
     setErrors(next)
     setFormError(undefined)
-    if (next.title) return titleRef.current?.focus()
-    if (next.website) return websiteRef.current?.focus()
-    if (next.description) return descriptionRef.current?.focus()
-    if (next.image) return chooseRef.current?.focus()
+    if (focus === 'title') return titleRef.current?.focus()
+    if (focus === 'website') return websiteRef.current?.focus()
+    if (focus === 'description') return descriptionRef.current?.focus()
+    if (focus === 'image') return chooseRef.current?.focus()
     if (next.list || !listId) return
 
     setBusy(true)
@@ -130,33 +102,12 @@ export function QuickAddDialog({
       })
     } catch (caught) {
       setBusy(false)
-      const unavailable = isLookupUnavailable(caught)
-      setLookupUnavailable(unavailable)
-      if (caught instanceof ApiError && caught.status === 422) {
-        const mapped: Partial<Record<Field, string>> = {}
-        const rest: string[] = []
-        for (const e of caught.errors ?? []) {
-          if (e.field === 'title' || e.field === 'website') mapped[e.field] ??= e.message
-          else rest.push(e.message)
-        }
-        setErrors(mapped)
-        if (mapped.title) titleRef.current?.focus()
-        else if (mapped.website) websiteRef.current?.focus()
-        if (rest.length || (!mapped.title && !mapped.website)) {
-          setFormError(rest.join(' ') || caught.title)
-        }
-      } else if (caught instanceof ApiError && caught.status === 409) {
-        setFormError('This list no longer exists or is in Trash.')
-      } else if (unavailable) {
-        setFormError(undefined)
-      } else if (
-        caught instanceof NetworkError ||
-        (caught instanceof ApiError && caught.status >= 500)
-      ) {
-        setFormError('The server could not be reached. Nothing was created, so you can try again.')
-      } else {
-        setFormError(messageOf(caught))
-      }
+      const failure = describeCreateFailure(caught)
+      setLookupUnavailable(failure.lookupUnavailable)
+      if (failure.errors) setErrors(failure.errors)
+      if (failure.focus === 'title') titleRef.current?.focus()
+      else if (failure.focus === 'website') websiteRef.current?.focus()
+      if (failure.formError !== 'keep') setFormError(failure.formError)
       return
     }
 
@@ -256,198 +207,57 @@ export function QuickAddDialog({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2">
-            <span aria-hidden className="text-sm text-text-muted">
-              In
-            </span>
-            <div className="w-52 min-w-0 [&>div>label]:sr-only [&_button]:h-8 [&_button]:rounded-md">
-              <Select
-                label="List"
-                placeholder={loading ? 'Loading lists…' : 'Select a list'}
-                options={lists.map((l) => ({ value: l.id, label: l.name }))}
-                value={listId}
-                onValueChange={(value) => {
-                  setPickedList(value)
-                  setChosen({})
-                }}
-                error={errors.list}
-              />
-            </div>
-          </div>
-          {!showWebsite && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                reveal(
-                  () => setShowWebsite(true),
-                  () => websiteRef.current?.focus(),
-                )
-              }
-            >
-              <Plus aria-hidden className="size-4" />
-              Website
-            </Button>
-          )}
-          {!showDescription && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                reveal(
-                  () => setShowDescription(true),
-                  () => descriptionRef.current?.focus(),
-                )
-              }
-            >
-              <Plus aria-hidden className="size-4" />
-              Description
-            </Button>
-          )}
-          {!showImage && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                reveal(
-                  () => setShowImage(true),
-                  () => chooseRef.current?.focus(),
-                )
-              }
-            >
-              <Plus aria-hidden className="size-4" />
-              Image
-            </Button>
-          )}
+          <ListPicker
+            lists={lists}
+            loading={loading}
+            listId={listId}
+            error={errors.list}
+            onPick={(value) => {
+              setPickedList(value)
+              setChosen({})
+            }}
+          />
+          <RevealButtons
+            showWebsite={showWebsite}
+            setShowWebsite={setShowWebsite}
+            websiteRef={websiteRef}
+            showDescription={showDescription}
+            setShowDescription={setShowDescription}
+            descriptionRef={descriptionRef}
+            showImage={showImage}
+            setShowImage={setShowImage}
+            chooseRef={chooseRef}
+            reveal={reveal}
+          />
         </div>
 
-        {showWebsite && (
-          <div className="[&_label]:sr-only">
-            <TextField
-              ref={websiteRef}
-              label="Website"
-              inputMode="url"
-              autoComplete="off"
-              placeholder="https://"
-              value={website}
-              onChange={(event) => {
-                setWebsite(event.target.value)
-                dismiss('website')
-              }}
-              error={errors.website}
-            />
-          </div>
-        )}
-        {showDescription && (
-          <div className="[&_label]:sr-only">
-            <TextArea
-              ref={descriptionRef}
-              label="Description"
-              hint="Markdown. Ctrl+Enter or Cmd+Enter adds."
-              placeholder="Write in Markdown…"
-              rows={3}
-              value={description}
-              onChange={(event) => {
-                setDescription(event.target.value)
-                dismiss('description')
-              }}
-              onKeyDown={onTextAreaKey}
-              error={errors.description}
-              maxLength={MAX_CONTENT_BYTES}
-            />
-          </div>
-        )}
-        {showImage && (
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <input
-                ref={fileRef}
-                type="file"
-                accept={ACCEPT}
-                tabIndex={-1}
-                aria-hidden
-                className="sr-only"
-                onChange={(event) => {
-                  setImage(event.target.files?.[0])
-                  dismiss('image')
-                }}
-              />
-              <Button
-                ref={chooseRef}
-                variant="secondary"
-                size="sm"
-                onClick={() => fileRef.current?.click()}
-              >
-                <ImagePlus aria-hidden className="size-4" />
-                {image ? 'Change image' : 'Choose image'}
-              </Button>
-              {image && (
-                <>
-                  <span className="min-w-0 flex-1 truncate text-sm text-text-muted">
-                    {image.name}
-                  </span>
-                  <IconButton
-                    aria-label="Remove image"
-                    className="size-8 pointer-coarse:size-11"
-                    onClick={() => {
-                      setImage(undefined)
-                      if (fileRef.current) fileRef.current.value = ''
-                    }}
-                  >
-                    <X aria-hidden />
-                  </IconButton>
-                </>
-              )}
-            </div>
-            {errors.image && (
-              <p role="alert" className="text-xs font-medium text-danger-text">
-                {errors.image}
-              </p>
-            )}
-          </div>
-        )}
-        {create.isPending && isBookLookup(listType, settings.data) && <LookupStatus />}
-        {lookupUnavailable ? (
-          <div
-            role="alert"
-            className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
-          >
-            <p>
-              {sourceName} metadata is unavailable right now. Your title is still here; retry the
-              lookup or add it without {sourceName} metadata.
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" onClick={() => void submit(undefined)}>
-                Retry {sourceName} lookup
-              </Button>
-              <Button size="sm" variant="secondary" onClick={() => void submit(undefined, false)}>
-                Add without {sourceName} metadata
-              </Button>
-            </div>
-          </div>
-        ) : (
-          formError && (
-            <div
-              role="alert"
-              className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
-            >
-              {formError}
-            </div>
-          )
-        )}
-        <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-          <p className="text-xs text-text-muted max-sm:hidden [@media(hover:none)]:hidden">
-            Enter to add · Esc to cancel
-          </p>
-          <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" onClick={onClose} disabled={busy}>
-              Cancel
-            </Button>
-            <Button type="submit" pending={busy}>
-              Add
-            </Button>
-          </div>
-        </div>
+        <OptionalSections
+          website={website}
+          setWebsite={setWebsite}
+          websiteRef={websiteRef}
+          showWebsite={showWebsite}
+          description={description}
+          setDescription={setDescription}
+          descriptionRef={descriptionRef}
+          showDescription={showDescription}
+          onTextAreaKey={onTextAreaKey}
+          image={image}
+          setImage={setImage}
+          fileRef={fileRef}
+          chooseRef={chooseRef}
+          showImage={showImage}
+          errors={errors}
+          dismiss={dismiss}
+        />
+        <QuickAddStatus
+          lookupPending={create.isPending && isBookLookup(listType, settings.data)}
+          lookupUnavailable={lookupUnavailable}
+          sourceName={sourceName}
+          formError={formError}
+          onRetryLookup={() => void submit(undefined)}
+          onAddWithoutLookup={() => void submit(undefined, false)}
+        />
+        <QuickAddFooter busy={busy} onCancel={onClose} />
       </form>
     </Dialog>
   )
