@@ -34,6 +34,12 @@ There is no CI. Quality gates run locally with `npm run check`.
 Stack: Tailwind 4 with design tokens (light / dark / system), Radix primitives, TanStack Query, React Router, MSW for tests and the no-backend mode,
 strict TypeScript, ESLint, Prettier, Vitest + Testing Library.
 
+## Structure
+
+Layers, import rules (ESLint boundaries), size and strictness rules are in [`docs/architecture.md`](docs/architecture.md).
+Features are `src/features/<name>/`, imported from other code only through their `index.ts`.
+Violations fail `npm run lint`; legacy files in `eslint.boundaries.baseline.js` must only shrink.
+
 ## Layout
 
 ```text

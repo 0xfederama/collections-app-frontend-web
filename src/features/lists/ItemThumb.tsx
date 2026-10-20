@@ -8,7 +8,7 @@ import type { ItemSummary } from './api'
  * letter, no type symbol. The letter scales with the tile's width (container query units), so every
  * display mode (compact, thumbnail, grid, search, hero) shows the same tile and type.
  */
-export function ItemInitial({ title, className }: { title: string; className?: string }) {
+function ItemInitial({ title, className }: { title: string; className?: string }) {
   return (
     <div
       aria-hidden

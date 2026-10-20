@@ -3,7 +3,7 @@ import { api, unwrap } from '../../lib/api'
 
 export type BackendStatus = 'checking' | 'ready' | 'down'
 
-export const healthKeys = { ready: ['health', 'readyz'] as const }
+const healthKeys = { ready: ['health', 'readyz'] as const }
 
 /** Readiness probe (outside /api/v1): DB reachable and data dir writable. The body is plain text. */
 const readyOptions = queryOptions({

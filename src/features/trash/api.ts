@@ -13,7 +13,6 @@ import { trashKeys } from './keys'
 export { trashKeys, LISTS_KEY_ROOT, ITEMS_KEY_ROOT } from './keys'
 
 export type TrashEntry = components['schemas']['TrashEntry']
-export type TrashPage = components['schemas']['TrashPage']
 export type RestoreResult = components['schemas']['RestoreResult']
 /** `folder_id` (`null` = top level) for a folder or list root, `list_id` for an item root. */
 export type RestoreDestination = { folder_id: string | null } | { list_id: string }

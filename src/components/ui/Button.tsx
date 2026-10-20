@@ -13,7 +13,7 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
   danger: 'bg-danger text-danger-fg hover:bg-danger-hover active:bg-danger-hover',
 }
 
-export const buttonSizeClasses: Record<ButtonSize, string> = {
+const buttonSizeClasses: Record<ButtonSize, string> = {
   sm: 'h-8 gap-1.5 px-3 text-sm pointer-coarse:min-h-11',
   md: 'h-10 gap-2 px-4 text-sm pointer-coarse:min-h-11',
 }

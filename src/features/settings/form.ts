@@ -20,7 +20,7 @@ export type SettingsField = keyof SettingsDraft
 export type ErrorMap = Partial<Record<SettingsField, string>>
 
 /** Page order: where focus goes when several fields are invalid. */
-export const FIELD_ORDER: SettingsField[] = [
+const FIELD_ORDER: SettingsField[] = [
   'workspace_name',
   'streaming_country_code',
   'metadata_language',
@@ -31,7 +31,7 @@ export const FIELD_ORDER: SettingsField[] = [
 
 export const inputId = (field: SettingsField) => `settings-${field.replaceAll('_', '-')}`
 
-export const FIELD_LABELS: Record<SettingsField, string> = {
+const FIELD_LABELS: Record<SettingsField, string> = {
   workspace_name: 'Workspace name',
   streaming_country_code: 'Country',
   metadata_language: 'Metadata language',

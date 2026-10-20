@@ -1,6 +1,6 @@
 import { ApiError, NetworkError } from '../../lib/api'
 
-export type TrashErrorKind =
+type TrashErrorKind =
   | 'gone' // 404: already restored or purged elsewhere
   | 'parent_in_trash' // 409: the parent was trashed since the list loaded
   | 'cycle' // 409 cycle_detected

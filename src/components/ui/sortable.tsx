@@ -147,7 +147,7 @@ const startSwallowingClick = () => {
   window.addEventListener('click', swallow, true)
   stopSwallowing = () => {
     window.removeEventListener('click', swallow, true)
-    window.removeEventListener('pointerdown', stopSwallowing!, true)
+    if (stopSwallowing) window.removeEventListener('pointerdown', stopSwallowing, true)
     stopSwallowing = undefined
   }
 }

@@ -4,7 +4,7 @@ import type { RestoreDestination, RestoreResult, TrashEntry } from './api'
 import { formerParent } from './model'
 
 /** Where a restored list or item opens. Folders have no page of their own. */
-export function restoredHref(
+function restoredHref(
   entry: TrashEntry,
   result: RestoreResult,
   destination?: RestoreDestination,

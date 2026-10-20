@@ -16,7 +16,7 @@ interface Destination {
 }
 
 /** Every possible destination in tree order; invalid ones carry the reason (UI_SPEC §5). */
-export function destinationsFor(node: TreeNode, index: TreeIndex): Destination[] {
+function destinationsFor(node: TreeNode, index: TreeIndex): Destination[] {
   const currentParent = parentIdOf(node)
   const alreadyHere = 'It is already here.'
   const out: Destination[] = [
@@ -45,7 +45,7 @@ export function destinationsFor(node: TreeNode, index: TreeIndex): Destination[]
 }
 
 /** The key {@link DestinationPicker} uses for the top level, which has no folder id. */
-export const ROOT_KEY = 'root'
+const ROOT_KEY = 'root'
 
 /** Turns a destination folder id into the picker's key (`null` is the top level). */
 export const destinationKey = (folderId: string | null) => folderId ?? ROOT_KEY

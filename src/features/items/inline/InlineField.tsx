@@ -191,6 +191,7 @@ export function InlineField({
   }
   return (
     <div className={cx('group/field relative', className)}>
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- the pen button inside this row is the keyboard path to the editor; a click anywhere on the row is a pointer shortcut */}
       <div
         onClick={onClick}
         className={cx(
@@ -403,6 +404,7 @@ function FieldEditor({
     />
   )
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Enter and Escape from the inner editor inputs bubble to this wrapper; the wrapper is not a control
     <div ref={box} onKeyDown={onKeyDown} className={cx('flex flex-col gap-2', className)}>
       <div className={stacked ? 'flex flex-col gap-3' : 'flex flex-nowrap items-center gap-2'}>
         <div className={cx('min-w-0', !stacked && 'flex-1')}>

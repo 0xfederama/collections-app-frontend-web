@@ -238,6 +238,7 @@ function TreeRow<T extends TreeNodeBase>({
   const hasChildren = !!node.children?.length
   const isExpanded = expanded.has(node.id)
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- keys are handled on the parent tree list (onKeyDown, roving tabindex); a click only selects the row
     <li
       ref={(el) => {
         liRef.current = el

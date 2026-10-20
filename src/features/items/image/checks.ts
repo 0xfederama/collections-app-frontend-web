@@ -1,8 +1,8 @@
 /** Client-side checks for an item image. They only save a round trip: the server stays authoritative. */
 
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024
-export const MAX_URL_LENGTH = 2048
-export const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_URL_LENGTH = 2048
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 /** Value for the file input's `accept`. */
 export const ACCEPT = ACCEPTED_TYPES.join(',')
 
@@ -20,7 +20,7 @@ function typeOf(file: File): string {
   return EXTENSION_TYPES[extension] ?? ''
 }
 
-export function formatBytes(bytes: number): string {
+function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`

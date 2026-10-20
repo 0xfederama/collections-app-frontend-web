@@ -1,4 +1,4 @@
-# CLAUDE.md — collections-app-frontend-web
+# CLAUDE.md — collections-app-frontend-web (AGENTS.md is a symlink to this file)
 
 React + TypeScript + Vite web app for the Collection App. It consumes the backend API through a **vendored, pinned** OpenAPI spec.
 
@@ -42,6 +42,7 @@ No CI (D-031, D-032): the gates run locally. Run `npm run check` before every PR
 | Lint / typecheck / format check / format                                                                   | `npm run lint` / `npm run typecheck` / `npm run format:check` / `npm run format`                                  |
 | Production build / preview                                                                                 | `npm run build` / `npm run preview`                                                                               |
 | Production image (Node build → Caddy; `check` runs it last, needs Docker) / run it against the dev backend | `npm run docker:build` / `docker run --rm --network backend_default -p 127.0.0.1:8081:8080 collections-web:check` |
+| Unused files / exports / packages (knip)                                                                   | `npm run knip`                                                                                                    |
 | Dependency vulnerability scan (network)                                                                    | `npm run audit`                                                                                                   |
 | E2E (Playwright, chromium; needs `./deploy/test up -d --fresh` from the parent repo; not in `check`)       | `npm run e2e` (once: `npx playwright install chromium`)                                                           |
 | Sync API contract (vendors the spec at a backend tag, regenerates `src/generated/`) / verify offline       | `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]` / `npm run api:check` (part of `check`)              |
@@ -50,6 +51,8 @@ No CI (D-031, D-032): the gates run locally. Run `npm run check` before every PR
 Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-038–D-042. Backend for dev: `docker compose up --build` in `../backend` (backend only) or in the parent folder (backend plus this dev server in a container).
 
 ## Layout & conventions
+
+- **Architecture rules (F-020, enforced; details in `docs/architecture.md`)**: a feature is imported only through its `index.ts` (ESLint `no-restricted-imports`, `eslint.boundaries.js`); `components/` and `lib/` never import features, layouts, routes, app or mocks; files in `eslint.boundaries.baseline.js` are legacy offenders: **never add a file to it**, remove files as you fix them. Pure logic goes in `model/` with table-driven tests; keep modules under ~250 lines (`max-lines` warns). No `any`, no `!` in production code, every `jsx-a11y` disable carries a `-- reason`. `npm run knip` (part of `check`) fails on unused files, exports and packages. Reference slice: `src/features/links/`.
 
 - `src/features/<feature>/` holds components, hooks, and `api.ts` (TanStack Query hooks, from W-02). All server I/O goes through `src/lib/api` (openapi-fetch client; failures throw `ApiError` / `NetworkError`), never raw `fetch`. Writes build `If-Match` with `ifMatch('item', item.version)`.
 - Lean rule (D-034): add a dependency only in the task that first uses it, and justify it in the PR.

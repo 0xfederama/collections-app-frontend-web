@@ -1,6 +1,6 @@
 import { ApiError, NetworkError } from '../../lib/api'
 
-export type ItemErrorKind = 'conflict' | 'unavailable' | 'not_found' | 'network' | 'other'
+type ItemErrorKind = 'conflict' | 'unavailable' | 'not_found' | 'network' | 'other'
 
 export interface ItemError {
   kind: ItemErrorKind

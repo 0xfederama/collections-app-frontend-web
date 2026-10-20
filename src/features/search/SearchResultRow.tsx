@@ -9,7 +9,7 @@ import type { ItemType } from '../items/api'
 export const resultHref = ({ item }: SearchResult) => `/lists/${item.list_id}/items/${item.id}`
 
 /** `Media › Movies › Watchlist`: the folders and the list that hold the item, muted. */
-export function ResultPath({
+function ResultPath({
   path,
   className,
   type = null,

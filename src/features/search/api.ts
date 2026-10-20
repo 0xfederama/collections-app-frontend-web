@@ -4,7 +4,6 @@ import { api, unwrap } from '../../lib/api'
 
 export type SearchResult = components['schemas']['SearchResult']
 export type SearchPage = components['schemas']['SearchPage']
-export type PathSegment = components['schemas']['PathSegment']
 
 /** API.md: `q` is 1–200 characters. */
 export const MAX_QUERY_LENGTH = 200

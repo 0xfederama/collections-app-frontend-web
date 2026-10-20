@@ -6,7 +6,7 @@ import { NetworkError, toApiError } from './errors'
  * Turns every non-2xx answer into a thrown ApiError and a failed fetch into a NetworkError, so
  * callers (TanStack Query) see failures as rejections instead of `{ error }` results.
  */
-export const errorMiddleware: Middleware = {
+const errorMiddleware: Middleware = {
   async onResponse({ response }) {
     if (response.ok) return undefined
     const text = await response.clone().text()
@@ -26,7 +26,7 @@ export const errorMiddleware: Middleware = {
   },
 }
 
-export function createApiClient() {
+function createApiClient() {
   const client = createClient<paths>({
     // Same origin, so the Vite proxy (dev) and Caddy (prod) just work. It has to be absolute
     // because Node's fetch (tests) rejects relative URLs; in the browser it is equivalent to "".

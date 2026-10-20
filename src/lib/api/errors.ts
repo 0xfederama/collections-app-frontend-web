@@ -1,7 +1,7 @@
 import type { components } from '../../generated/schema'
 
-export type Problem = components['schemas']['Problem']
-export type ProblemCode = Problem['code']
+type Problem = components['schemas']['Problem']
+type ProblemCode = Problem['code']
 // The backend may send codes outside the spec enum (D-057), so any string is allowed at runtime.
 export type ErrorCode = ProblemCode | 'unknown' | (string & Record<never, never>)
 export type FieldError = { field: string; message: string }

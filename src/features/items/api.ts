@@ -19,7 +19,6 @@ export type UpdateItemRequest = components['schemas']['UpdateItemRequest']
 export type CreateItemRequest = Omit<components['schemas']['CreateItemRequest'], 'lookup'> & {
   lookup?: boolean
 }
-export type LookupItemRequest = components['schemas']['LookupItemRequest']
 
 /** Exported so other features (W-08, W-09, W-10) invalidate by key, not by string literal. */
 export const itemKeys = {
@@ -148,29 +147,6 @@ export function useUpdateItem() {
       void queryClient.invalidateQueries({ queryKey: homeKeys.recent })
     },
   )
-}
-
-/** `POST /items/{id}/lookup`: explicit fill (TMDB or Open Library), re-match or refresh from the opened snapshot. */
-export function useLookupItem() {
-  const client = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ item, request }: { item: Item; request: LookupItemRequest }) =>
-      unwrap(
-        api.POST('/api/v1/items/{id}/lookup', {
-          params: { path: { id: item.id }, header: ifMatch('item', item.version) },
-          body: request,
-        }),
-      ),
-    onSuccess: (updated, { item }) => {
-      recordOwnWrite(client, item.id, item.version, updated.version)
-      client.setQueryData<Item>(itemKeys.detail(item.id), updated)
-      void client.invalidateQueries({ queryKey: listKeys.items(item.list_id) })
-      void client.invalidateQueries({ queryKey: listKeys.detail(item.list_id) })
-      void client.invalidateQueries({ queryKey: treeKeys.tree })
-      void client.invalidateQueries({ queryKey: searchKeys.all })
-      void client.invalidateQueries({ queryKey: homeKeys.recent })
-    },
-  })
 }
 
 /** `POST /lists/{id}/items`: the new item is cached so its page opens without a loading state. */

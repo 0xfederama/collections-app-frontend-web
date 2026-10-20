@@ -21,7 +21,7 @@ import { useUpdateList } from '../tree/mutations'
 const MarkdownEditor = lazy(() => import('../items/content/MarkdownEditor'))
 
 /** API: a list description is Markdown of at most 64 KiB of UTF-8 (bytes, not characters). */
-export const MAX_DESCRIPTION_BYTES = 64 * 1024
+const MAX_DESCRIPTION_BYTES = 64 * 1024
 
 const parseIds = (raw: unknown): string[] | undefined =>
   Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : undefined
@@ -143,6 +143,7 @@ function DescriptionView({
           Edit description
         </button>
       </div>
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- the Edit description button above is the keyboard path; a click on the text is a pointer shortcut */}
       <div
         id={regionId}
         hidden={collapsed}

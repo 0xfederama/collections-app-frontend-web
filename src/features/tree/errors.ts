@@ -1,6 +1,6 @@
 import { ApiError, NetworkError, type FieldError } from '../../lib/api'
 
-export type TreeErrorKind =
+type TreeErrorKind =
   | 'conflict' // 412: someone else changed it
   | 'unavailable' // 409 destination_unavailable
   | 'cycle' // 409 cycle_detected

@@ -24,12 +24,12 @@ export function getThemePreference(): ThemePreference {
 const systemPrefersDark = () =>
   typeof window.matchMedia === 'function' && window.matchMedia(DARK_QUERY).matches
 
-export function resolveTheme(pref: ThemePreference = getThemePreference()): ResolvedTheme {
+function resolveTheme(pref: ThemePreference = getThemePreference()): ResolvedTheme {
   if (pref === 'system') return systemPrefersDark() ? 'dark' : 'light'
   return pref
 }
 
-export function applyTheme(pref: ThemePreference = getThemePreference()): ResolvedTheme {
+function applyTheme(pref: ThemePreference = getThemePreference()): ResolvedTheme {
   const resolved = resolveTheme(pref)
   document.documentElement.dataset.theme = resolved
   return resolved

@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { components } from '../../../generated/schema'
 import { api, ifMatch, unwrap } from '../../../lib/api'
 import { listKeys } from '../../lists/api'
 import { itemKeys, type ItemContent } from '../api'
-
-export type ContentVersionInfo = components['schemas']['ContentVersionInfo']
 
 export const contentKeys = {
   versions: (itemId: string) => ['items', itemId, 'content-versions'] as const,

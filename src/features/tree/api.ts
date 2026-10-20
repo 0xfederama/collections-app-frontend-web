@@ -24,7 +24,7 @@ export interface FolderNode extends TreeNodeBase {
   children: TreeNode[]
 }
 
-export interface ListNode extends TreeNodeBase {
+interface ListNode extends TreeNodeBase {
   kind: 'list'
   list: List
 }
@@ -52,7 +52,8 @@ export function buildTree(folders: readonly Folder[], lists: readonly List[]): T
     else folderNodes.get(parentId)?.children.push(node)
   }
   for (const folder of [...folders].sort(bySortOrder)) {
-    place(folderNodes.get(folder.id)!, folder.parent_folder_id)
+    const node = folderNodes.get(folder.id)
+    if (node) place(node, folder.parent_folder_id)
   }
   // Lists go in after all folders, so each parent already holds its sub-folders.
   for (const list of [...lists].sort(bySortOrder)) {

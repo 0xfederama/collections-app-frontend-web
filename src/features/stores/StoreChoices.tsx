@@ -53,6 +53,7 @@ export function StoreChoices({
       )}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
+          {/* eslint-disable-next-line jsx-a11y/role-supports-aria-props -- aria-invalid marks the error state on this trigger; its error text is not linked to it yet (flagged for review) */}
           <button
             type="button"
             aria-labelledby={`${captionId} ${valueId}`}

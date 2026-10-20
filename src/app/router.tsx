@@ -20,7 +20,7 @@ const devRoutes: RouteObject[] = import.meta.env.DEV
     ]
   : []
 
-export const routes: RouteObject[] = [
+const routes: RouteObject[] = [
   ...devRoutes,
   {
     path: '/',

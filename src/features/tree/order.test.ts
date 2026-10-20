@@ -23,6 +23,7 @@ const node = (n: number) => {
         if (found) return found
       }
     }
+    return undefined
   }
   return find(index.nodes)!
 }

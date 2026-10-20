@@ -37,6 +37,7 @@ export function TreeRowActions({ node }: { node: TreeNode }): ReactNode {
   const actions = useTreeActions()
   const name = node.kind === 'folder' ? node.folder.name : node.list.name
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stops a click on the row's menu from selecting the row; the menu button inside is the keyboard path
     <span
       onClick={(event) => event.stopPropagation()}
       className="flex shrink-0 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 has-[[data-state=open]]:opacity-100 [@media(hover:none)]:opacity-100"

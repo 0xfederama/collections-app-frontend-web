@@ -11,7 +11,7 @@ export interface StoredVersion {
   created_at: string
 }
 
-export interface ContentCall {
+interface ContentCall {
   ifMatch: string | null
   body: Record<string, unknown>
 }

@@ -14,9 +14,10 @@
     "e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "knip": "knip",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run api:check && npm run format:check && npm run lint && npm run typecheck && npm run test && vite build && npm run docker:build",
+    "check": "npm run api:check && npm run format:check && npm run lint && npm run knip && npm run typecheck && npm run test && vite build && npm run docker:build",
     "docker:build": "node scripts/docker-build.mjs",
     "audit": "npm audit",
     "api:sync": "node scripts/api-sync.mjs",
@@ -61,10 +62,12 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^10.12.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
     "js-yaml": "^4.3.2",
     "jsdom": "^30.1.2",
+    "knip": "^6.42.1",
     "msw": "^3.0.3",
     "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.10",
@@ -78,6 +81,9 @@
     "playwright-core": "1.64.0",
     "openapi-typescript": {
       "typescript": "$typescript"
+    },
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
     }
   },
   "msw": {

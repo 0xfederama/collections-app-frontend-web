@@ -33,6 +33,7 @@ export function TrashRow({ entry, entries, onRestoreTo, onPurge, onRestored }: T
   const [error, setError] = useState<{ error: TrashError; retry: () => void } | null>(null)
   const Icon = rootIcons[entry.root_type]
   const blocked = entry.restorable_in_place ? null : blockedBy(entry, entries)
+  const restoreInstead = blocked?.restoreInstead ?? null
   const name = `“${entry.root_name}”`
   const hidden = <span className="sr-only"> {name}</span>
 
@@ -105,14 +106,14 @@ export function TrashRow({ entry, entries, onRestoreTo, onPurge, onRestored }: T
             <Button size="sm" variant="secondary" onClick={() => onRestoreTo(entry)}>
               Restore to…{hidden}
             </Button>
-            {blocked.restoreInstead && (
+            {restoreInstead && (
               <Button
                 size="sm"
                 variant="secondary"
                 pending={restore.isPending}
-                onClick={() => void restoreInPlace(blocked.restoreInstead!)}
+                onClick={() => void restoreInPlace(restoreInstead)}
               >
-                Restore “{blocked.restoreInstead.root_name}” instead
+                Restore “{restoreInstead.root_name}” instead
               </Button>
             )}
           </>
