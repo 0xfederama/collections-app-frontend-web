@@ -1,11 +1,8 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { api, ifMatch, unwrap } from '../../lib/api'
-import { homeKeys } from '../home'
-import { invalidateContent } from '../invalidateContent'
-import { listKeys } from '../lists'
-import { searchKeys } from '../search'
-import { treeKeys } from '../tree'
+import { invalidateContent, invalidateItemWrite } from '../../data/invalidate'
+import { itemKeys } from '../../data/keys'
 
 export type Item = components['schemas']['Item']
 export type ItemType = components['schemas']['ItemType']
@@ -18,12 +15,6 @@ export type UpdateItemRequest = components['schemas']['UpdateItemRequest']
  */
 export type CreateItemRequest = Omit<components['schemas']['CreateItemRequest'], 'lookup'> & {
   lookup?: boolean
-}
-
-/** Exported so other features (W-08, W-09, W-10) invalidate by key, not by string literal. */
-export const itemKeys = {
-  detail: (itemId: string) => ['items', itemId, 'detail'] as const,
-  content: (itemId: string) => ['items', itemId, 'content'] as const,
 }
 
 /**
@@ -138,14 +129,8 @@ export function useUpdateItem() {
       client.setQueryData<Item>(itemKeys.detail(item.id), updated)
       return updated
     },
-    (queryClient, { item }) => {
-      void queryClient.invalidateQueries({ queryKey: listKeys.items(item.list_id) })
-      void queryClient.invalidateQueries({ queryKey: listKeys.detail(item.list_id) })
-      void queryClient.invalidateQueries({ queryKey: treeKeys.tree })
-      // A new title or status shows in search results and Home "Recently updated".
-      void queryClient.invalidateQueries({ queryKey: searchKeys.all })
-      void queryClient.invalidateQueries({ queryKey: homeKeys.recent })
-    },
+    // A new title or status shows in the list, the tree, search results and Home "Recently updated".
+    (queryClient, { item }) => void invalidateItemWrite(queryClient, item.list_id),
   )
 }
 

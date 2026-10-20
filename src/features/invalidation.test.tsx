@@ -4,21 +4,16 @@ import { createElement, type ReactNode } from 'react'
 import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { exampleResponses } from '../generated/examples'
+import { homeKeys, listKeys, searchKeys, trashKeys, treeKeys } from '../data/keys'
 import { server } from '../mocks/server'
 import { createTestQueryClient } from '../test-utils'
-import { homeKeys } from './home/api'
-import { invalidateContent } from './invalidateContent'
 import { useCreateItem, useDeleteItem, useMoveItem, type Item } from './items'
-import { listKeys } from './lists'
-import { searchKeys } from './search/api'
-import { trashKeys } from './trash/keys'
 import { useRestoreTrash, usePurgeTrash } from './trash/api'
 import {
   useCreateFolder,
   useDeleteFolder,
   useDeleteList,
   useMoveList,
-  treeKeys,
   type Folder,
   type List,
 } from './tree'
@@ -68,12 +63,6 @@ async function run<T>(
 }
 
 describe('F006-W1 invalidateContent', () => {
-  it('invalidates tree, lists, items, search, Home recent and trash, nothing else', async () => {
-    const client = seeded()
-    await invalidateContent(client)
-    expectInvalidated(client)
-  })
-
   const cases: [string, (client: QueryClient) => Promise<unknown>][] = [
     ['delete folder', (c) => run(c, useDeleteFolder, (m) => m.mutateAsync(folder))],
     ['delete list', (c) => run(c, useDeleteList, (m) => m.mutateAsync(list))],

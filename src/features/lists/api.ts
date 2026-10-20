@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { ApiError, api, ifMatch, unwrap } from '../../lib/api'
-import { treeKeys } from '../tree'
+import { listKeys, treeKeys, type ItemsKeyParams } from '../../data/keys'
 
 export type List = components['schemas']['List']
 export type ItemSummary = components['schemas']['ItemSummary']
@@ -19,34 +19,8 @@ export type PinnedFields = components['schemas']['PinnedFields']
 /** Max page size of `GET /lists/{id}/items` (D-018). */
 export const ITEMS_PAGE_SIZE = 200
 
-export interface ItemsParams {
-  /** The URL override; `null` lets the server use the list's `sort_mode` (D-063). */
-  sort: SortMode | null
-  q: string
-  filterField: string | null
-  filterValue: string | null
-  filterMin: string | null
-  filterMax: string | null
-}
-
-/** Exported so other features (W-05, W-07, W-08) invalidate by key, not by string literal. */
-export const listKeys = {
-  detail: (listId: string) => ['lists', listId, 'detail'] as const,
-  /** Prefix of every items query of a list, whatever its sort or filter. */
-  items: (listId: string) => ['lists', listId, 'items'] as const,
-  itemsQuery: (listId: string, params: ItemsParams) =>
-    [
-      'lists',
-      listId,
-      'items',
-      params.sort,
-      params.q,
-      params.filterField,
-      params.filterValue,
-      params.filterMin,
-      params.filterMax,
-    ] as const,
-}
+/** The list view's query parameters; the key shape lives in `data/keys.ts` (`ItemsKeyParams`). */
+export type ItemsParams = ItemsKeyParams
 
 export function useList(listId: string) {
   return useQuery({

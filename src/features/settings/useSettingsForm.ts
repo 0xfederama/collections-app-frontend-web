@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useToast } from '../../components/ui'
 import { useStoreProviders } from '../stores'
 import { ApiError, NetworkError } from '../../lib/api'
-import { settingsKeys, useUpdateSettings, type Settings } from './api'
+import { settingsKeys } from '../../data/keys'
+import { useUpdateSettings, type Settings } from './api'
 import {
   buildPatch,
   classifySaveFailure,

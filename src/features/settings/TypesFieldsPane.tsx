@@ -4,7 +4,8 @@ import { Button, Skeleton } from '../../components/ui'
 import { ApiError } from '../../lib/api'
 import { ListIconPicker, type IconChoice } from '../lists'
 import { useTree } from '../tree'
-import { typeKeys, useTypes, useUpdateType, type TypeDefinition, type TypeField } from './api'
+import { typeKeys } from '../../data/keys'
+import { useTypes, useUpdateType, type TypeDefinition, type TypeField } from './api'
 import {
   defaultFieldOptions,
   defaultsFromType,

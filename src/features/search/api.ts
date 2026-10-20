@@ -1,6 +1,7 @@
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
 import { api, unwrap } from '../../lib/api'
+import { searchKeys } from '../../data/keys'
 
 export type SearchResult = components['schemas']['SearchResult']
 export type SearchPage = components['schemas']['SearchPage']
@@ -14,13 +15,6 @@ export const RESULTS_PAGE_SIZE = 50
 
 /** What is sent to the server: surrounding whitespace removed, cut to the API's 200 characters. */
 export const normalizeQuery = (q: string) => q.trim().slice(0, MAX_QUERY_LENGTH).trim()
-
-/** Exported so other features can invalidate searches after item changes (W-07, W-08, W-10). */
-export const searchKeys = {
-  all: ['search'] as const,
-  top: (q: string, limit: number, offset: number) => ['search', 'top', q, limit, offset] as const,
-  results: (q: string) => ['search', 'results', q] as const,
-}
 
 const fetchSearch = (q: string, limit: number, offset: number, signal: AbortSignal) =>
   unwrap(api.GET('/api/v1/search', { params: { query: { q, limit, offset } }, signal }))

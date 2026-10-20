@@ -9,6 +9,7 @@ Work in progress: F-020 W3-W5 (splitting the flat feature folders into `api/ mod
 - `src/components/ui/`: design-system primitives. Imports no feature, layout, route, app or mock code.
 - `src/lib/`: shared helpers (API client in `lib/api`, storage, breakpoints, text). Imports no feature code either.
 - `src/features/<feature>/`: one folder per area. Public face is `index.ts`. Target internals: `api/` (TanStack Query hooks), `model/` (pure logic), `ui/` (components), `hooks/`. Most features are still flat; W3 splits them.
+- `src/data/`: query keys (`keys.ts`) and cache invalidation (`invalidate.ts`). Imports no feature, layout, route, app, mock or component code.
 - `src/app/`: providers, router, lazy route loading.
 - `src/routes/`: one thin component per route.
 - `src/layouts/`: `AppShell` and the sidebar frame.
@@ -18,7 +19,7 @@ Work in progress: F-020 W3-W5 (splitting the flat feature folders into `api/ mod
 
 Defined in `eslint.boundaries.js`, using `no-restricted-imports`:
 
-- **A.** `components` and `lib` never import `features`, `layouts`, `routes`, `app` or `mocks`.
+- **A.** `components` and `lib` never import `features`, `layouts`, `routes`, `app` or `mocks`; `data` never imports `features`, `layouts`, `routes`, `app`, `mocks` or `components`.
 - **B.** A feature imports another feature only through that feature's `index.ts`.
 - **C.** Files outside `features/`, `components/` and `lib/` import a feature only through its `index.ts`.
 
@@ -27,6 +28,10 @@ Public entries per feature: `index.ts`, `testing.ts` (test kits) and `screens.ts
 There is no legacy baseline any more (F020-W3): the rules apply to every file. Never add an exemption list; fix the import instead.
 
 To fix a violation, export the symbol from the feature's `index.ts` and import it from there. Do not reach into a feature's internal file.
+
+## Data layer
+
+`src/data/` holds the query keys of every server resource (`keys.ts`, the cache identities; values never change) and the shared invalidation (`invalidate.ts`: `invalidateContent` for any write that changes what exists or where, `invalidateItemWrite` for an item PATCH). Features import keys from `data/keys` and never re-export them from their barrels. The API client is `src/lib/api` (openapi-fetch, `ApiError` / `NetworkError`, `ifMatch`).
 
 ## Size and purity
 

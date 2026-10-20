@@ -2,19 +2,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
-import { itemKeys } from '../items'
-import { listKeys } from '../lists'
-import { searchKeys } from '../search'
-import { treeKeys } from '../tree'
 import {
   ITEMS_KEY_ROOT,
   LISTS_KEY_ROOT,
-  TRASH_PAGE_SIZE,
+  itemKeys,
+  listKeys,
+  searchKeys,
   trashKeys,
-  usePurgeTrash,
-  useRestoreTrash,
-  useTrash,
-} from './api'
+  treeKeys,
+} from '../../data/keys'
+import { TRASH_PAGE_SIZE, usePurgeTrash, useRestoreTrash, useTrash } from './api'
 import { createTestQueryClient } from '../../test-utils'
 import { entry, installTrash, T } from './trashTestKit'
 

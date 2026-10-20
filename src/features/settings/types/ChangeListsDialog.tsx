@@ -2,7 +2,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { AlertDialog, Select } from '../../../components/ui'
 import { NO_TYPE_VALUE, typeOptions, valueToType } from '../../items'
-import { treeKeys, useUpdateList, type List } from '../../tree'
+import { treeKeys } from '../../../data/keys'
+import { useUpdateList, type List } from '../../tree'
 import type { TypeDefinition } from '../api'
 
 export function ChangeListsDialog({

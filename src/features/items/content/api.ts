@@ -1,13 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, ifMatch, unwrap } from '../../../lib/api'
-import { listKeys } from '../../lists'
-import { itemKeys, type ItemContent } from '../api'
-
-export const contentKeys = {
-  versions: (itemId: string) => ['items', itemId, 'content-versions'] as const,
-  version: (itemId: string, version: number) =>
-    ['items', itemId, 'content-versions', version] as const,
-}
+import { contentKeys, itemKeys, listKeys } from '../../../data/keys'
+import type { ItemContent } from '../api'
 
 /**
  * A content write changes the item's `updated_at` and `content_version` but not its own `version`

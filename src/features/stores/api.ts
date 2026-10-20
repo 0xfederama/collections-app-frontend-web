@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import type { components } from '../../generated/schema'
+import { storeKeys } from '../../data/keys'
 import { api, unwrap } from '../../lib/api'
 
 export type StoreProvider = components['schemas']['StoreProvider']
-
-const storeKeys = { providers: ['store-providers'] as const }
 
 /**
  * The fixed store list (F016-W4). It changes only with a deploy, so it is kept for a day; the item

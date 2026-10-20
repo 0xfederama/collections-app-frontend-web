@@ -5,13 +5,13 @@ import { ApiError } from '../../lib/api'
 import { cx } from '../../lib/cx'
 import {
   ITEMS_PAGE_SIZE,
-  listKeys,
   useReorderItems,
   type DisplayMode,
   type ItemSummary,
   type ItemsParams,
   type SortMode,
 } from './api'
+import { listKeys } from '../../data/keys'
 import type { ItemType, TypeDefinition } from '../items'
 import { ItemEntry } from './ItemEntry'
 import type { PinnedKeys } from './pinned'
