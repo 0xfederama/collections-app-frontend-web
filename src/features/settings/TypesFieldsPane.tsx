@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState, type FormEvent } from 'react'
-import { AlertDialog, Button, Dialog, Select, Skeleton, TextField } from '../../components/ui'
+import { useMemo, useState } from 'react'
+import { AlertDialog, Button, Select, Skeleton, TextField } from '../../components/ui'
 import { Plus } from '../../components/ui/icons'
 import { SortableProvider } from '../../components/ui/sortable'
 import { ApiError } from '../../lib/api'
@@ -9,7 +9,6 @@ import { ListIconMark, ListIconPicker, type IconChoice } from '../lists'
 import { useUpdateList, treeKeys, useTree } from '../tree'
 import {
   typeKeys,
-  useCreateType,
   useCreateTypeField,
   useDeleteType,
   useDeleteTypeField,
@@ -33,12 +32,12 @@ import {
 } from './types/model'
 import { FieldRow } from './types/FieldRow'
 import { TypeRow } from './types/TypeRow'
+import { CreateTypeDialog } from './types/CreateTypeDialog'
 
 export function TypesFieldsPane() {
   const queryClient = useQueryClient()
   const typesQuery = useTypes()
   const treeQuery = useTree()
-  const createType = useCreateType()
   const updateType = useUpdateType()
   const deleteType = useDeleteType()
   const updateList = useUpdateList()
@@ -66,11 +65,8 @@ export function TypesFieldsPane() {
     if (selectedKey) setRenameDraft({ key: selectedKey, name: value })
   }
   const [createOpen, setCreateOpen] = useState(false)
-  const [createError, setCreateError] = useState<unknown>(null)
-  const [name, setName] = useState('')
   const [fieldLabel, setFieldLabel] = useState('')
   const [fieldType, setFieldType] = useState<(typeof fieldTypes)[number]['value']>('text')
-  const [allowsPrice, setAllowsPrice] = useState(false)
   const [icon, setIcon] = useState<IconChoice>({ icon: null, icon_color: null })
   const [iconOpen, setIconOpen] = useState(false)
   const [iconTarget, setIconTarget] = useState<'create' | 'type'>('create')
@@ -119,31 +115,6 @@ export function TypesFieldsPane() {
       setConflict(false)
     } catch {
       setOperationError(new Error('The latest definition could not be loaded. Try again.'))
-    }
-  }
-
-  const submitType = async (event: FormEvent) => {
-    event.preventDefault()
-    const trimmed = name.trim()
-    if (!trimmed) return
-    const created = await createType
-      .mutateAsync({
-        name: trimmed,
-        ...(icon.icon ? { default_icon: icon.icon } : {}),
-        allows_price: allowsPrice,
-      })
-      .catch((error: unknown) => {
-        setCreateError(error)
-        return null
-      })
-    if (created) {
-      setName('')
-      setIcon({ icon: null, icon_color: null })
-      setAllowsPrice(false)
-      setSelectedKey((created as TypeDefinition).key)
-      setOperationError(null)
-      setCreateError(null)
-      setCreateOpen(false)
     }
   }
 
@@ -202,10 +173,7 @@ export function TypesFieldsPane() {
         <button
           type="button"
           title="New type"
-          onClick={() => {
-            setCreateError(null)
-            setCreateOpen(true)
-          }}
+          onClick={() => setCreateOpen(true)}
           className="flex min-h-12 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-text-muted hover:bg-fill hover:text-text focus-visible:outline-2 focus-visible:outline-focus-ring"
         >
           <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-md bg-fill">
@@ -536,58 +504,19 @@ export function TypesFieldsPane() {
         )}
       </div>
       {createOpen && (
-        <Dialog
-          open
-          onOpenChange={(open) => !open && !createType.isPending && setCreateOpen(false)}
-          title="New type"
-          description="Create the type first, then add its fields and set the default sort and pins in its details."
-        >
-          <form onSubmit={(event) => void submitType(event)} className="flex flex-col gap-3">
-            <TextField
-              label="Type name"
-              placeholder="Board games"
-              hint="Suggest a plural name, like Board games. It is kept as you type it."
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              maxLength={100}
-            />
-            <label className="flex min-h-10 items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={allowsPrice}
-                onChange={(event) => setAllowsPrice(event.target.checked)}
-              />{' '}
-              Allows a price
-            </label>
-            {createError !== null && (
-              <p role="alert" className="text-sm text-danger-text">
-                {errorText(createError)}
-              </p>
-            )}
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setIconTarget('create')
-                  setIconOpen(true)
-                }}
-              >
-                {icon.icon ? (
-                  <>
-                    <ListIconMark icon={icon.icon} className="size-5" iconClassName="size-3" />
-                    Change icon
-                  </>
-                ) : (
-                  'Choose icon'
-                )}
-              </Button>
-              <Button type="submit" pending={createType.isPending} disabled={!name.trim()}>
-                Create type
-              </Button>
-            </div>
-          </form>
-        </Dialog>
+        <CreateTypeDialog
+          onClose={() => setCreateOpen(false)}
+          onCreated={(key) => {
+            setIcon({ icon: null, icon_color: null })
+            setSelectedKey(key)
+            setOperationError(null)
+          }}
+          icon={icon}
+          onPickIcon={() => {
+            setIconTarget('create')
+            setIconOpen(true)
+          }}
+        />
       )}
       {operationError !== null && (
         <div
