@@ -7,7 +7,7 @@ describe('F002-T5 ServiceIcon', () => {
     'maps %s to an icon with its name',
     (name) => {
       const { container } = render(<ServiceIcon name={name} />)
-      expect(screen.getByRole('img')).toHaveAttribute('title')
+      expect(screen.getByRole('img')).toHaveAttribute('aria-label')
       expect(container.querySelector('img')).not.toBeNull()
     },
   )
@@ -89,22 +89,22 @@ describe('F009-W5 one tile for every icon', () => {
   it('holds that geometry at the smaller list-row sizes too', () => {
     render(
       <>
-        <ServiceIcon name="Netflix" size={26} />
+        <ServiceIcon name="YouTube" size={26} />
         <LinkIcon name="IMDb" size={20} />
       </>,
     )
-    const tight = tile('Netflix')
+    const tight = tile('YouTube')
     const small = tile('IMDb')
     expect(tight).toHaveStyle({ width: '26px', height: '26px' })
     expect(small).toHaveStyle({ width: '20px', height: '20px' })
     // Only the size differs: same shape, radius, background and inner padding.
     expect(small.className).toBe(tight.className)
-    expect(mark('IMDb').className).toBe(mark('Netflix').className)
+    expect(mark('IMDb').className).toBe(mark('YouTube').className)
   })
 
   it('contains the logo with even proportional padding, never cropped or overflowing', () => {
-    render(<ServiceIcon name="Netflix" />)
-    const inner = mark('Netflix')
+    render(<ServiceIcon name="YouTube" />)
+    const inner = mark('YouTube')
     // 18% of the tile on every side, as a share and not as pixels, so it scales with the tile.
     expect(inner).toHaveClass('p-[18%]', 'size-full')
     const logo = inner.querySelector('img')!
@@ -139,7 +139,7 @@ describe('F009-W5 one tile for every icon', () => {
     const unknown = tile('Zattoo')
     // The same tile as a known service.
     expect(unknown.className).toBe(tile('Netflix').className)
-    expect(unknown).toHaveAttribute('title', 'Zattoo')
+    expect(unknown).toHaveAttribute('aria-label', 'Zattoo')
     expect(unknown).not.toHaveTextContent('Zattoo')
     // Only the first letter, upper case, inside the tile.
     expect(mark('Zattoo')).toHaveTextContent('Z')
@@ -154,7 +154,7 @@ describe('F009-W5 one tile for every icon', () => {
 
   it('an unknown link site is a letter tile too', () => {
     render(<LinkIcon name="MyAnimeList" />)
-    expect(tile('MyAnimeList')).toHaveAttribute('title', 'MyAnimeList')
+    expect(tile('MyAnimeList')).toHaveAttribute('aria-label', 'MyAnimeList')
     expect(mark('MyAnimeList')).toHaveTextContent('M')
   })
 })
@@ -164,14 +164,14 @@ describe('F016-W4 store tiles are named by the display name', () => {
     // F017-W2: Bookshop has a logo now, so the letter path is checked with a key that has none.
     render(<ServiceIcon name="zattoo_tv" label="Zattoo TV" />)
     const tile = screen.getByRole('img', { name: 'Zattoo TV' })
-    expect(tile).toHaveAttribute('title', 'Zattoo TV')
+    expect(tile).toHaveAttribute('aria-label', 'Zattoo TV')
     expect(tile.firstElementChild).toHaveTextContent('Z')
   })
 
   it('a store with a logo keeps the label as its name', () => {
     render(<ServiceIcon name="bookshop" label="Bookshop.org" />)
     expect(screen.getByRole('img', { name: 'Bookshop.org' })).toHaveAttribute(
-      'title',
+      'aria-label',
       'Bookshop.org',
     )
   })

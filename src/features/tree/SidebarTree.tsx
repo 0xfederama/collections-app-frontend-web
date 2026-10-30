@@ -102,7 +102,9 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
     const Icon = state.expanded ? FolderOpen : Folder
     return (
       <>
-        <Icon aria-hidden className="size-4 shrink-0 text-text-muted" />
+        <span aria-hidden className="grid size-[22px] shrink-0 place-items-center text-text-muted">
+          <Icon className="size-[18px]" />
+        </span>
         <span className="min-w-0 flex-1 truncate">{node.folder.name}</span>
         <TreeRowActions node={node} />
       </>

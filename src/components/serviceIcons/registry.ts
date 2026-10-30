@@ -43,4 +43,19 @@ export const findService = (name: string): ServiceEntry | undefined =>
   byName.get(normalizeServiceName(name))
 
 /** The streaming services offered in the item's picker, in display order (derived). */
+/**
+ * Display order of service tiles: the registry order (the original seven first, the rest after),
+ * unknown services last, ties in their given order. Does not mutate.
+ */
+export function sortByServiceOrder<T>(items: readonly T[], nameOf: (item: T) => string): T[] {
+  const rank = (item: T) => {
+    const found = findService(nameOf(item))
+    return found ? SERVICES.indexOf(found) : Number.MAX_SAFE_INTEGER
+  }
+  return items
+    .map((item, index) => ({ item, index, rank: rank(item) }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map((entry) => entry.item)
+}
+
 export const STREAMING_SERVICES: string[] = SERVICES.filter((e) => e.streaming).map((e) => e.label)
