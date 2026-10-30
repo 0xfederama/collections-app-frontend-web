@@ -123,7 +123,7 @@ function TypeChip({ type, definition }: { type: TreeList['type']; definition: Ty
   )
 }
 
-/** Title, type chip, description, then the sticky toolbar: search, filter, sort, pinned, display mode, with the + New item button first (UI_SPEC §3). */
+/** Title, type chip, description, then the sticky toolbar: search, filter, sort, pinned, right to left: + New item, search, filter, sort, pinned, display mode (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   return (
@@ -144,20 +144,52 @@ export function ListHeader(props: ListHeaderProps) {
         )}
       </header>
       {/* Sticky inside the scrolling `main`: the solid background keeps the items that pass behind it
-          readable. The wrapper is the container the narrow variants measure. Option 4 (F019): search and
-          "+ Filter" first, then sort and display; an applied field filter is a chip under the bar. */}
+          readable. The wrapper is the container the narrow variants measure. Reversed (2.20.5): display, pinned, sort, "+ Filter", search, then +; an applied field filter is a chip under the bar. */}
       <div className="@container z-10 bg-bg sm:sticky sm:top-0">
         <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
-          {props.showAddItem && (
-            <Button
-              size="sm"
-              aria-label="New item"
-              onClick={props.onAddItem}
-              className="size-9! shrink-0 px-0! pointer-coarse:size-11!"
-            >
-              <Plus aria-hidden className="size-4" />
-            </Button>
+          <SegmentedControl
+            aria-label="Display mode"
+            options={modeOptions}
+            value={props.displayMode}
+            onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
+          />
+          {list && (props.definition.fields.length > 0 || props.definition.allows_price) && (
+            <PinnedMenu
+              list={list}
+              definition={props.definition}
+              onChange={props.onPinned}
+              onReset={props.onResetPinned}
+            />
           )}
+          {props.canMakeDefault && (
+            <button
+              type="button"
+              onClick={props.onMakeDefault}
+              disabled={props.makeDefaultPending}
+              className={toolbarControl}
+            >
+              Make this the default sort
+            </button>
+          )}
+          {/* Like "+ Filter": the sort icon and the current choice; below 44rem of bar width only the
+              icon stays (the name is still "Sort" for assistive tech). */}
+          <div className="relative shrink-0 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:w-auto! @max-[44rem]:[&_button]:w-full! pointer-coarse:[&_button]:h-11! [&_button]:border-border! [&_button]:bg-surface! [&_button]:pr-3 [&_button]:pl-9 [&_button]:font-medium [&_button]:hover:bg-fill-hover! [&_button>span:last-child]:hidden @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only">
+            <Select
+              label="Sort"
+              options={sortOptionsFor(props.definition)}
+              value={props.sort}
+              onValueChange={(value) => props.onSort(value as SortMode)}
+            />
+            <ArrowUpDown
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text @max-[44rem]:inset-0 @max-[44rem]:left-0 @max-[44rem]:m-auto @max-[44rem]:translate-y-0"
+            />
+          </div>
+          <FieldFilterMenu
+            fields={props.definition.fields}
+            value={props.fieldFilter}
+            onChange={props.onFieldFilter}
+          />
           <div className="min-w-40 flex-1 [&_label]:sr-only">
             <TextField
               label={
@@ -175,49 +207,16 @@ export function ListHeader(props: ListHeaderProps) {
               className="h-9! hover:border-text-muted! focus-within:border-accent!"
             />
           </div>
-          <FieldFilterMenu
-            fields={props.definition.fields}
-            value={props.fieldFilter}
-            onChange={props.onFieldFilter}
-          />
-          {/* Like "+ Filter": the sort icon and the current choice; below 44rem of bar width only the
-              icon stays (the name is still "Sort" for assistive tech). */}
-          <div className="relative shrink-0 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:w-auto! @max-[44rem]:[&_button]:w-full! pointer-coarse:[&_button]:h-11! [&_button]:border-border! [&_button]:bg-surface! [&_button]:pr-3 [&_button]:pl-9 [&_button]:font-medium [&_button]:hover:bg-fill-hover! [&_button>span:last-child]:hidden @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only">
-            <Select
-              label="Sort"
-              options={sortOptionsFor(props.definition)}
-              value={props.sort}
-              onValueChange={(value) => props.onSort(value as SortMode)}
-            />
-            <ArrowUpDown
-              aria-hidden
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text @max-[44rem]:inset-0 @max-[44rem]:left-0 @max-[44rem]:m-auto @max-[44rem]:translate-y-0"
-            />
-          </div>
-          {props.canMakeDefault && (
-            <button
-              type="button"
-              onClick={props.onMakeDefault}
-              disabled={props.makeDefaultPending}
-              className={toolbarControl}
+          {props.showAddItem && (
+            <Button
+              size="sm"
+              aria-label="New item"
+              onClick={props.onAddItem}
+              className="size-9! shrink-0 px-0! pointer-coarse:size-11!"
             >
-              Make this the default sort
-            </button>
+              <Plus aria-hidden className="size-4" />
+            </Button>
           )}
-          {list && (props.definition.fields.length > 0 || props.definition.allows_price) && (
-            <PinnedMenu
-              list={list}
-              definition={props.definition}
-              onChange={props.onPinned}
-              onReset={props.onResetPinned}
-            />
-          )}
-          <SegmentedControl
-            aria-label="Display mode"
-            options={modeOptions}
-            value={props.displayMode}
-            onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
-          />
         </div>
         {describeFieldFilter(props.definition.fields, props.fieldFilter) && (
           <div className="mt-2 flex flex-wrap gap-2">
