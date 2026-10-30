@@ -172,7 +172,10 @@ export function ListView({ treeList }: { treeList: List }) {
       )
     }
     return (
-      <div role="alert" className="flex flex-col items-start gap-2">
+      <div
+        role="alert"
+        className="flex flex-col items-start gap-3 rounded-lg border border-border p-4 text-ui"
+      >
         <p>Couldn’t load this list.</p>
         <Button variant="secondary" onClick={() => void listQuery.refetch()}>
           Retry
@@ -192,7 +195,10 @@ export function ListView({ treeList }: { treeList: List }) {
   if (!definition) {
     if (definitions.isPending) return <ItemsSkeleton mode={list?.display_mode ?? 'grid'} />
     return (
-      <div role="alert" className="flex flex-col items-start gap-2">
+      <div
+        role="alert"
+        className="flex flex-col items-start gap-3 rounded-lg border border-border p-4 text-ui"
+      >
         <p>Couldn’t load this list’s type definition.</p>
         <Button variant="secondary" onClick={() => void definitions.refetch()}>
           Retry
@@ -208,6 +214,7 @@ export function ListView({ treeList }: { treeList: List }) {
         definition={definition}
         list={list}
         showAddItem={!!list && (list.item_count > 0 || draft)}
+        itemCount={list?.item_count}
         displayMode={mode}
         onDisplayMode={setDisplayMode}
         sort={effectiveSort}
@@ -224,7 +231,10 @@ export function ListView({ treeList }: { treeList: List }) {
         onAddItem={addItem}
       />
       {itemsQuery.isError ? (
-        <div role="alert" className="flex flex-col items-start gap-2">
+        <div
+          role="alert"
+          className="flex flex-col items-start gap-3 rounded-lg border border-border p-4 text-ui"
+        >
           <p>Couldn’t load the items.</p>
           <Button variant="secondary" onClick={() => void itemsQuery.refetch()}>
             Retry

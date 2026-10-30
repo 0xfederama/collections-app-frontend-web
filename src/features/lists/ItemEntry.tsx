@@ -22,11 +22,15 @@ export interface ItemEntryProps {
   definition: TypeDefinition
 }
 
-const linkClass = `rounded-sm font-semibold text-text after:absolute after:inset-0 after:rounded-[inherit] after:content-[""] ${focusRing}`
+const linkClass = `rounded-sm font-display text-row text-text after:absolute after:inset-0 after:rounded-[inherit] after:content-[""] ${focusRing}`
 
 /** Whole row or card is the click target (the title link stretches over it); hover and focus show on the shell. */
 const surface =
-  'border border-border bg-surface shadow-sm transition-shadow hover:shadow-md hover:bg-surface-raised has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-focus-ring'
+  'border border-border bg-surface transition-colors hover:bg-surface-raised has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-focus-ring'
+
+/** Medium rows (F021) are not cards: hairline dividers between them, no border or fill of their own. */
+const rowFrame =
+  'border-b border-border-soft transition-colors hover:bg-surface has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-focus-ring'
 
 /** One item of the list in the given display mode: a row (compact, thumbnail) or a card (grid). */
 export function ItemEntry({
@@ -59,7 +63,7 @@ export function ItemEntry({
 
   const shell = cx(
     'group/entry relative list-none [-webkit-touch-callout:none]',
-    surface,
+    mode === 'thumbnail' ? rowFrame : surface,
     reorder?.isDragging && 'z-20 shadow-lg ring-2 ring-focus-ring',
   )
 
@@ -96,27 +100,30 @@ export function ItemEntry({
       <li
         ref={reorder?.rowRef}
         {...reorder?.rowProps}
-        className={cx(shell, 'flex items-center gap-3.5 rounded-lg p-1.5 pr-4')}
+        className={cx(shell, 'flex items-center gap-3.5 px-2 py-[9px]')}
       >
         <ItemThumb
           item={item}
           decorative
-          className="aspect-square w-14 shrink-0 rounded-[12px] sm:w-16"
+          className="aspect-[36/50] w-9 shrink-0 rounded-sm border border-border"
         />
-        <div className="flex min-w-0 flex-1 items-baseline gap-3">
-          <span className="min-w-0 truncate">{title}</span>
-          <PinnedSlot
-            keys={beside}
-            {...slots}
-            iconSize={20}
-            className="max-w-[55%] min-w-0 overflow-hidden text-sm text-text-muted"
-          />
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          {/* The first pinned field sits under the title; the second one is on the right (F021). */}
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="min-w-0 truncate">{title}</span>
+            <PinnedSlot
+              keys={beside}
+              {...slots}
+              iconSize={18}
+              className="min-w-0 overflow-hidden text-secondary text-text-muted"
+            />
+          </div>
         </div>
         <PinnedSlot
           keys={corner}
           {...slots}
-          iconSize={26}
-          className="max-w-[45%] shrink-0 justify-end text-sm"
+          iconSize={22}
+          className="max-w-[45%] shrink-0 justify-end font-mono text-secondary"
         />
         {controls?.menu}
       </li>
@@ -129,7 +136,7 @@ export function ItemEntry({
       {...reorder?.rowProps}
       className={cx(shell, 'flex flex-col rounded-lg p-1.5 pb-3')}
     >
-      <ItemThumb item={item} decorative className="aspect-4/3 w-full rounded-[13px]" />
+      <ItemThumb item={item} decorative className="aspect-4/3 w-full rounded-lg" />
       <div className="flex flex-1 flex-col gap-1 px-2 pt-2.5">
         {title}
         <PinnedSlot keys={beside} {...slots} iconSize={20} className="text-xs text-text-muted" />
