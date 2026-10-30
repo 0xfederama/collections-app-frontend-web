@@ -123,7 +123,7 @@ function TypeChip({ type, definition }: { type: TreeList['type']; definition: Ty
   )
 }
 
-/** Title, type chip, description, then the sticky toolbar: search, filter, sort, pinned, display mode, New item (UI_SPEC §3). */
+/** Title, type chip, description, then the sticky toolbar: search, filter, sort, pinned, display mode, with the + New item button first (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   return (
@@ -148,6 +148,16 @@ export function ListHeader(props: ListHeaderProps) {
           "+ Filter" first, then sort and display; an applied field filter is a chip under the bar. */}
       <div className="@container z-10 bg-bg sm:sticky sm:top-0">
         <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
+          {props.showAddItem && (
+            <Button
+              size="sm"
+              aria-label="New item"
+              onClick={props.onAddItem}
+              className="size-9! shrink-0 px-0! pointer-coarse:size-11!"
+            >
+              <Plus aria-hidden className="size-4" />
+            </Button>
+          )}
           <div className="min-w-40 flex-1 [&_label]:sr-only">
             <TextField
               label={
@@ -208,16 +218,6 @@ export function ListHeader(props: ListHeaderProps) {
             value={props.displayMode}
             onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
           />
-          {props.showAddItem && (
-            <Button
-              size="sm"
-              onClick={props.onAddItem}
-              className="h-9! max-sm:w-10 max-sm:px-0 pointer-coarse:h-11! pointer-coarse:max-sm:w-11"
-            >
-              <Plus aria-hidden className="size-4" />
-              <span className="max-sm:sr-only">New item</span>
-            </Button>
-          )}
         </div>
         {describeFieldFilter(props.definition.fields, props.fieldFilter) && (
           <div className="mt-2 flex flex-wrap gap-2">
