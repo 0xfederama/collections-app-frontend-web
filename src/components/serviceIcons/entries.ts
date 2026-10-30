@@ -93,7 +93,7 @@ export const SERVICES: ServiceEntry[] = [
     aliases: [],
     file: 'netflix.svg',
     tile: 'neutral',
-    fit: 'inset',
+    fit: 'bleed',
     streaming: true,
   },
   {
@@ -191,8 +191,8 @@ export const SERVICES: ServiceEntry[] = [
     label: 'RaiPlay',
     aliases: [],
     file: 'raiplay.svg',
-    tile: 'neutral',
-    fit: 'bleed',
+    tile: 'light',
+    fit: 'inset',
     streaming: true,
   },
   {
@@ -236,7 +236,7 @@ export const SERVICES: ServiceEntry[] = [
     label: 'Google Play',
     aliases: ['googleplaymovies', 'googleplaybooks'],
     file: 'google-play.svg',
-    tile: 'light',
+    tile: 'neutral',
     fit: 'inset',
     streaming: true,
   },
