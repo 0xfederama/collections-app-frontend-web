@@ -64,12 +64,15 @@ export const devTree: Tree = {
     list(17, 'Gadgets', 'wishlist', 6, 0, 5),
     list(18, 'Wishlist', 'wishlist', null, 0, 21),
     list(19, 'Ideas', null, null, 1, 0),
-    list(20, 'To read', 'book', null, 2, 5),
   ],
 }
 
 /** Dev worker only: listed before the spec-example handlers, so it wins. Tests keep the spec example. */
-const treeBackend = createTreeBackend(devTree)
+const treeBackend = createTreeBackend({
+  ...devTree,
+  // Dev worker only (tests read `devTree`): a Books list so the store icons show in place.
+  lists: [...devTree.lists, list(20, 'To read', 'book', 1, 2, 5)],
+})
 export const devHandlers = treeBackend.handlers
 /** Live folders and lists of the dev tree (devItems reads list records from here, so both share one). */
 export const devTreeState = treeBackend.state

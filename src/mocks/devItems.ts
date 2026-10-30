@@ -50,6 +50,14 @@ const STORES = ['amazon', 'bookshop', 'apple_books', 'google_play_books', 'kobo'
 const pick = <T>(pool: readonly T[], i: number, n: number) =>
   Array.from({ length: n }, (_, k) => pool[(i * 3 + k) % pool.length] as T)
 
+const BOOK_AUTHORS = [
+  'Frank Herbert',
+  'Ursula K. Le Guin',
+  'Susanna Clarke',
+  'Octavia E. Butler',
+  'Stanisław Lem',
+]
+
 const TITLES: Record<string, string[]> = {
   movie: ['Blade Runner 2049', 'Arrival', 'The Grand Budapest Hotel', 'Past Lives', 'Drive'],
   tv_show: ['Severance', 'The Bear', 'Slow Horses', 'Andor', 'Shōgun'],
@@ -84,7 +92,11 @@ function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
         streaming: { country: 'IT', platforms: pick(STREAMING, i + 2, 4), paid_platforms: [] },
       }
     case 'book':
-      return { author: 'Various', pages: 200 + i * 37, stores: pick(STORES, i, 4) }
+      return {
+        author: BOOK_AUTHORS[i % BOOK_AUTHORS.length],
+        pages: 200 + i * 37,
+        stores: pick(STORES, i, 4),
+      }
     case 'vehicle':
       return { model_year: 2015 + (i % 10), power_hp: 70 + i * 10 }
     default:

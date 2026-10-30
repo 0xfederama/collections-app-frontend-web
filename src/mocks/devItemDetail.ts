@@ -114,7 +114,10 @@ function fullItem(summary: ItemSummary): Item {
       ? saved.type === type
         ? saved.metadata
         : {}
-      : metadataFor({ id: summary.id, type }),
+      : {
+          ...metadataFor({ id: summary.id, type }),
+          ...(type === summary.type ? summary.metadata : {}),
+        },
     path,
   } as Item
 }
