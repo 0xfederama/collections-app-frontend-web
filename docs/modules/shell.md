@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Top-level providers, router, and the responsive frame every route renders into: frosted sidebar, floating toolbars and the item detail sheet. Spec: `design-docs/UI_SPEC.md` §2; redesign: `design-docs/features/F-002-ui-refresh.md`.
+Top-level providers, router, and the responsive frame every route renders into: solid sidebar, floating toolbars and the item detail sheet. Spec: `design-docs/UI_SPEC.md` §2; redesign: `design-docs/features/F-002-ui-refresh.md`.
 
 ## Key files
 
@@ -31,7 +31,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
 
 ## Gotchas
 
-- Sidebar, mobile menu button and detail sheet use the frosted `material` classes (see [theme](theme.md)).
+- Sidebar, mobile menu button and detail sheet use the solid `material` classes (see [theme](theme.md)); there is no blur.
 - The desktop sidebar stays bounded to the viewport; `main` owns vertical scrolling. Flex ancestors need `min-h-0` and overflow containment for the sidebar and main scroll region to remain bounded.
 - Route screens are code-split: `ListRoute`, `SearchRoute`, `SettingsRoute`, `TrashRoute` via `lazyRoute`; `ItemRoute` has its own `Suspense`.
 - Below 1280 px the item route replaces `main`'s `Outlet`, so `ListRoute` unmounts while an item is open. At ≥ 1280 the list stays mounted; the sheet's close button goes to `/lists/:listId` and keeps `?q=` and `?sort=`.

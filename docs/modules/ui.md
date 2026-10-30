@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Design-system primitives in `src/components/ui/` that features compose instead of raw HTML or Radix, plus the shared favicon tiles (`ServiceIcon`, `LinkIcon`). Spec: `design-docs/UI_SPEC.md` §11; Frosted Gallery restyle: `design-docs/features/F-002-ui-refresh.md`.
+Design-system primitives in `src/components/ui/` that features compose instead of raw HTML or Radix, plus the shared favicon tiles (`ServiceIcon`, `LinkIcon`). Spec: `design-docs/UI_SPEC.md` §11; Editorial restyle: `design-docs/features/F-021-web-restyle.md`.
 
 ## Key files
 
@@ -17,15 +17,15 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 
 ## Interfaces
 
-- `Button` (`variant`, `size`, `pending`), `IconButton` (plus required `aria-label`).
+- `Button` (`variant`: `primary`, `ink`, `secondary`, `ghost`, `danger`; `size`, `pending`), `IconButton` (plus required `aria-label`). `ink` is the Quick add button only.
 - `TextField` / `TextArea`: `label`, `hint`, `error`; TextField adds `prefix`, `suffix`.
 - `Select`, `Combobox`: `options`, `value`, `onValueChange`. `CountrySelect`, `CurrencySelect` (`IsoSelects.tsx`, not in the barrel).
 - `SegmentedControl`, `Menu` (`trigger`, `items`), `Tooltip`, `Chip` (`tone`, `icon`), `Badge` (`type`), `Card`, `EmptyState`, `Skeleton`.
-- `Dialog`, `AlertDialog`, `Drawer`: `open` / `onOpenChange`, `initialFocus`; frosted surface.
+- `Dialog`, `AlertDialog`, `Drawer`: `open` / `onOpenChange`, `initialFocus`; solid surface.
 - `ToastProvider` / `useToast()`: `(options: { kind?, title, description?, action? })`.
 - `Tree<T>`: `nodes`, `expanded`, `selected`, `renderRow`, `sortable(node)`, `onReorder(move)`, `acceptsDrop(target, sourceId)`.
 - `SortableProvider({ onMove })`, `useSortableRow(id, slot)`, `arrayMove`.
-- `ServiceIcon({ name, paid?, size? })`, `LinkIcon({ name, size? })`; both default to `TILE_SIZE` (36).
+- `ServiceIcon({ name, paid?, size? })`, `LinkIcon({ name, size? })`; both default to `TILE_SIZE` (44).
 
 ## Gotchas
 
@@ -34,7 +34,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - "Drop into" is pointer-only: a `into:<id>` droppable on a row is live while the pointer is over its middle, and only with `acceptsDrop`. Keyboard drags never drop into.
 - `Tree` is controlled and has no expand chevron: selecting a row (click, Enter, Space) is what toggles a folder.
 - Focus anywhere in a row makes it the roving stop; keys pressed inside a row's own buttons are ignored by the tree.
-- Every link and streaming icon is the same tile (`TILE_SIZE`, `rounded-md`, `bg-fill`): the logo, the Website globe and the letter of an unknown service all sit in the same 18% inset, contained and never cropped. An unknown service is a letter tile, never a text `Chip`; the `$` badge marks paid platforms and the tile's own text label names it.
+- Every link and streaming icon is the same tile (`TILE_SIZE`, `rounded-sm`, `bg-fill`): the logo, the Website globe and the letter of an unknown service all sit in the same 18% inset, contained and never cropped. An unknown service is a letter tile, never a text `Chip`; the `$` badge marks paid platforms and the tile's own text label names it.
 - Only `size` varies between callers: a tight list row asks for a smaller tile, the shape, radius and padding do not change.
 - Google and IMDb use their vendored Simple Icons SVG marks, not favicons. Those two SVGs carry no white background: the tile owns the surface.
 - Dialog, AlertDialog and Drawer return focus to the element focused when they opened; a Dialog from a Menu item returns it to the menu trigger.
