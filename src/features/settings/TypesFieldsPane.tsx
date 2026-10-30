@@ -118,7 +118,7 @@ export function TypesFieldsPane() {
     )
   if (typesQuery.isError)
     return (
-      <div role="alert" className="flex flex-col items-start gap-2 text-sm">
+      <div role="alert" className="flex flex-col items-start gap-2 text-ui">
         <p>Couldn’t load types and fields.</p>
         <Button variant="secondary" onClick={() => void typesQuery.refetch()}>
           Retry
@@ -176,7 +176,7 @@ export function TypesFieldsPane() {
             />
           </>
         ) : (
-          <div className="grid min-h-40 place-items-center text-center text-sm text-text-muted">
+          <div className="grid min-h-40 place-items-center text-center text-ui text-text-muted">
             Choose a type to view and edit its fields.
           </div>
         )}

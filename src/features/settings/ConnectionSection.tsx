@@ -13,9 +13,9 @@ const statusView: Record<BackendStatus, { text: string; Icon: typeof CircleCheck
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
-      <dt className="text-sm text-text-muted sm:w-40 sm:shrink-0">{label}</dt>
-      <dd className="min-w-0 break-all text-sm">{children}</dd>
+    <div className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-center sm:gap-4">
+      <dt className="text-ui text-text-muted sm:w-40 sm:shrink-0">{label}</dt>
+      <dd className="min-w-0 break-all text-ui">{children}</dd>
     </div>
   )
 }
@@ -29,7 +29,7 @@ export function ConnectionSection() {
   const { status, check } = useBackendCheck()
   const { text, Icon, tone } = statusView[status]
   return (
-    <dl className="flex flex-col gap-3">
+    <dl className="flex flex-col divide-y divide-border-soft border-t border-border">
       <Row label="Backend">
         <span className="flex flex-wrap items-center gap-3">
           {/* Icon + text, never colour alone; `role=status` is a polite live region, so a re-check result is announced. */}

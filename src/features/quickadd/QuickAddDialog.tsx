@@ -197,7 +197,7 @@ export function QuickAddDialog({
             error={errors.title}
             placeholder="Title"
             className="w-full"
-            inputClassName="w-full border-b border-transparent bg-transparent pb-1 text-[22px] leading-snug font-semibold tracking-tight text-text outline-none placeholder:text-text-muted focus-visible:border-accent"
+            inputClassName="w-full border-b border-transparent bg-transparent pb-1 font-display text-section text-text outline-none placeholder:text-text-muted focus-visible:border-accent"
           />
         </div>
 

@@ -111,7 +111,7 @@ export function RestoreToDialog({ entry, onClose, onRestored, onGone }: RestoreT
     body = (
       <div
         role="alert"
-        className="flex flex-col items-start gap-2 rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
+        className="flex flex-col items-start gap-2 rounded-lg border border-danger-border bg-danger-bg p-3 text-ui text-danger-text"
       >
         <p>The destinations could not be loaded.</p>
         <Button size="sm" variant="secondary" onClick={tree.refetch}>
@@ -121,7 +121,7 @@ export function RestoreToDialog({ entry, onClose, onRestored, onGone }: RestoreT
     )
   } else if (isItem && !options.some((o) => !o.group)) {
     body = (
-      <p className="text-sm text-text-muted">
+      <p className="text-ui text-text-muted">
         There are no lists to restore it to. Create a list first, then restore the item.
       </p>
     )

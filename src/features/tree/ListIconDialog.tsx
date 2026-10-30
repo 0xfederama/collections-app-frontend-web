@@ -129,7 +129,7 @@ export function ListIconDialog({
               className="size-9"
               iconClassName="size-5"
             />
-            <span className="text-sm text-text-muted">{choiceLabel}</span>
+            <span className="text-ui text-text-muted">{choiceLabel}</span>
           </div>
           {action.error && (
             <FormError
@@ -152,7 +152,7 @@ export function ListIconDialog({
             </>
           )}
           {reloading && (
-            <p role="status" className="text-sm text-text-muted">
+            <p role="status" className="text-ui text-text-muted">
               Loading latest list…
             </p>
           )}
@@ -186,7 +186,7 @@ export function ListIconDialog({
             aria-label="Your draft"
             value={copyFallback}
             onFocus={(event) => event.currentTarget.select()}
-            className="w-full rounded-sm border border-border-strong bg-surface p-3 font-mono text-sm text-text"
+            className="w-full rounded-md border border-border-strong bg-surface p-3 font-mono text-ui text-text"
           />
         </Dialog>
       )}

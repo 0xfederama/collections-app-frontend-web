@@ -4,11 +4,11 @@ import openLibraryLogo from '../../assets/services/open-library.svg'
 const externalLink =
   'text-accent underline decoration-border-strong underline-offset-4 hover:text-accent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring'
 
-const logoTile = 'size-12 shrink-0 overflow-hidden rounded-md bg-fill p-1.5'
+const logoTile = 'size-12 shrink-0 overflow-hidden rounded-sm bg-fill p-1.5'
 
 export function AboutSection() {
   return (
-    <div className="flex flex-col gap-5 text-sm leading-6">
+    <div className="flex flex-col gap-5 text-ui leading-6">
       <div className="flex items-start gap-3">
         <span className={logoTile}>
           <img src={tmdbLogo} alt="TMDB" className="size-full object-contain" />

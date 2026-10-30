@@ -209,7 +209,7 @@ export function OptionalSections({
             </Button>
             {image && (
               <>
-                <span className="min-w-0 flex-1 truncate text-sm text-text-muted">
+                <span className="min-w-0 flex-1 truncate text-ui text-text-muted">
                   {image.name}
                 </span>
                 <IconButton
@@ -226,7 +226,7 @@ export function OptionalSections({
             )}
           </div>
           {errors.image && (
-            <p role="alert" className="text-xs font-medium text-danger-text">
+            <p role="alert" className="text-secondary font-medium text-danger-text">
               {errors.image}
             </p>
           )}

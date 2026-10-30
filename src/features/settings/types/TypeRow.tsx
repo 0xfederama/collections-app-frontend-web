@@ -19,7 +19,7 @@ export function TypeRow({
       onClick={onSelect}
       className={cx(
         'flex min-h-12 w-full items-center gap-3 rounded-md px-3 py-2 text-left focus-visible:outline-2 focus-visible:outline-focus-ring',
-        selected ? 'bg-accent/10 text-text' : 'hover:bg-fill',
+        selected ? 'bg-accent-tint text-text' : 'hover:bg-fill',
       )}
     >
       <ListIconMark
@@ -28,7 +28,7 @@ export function TypeRow({
         className="size-9"
         iconClassName="size-4"
       />
-      <span className="min-w-0 flex-1 text-sm font-medium break-words">{type.name}</span>
+      <span className="min-w-0 flex-1 font-display text-row break-words">{type.name}</span>
       {type.is_locked && (
         <>
           <Lock aria-hidden className="size-3.5 shrink-0 text-text-muted" />

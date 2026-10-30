@@ -64,7 +64,7 @@ export function DefaultsSection({
             Clear icon
           </Button>
         )}
-        <label className="ml-1 flex min-h-10 items-center gap-2 text-sm">
+        <label className="ml-1 flex min-h-10 items-center gap-2 text-ui">
           <input
             type="checkbox"
             aria-label="Allow prices for items"
@@ -99,9 +99,9 @@ export function DefaultsSection({
           disabled={fieldOptions.length === 0}
         />
         <fieldset className="min-w-0">
-          <legend className="mb-2 text-sm font-medium">Default pinned fields</legend>
+          <legend className="mb-2 text-ui font-medium">Default pinned fields</legend>
           {fieldOptions.length === 0 ? (
-            <p className="text-sm text-text-muted">Add fields to choose up to three pins.</p>
+            <p className="text-ui text-text-muted">Add fields to choose up to three pins.</p>
           ) : (
             <div className="flex flex-col gap-1">
               {fieldOptions.map((field) => {
@@ -111,7 +111,7 @@ export function DefaultsSection({
                 return (
                   <label
                     key={field.value}
-                    className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm hover:bg-fill"
+                    className="flex min-h-9 items-center gap-2 rounded-md px-2 text-ui hover:bg-fill"
                   >
                     <input
                       type="checkbox"
@@ -125,13 +125,17 @@ export function DefaultsSection({
                       }}
                     />
                     <span className="min-w-0 flex-1 break-words">{field.label}</span>
-                    {checked && <span className="text-xs text-text-muted">{position + 1}</span>}
+                    {checked && (
+                      <span className="font-mono text-secondary text-text-muted">
+                        {position + 1}
+                      </span>
+                    )}
                   </label>
                 )
               })}
             </div>
           )}
-          <p className="mt-1 text-xs text-text-muted">
+          <p className="mt-1 text-secondary text-text-muted">
             {defaults.pinnedFields === null
               ? 'No type-specific pin default is set.'
               : defaults.pinnedFields.length === 0

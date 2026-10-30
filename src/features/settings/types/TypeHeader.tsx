@@ -13,8 +13,8 @@ export function TypeHeader({
   return (
     <div className="flex flex-wrap items-start gap-3">
       <div className="min-w-0 flex-1 basis-40">
-        <h3 className="text-base font-semibold break-words">{selected.name}</h3>
-        <p className="text-xs text-text-muted">
+        <h3 className="font-display text-section break-words">{selected.name}</h3>
+        <p className="text-secondary text-text-muted">
           {selected.is_locked ? 'Built in type · settings are read only' : `Key: ${selected.key}`}
         </p>
       </div>

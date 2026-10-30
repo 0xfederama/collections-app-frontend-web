@@ -64,7 +64,7 @@ export function ChangeListsDialog({
         onValueChange={setChangeTargetType}
         disabled={updateList.isPending}
       />
-      <p className="text-sm text-text-muted">
+      <p className="text-ui text-text-muted">
         Lists:{' '}
         {lists
           .filter((list) => list.type === type.key)

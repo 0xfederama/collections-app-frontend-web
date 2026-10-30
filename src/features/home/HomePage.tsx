@@ -14,7 +14,7 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Home</h1>
+      <h1 className="font-display text-display">Home</h1>
       {noLists ? (
         <EmptyState
           icon={ListPlus}
@@ -36,7 +36,7 @@ export function HomePage() {
       ) : (
         <>
           <section aria-labelledby="home-lists" className="flex flex-col gap-3">
-            <h2 id="home-lists" className="text-sm font-semibold text-text-muted">
+            <h2 id="home-lists" className="font-display text-section text-text">
               Your lists
             </h2>
             {tree.status === 'pending' ? (

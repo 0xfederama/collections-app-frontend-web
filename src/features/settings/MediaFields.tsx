@@ -31,7 +31,7 @@ export function MediaFields({
       hidden={hidden}
       className={`flex flex-col gap-4 ${hidden ? 'hidden' : ''}`}
     >
-      <h2 id="settings-movies-tv" className="text-sm font-semibold text-text-muted">
+      <h2 id="settings-movies-tv" className="font-display text-section text-text">
         Country &amp; language
       </h2>
       <CountrySelect
@@ -53,7 +53,7 @@ export function MediaFields({
         disabled={isPending}
         options={metadataLanguageOptions}
       />
-      <h2 id="settings-books" className="pt-2 text-sm font-semibold text-text-muted">
+      <h2 id="settings-books" className="pt-2 font-display text-section text-text">
         Books
       </h2>
       <Select

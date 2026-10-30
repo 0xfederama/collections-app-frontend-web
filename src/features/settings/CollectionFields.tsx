@@ -34,7 +34,7 @@ export function CollectionFields({
       hidden={hidden}
       className={`flex flex-col gap-4 ${hidden ? 'hidden' : ''}`}
     >
-      <h2 id="settings-general" className="text-sm font-semibold text-text-muted">
+      <h2 id="settings-general" className="font-display text-section text-text">
         General
       </h2>
       <TextField

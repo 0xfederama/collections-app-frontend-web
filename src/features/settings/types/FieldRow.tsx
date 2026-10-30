@@ -34,8 +34,8 @@ export function FieldRow({
       )}
     >
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium break-words">{field.label}</span>
-        <span className="text-xs text-text-muted">
+        <span className="block font-display text-row break-words">{field.label}</span>
+        <span className="text-secondary text-text-muted">
           {field.key} · {field.type === 'boolean' ? 'yes / no' : fieldTypeWord(field.type)}
           {field.is_locked ? ' · built in, read only' : ''}
         </span>
@@ -50,7 +50,7 @@ export function FieldRow({
           </Button>
         </>
       )}
-      {field.is_locked && <span className="text-xs text-text-muted">Locked</span>}
+      {field.is_locked && <span className="text-secondary text-text-muted">Locked</span>}
     </div>
   )
 }

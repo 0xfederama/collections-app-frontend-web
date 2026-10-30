@@ -32,10 +32,10 @@ export function TypeList({
         onClick={onCreate}
         className="flex min-h-12 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-text-muted hover:bg-fill hover:text-text focus-visible:outline-2 focus-visible:outline-focus-ring"
       >
-        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-md bg-fill">
+        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-sm bg-fill">
           <Plus className="size-4" />
         </span>
-        <span className="min-w-0 flex-1 text-sm font-medium">New type</span>
+        <span className="min-w-0 flex-1 text-ui font-medium">New type</span>
       </button>
     </div>
   )

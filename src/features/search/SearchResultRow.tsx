@@ -45,16 +45,19 @@ export function SearchResultBody({ result, large }: { result: SearchResult; larg
       <div aria-hidden className="shrink-0">
         <ItemThumb
           item={item}
-          className={cx('rounded-sm', large ? 'size-16 md:size-20 md:rounded-md' : 'size-10')}
+          className={cx('rounded-sm', large ? 'size-16 md:size-20' : 'size-10')}
         />
       </div>
       <span className="min-w-0 flex-1">
         <span
-          className={cx('block truncate font-medium text-text', large ? 'text-base' : 'text-sm')}
+          className={cx(
+            'block truncate text-text',
+            large ? 'font-display text-row' : 'font-display text-ui font-semibold',
+          )}
         >
           {item.title}
         </span>
-        <ResultPath path={path} className="text-xs" type={item.type} />
+        <ResultPath path={path} className="text-secondary" type={item.type} />
       </span>
       <span
         className="inline-flex shrink-0 text-text-muted"
