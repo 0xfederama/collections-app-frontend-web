@@ -46,7 +46,7 @@ No CI (D-031, D-032): the gates run locally. Run `npm run check` before every PR
 | Dependency vulnerability scan (network)                                                                    | `npm run audit`                                                                                                   |
 | E2E (Playwright, chromium; needs `./deploy/test up -d --fresh` from the parent repo; not in `check`)       | `npm run e2e` (once: `npx playwright install chromium`)                                                           |
 | Sync API contract (vendors the spec at a backend tag, regenerates `src/generated/`) / verify offline       | `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]` / `npm run api:check` (part of `check`)              |
-| Dev server with no backend (MSW serves the fixtures)                                                  | `VITE_API_MOCKS=1 npm run dev`                                                                                    |
+| Dev server with no backend (MSW serves the fixtures)                                                       | `VITE_API_MOCKS=1 npm run dev`                                                                                    |
 
 Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-038–D-042. Backend for dev: `docker compose up --build` in `../backend` (backend only) or in the parent folder (backend plus this dev server in a container).
 

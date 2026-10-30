@@ -78,7 +78,7 @@ export function PinnedSlot({
         parts.push(
           <span key={`k${parts.length}`} className="inline-flex flex-wrap items-center gap-1.5">
             {stores.map((store) => {
-              const label = storeName(providers.data ?? undefined, store)
+              const label = storeName(providers.data, store)
               const href = storeLink(store, { isbn, title: item.title, country })
               return (
                 <TileLink key={store} href={safeWebsiteUrl(href)} label={label}>

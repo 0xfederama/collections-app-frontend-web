@@ -68,7 +68,7 @@ export function SearchRoute() {
   }
 
   const results = useSearchResults(q)
-  const rows = results.data?.pages.flatMap((page) => page.data ?? []) ?? []
+  const rows = results.data?.pages.flatMap((page) => page.data) ?? []
   const total = results.data?.pages[0]?.page.total ?? 0
 
   let body

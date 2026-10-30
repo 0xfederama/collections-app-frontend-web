@@ -79,7 +79,7 @@ export function StoresInputs({ form, field }: { form: FieldForm; field: TypeFiel
     <StoreChoices
       value={parseStoreKeys(form.draft.meta[field.key] ?? '')}
       onChange={(next) => form.setMeta(field.key, joinStoreKeys(next))}
-      providers={providers.data ?? []}
+      providers={providers.data}
       label={field.label}
     />
   )
