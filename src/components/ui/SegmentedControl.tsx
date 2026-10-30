@@ -43,7 +43,7 @@ export function SegmentedControl({
       {options.map((option) => (
         <label
           key={option.value}
-          className="relative flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-[calc(var(--radius-md)-2px)] px-3 text-sm font-medium text-text-muted transition-colors has-[:checked]:bg-surface has-[:checked]:text-text has-[:checked]:shadow-sm has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus-ring not-has-[:checked]:not-has-[:disabled]:hover:bg-fill-hover not-has-[:checked]:not-has-[:disabled]:hover:text-text pointer-coarse:min-h-11"
+          className="relative flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-sm px-3 text-ui font-medium text-text-muted transition-colors has-[:checked]:bg-surface has-[:checked]:text-text has-[:checked]:shadow-sm has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus-ring not-has-[:checked]:not-has-[:disabled]:hover:bg-fill-hover not-has-[:checked]:not-has-[:disabled]:hover:text-text pointer-coarse:min-h-11"
         >
           <input
             type="radio"

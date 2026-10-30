@@ -69,11 +69,9 @@ export function Dialog({
             )}
           >
             <div className={cx('flex flex-col gap-1', hideTitle && 'sr-only')}>
-              <RadixDialog.Title className="text-xl tracking-tight font-semibold">
-                {title}
-              </RadixDialog.Title>
+              <RadixDialog.Title className="font-display text-section">{title}</RadixDialog.Title>
               {description ? (
-                <RadixDialog.Description className="text-sm text-text-muted">
+                <RadixDialog.Description className="text-ui text-text-muted">
                   {description}
                 </RadixDialog.Description>
               ) : null}

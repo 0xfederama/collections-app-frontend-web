@@ -263,9 +263,9 @@ function TreeRow<T extends TreeNodeBase>({
       }}
       style={{ paddingInlineStart: `${(level - 1) * 16 + 8}px` }}
       className={cx(
-        'group/row flex min-h-9 cursor-pointer select-none items-center [-webkit-touch-callout:none] gap-1 rounded-md pr-2 text-sm text-text hover:bg-fill-hover focus-visible:bg-fill-hover focus-visible:outline-none aria-selected:bg-accent/10 aria-selected:focus-visible:bg-accent/20 aria-selected:font-medium aria-selected:text-accent-text pointer-coarse:min-h-11',
+        'group/row flex min-h-9 cursor-pointer select-none items-center [-webkit-touch-callout:none] gap-1 rounded-md pr-2 text-ui text-text hover:bg-fill-hover focus-visible:bg-fill-hover focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus-ring aria-selected:bg-accent-tint aria-selected:focus-visible:bg-accent-tint aria-selected:font-medium aria-selected:text-accent-text pointer-coarse:min-h-11',
         isDragging && 'bg-surface-raised opacity-80 shadow-md',
-        isDropTarget && 'bg-accent/20 text-accent-text',
+        isDropTarget && 'bg-accent-tint text-accent-text',
       )}
     >
       {renderRow(node, { level, expanded: isExpanded, selected, hasChildren })}

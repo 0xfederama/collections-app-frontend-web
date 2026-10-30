@@ -44,13 +44,13 @@ const visualFor = (name: string): Visual => {
 }
 
 /**
- * F009-W5: one tile geometry for every link and streaming icon. A square with the `rounded-md`
+ * F009-W5: one tile geometry for every link and streaming icon. A square with the `rounded-sm`
  * radius and a hairline border. The background is the neutral `fill` surface, or `bg-tile-light`
  * for marks drawn for a white ground (F017-W2). `size` is the only thing that varies: a tight list
  * row asks for 20–26 px, the item page for the default.
  */
 const TILE =
-  'relative inline-flex shrink-0 items-center justify-center rounded-md border border-border'
+  'relative inline-flex shrink-0 items-center justify-center rounded-sm border border-border'
 
 /**
  * The mark inside an inset tile (and the symbol and letter). `object-contain` fits the image in its
@@ -98,7 +98,7 @@ function InsetMark({ visual }: { visual: Visual }) {
 /** The mark of a bleed tile: the image fills the tile, clipped by its rounded corners. */
 function BleedMark({ src }: { src: string }) {
   return (
-    <span aria-hidden className="absolute inset-0 overflow-hidden rounded-md">
+    <span aria-hidden className="absolute inset-0 overflow-hidden rounded-sm">
       <img
         src={src}
         alt=""

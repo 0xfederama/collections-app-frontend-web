@@ -62,9 +62,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             >
               <Icon aria-hidden className="mt-0.5 size-5 shrink-0" />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <RadixToast.Title className="text-sm font-medium">{t.title}</RadixToast.Title>
+                <RadixToast.Title className="text-ui font-medium">{t.title}</RadixToast.Title>
                 {t.description && (
-                  <RadixToast.Description className="text-sm">
+                  <RadixToast.Description className="text-ui">
                     {t.description}
                   </RadixToast.Description>
                 )}

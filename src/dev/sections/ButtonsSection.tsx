@@ -5,7 +5,7 @@ import { Row, Section } from './shared'
 export function ButtonsSection() {
   return (
     <Section id="buttons" title="Buttons">
-      {(['primary', 'secondary', 'ghost', 'danger'] as const).map((variant) => (
+      {(['primary', 'ink', 'secondary', 'ghost', 'danger'] as const).map((variant) => (
         <Row key={variant} label={variant}>
           <Button variant={variant}>Default</Button>
           <Button variant={variant} size="sm">

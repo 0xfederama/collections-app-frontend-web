@@ -44,9 +44,9 @@ export function Drawer({
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <RadixDialog.Title className="text-xl font-semibold">{title}</RadixDialog.Title>
+              <RadixDialog.Title className="font-display text-section">{title}</RadixDialog.Title>
               {description ? (
-                <RadixDialog.Description className="text-sm text-text-muted">
+                <RadixDialog.Description className="text-ui text-text-muted">
                   {description}
                 </RadixDialog.Description>
               ) : null}

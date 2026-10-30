@@ -49,10 +49,10 @@ export function AlertDialog({
           className="fixed top-1/2 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-4 material-strong rounded-xl p-6 text-text shadow-sheet data-[state=closed]:animate-dialog-out data-[state=open]:animate-dialog-in"
         >
           <div className="flex flex-col gap-1">
-            <RadixAlertDialog.Title className="text-xl font-semibold">
+            <RadixAlertDialog.Title className="font-display text-section">
               {title}
             </RadixAlertDialog.Title>
-            <RadixAlertDialog.Description className="text-sm text-text-muted">
+            <RadixAlertDialog.Description className="text-ui text-text-muted">
               {description}
             </RadixAlertDialog.Description>
           </div>
