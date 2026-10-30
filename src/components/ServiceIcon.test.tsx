@@ -178,15 +178,15 @@ describe('F016-W4 store tiles are named by the display name', () => {
 })
 
 describe('F017-W2 registry tiles: background and fit follow the entry', () => {
-  it('a light entry (Letterboxd) sits on the theme-independent light surface, not the fill', () => {
+  it('a light entry (Goodreads) sits on the theme-independent light surface, not the fill', () => {
     render(
       <>
-        <LinkIcon name="Letterboxd" />
+        <LinkIcon name="Goodreads" />
         <LinkIcon name="Google" />
       </>,
     )
-    expect(tile('Letterboxd')).toHaveClass('bg-tile-light')
-    expect(tile('Letterboxd')).not.toHaveClass('bg-fill')
+    expect(tile('Goodreads')).toHaveClass('bg-tile-light')
+    expect(tile('Goodreads')).not.toHaveClass('bg-fill')
     expect(tile('Google')).toHaveClass('bg-fill')
   })
 
