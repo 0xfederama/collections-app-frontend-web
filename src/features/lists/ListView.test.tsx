@@ -6,14 +6,14 @@ import { describe, expect, it } from 'vitest'
 import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from '../../app/router'
 import { ToastProvider } from '../../components/ui'
-import { exampleResponses } from '../../generated/examples'
+import { exampleResponses } from '../../mocks/fixtures'
 import type { components } from '../../generated/schema'
+import type { ItemSummary } from './api'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { createTestQueryClient, mockViewport } from '../../test-utils'
 
 type List = components['schemas']['List']
-type ItemSummary = components['schemas']['ItemSummary']
 
 const LIST = '7c1e5a10-0000-4000-8000-000000000011'
 const listUrl = `${location.origin}/api/v1/lists/${LIST}`
@@ -163,7 +163,7 @@ function renderList(path: string) {
 /** The sidebar tree with the test list's type replaced (the header reads the type from there). */
 function treeWithType(type: List['type']) {
   const tree = { ...(exampleResponses.getTree.body as components['schemas']['Tree']) }
-  tree.lists = tree.lists.map((list) => (list.id === LIST ? { ...list, type } : list))
+  tree.lists = (tree.lists ?? []).map((list) => (list.id === LIST ? { ...list, type } : list))
   server.use(http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json(tree)))
 }
 
@@ -1018,7 +1018,7 @@ describe('W-06 list actions menu (W-05) in the header', () => {
       http.get(treeUrl, () =>
         HttpResponse.json({
           ...tree,
-          lists: tree.lists.map((l) =>
+          lists: (tree.lists ?? []).map((l) =>
             l.id === LIST ? { ...l, name: backend.list.name, version: backend.list.version } : l,
           ),
         }),

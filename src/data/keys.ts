@@ -1,9 +1,6 @@
 // Query keys of every server resource (F020-W4). The values are the cache identities: changing one
 // changes what is invalidated, so they are fixed. Imports nothing from features (eslint.boundaries.js,
 // rule A), so features import the keys from here and never the other way round.
-import type { components } from '../generated/schema'
-
-type SortMode = components['schemas']['SortMode']
 
 /** Folder and list tree (`GET /tree`). */
 export const treeKeys = { tree: ['tree'] as const }
@@ -11,7 +8,7 @@ export const treeKeys = { tree: ['tree'] as const }
 /** The parameters of one items query of a list (the URL state of the list view, W-06). */
 export interface ItemsKeyParams {
   /** The URL override; `null` lets the server use the list's `sort_mode` (D-063). */
-  sort: SortMode | null
+  sort: string | null
   q: string
   filterField: string | null
   filterValue: string | null

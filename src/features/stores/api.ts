@@ -16,7 +16,7 @@ export function useStoreProviders() {
   return useQuery({
     queryKey: storeKeys.providers,
     queryFn: ({ signal }) => unwrap(api.GET('/api/v1/store-providers', { signal })),
-    select: (data) => data.providers,
+    select: (data) => data.providers ?? [],
     staleTime: PROVIDERS_STALE_MS,
   })
 }

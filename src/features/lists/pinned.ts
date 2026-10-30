@@ -1,9 +1,6 @@
-import type { components } from '../../generated/schema'
-import type { PinnedFields } from './api'
+import type { ItemSummary, PinnedFields } from './api'
 import { formatField, hasPrice, type TypeDefinition } from '../items'
 import { formatPrice } from './price'
-
-type ItemSummary = components['schemas']['ItemSummary']
 
 /**
  * The fields a list pins, by key, in order: the first reads next to the title, the second in the

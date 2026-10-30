@@ -10,11 +10,29 @@ import { ApiError, api, ifMatch, unwrap } from '../../lib/api'
 import { listKeys, treeKeys, type ItemsKeyParams } from '../../data/keys'
 
 export type List = components['schemas']['List']
-export type ItemSummary = components['schemas']['ItemSummary']
-type ItemPage = components['schemas']['ItemPage']
-export type DisplayMode = components['schemas']['DisplayMode']
-export type SortMode = components['schemas']['SortMode']
-export type PinnedFields = components['schemas']['PinnedFields']
+type Price = components['schemas']['Price']
+type ImageSummary = components['schemas']['ImageSummary']
+
+/**
+ * A row of a list. The contract types `image` and `price` as always present, but the server sends
+ * `null` for a row with no image or no price (its Go type is a pointer), so both are typed nullable here.
+ */
+export type ItemSummary = Omit<components['schemas']['ItemSummary'], 'image' | 'price'> & {
+  image: ImageSummary | null
+  price: Price | null
+}
+
+/** The list's display modes (the contract types `display_mode` as a plain string). */
+export type DisplayMode = 'compact' | 'thumbnail' | 'grid'
+/** A built-in sort (`manual`, `title`, `updated`, `price`) or a field key of the list's type (the contract types it as a string). */
+export type SortMode = string
+/** The pinned field keys of a list; `null` is the type default, `[]` pins nothing (the contract types it as a plain array). */
+export type PinnedFields = string[] | null
+
+/** One page of `GET /lists/{id}/items`; `data` is `[]` when the server sends `null` (no rows). */
+export type ItemPageData = Omit<components['schemas']['ItemPage'], 'data'> & {
+  data: ItemSummary[]
+}
 
 /** Max page size of `GET /lists/{id}/items` (D-018). */
 export const ITEMS_PAGE_SIZE = 200
@@ -34,8 +52,8 @@ export function useListItems(listId: string, params: ItemsParams) {
   return useInfiniteQuery({
     queryKey: listKeys.itemsQuery(listId, params),
     initialPageParam: 0,
-    queryFn: ({ signal, pageParam }) =>
-      unwrap(
+    queryFn: async ({ signal, pageParam }): Promise<ItemPageData> => {
+      const page = await unwrap(
         api.GET('/api/v1/lists/{id}/items', {
           params: {
             path: { id: listId },
@@ -52,7 +70,9 @@ export function useListItems(listId: string, params: ItemsParams) {
           },
           signal,
         }),
-      ),
+      )
+      return { ...page, data: page.data ?? [] }
+    },
     getNextPageParam: (last) => {
       const next = last.page.offset + last.data.length
       return last.data.length > 0 && next < last.page.total ? next : undefined
@@ -60,7 +80,7 @@ export function useListItems(listId: string, params: ItemsParams) {
   })
 }
 
-export type ItemsData = InfiniteData<ItemPage, unknown>
+export type ItemsData = InfiniteData<ItemPageData, unknown>
 
 /** Flat items of all loaded pages, plus the server's total for the query. */
 export function flattenItems(data: ItemsData | undefined) {

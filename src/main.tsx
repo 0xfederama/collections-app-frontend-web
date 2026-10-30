@@ -9,7 +9,7 @@ trackInputModality()
 const root = document.getElementById('root')
 if (!root) throw new Error('missing #root element')
 
-// `VITE_API_MOCKS=1 npm run dev` serves the API from the spec examples. Vite replaces the flag at
+// `VITE_API_MOCKS=1 npm run dev` serves the API from the fixtures. Vite replaces the flag at
 // build time, so this branch and the whole mocks module are absent from production bundles.
 async function enableMocks() {
   if (import.meta.env.VITE_API_MOCKS !== '1') return

@@ -7,12 +7,19 @@ import type { TreeNodeBase } from '../../components/ui'
 
 export type Folder = components['schemas']['Folder']
 export type List = components['schemas']['List']
-export type TreeData = components['schemas']['Tree']
+/**
+ * The tree as the screens read it. The API sends `null` for an empty slice (a Go nil slice), so
+ * the query normalizes it to `[]` once, here; nothing downstream checks for `null`.
+ */
+export type TreeData = { folders: Folder[]; lists: List[] }
 
 export function useTree() {
   return useQuery({
     queryKey: treeKeys.tree,
-    queryFn: ({ signal }) => unwrap(api.GET('/api/v1/tree', { signal })),
+    queryFn: async ({ signal }): Promise<TreeData> => {
+      const tree = await unwrap(api.GET('/api/v1/tree', { signal }))
+      return { folders: tree.folders ?? [], lists: tree.lists ?? [] }
+    },
   })
 }
 

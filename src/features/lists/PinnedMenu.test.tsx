@@ -4,8 +4,15 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { PinnedMenu } from './PinnedMenu'
 import type { List } from './api'
-import type { ItemType } from '../items'
+import type { ItemType, TypeDefinition } from '../items'
 import { mockTypes } from '../../mocks/types'
+
+/** A mock type as the app reads it: the contract's `fields` may be null, `useTypes` makes it an array. */
+function mockType(key: string | null): TypeDefinition {
+  const found = mockTypes.find((candidate) => candidate.key === key)
+  if (!found) throw new Error(`no mock type ${key}`)
+  return { ...found, fields: found.fields ?? [] }
+}
 
 type Pinned = List['pinned_fields']
 
@@ -20,7 +27,7 @@ function Harness({
   patches: Pinned[]
 }) {
   const [pinned, setPinned] = useState<Pinned>(initial)
-  const definition = mockTypes.find((candidate) => candidate.key === type)!
+  const definition = mockType(type)
   return (
     <PinnedMenu
       list={{ type, pinned_fields: pinned }}

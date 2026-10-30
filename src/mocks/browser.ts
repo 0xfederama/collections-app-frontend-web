@@ -11,7 +11,7 @@ import { devTrashHandlers } from './devTrash'
 import { handlers } from './handlers'
 import { typeHandlers } from './types'
 
-/** Dev-only worker, started by main.tsx when VITE_API_MOCKS=1. `devHandlers` override the spec examples. */
+/** Dev-only worker, started by main.tsx when VITE_API_MOCKS=1. `devHandlers` override the fixtures. */
 export const worker = setupWorker(
   ...devImageHandlers,
   ...devContentHandlers,

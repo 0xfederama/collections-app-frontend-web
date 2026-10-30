@@ -2,8 +2,11 @@ import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
 import { problemResponse } from './problems'
 
-type TrashEntry = components['schemas']['TrashEntry']
 type PathSegment = components['schemas']['PathSegment']
+/** The fake always sends `former_path` as an array (the client reads the API's `null` as `[]`). */
+type TrashEntry = Omit<components['schemas']['TrashEntry'], 'former_path'> & {
+  former_path: PathSegment[]
+}
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 const isRecord = (value: unknown): value is Record<string, unknown> =>

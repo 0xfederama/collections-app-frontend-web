@@ -7,6 +7,13 @@ import type { TypeDefinition } from '../items'
 import { mockTypes } from '../../mocks/types'
 import { renderWithProviders } from '../../test-utils'
 
+/** A mock type as the app reads it: the contract's `fields` may be null, `useTypes` makes it an array. */
+function mockType(key: string): TypeDefinition {
+  const found = mockTypes.find((candidate) => candidate.key === key)
+  if (!found) throw new Error(`no mock type ${key}`)
+  return { ...found, fields: found.fields ?? [] }
+}
+
 const item = (over: Partial<ItemSummary> = {}): ItemSummary => ({
   id: 'i1',
   list_id: 'l1',
@@ -46,8 +53,7 @@ function entry(
   over: Partial<ItemSummary> = {},
 ) {
   const type = over.type ?? 'movie'
-  const definition =
-    type === 'book' ? bookDefinition : mockTypes.find((candidate) => candidate.key === type)!
+  const definition = type === 'book' ? bookDefinition : mockType(type)
   renderWithProviders(
     <MemoryRouter>
       <ul>

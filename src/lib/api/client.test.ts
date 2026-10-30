@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
-import { exampleResponses } from '../../generated/examples'
+import { exampleResponses } from '../../mocks/fixtures'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { api, unwrap } from './client'

@@ -60,7 +60,7 @@ export function DescriptionEditor({ initial, onDone }: { initial: TreeList; onDo
     await queryClient.refetchQueries({ queryKey: treeKeys.tree })
     const latest = queryClient
       .getQueryData<TreeData>(treeKeys.tree)
-      ?.lists.find((list) => list.id === base.id)
+      ?.lists?.find((list) => list.id === base.id)
     if (!latest) {
       setGone(true)
       return

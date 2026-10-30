@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { exampleResponses } from '../../generated/examples'
+import { exampleResponses } from '../../mocks/fixtures'
 import { buildTree, createTreeIndex, type Folder, type FolderNode, type List } from './api'
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`

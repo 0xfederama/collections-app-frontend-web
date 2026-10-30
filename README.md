@@ -50,7 +50,7 @@ src/routes/            one thin component per route
 src/features/<x>/      components, hooks and api.ts (TanStack Query) per feature
 src/lib/api/           the only place that talks to the server (openapi-fetch client, ApiError)
 src/components/ui/     design-system primitives (gallery at /dev/ui in dev)
-src/mocks/             MSW handlers built from the spec examples, plus stateful dev fakes
+src/mocks/             MSW handlers built from the fixtures, plus stateful dev fakes
 src/generated/         generated from the spec: never edit
 api/                   vendored OpenAPI spec and lock file: never edit (use api:sync)
 src/styles/            global.css (Tailwind entry) and tokens.css
@@ -73,7 +73,7 @@ npm ci
 npm run dev            # http://localhost:5173
 ```
 
-With no backend at all, MSW serves the spec examples in the browser:
+With no backend at all, MSW serves the fixtures in the browser:
 
 ```bash
 VITE_API_MOCKS=1 npm run dev
