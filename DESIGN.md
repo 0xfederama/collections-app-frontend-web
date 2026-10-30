@@ -1,61 +1,90 @@
 ---
-name: Collections (web 2.0.0)
-description: Frosted Gallery. Frosted chrome floating over image-led content, one indigo accent, light and graphite dark.
+name: Collections (web 2.20.0)
+description: Editorial. Plain near-white and near-black surfaces, hairline borders, one electric blue accent, a geometric display face and less rounding. Shadows only on floating layers.
 colors:
-  accent: '#4f46e5'
-  accent-hover: '#4338ca'
-  accent-dark: '#818cf8'
-  accent-dark-hover: '#a5b4fc'
+  accent: '#2d5bff'
+  accent-hover: '#2a52e8'
+  accent-text: '#2448d6'
+  accent-tint: '#eef2ff'
   accent-fg: '#ffffff'
-  accent-fg-dark: '#0f0e2e'
-  ground: '#edeef1'
-  surface: '#ffffff'
-  ink: '#1d1d1f'
-  ink-muted: '#5c5d66'
-  border-strong: '#7f8292'
-  graphite-ground: '#121215'
-  graphite-surface: '#1a1a1f'
-  graphite-raised: '#232329'
-  graphite-ink: '#f2f2f5'
-  graphite-muted: '#a3a3ae'
+  accent-dark: '#4a72ff'
+  accent-dark-hover: '#6686ff'
+  accent-dark-text: '#8fa8ff'
+  accent-dark-fg: '#0b0b0c'
+  ink: '#0b0b0c'
+  ink-fg: '#ffffff'
+  ink-dark: '#f4f4f5'
+  ink-dark-fg: '#0b0b0c'
+  ground: '#ffffff'
+  sidebar: '#f7f7f8'
+  surface: '#f6f6f7'
+  border: '#e6e6e9'
+  border-soft: '#f0f0f1'
+  text: '#0b0b0c'
+  text-muted: '#55555c'
+  text-subtle: '#6e6e78'
+  dark-ground: '#0b0b0c'
+  dark-sidebar: '#121214'
+  dark-surface: '#18181b'
+  dark-raised: '#1d1d21'
+  dark-border: '#26262b'
+  dark-border-soft: '#1d1d21'
+  dark-text: '#f4f4f5'
+  dark-text-muted: '#a8a8b0'
+  dark-text-subtle: '#8a8a93'
   danger: '#b91c1c'
   danger-dark: '#f87171'
-  success-text: '#166534'
-  warning-text: '#92400e'
 typography:
-  title-page:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: '2rem'
+  display:
+    fontFamily: "'Space Grotesk', ui-sans-serif, system-ui, sans-serif"
+    fontSize: 'clamp(2rem, 1.25rem + 3vw, 2.75rem)'
     fontWeight: 700
-    lineHeight: 1.2
-    letterSpacing: '-0.025em'
-  title-dialog:
-    fontFamily: '{typography.title-page.fontFamily}'
+    lineHeight: 1.02
+    letterSpacing: '-0.035em'
+  heading:
+    fontFamily: "'Space Grotesk', ui-sans-serif, system-ui, sans-serif"
+    fontSize: '1.875rem'
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: '-0.03em'
+  section:
+    fontFamily: "'Space Grotesk', ui-sans-serif, system-ui, sans-serif"
     fontSize: '1.25rem'
     fontWeight: 600
-    lineHeight: 1.2
-    letterSpacing: '-0.025em'
+    lineHeight: 1.3
+    letterSpacing: '-0.015em'
+  row:
+    fontFamily: "'Space Grotesk', ui-sans-serif, system-ui, sans-serif"
+    fontSize: '0.96875rem'
+    fontWeight: 600
+    lineHeight: 1.35
+    letterSpacing: '-0.01em'
   body:
-    fontFamily: '{typography.title-page.fontFamily}'
-    fontSize: '1rem'
+    fontFamily: "'Geist', ui-sans-serif, system-ui, sans-serif"
+    fontSize: '0.9375rem'
     fontWeight: 400
-    lineHeight: 1.5
-    letterSpacing: '-0.006em'
-  control:
-    fontFamily: '{typography.title-page.fontFamily}'
+    lineHeight: 1.6
+  ui:
+    fontFamily: "'Geist', ui-sans-serif, system-ui, sans-serif"
     fontSize: '0.875rem'
     fontWeight: 500
     lineHeight: 1.5
-  caption:
-    fontFamily: '{typography.title-page.fontFamily}'
-    fontSize: '0.75rem'
-    fontWeight: 500
+  secondary:
+    fontFamily: "'Geist', ui-sans-serif, system-ui, sans-serif"
+    fontSize: '0.8125rem'
+    fontWeight: 400
     lineHeight: 1.5
+  label:
+    fontFamily: "'Geist Mono', ui-monospace, monospace"
+    fontSize: '0.75rem'
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: '0.06em'
 rounded:
-  sm: '8px'
-  md: '10px'
-  lg: '18px'
-  xl: '24px'
+  sm: '6px'
+  md: '8px'
+  lg: '12px'
+  xl: '16px'
   full: '9999px'
 spacing:
   base: '4px'
@@ -65,31 +94,36 @@ components:
   button-primary:
     backgroundColor: '{colors.accent}'
     textColor: '{colors.accent-fg}'
-    rounded: '{rounded.full}'
-    height: '40px'
-    padding: '0 16px'
+    rounded: '{rounded.md}'
+    height: '36px'
+    padding: '0 14px'
   button-primary-hover:
     backgroundColor: '{colors.accent-hover}'
+  button-ink:
+    backgroundColor: '{colors.ink}'
+    textColor: '{colors.ink-fg}'
+    rounded: '{rounded.md}'
+    height: '36px'
   button-secondary:
-    backgroundColor: '{colors.surface}'
-    textColor: '{colors.ink}'
-    rounded: '{rounded.full}'
-    height: '40px'
+    backgroundColor: '{colors.ground}'
+    textColor: '{colors.text}'
+    rounded: '{rounded.md}'
+    height: '36px'
   button-danger:
     backgroundColor: '{colors.danger}'
-    textColor: '{colors.surface}'
-    rounded: '{rounded.full}'
+    textColor: '#ffffff'
+    rounded: '{rounded.md}'
   card:
     backgroundColor: '{colors.surface}'
     rounded: '{rounded.lg}'
     padding: '6px'
   chip:
     rounded: '{rounded.full}'
-    typography: '{typography.caption}'
+    typography: '{typography.secondary}'
     padding: '2px 10px'
   field:
     rounded: '{rounded.md}'
-    typography: '{typography.control}'
+    typography: '{typography.ui}'
   detail-sheet:
     rounded: '{rounded.xl}'
     width: '420px'
@@ -97,150 +131,192 @@ components:
     width: '268px'
 ---
 
-# Design System: Collections (web 2.0.0)
+# Design System: Collections (web 2.20.0)
 
 ## Overview
 
-**Creative North Star: "The Frosted Gallery"**
+**Direction: "Editorial"** (F-021, `design-docs/features/F-021-web-restyle.md`, approved 2026-10-30). The app reads like a
+printed catalogue: a geometric display face for titles, a quiet UI face, near-white and near-black neutrals, one electric
+blue and little rounding. Hairline borders do the separating. Shadows appear only on floating layers (menus, popovers,
+dialogs, toasts, the detail sheet). Images still lead; chrome stays out of the way.
 
-A calm, personal collection browser for two people. Images lead; chrome is frosted material floating over the content and recedes. Colour comes only from the single indigo accent and from real images. Apple-inspired depth (hairline, inner highlight, layered soft shadow, blur) without Liquid Glass theatrics. Operate register: standard controls, scannable rows, a clean grid. Light and graphite dark share the same materials.
+This replaces the Frosted Gallery (F-002). There is no blur, no gradient and no glow anywhere.
 
-Confirmed rejections: the flat admin dashboard, flat colour-field styling, per-list colours.
+**Key characteristics:**
 
-**Key Characteristics:**
-
-- Frosted sidebar, floating pill toolbar, floating detail sheet and dialogs are the only blurred surfaces.
-- White cards with a 6px inner inset around the image; neutral fallback tiles where images are missing.
-- One accent, used only where something can be acted on.
-- System font stack, no web font.
-- 150-200ms ease-out; springs only on button press.
+- Solid surfaces only: the sidebar tone, the page ground and raised layers. No `backdrop-filter`.
+- One blue accent for actions, focus and selection. Quick add is the one ink (text-colour) button.
+- Two web fonts, self-hosted (OFL, Latin subset): Space Grotesk for display text, Geist for UI and body, Geist Mono for
+  numbers and small labels.
+- Medium list rows (about 68 px): thumbnail, title with the first pinned field under it, the second pinned field on the
+  right in mono.
+- Radius scale 6 / 8 / 12 / 16 px, full only for tags.
+- 150-200 ms ease-out; springs only on button press; reduced motion respected.
 
 ## Colors
 
-Cool grey ground, white or graphite surfaces, one restrained indigo. Frontmatter is normative; semantic CSS variables in `src/styles/tokens.css` are the only colour source (Tailwind's default palette is dropped).
+Near-white and near-black neutrals with one blue accent. The frontmatter is normative. The semantic CSS variables in
+`src/styles/tokens.css` are the only colour source (Tailwind's default palette is dropped in `global.css`).
 
 ### Primary
 
-- **Gallery Indigo** (accent; #4f46e5 light, lifted #818cf8 dark): primary buttons, links and accent text (`accent-text`), focus ring, accent chip, the sidebar New item button. Hover steps to accent-hover. Text on it is white in light, deep indigo #0f0e2e in dark.
+- **Editorial Blue** (`#2d5bff` light, `#4a72ff` dark): primary buttons, focus ring, selection, the workspace accent dot.
+  Hover `#2a52e8` (dark `#6686ff`). Link and selected text `#2448d6` (dark `#8fa8ff`). Selected tint `#eef2ff` (dark
+  `rgb(74 114 255 / 0.16)`).
+- **Ink** (`#0b0b0c` light, `#f4f4f5` dark): the Quick add button only. Its text is the opposite ink.
 
 ### Neutral
 
-- **Cool Gallery Grey** (#edeef1): page ground, with a faint ambient gradient (indigo glow top right, sky glow bottom left; stronger indigo in dark).
-- **Paper White** (#ffffff): cards, secondary buttons, menus (light `surface` and `surface-raised`).
-- **Graphite** (#121215 ground, #1a1a1f surface, #232329 raised): dark theme.
-- **Ink** (#1d1d1f) and **Quiet Ink** (#5c5d66); dark: #f2f2f5 and #a3a3ae.
-- **Fill** (translucent ink at 5.5% / 10% hover; white 7% / 12% in dark): field backgrounds, segmented tracks, fallback tiles.
-- **Hairline** (border at 14% ink; 12% white in dark) for dividers; **Control Edge** (#7f8292 light, #7d7e8c dark) for input borders.
-- Status (success, warning, danger) each have bg, border and text tokens per theme; used for chips, banners and the solid danger button (#b91c1c light, #f87171 dark).
+- **Light:** ground `#ffffff`, sidebar `#f7f7f8`, surface `#f6f6f7`, border `#e6e6e9`, soft divider `#f0f0f1`, text
+  `#0b0b0c`, body text `#55555c`, muted text `#6e6e78`.
+- **Dark (near-black):** ground `#0b0b0c`, sidebar `#121214`, surface `#18181b`, raised `#1d1d21`, border `#26262b`, soft
+  divider `#1d1d21`, text `#f4f4f5`, body text `#a8a8b0`, muted text `#8a8a93`.
+- Fills are translucent ink (5% and 9% hover on light; 7% and 12% white on dark), for fields, tracks and fallback tiles.
+- Overlays are `rgb(11 11 12 / 0.4)` (light) and `rgb(0 0 0 / 0.6)` (dark).
+
+### Status
+
+Success, warning and danger each have background, border and text tokens per theme. Danger is `#b91c1c` (dark
+`#f87171`) for the solid destructive button. Every state colour is paired with text or an icon.
 
 ### Named Rules
 
-**The Acting-Accent Rule.** Indigo marks what can be acted on or focused. It never decorates.
-**The Image-Colour Rule.** Apart from the accent, hue comes from real images; missing images get neutral fill tiles (kind icon plus initial), never a colour per list.
-**The Semantic-Only Rule.** Components use semantic tokens (`bg-surface`, `text-text-muted`, `border-border`); no raw hex or Tailwind palette in components.
+**The Acting-Accent Rule.** Blue marks what can be acted on or focused. It never decorates.
+**The Ink-Action Rule.** Quick add is the only ink button; every other primary action is blue.
+**The Semantic-Only Rule.** Components use semantic tokens (`bg-surface`, `text-text-muted`, `border-border`,
+`bg-accent-tint`); no raw hex or Tailwind palette in components, and no inline style attributes (CSP).
 
 ## Typography
 
-**Font:** the system stack (-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Segoe UI, Roboto, Helvetica Neue, Arial). Single family for display and body; no web font.
+**Families (self-hosted, `src/styles/fonts.css`, Latin subset, `font-display: swap`, never fetched at runtime):**
 
-**Character:** native and quiet; hierarchy comes from weight and tight tracking, not from a display face.
+- **Space Grotesk** (`font-display`): list and item titles, section headings, row titles, the workspace name.
+- **Geist** (`font-sans`): all UI and body text, weights 400, 500 and 600.
+- **Geist Mono** (`font-mono`): counts, years, pages, prices, keyboard hints and uppercase group labels.
 
-### Hierarchy
+### Scale (utilities in `global.css`, each one carries size, line height, tracking and weight)
 
-- **Page title** (700, 2rem, 1.2): list heading, with the kind chip and count beside it.
-- **Dialog title** (600, 1.25rem, 1.2, tracking -0.025em).
-- **Body** (400, 1rem, 1.5, tracking -0.006em).
-- **Control** (500, 0.875rem): buttons, fields, menus, segmented options.
-- **Caption** (500, 0.75rem): chips, counts, key hints.
-- Scale in use: xs 0.75, sm 0.875, base 1, lg 1.125, xl 1.25, 2xl 1.5, 3xl 2, 4xl 2.5rem. Sidebar brand name is 15px semibold.
+- **`text-display`** (Space Grotesk 700, `clamp(2rem, 1.25rem + 3vw, 2.75rem)`, 1.02, -0.035em): list and item title. 32 px at narrow widths, 44 px from 800 px.
+- **`text-heading`** (Space Grotesk 700, 30 px, 1.1, -0.03em): page and dialog headings.
+- **`text-section`** (Space Grotesk 600, 20 px, 1.3, -0.015em): section headings, such as the item description.
+- **`text-row`** (Space Grotesk 600, 15.5 px, 1.35, -0.01em): row titles.
+- **`text-body`** (Geist 400, 15 px, 1.6): running text, the description.
+- **`text-ui`** (Geist 500, 14 px, 1.5): buttons, fields, menus.
+- **`text-secondary`** (Geist, 13 px, 1.5): secondary lines and hints.
+- **`text-label`** (Geist Mono, 12 px, 1.4, +0.06em): mono labels; uppercase group labels.
+
+The legacy Tailwind sizes (`text-xs` to `text-4xl`) are removed; the scale above is the only size set.
 
 ### Named Rules
 
-**The Tabular-Numbers Rule.** Prices and counts use tabular figures (`.tabular`).
+**The Tabular-Numbers Rule.** Prices, counts, years and pages are set in Geist Mono (or `.tabular`), so they align.
 
 ## Layout
 
-Desktop is three columns: resizable frosted sidebar (default 268px, range 220-400), a main column with 24px padding, and a floating 420px detail sheet at 1280px and wider (`m-3.5`, left margin 0). Below 1280 the item is a full page; the shell collapses at 1024 and 768 (breakpoints in `lib/breakpoints.ts`, equal to Tailwind md, lg, xl). Mobile has a frosted top bar and a drawer for navigation.
+Desktop is three columns: the sidebar (default 268 px, range 220-400) in the sidebar tone with a hairline divider, a main
+column with 24 px padding, and a 420 px detail panel at 1280 px and wider. Below 1280 the item is a full page. The shell
+collapses at 1024 and 768 px (`lib/breakpoints.ts`, equal to Tailwind `md`, `lg`, `xl`). Mobile uses a menu button and a
+drawer for navigation.
 
-The list view's grid is 2 columns on phones, 3 at md, then auto-fill with a minimum card of 180px (lg) or 220px (xl); gaps 12px (16px at md). Rows (compact: 6px gap; thumbnail: 8px gap) are the other display modes. Spacing is Tailwind's 4px base. Touch targets grow to 44px under `pointer-coarse`. The floating toolbar sticks to the top of the list at sm and wider and collapses its labels into icons by container width.
+The list header has a two-part chip (accent half with the type, tint half with the count, 8 px outer corners), the display
+title, the description, then one toolbar row: search, + Filter, sort, Pinned, display mode, New item. The toolbar sticks to
+the top of the list.
+
+Spacing is Tailwind's 4 px base. Touch targets are 44 px under `pointer-coarse`; desktop controls may be 36-38 px tall.
 
 ## Elevation & Depth
 
-Hybrid: frosted material plus layered shadows. Every shadow starts with a 1px hairline ring, then a tight contact shadow, then a soft long one. Dark theme uses black at higher opacity and an 8% white inner highlight.
+Flat by default. Surfaces are separated by the hairline border. A shadow is only for layers that float above the page
+(menus, popovers, dialogs, toasts, the detail sheet). Shadows always start with the 1 px hairline ring.
 
-### Shadow Vocabulary
+### Shadow vocabulary
 
-- **sm** (`0 0 0 1px hairline, 0 1px 2px rgb(30 30 70 / .14)`): cards and secondary buttons at rest.
-- **md** (sm plus `0 10px 24px -16px`): hover on secondary buttons.
-- **lg** (`0 4px 10px -4px, 0 22px 44px -14px`): interactive card hover.
-- **float** (lg plus inner top highlight): toolbar, menus.
-- **sheet** (`0 40px 80px -20px rgb(20 20 40 / .35)` plus highlight): detail sheet, dialogs.
-- **accent** (inner top highlight plus `0 6px 14px -4px` indigo at 45%): primary buttons.
+- **sm** (hairline ring only): cards and tiles at rest.
+- **md** (hairline plus `0 4px 12px -6px`): hover on floating controls.
+- **lg / float** (hairline plus `0 8px 24px -10px`): menus, popovers, toasts, toolbar sheets.
+- **sheet** (hairline plus `0 24px 60px -18px`): detail panel, dialogs, drawer.
+- **accent**: none. The primary button is flat.
 
-### Material
+### Surfaces
 
-`material` (78% surface, blur 28px, saturate 180%) for sidebar, toolbar and top bar; `material-strong` (90%) for the detail sheet and dialogs. Menus and popovers are solid `surface-raised`. Under `@supports not (backdrop-filter)` and `prefers-reduced-transparency` both become the solid surface and the overlay darkens.
+There is no blur. `material` is the sidebar tone (`--material-bg`); `material-strong` is the raised layer
+(`--material-bg-strong`) for dialogs, drawers and the detail panel. Menus and popovers are solid raised surfaces.
 
 ### Named Rules
 
-**The Blur-Budget Rule.** Backdrop blur only on sidebar, toolbar, detail sheet, dialogs and drawer. Never on cards, menus or content.
-**The Hairline-First Rule.** Depth always includes the 1px hairline ring so a surface reads on any image behind it.
+**The No-Blur Rule.** Nothing is frosted, blurred or translucent over content. Use the solid surface utilities.
+**The Hairline-First Rule.** Separation comes from the 1 px border first; a shadow only adds lift to a floating layer.
 
 ## Shapes
 
-Soft and rounded, nested. Radii: controls 8px, field and menu parts 10px, cards 18px, sheets, dialogs and drawer 24px, pills and buttons fully round. Cards inset the image by 6px with a concentric inner radius (13px grid image, 12px row thumbnail). Toolbar is a full pill on desktop and a 22px-radius block when it wraps on phones. Images are cropped `object-cover`.
+Radii, from `tokens.css` (`--radius-*`):
+
+- **6 px (`rounded-sm`):** small tiles: the row thumbnail, service and link tiles, checkboxes, skeleton rows.
+- **8 px (`rounded-md`):** controls: buttons, inputs, selects, menu items, tree rows, tooltips.
+- **12 px (`rounded-lg`):** containers: cards, covers, menus, popovers, toasts, toolbars.
+- **16 px (`rounded-xl`):** sheets, dialogs and the drawer.
+- **Full (`rounded-full`):** tags only: chips, badges, avatars.
+
+Nested shapes stay concentric (inner radius = outer radius minus padding). Images are cropped `object-cover`.
 
 ## Components
 
 ### Buttons
 
-- **Shape:** full pill, 40px tall (32px small), 44px minimum on touch; medium weight 14px.
-- **Primary:** indigo with the accent shadow. **Secondary:** surface with sm shadow, darkens 6% on hover. **Ghost:** transparent, fill on hover. **Danger:** solid red, used for confirmed destructive actions.
-- **Press:** scale 0.97 with the spring ease; disabled at 50% opacity; pending shows a spinner and blocks activation.
+- **Primary:** blue, 8 px radius. **Ink:** the Quick add button. **Secondary:** bordered on the ground. **Ghost:** transparent
+  with fill on hover. **Danger:** solid red, for confirmed destructive actions only.
+- **Press:** scale 0.97 with the spring ease. Disabled at 50% opacity. Pending shows a spinner and blocks activation.
 
-### Cards (item entry)
+### List rows (medium, default)
 
-White surface, radius 18px, 6px padding around a 4:3 image tile (rows: 56-64px square thumb). The whole card is one link target via a stretched overlay; hover lifts 1px and deepens to lg. Missing images render a fill tile with the kind icon and the title's initial.
+About 68 px. A 36 x 50 thumbnail (6 px radius, neutral fill with the type icon and initial when the image is missing), 9 px
+vertical padding, the title in Space Grotesk 15.5 px with the first pinned field on its own line under it, and the second
+pinned field on the right in mono. Compact and gallery modes keep their structure with the same tokens. Hover uses the
+fill; the current row is tinted.
 
 ### Chips and badges
 
-Pills, 12px medium, tone-tinted (neutral, accent, success, warning, danger) with text always present. The kind chip sits next to the list title.
+Full pills, 13 px, with text always present. The type and count chip above the list title is the one two-part exception
+(8 px outer corners).
 
-### Inputs / Fields
+### Inputs / fields
 
-10px radius, fill background with a Control Edge border, surface on focus, muted-ink border on hover, danger border when invalid; 2px indigo focus-visible outline with 2px offset everywhere.
+8 px radius, fill background with a border, surface on focus. The border on hover darkens; an invalid field uses the
+danger border. Focus is a 2 px blue `focus-visible` ring with a 2 px offset (inset where a scroll container clips it).
 
-### Segmented control
+### Tree and navigation
 
-Fill track with 2px padding; the checked option becomes a surface pill-ish segment with text colour; used for display mode in the toolbar.
+Sidebar group labels (folders) are mono uppercase labels (`text-label`, 12 px; the brief said 11 px, the scale token wins). Counts are mono. The current row is tinted with accent text. The
+sidebar holds the workspace name (Space Grotesk 19 px bold, with a decorative accent dot after it), search, Quick add, the
+tree, Trash and Settings. It collapses to an icon rail.
 
-### Navigation
+### Dialogs and the detail panel
 
-Frosted sidebar: brand name, search combobox, accent New item button (shows an N key hint), tree of list tiles with counts, Trash and Settings last, theme toggle in the footer. Collapses to an icon rail.
+Solid raised surface, 16 px radius, sheet shadow. Dialogs are centred with a dim overlay and open with a 0.97 scale and a
+fade. The item panel is the same surface, floating at 1280 px and wider.
 
-### Detail sheet and dialogs
+### Service and link tiles
 
-Strong material, 24px radius, sheet shadow; dialogs are centred, max 512px, with an overlay dim, and animate with a 0.97 scale and fade.
-
-### Service icon
-
-Square tile (radius 10px, fill background, hairline border) with a local WebP favicon, or a monogram when none exists; a small round `$` badge marks paid availability and the accessible name adds ", paid". Rasters live in `src/assets/services/`; provenance, source URLs and dates are in its README.
+One icon tile for every link and streaming service: 44 px on the item page (`TILE_SIZE`), 6 px radius, neutral fill and
+hairline border, the mark contained in an 18% inset (never cropped). A missing logo is the letter tile. Dark marks use the
+light tile. Logos live in `src/assets/services/` with a README row (source, licence, date); the registry is
+`src/components/serviceIcons/`.
 
 ## Do's and Don'ts
 
-### Do:
+### Do
 
-- **Do** take colour, radius, shadow and spacing from the tokens in `src/styles/tokens.css`.
-- **Do** keep new floating chrome on `material` or `material-strong` with a shadow from the vocabulary, and provide the solid fallback by using the existing utilities.
-- **Do** inset images in cards by 6px with a nested radius.
+- **Do** take colour, radius, type, shadow and spacing from the tokens and utilities (`src/styles/tokens.css`,
+  `src/styles/global.css`).
+- **Do** use the solid surface utilities for floating chrome, with a shadow from the vocabulary.
 - **Do** pair every state colour with text or an icon.
-- **Do** keep motion at 150-200ms ease-out and honour reduced motion.
-- **Do** fall back to a neutral fill tile when an image is missing.
+- **Do** keep motion at 150-200 ms ease-out and honour reduced motion.
+- **Do** use a neutral fill tile when an image is missing.
 
-### Don't:
+### Don't
 
-- **Don't** add a second accent, per-list colours or decorative gradients on content.
-- **Don't** blur cards, menus or list content.
-- **Don't** use a web font or hard offset shadows.
-- **Don't** hard-code hex or Tailwind palette classes in components.
-- **Don't** add raster assets without a README row giving source URL and date.
+- **Don't** blur, frost or gradient any surface.
+- **Don't** add a second accent, per-list colours, or a second ink button.
+- **Don't** hard-code hex, Tailwind palette classes, radii or sizes in components.
+- **Don't** fetch fonts or icons at runtime, or add a web font outside `fonts.css`.
+- **Don't** add raster assets without a README row giving the source URL and date.
