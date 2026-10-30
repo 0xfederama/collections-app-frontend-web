@@ -29,7 +29,7 @@ const supportsSort = (type: ItemType, sort: SortMode) =>
   (sort === 'price' && PRICE_TYPES.has(type)) ||
   mockTypes.some(
     (definition) =>
-      definition.key === type && (definition.fields ?? []).some((field) => field.key === sort),
+      definition.key === type && definition.fields.some((field) => field.key === sort),
   )
 
 /** List endpoints of the fake (API.md §4, D-054, D-060). */

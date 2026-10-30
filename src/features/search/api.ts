@@ -3,28 +3,8 @@ import type { components } from '../../generated/schema'
 import { api, unwrap } from '../../lib/api'
 import { searchKeys } from '../../data/keys'
 
-type SearchPathSegment = components['schemas']['SearchPathSegment']
-type ItemSummary = components['schemas']['ItemSummary']
-
-/**
- * A search row. The contract marks `path` nullable; `toSearchRows` reads it as `[]`, so consumers get
- * an array. The item's `image` and `price` are also sent as `null` when absent (FLAG: backend contract
- * gap), so they are typed nullable here.
- */
-export type SearchResult = Omit<components['schemas']['SearchResult'], 'item' | 'path'> & {
-  item: Omit<ItemSummary, 'image' | 'price'> & {
-    image: ItemSummary['image'] | null
-    price: components['schemas']['Price'] | null
-  }
-  path: SearchPathSegment[]
-}
-/** One page of rows: `data` is read as `[]` when the contract's nullable list is absent. */
-export type SearchPage = { data: SearchResult[]; page: components['schemas']['Page'] }
-
-/** The rows of a page, with the nullable `data` and `path` read as empty lists (the query boundary). */
-export const toSearchRows = (
-  data: components['schemas']['SearchResult'][] | null | undefined,
-): SearchResult[] => (data ?? []).map((row) => ({ ...row, path: row.path ?? [] }))
+export type SearchResult = components['schemas']['SearchResult']
+export type SearchPage = components['schemas']['SearchPage']
 
 /** API.md: `q` is 1–200 characters. */
 export const MAX_QUERY_LENGTH = 200
@@ -36,17 +16,8 @@ export const RESULTS_PAGE_SIZE = 50
 /** What is sent to the server: surrounding whitespace removed, cut to the API's 200 characters. */
 export const normalizeQuery = (q: string) => q.trim().slice(0, MAX_QUERY_LENGTH).trim()
 
-const fetchSearch = async (
-  q: string,
-  limit: number,
-  offset: number,
-  signal: AbortSignal,
-): Promise<SearchPage> => {
-  const body = await unwrap(
-    api.GET('/api/v1/search', { params: { query: { q, limit, offset } }, signal }),
-  )
-  return { page: body.page, data: toSearchRows(body.data) }
-}
+const fetchSearch = (q: string, limit: number, offset: number, signal: AbortSignal) =>
+  unwrap(api.GET('/api/v1/search', { params: { query: { q, limit, offset } }, signal }))
 
 /**
  * One page of matches (the dropdown). Disabled for an empty or whitespace `q`. While `q` changes,
