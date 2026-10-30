@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { joinStoreKeys, parseStoreKeys, storeName } from './providers'
+import { joinStoreKeys, parseStoreKeys, sortStoreKeys, storeName } from './providers'
 
 const providers = [
   { key: 'amazon' as const, name: 'Amazon' },
@@ -26,5 +26,16 @@ describe('F016-W4 store key text', () => {
   it('joins keys back into the text an input holds', () => {
     expect(joinStoreKeys(['amazon', 'kobo'])).toBe('amazon, kobo')
     expect(joinStoreKeys([])).toBe('')
+  })
+})
+
+describe('F017 store order', () => {
+  it('sorts keys in the provider order, unknown keys last, unchanged before the list loads', () => {
+    expect(sortStoreKeys(providers, ['kobo', 'bookshop', 'amazon'])).toEqual([
+      'amazon',
+      'bookshop',
+      'kobo',
+    ])
+    expect(sortStoreKeys(undefined, ['kobo', 'amazon'])).toEqual(['kobo', 'amazon'])
   })
 })

@@ -4,7 +4,7 @@ import { focusRing } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import type { ItemSummary } from './api'
 import { pinnedTexts, storesOf, streamingOf } from './pinned'
-import { storeName, useStoreProviders } from '../stores'
+import { sortStoreKeys, storeName, useStoreProviders } from '../stores'
 import type { TypeDefinition } from '../items'
 import { safeWebsiteUrl, storeLink, streamingSearchLink } from '../links'
 import { useSettings } from '../settings'
@@ -77,7 +77,7 @@ export function PinnedSlot({
       if (stores.length) {
         parts.push(
           <span key={`k${parts.length}`} className="inline-flex flex-wrap items-center gap-1.5">
-            {stores.map((store) => {
+            {sortStoreKeys(providers.data, stores).map((store) => {
               const label = storeName(providers.data, store)
               const href = storeLink(store, { isbn, title: item.title, country })
               return (
