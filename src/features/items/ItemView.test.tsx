@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
-import { exampleResponses } from '../../generated/examples'
+import { exampleResponses } from '../../mocks/fixtures'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { mockViewport, renderAt } from '../../test-utils'
@@ -648,7 +648,7 @@ describe('F016-W1 book item detail', () => {
     const book = {
       ...base,
       fields: [
-        ...base.fields,
+        ...(base.fields ?? []),
         {
           key: 'openlibrary_id',
           label: 'Open Library id',

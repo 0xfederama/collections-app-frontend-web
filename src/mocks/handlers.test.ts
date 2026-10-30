@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { exampleResponses } from '../generated/examples'
+import { exampleResponses } from './fixtures'
 import { mockTypes } from './types'
 
 const UUID = '0b9f2b6e-6c1c-4d58-9a55-3f1d3a0e2a11'

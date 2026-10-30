@@ -12,7 +12,7 @@ const GAP = '\u202F'
  * amounts are rounded to whole units. Prices travel as decimal strings (D-015); `Number` is fine
  * here because this is display only.
  */
-export function formatPrice(price: Price): string | null {
+export function formatPrice(price: Price | null): string | null {
   if (!price) return null
   const min = price.min === null ? null : Number(price.min)
   const max = price.max === null ? null : Number(price.max)

@@ -1,5 +1,4 @@
 import type { LucideIcon } from '../../components/ui/icons'
-import type { components } from '../../generated/schema'
 import {
   Aperture,
   Archive,
@@ -76,7 +75,7 @@ export const LIST_ICON_COLORS = [
   'pink',
   'gray',
 ] as const
-export type ListIconColor = Exclude<components['schemas']['ListIconColor'], null>
+export type ListIconColor = (typeof LIST_ICON_COLORS)[number]
 
 type BuiltinIcon = { key: string; name: string; keywords: string[]; Icon: LucideIcon }
 const iconRows: [string, LucideIcon, ...string[]][] = [

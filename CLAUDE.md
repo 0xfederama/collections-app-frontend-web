@@ -46,7 +46,7 @@ No CI (D-031, D-032): the gates run locally. Run `npm run check` before every PR
 | Dependency vulnerability scan (network)                                                                    | `npm run audit`                                                                                                   |
 | E2E (Playwright, chromium; needs `./deploy/test up -d --fresh` from the parent repo; not in `check`)       | `npm run e2e` (once: `npx playwright install chromium`)                                                           |
 | Sync API contract (vendors the spec at a backend tag, regenerates `src/generated/`) / verify offline       | `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]` / `npm run api:check` (part of `check`)              |
-| Dev server with no backend (MSW serves the spec examples)                                                  | `VITE_API_MOCKS=1 npm run dev`                                                                                    |
+| Dev server with no backend (MSW serves the fixtures)                                                  | `VITE_API_MOCKS=1 npm run dev`                                                                                    |
 
 Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-038–D-042. Backend for dev: `docker compose up --build` in `../backend` (backend only) or in the parent folder (backend plus this dev server in a container).
 
@@ -57,7 +57,7 @@ Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-
 - `src/features/<feature>/` holds components, hooks, and `api.ts` (TanStack Query hooks, from W-02). All server I/O goes through `src/lib/api` (openapi-fetch client; failures throw `ApiError` / `NetworkError`), never raw `fetch`. Writes build `If-Match` with `ifMatch('item', item.version)`.
 - Lean rule (D-034): add a dependency only in the task that first uses it, and justify it in the PR.
 - `src/generated/` and `api/openapi.yaml` are generated/vendored, so **never edit** them. Regenerate with `api:sync`; `api:check` fails on any drift.
-- `src/mocks/` holds MSW handlers built from the spec examples (`src/generated/examples.ts`). Tests start the Node server in `test-setup.ts` (unmocked requests fail); override per test with `server.use(...)`. Render with `renderAt` / `renderWithProviders` from `src/test-utils.tsx` (fresh QueryClient per render).
+- `src/mocks/` holds MSW handlers built from the hand-owned fixtures in `src/mocks/fixtures.ts` (api-v1.0.0 has no spec examples; nullable slices and fields are normalised once in each query's `queryFn`). Tests start the Node server in `test-setup.ts` (unmocked requests fail); override per test with `server.use(...)`. Render with `renderAt` / `renderWithProviders` from `src/test-utils.tsx` (fresh QueryClient per render).
 - `src/components/ui/` is the design-system primitives (barrel `index.ts`, all 18 of UI_SPEC §11). Compose them; use tokens from `src/styles/tokens.css`, with no hard-coded colors, radii, or spacing. Lucide icons are imported only in `src/components/ui/icons.ts`.
 - `/dev/ui` is a dev-only gallery of every primitive and state (`src/dev/DevUiRoute.tsx`, lazy route, absent from the prod bundle). Add new primitives or states there.
 - Shell (W-04): `src/layouts/AppShell.tsx` picks the layout from `useBreakpoint()` (`src/lib/breakpoints.ts`, the one place for 768 / 1024 / 1280, equal to Tailwind `md` / `lg` / `xl`). The item route is rendered by the shell, not by `ListRoute`: full page in `main` below 1280, in the `aside` panel at ≥ 1280. All UI_SPEC §1 routes are registered in `src/app/router.tsx`; don't edit it to add them.
@@ -101,10 +101,10 @@ Versions and tool choices: DECISIONS.md "Toolchain versions (R-1)" and D-034, D-
 - Streaming (F011-W1/W2): the item's streaming editor asks for **no country** — it is a Settings value (`settings.streaming_country_code`), and the contract still requires `metadata.streaming.country`, so `toFields` keeps sending the item's own country or the Settings one. Platforms are a multi-choice dropdown (`items/inline/StreamingPlatforms.tsx`) over `STREAMING_SERVICES` (exported from `components/ServiceIcon.tsx`), plus a field for a service with no logo; the parent still keeps the comma-separated draft string.
 - Tests fake the viewport with `mockViewport(width)` from `src/test-utils.tsx` (jsdom has no `matchMedia`; unmocked tests see 1024 px). `test-setup.ts` resets it and clears `localStorage` after each test.
 - E2E (F003-W1, `e2e/`): `*.spec.ts` files are Playwright's (vitest excludes `e2e/**`), run against the real stack on :5183 (`E2E_BASE_URL`), each spec independent with unique names (`e2e/helpers.ts` seeds through the API); role/label locators and web-first assertions only, never `waitForTimeout`. Run when a user flow changes and before a release (D-076).
-- `src/mocks/devData.ts` is a richer tree used only by the dev worker (`src/mocks/browser.ts`); Vitest keeps the unmodified spec examples.
+- `src/mocks/devData.ts` is a richer tree used only by the dev worker (`src/mocks/browser.ts`); Vitest keeps the unmodified fixtures.
 - Editable resources: `If-Match` is built from the resource `version` by `lib/api`. Drafts are never discarded on 412 or network errors (UI_SPEC §9).
 - Accessibility is required: labels, focus-visible, keyboard paths, and no color-only state.
-- Tests: names reference acceptance IDs (`describe("AT-13 external links")`). Mock the API with MSW handlers built from spec examples.
+- Tests: names reference acceptance IDs (`describe("AT-13 external links")`). Mock the API with MSW handlers built from the fixtures.
 
 ## Gotchas
 

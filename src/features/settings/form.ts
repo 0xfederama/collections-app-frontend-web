@@ -120,7 +120,7 @@ export function buildPatch(base: Settings, draft: SettingsDraft): UpdateSettings
     patch.markdown_history_limit = value.markdown_history_limit
   }
   if (value.preferred_store !== base.preferred_store) {
-    patch.preferred_store = value.preferred_store as UpdateSettingsRequest['preferred_store']
+    patch.preferred_store = value.preferred_store
   }
   return patch
 }

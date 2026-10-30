@@ -4,8 +4,15 @@ import { api, ifMatch, unwrap } from '../../lib/api'
 import { invalidateContent, invalidateItemWrite } from '../../data/invalidate'
 import { itemKeys } from '../../data/keys'
 
-export type Item = components['schemas']['Item']
-export type ItemType = components['schemas']['ItemType']
+/**
+ * An item. The server sends `price: null` when the item has no price, but the generated contract
+ * types `price` as present (FLAG: backend contract gap), so the web type makes it nullable.
+ */
+export type Item = Omit<components['schemas']['Item'], 'price'> & {
+  price: components['schemas']['Price'] | null
+}
+/** The list's type key, `null` when the list has no type (the contract types it as a plain string). */
+export type ItemType = string | null
 export type ItemContent = components['schemas']['Content']
 export type UpdateItemRequest = components['schemas']['UpdateItemRequest']
 /**

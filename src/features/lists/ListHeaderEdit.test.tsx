@@ -94,7 +94,9 @@ describe('F002-W2 list description, edited in place', () => {
 
   it('Enter writes a new line, Ctrl+Enter saves, an emptied text sends null', async () => {
     const tree = seedTree()
-    tree.lists.find((l) => l.id === ID.wishlist)!.description = 'Old text'
+    const wishlist = tree.lists?.find((l) => l.id === ID.wishlist)
+    if (!wishlist) throw new Error('the seeded tree has no wishlist')
+    wishlist.description = 'Old text'
     const { user, backend } = await openList(ID.wishlist, tree)
     await user.click(await within(main()).findByText('Old text'))
     const field = await editor()
@@ -111,7 +113,9 @@ describe('F002-W2 list description, edited in place', () => {
 
   it('Esc and ✕ cancel without a request, and the Edit description button opens the editor', async () => {
     const tree = seedTree()
-    tree.lists.find((l) => l.id === ID.wishlist)!.description = 'Keep'
+    const wishlist = tree.lists?.find((l) => l.id === ID.wishlist)
+    if (!wishlist) throw new Error('the seeded tree has no wishlist')
+    wishlist.description = 'Keep'
     const { user, backend } = await openList(ID.wishlist, tree)
     await user.click(await within(main()).findByRole('button', { name: 'Edit description' }))
     await user.type(await editor(), ' changed')

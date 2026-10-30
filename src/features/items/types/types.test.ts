@@ -109,10 +109,15 @@ describe('no type (null)', () => {
 })
 
 describe('F016-W1 the book type', () => {
-  const book = mockTypes.find((type) => type.key === 'book')!
+  // The mock as `useTypes` hands it out: `fields` read as a list (the contract makes it nullable).
+  const definitions: TypeDefinition[] = mockTypes.map((type) => ({
+    ...type,
+    fields: type.fields ?? [],
+  }))
+  const book = definitions.find((type) => type.key === 'book')!
 
   it('is offered in the type menus, from the types API definitions', () => {
-    expect(typeOptions(mockTypes)).toContainEqual({ value: 'book', label: 'Books' })
+    expect(typeOptions(definitions)).toContainEqual({ value: 'book', label: 'Books' })
   })
 
   it('draws store keys as tiles, never as text, and leaves them out of the text rows', () => {

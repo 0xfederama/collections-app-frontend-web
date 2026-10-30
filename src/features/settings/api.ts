@@ -6,7 +6,13 @@ import { settingsKeys, typeKeys } from '../../data/keys'
 
 export type Settings = components['schemas']['Settings']
 export type UpdateSettingsRequest = components['schemas']['UpdateSettingsRequest']
-export type TypeDefinition = components['schemas']['TypeDefinition']
+/**
+ * A type definition with its fields as a list. The contract types `fields` as nullable, so the
+ * definitions are normalized once at the query boundary (`asDefinition`) and every consumer reads an array.
+ */
+export type TypeDefinition = Omit<components['schemas']['TypeDefinition'], 'fields'> & {
+  fields: TypeField[]
+}
 export type TypeField = components['schemas']['TypeField']
 export type CreateTypeRequest = components['schemas']['CreateTypeRequest']
 export type CreateTypeFieldRequest = components['schemas']['CreateTypeFieldRequest']
@@ -20,17 +26,27 @@ const fieldMatch = (version: number) => ({ 'If-Match': `"kf-${version}"` })
 // never user-facing: not an editable field, and never pinnable, sortable or filterable (contract:
 // pinned_fields).
 const BOOKKEEPING_FIELDS = new Set(['tmdb_id', 'lookup_disabled', 'openlibrary_id'])
-const withoutBookkeeping = (types: TypeDefinition[]): TypeDefinition[] =>
-  types.map((type) => ({
-    ...type,
-    fields: type.fields.filter((field) => !BOOKKEEPING_FIELDS.has(field.key)),
-  }))
+/** A definition from the contract, with `fields` read as a list (absent = no fields). */
+const asDefinition = (type: components['schemas']['TypeDefinition']): TypeDefinition => ({
+  ...type,
+  fields: type.fields ?? [],
+})
+
+const withoutBookkeeping = (types: components['schemas']['TypeDefinition'][]): TypeDefinition[] =>
+  types.map((type) => {
+    const definition = asDefinition(type)
+    return {
+      ...definition,
+      fields: definition.fields.filter((field) => !BOOKKEEPING_FIELDS.has(field.key)),
+    }
+  })
 
 export function useTypes() {
   return useQuery({
     queryKey: typeKeys.types,
     select: withoutBookkeeping,
-    queryFn: ({ signal }) => unwrap(api.GET('/api/v1/types', { signal })),
+    // The list itself is nullable in the contract: an absent list is no types.
+    queryFn: async ({ signal }) => (await unwrap(api.GET('/api/v1/types', { signal }))) ?? [],
   })
 }
 
@@ -60,7 +76,7 @@ export function useUpdateType() {
         params: { path: { key: type.key }, header: typeMatch(type.version) },
         body: patch,
       }),
-    ),
+    ).then(asDefinition),
   )
 }
 

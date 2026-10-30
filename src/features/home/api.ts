@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { homeKeys } from '../../data/keys'
 import { api, unwrap } from '../../lib/api'
+import { toSearchRows } from '../search'
 
 /** Rows in Home's "Recently updated" section (D-070, API default). */
 export const RECENT_LIMIT = 12
@@ -13,8 +14,12 @@ export const RECENT_LIMIT = 12
 export function useRecentItems(limit = RECENT_LIMIT) {
   return useQuery({
     queryKey: [...homeKeys.recent, limit] as const,
-    queryFn: ({ signal }) =>
-      unwrap(api.GET('/api/v1/recent-items', { params: { query: { limit } }, signal })),
+    queryFn: async ({ signal }) => {
+      const body = await unwrap(
+        api.GET('/api/v1/recent-items', { params: { query: { limit } }, signal }),
+      )
+      return { data: toSearchRows(body.data) }
+    },
     staleTime: 0,
   })
 }

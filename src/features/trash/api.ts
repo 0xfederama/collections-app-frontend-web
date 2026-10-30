@@ -9,7 +9,14 @@ import { ApiError, api, unwrap } from '../../lib/api'
 import { invalidateContent } from '../../data/invalidate'
 import { trashKeys, treeKeys } from '../../data/keys'
 
-export type TrashEntry = components['schemas']['TrashEntry']
+type PathSegment = components['schemas']['PathSegment']
+/**
+ * A Trash entry with `former_path` always an array: the API sends `null` for an entry with no
+ * recorded path (a Go nil slice), read here as `[]`. `useTrash` normalizes it once.
+ */
+export type TrashEntry = Omit<components['schemas']['TrashEntry'], 'former_path'> & {
+  former_path: PathSegment[]
+}
 export type RestoreResult = components['schemas']['RestoreResult']
 /** `folder_id` (`null` = top level) for a folder or list root, `list_id` for an item root. */
 export type RestoreDestination = { folder_id: string | null } | { list_id: string }
@@ -25,13 +32,21 @@ export function useTrash() {
   return useInfiniteQuery({
     queryKey: trashKeys.list,
     initialPageParam: 0,
-    queryFn: ({ signal, pageParam }) =>
-      unwrap(
+    queryFn: async ({ signal, pageParam }) => {
+      const page = await unwrap(
         api.GET('/api/v1/trash', {
           params: { query: { limit: TRASH_PAGE_SIZE, offset: pageParam } },
           signal,
         }),
-      ),
+      )
+      return {
+        page: page.page,
+        data: (page.data ?? []).map((entry) => ({
+          ...entry,
+          former_path: entry.former_path ?? [],
+        })),
+      }
+    },
     staleTime: 0,
     refetchOnMount: 'always',
     getNextPageParam: (last) => {

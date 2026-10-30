@@ -1,11 +1,11 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
 import { devTreeState } from './devData'
-import { devItemStore } from './devItems'
+import { devItemStore, type ItemSummary } from './devItems'
 import { problemResponse } from './problems'
 
 type Item = components['schemas']['Item']
-type ItemSummary = components['schemas']['ItemSummary']
+type Price = components['schemas']['Price']
 type Folder = components['schemas']['Folder']
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
@@ -80,7 +80,7 @@ type PriceInput = {
 } | null
 
 /** A price request as the server stores it: always `min`, `max`, `currency` (a single price has min == max). */
-const toPrice = (input: PriceInput): ItemSummary['price'] =>
+const toPrice = (input: PriceInput): Price | null =>
   input
     ? 'amount' in input && input.amount !== undefined
       ? { min: input.amount, max: input.amount, currency: input.currency }

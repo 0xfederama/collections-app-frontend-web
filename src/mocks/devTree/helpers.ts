@@ -3,7 +3,9 @@ import { problemResponse } from '../problems'
 
 export type Folder = components['schemas']['Folder']
 export type List = components['schemas']['List']
-export type Tree = components['schemas']['Tree']
+export type PathSegment = components['schemas']['PathSegment']
+/** The fake's tree: both slices always present (the wire sends `null` for an empty one). */
+export type Tree = { folders: Folder[]; lists: List[] }
 
 /** The fake's state, shared by every handler of one `createTreeBackend` call. */
 export interface TreeDb {

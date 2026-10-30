@@ -1,9 +1,9 @@
 import type { components } from '../generated/schema'
 import { createTreeBackend } from './devTree'
+import type { Tree } from './devTree/helpers'
 
 type Folder = components['schemas']['Folder']
 type List = components['schemas']['List']
-type Tree = components['schemas']['Tree']
 
 const id = (n: number) => `7c1e5a10-0000-4000-8000-${String(n).padStart(12, '0')}`
 const stamp = '2026-10-14T09:00:00Z'

@@ -3,7 +3,21 @@ import type { components } from '../generated/schema'
 import { problemResponse } from './problems'
 
 type Settings = components['schemas']['Settings']
+/** The request types `preferred_store` as a plain string; `validationError` narrows it to a store key. */
 type UpdateSettingsRequest = components['schemas']['UpdateSettingsRequest']
+type StoreKey = Settings['preferred_store']
+type SettingsChange = Omit<UpdateSettingsRequest, 'preferred_store'> & {
+  preferred_store?: StoreKey
+}
+
+const STORE_KEYS: readonly StoreKey[] = [
+  'amazon',
+  'bookshop',
+  'apple_books',
+  'google_play_books',
+  'kobo',
+]
+const isStoreKey = (value: string): value is StoreKey => STORE_KEYS.some((key) => key === value)
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 
@@ -54,10 +68,7 @@ function validationError(body: UpdateSettingsRequest) {
     return invalid('trash_retention_days', 'must be between 1 and 365')
   }
   const store = body.preferred_store
-  if (
-    store !== undefined &&
-    !['amazon', 'bookshop', 'apple_books', 'google_play_books', 'kobo'].includes(store)
-  ) {
+  if (store !== undefined && !isStoreKey(store)) {
     return invalid('preferred_store', 'must be one of the store providers')
   }
   return null
@@ -82,9 +93,11 @@ export function createSettingsBackend(start: Settings = initial()) {
       const body = (await request.json()) as UpdateSettingsRequest
       const bad = validationError(body)
       if (bad) return bad
+      const { preferred_store: store, ...rest } = body
       const next: Settings = {
         ...settings,
-        ...body,
+        ...rest,
+        ...(store !== undefined && isStoreKey(store) && { preferred_store: store }),
         ...(body.workspace_name !== undefined && { workspace_name: body.workspace_name.trim() }),
       }
       const changed = (Object.keys(next) as (keyof Settings)[]).some(
@@ -99,7 +112,7 @@ export function createSettingsBackend(start: Settings = initial()) {
     get settings() {
       return settings
     },
-    bumpExternally: (change: UpdateSettingsRequest = {}) => {
+    bumpExternally: (change: SettingsChange = {}) => {
       settings = { ...settings, ...change, version: settings.version + 1 }
     },
   }

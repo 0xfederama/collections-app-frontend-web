@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw/http'
-import { exampleResponses, type ExampleResponse } from '../generated/examples'
+import { exampleResponses, type ExampleResponse } from './fixtures'
 
 // Stand-in for the two attachment endpoints, whose spec has no example (binary body).
 const PLACEHOLDER_IMAGE =

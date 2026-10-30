@@ -38,7 +38,7 @@ async function fetchSuggestions(source: TmdbSource, q: string, signal: AbortSign
       signal,
     }),
   )
-  return { available: body.available, rows: body.results.map(tmdbRow) }
+  return { available: body.available, rows: (body.results ?? []).map(tmdbRow) }
 }
 
 /** The meta line under a title: the year. */

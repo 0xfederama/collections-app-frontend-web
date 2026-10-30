@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import { renderWithProviders } from '../../test-utils'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { exampleResponses } from '../../generated/examples'
+import { exampleResponses } from '../../mocks/fixtures'
 import type { Item } from './api'
 import { ExternalLinks } from './ExternalLinks'
 

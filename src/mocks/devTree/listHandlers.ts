@@ -1,5 +1,4 @@
 import { http, HttpResponse } from 'msw/http'
-import type { components } from '../../generated/schema'
 import { problemResponse } from '../problems'
 import { mockTypes } from '../types'
 import {
@@ -11,12 +10,14 @@ import {
   url,
   validName,
   type List,
+  type PathSegment,
   type TreeDb,
 } from './helpers'
 
-type DisplayMode = components['schemas']['DisplayMode']
-type SortMode = components['schemas']['SortMode']
-type ItemType = components['schemas']['ItemType']
+// The contract sends these as plain strings now; the fake takes them from the list record.
+type DisplayMode = List['display_mode']
+type SortMode = List['sort_mode']
+type ItemType = List['type']
 
 const DISPLAY_MODES: DisplayMode[] = ['compact', 'thumbnail', 'grid']
 const ITEM_TYPES: ItemType[] = mockTypes.map((type) => type.key)
@@ -28,7 +29,7 @@ const supportsSort = (type: ItemType, sort: SortMode) =>
   (sort === 'price' && PRICE_TYPES.has(type)) ||
   mockTypes.some(
     (definition) =>
-      definition.key === type && definition.fields.some((field) => field.key === sort),
+      definition.key === type && (definition.fields ?? []).some((field) => field.key === sort),
   )
 
 /** List endpoints of the fake (API.md §4, D-054, D-060). */
@@ -97,7 +98,7 @@ export function listHandlers(db: TreeDb) {
     http.get(url('/api/v1/lists/:id'), ({ params }) => {
       const list = state.lists.find((l) => l.id === params.id)
       if (!list) return problemResponse(404, 'not_found')
-      const path: NonNullable<List['path']> = []
+      const path: PathSegment[] = []
       for (
         let parent = folderOf(state, list.folder_id);
         parent;
