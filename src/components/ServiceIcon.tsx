@@ -11,7 +11,7 @@ import {
   type TileStyle,
 } from './serviceIcons/registry'
 
-export { STREAMING_SERVICES } from './serviceIcons/registry'
+export { STREAMING_SERVICES, sortByServiceOrder } from './serviceIcons/registry'
 
 /** What a tile shows: a vendored mark, the neutral symbol, or the first letter of the name. */
 interface Visual {

@@ -5,6 +5,7 @@ import {
   STREAMING_SERVICES,
   findService,
   normalizeServiceName,
+  sortByServiceOrder,
 } from './registry'
 
 describe('F017-W2 service registry', () => {
@@ -69,5 +70,20 @@ describe('F017-W2 service registry', () => {
       'Infinity',
     ])
     expect(STREAMING_SERVICES).toEqual(SERVICES.filter((e) => e.streaming).map((e) => e.label))
+  })
+})
+
+describe('F017-W2 sortByServiceOrder', () => {
+  it('puts the original seven first in their order, new services after, unknown last', () => {
+    const input = ['Zattoo', 'Hulu', 'YouTube', 'Netflix', 'Prime Video', 'Peacock', 'Disney+']
+    expect(sortByServiceOrder(input, (name) => name)).toEqual([
+      'Netflix',
+      'Prime Video',
+      'Disney+',
+      'YouTube',
+      'Hulu',
+      'Peacock',
+      'Zattoo',
+    ])
   })
 })

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ServiceIcon } from '../../components/ServiceIcon'
+import { ServiceIcon, sortByServiceOrder } from '../../components/ServiceIcon'
 import { focusRing } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import type { ItemSummary } from './api'
@@ -96,7 +96,7 @@ export function PinnedSlot({
       continue
     }
     flush()
-    const services = streamingOf(item)
+    const services = sortByServiceOrder(streamingOf(item), (s) => s.name)
     const streaming = item.metadata.streaming as { link?: string | null } | null | undefined
     // Each service the web knows opens its own search for the title; one without a search falls back
     // to the title's JustWatch page (`streaming.link`), and without either stays plain.

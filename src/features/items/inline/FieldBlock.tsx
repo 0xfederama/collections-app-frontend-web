@@ -1,6 +1,6 @@
 import { cx } from '../../../lib/cx'
 import { useState, type ReactNode } from 'react'
-import { ServiceIcon } from '../../../components/ServiceIcon'
+import { ServiceIcon, sortByServiceOrder } from '../../../components/ServiceIcon'
 import { Button, focusRing, Menu, type MenuItem } from '../../../components/ui'
 import { Plus, TriangleAlert } from '../../../components/ui/icons'
 import { useSettings } from '../../settings'
@@ -34,7 +34,7 @@ function StreamingValue({ item }: { item: Item }) {
     <div className="flex flex-col gap-1.5">
       {streaming.platforms?.length ? (
         <ul aria-label="Platforms" className="flex flex-wrap items-center justify-start gap-2">
-          {streaming.platforms.map((name) => (
+          {sortByServiceOrder(streaming.platforms, (name) => name).map((name) => (
             <li key={name} className="flex items-center justify-center">
               <ServiceIcon name={name} paid={paid.has(name.toLowerCase())} />
             </li>

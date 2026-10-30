@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
-import { devTree, devTreeState } from './devData'
+import { devTreeState, devWorkerTree } from './devData'
 import { problemResponse } from './problems'
 import { mockTypes } from './types'
 
@@ -267,7 +267,7 @@ function createItemsBackend(tree: Tree, findList: (id: string) => List | undefin
   return { handlers, store }
 }
 
-const devItems = createItemsBackend(devTree, (id) =>
+const devItems = createItemsBackend(devWorkerTree, (id) =>
   devTreeState.lists.find((list) => list.id === id),
 )
 
