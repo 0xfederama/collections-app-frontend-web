@@ -70,11 +70,6 @@ export function Sidebar({
               className="flex min-w-0 items-center truncate font-display text-[1.1875rem] font-bold tracking-[-0.02em]"
             >
               <span className="min-w-0 truncate">{workspaceName}</span>
-              {/* Decorative accent dot (F021): outside the truncating name, so it stays on long names. The name alone is the link's accessible name. */}
-              <span
-                aria-hidden
-                className="ml-1.5 inline-block size-1.5 shrink-0 rounded-full bg-accent"
-              />
             </Link>
           )}
           {onToggleRail && (
