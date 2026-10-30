@@ -168,10 +168,6 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
               placeholder="Search"
               autoComplete="off"
               spellCheck={false}
-              // The secondary Button has no border class (its edge is the shadow-sm hairline), so the
-              // closest light token is used. `!` wins over controlBorder, and the hover and focus
-              // states are re-stated as important so they still apply.
-              className="border-border! hover:border-text-muted! focus-within:border-accent!"
               value={value}
               onChange={(event) => {
                 setValue(event.target.value)
@@ -181,7 +177,7 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
               onKeyDown={onKeyDown}
               prefix={<Search aria-hidden className="size-4" />}
               suffix={
-                <kbd aria-hidden className="text-xs opacity-80">
+                <kbd aria-hidden className="font-mono text-label opacity-80">
                   /
                 </kbd>
               }

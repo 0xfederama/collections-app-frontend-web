@@ -117,7 +117,7 @@ function ShellFrame() {
           role="region"
           aria-label="Sidebar"
           style={{ width: rail ? RAIL_WIDTH : sidebar.width }}
-          className="relative flex min-h-0 shrink-0 flex-col overflow-hidden border-r border-border material"
+          className="relative flex min-h-0 shrink-0 flex-col overflow-hidden border-r border-border bg-sidebar"
         >
           <Sidebar
             rail={rail}

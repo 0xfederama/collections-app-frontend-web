@@ -105,7 +105,9 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
         <span aria-hidden className="grid size-[22px] shrink-0 place-items-center text-text-muted">
           <Icon className="size-[18px]" />
         </span>
-        <span className="min-w-0 flex-1 truncate">{node.folder.name}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-label text-text-subtle uppercase">
+          {node.folder.name}
+        </span>
         <TreeRowActions node={node} />
       </>
     )
@@ -123,7 +125,7 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
       >
         <span
           aria-hidden
-          className="grid size-[22px] shrink-0 place-items-center rounded-[6px] bg-fill shadow-[inset_0_0_0_1px_var(--material-hairline)]"
+          className="grid size-[22px] shrink-0 place-items-center rounded-sm bg-fill shadow-[inset_0_0_0_1px_var(--material-hairline)]"
         >
           <ListIconMark
             icon={list.icon}
@@ -134,7 +136,7 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
           />
         </span>
         <span className="min-w-0 flex-1 truncate">{list.name}</span>
-        <span className="text-xs text-text-muted tabular-nums">
+        <span className="font-mono text-label text-text-subtle tabular-nums">
           {list.item_count}
           <span className="sr-only"> items</span>
         </span>
