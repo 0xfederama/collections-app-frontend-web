@@ -824,7 +824,7 @@ export interface components {
         };
         BookSuggestions: {
             available: boolean;
-            results: components["schemas"]["BookSuggestion"][] | null;
+            results: components["schemas"]["BookSuggestion"][];
         };
         Content: {
             /** @description Markdown source, up to 1 MiB UTF-8. */
@@ -851,7 +851,7 @@ export interface components {
             version: number;
         };
         ContentVersionList: {
-            data: components["schemas"]["ContentVersionInfo"][] | null;
+            data: components["schemas"]["ContentVersionInfo"][];
         };
         CreateFolderRequest: {
             name: string;
@@ -939,7 +939,7 @@ export interface components {
             };
             /** @description Ancestor folders and the list. Present on getItem only. */
             path?: components["schemas"]["PathSegment"][];
-            price: components["schemas"]["Price"];
+            price: components["schemas"]["Price"] | null;
             /** Format: int64 */
             sort_order: number;
             title: string;
@@ -952,7 +952,7 @@ export interface components {
             website: string | null;
         };
         ItemPage: {
-            data: components["schemas"]["ItemSummary"][] | null;
+            data: components["schemas"]["ItemSummary"][];
             page: components["schemas"]["Page"];
         };
         ItemSummary: {
@@ -962,13 +962,13 @@ export interface components {
             created_at: string;
             /** Format: uuid */
             id: string;
-            image: components["schemas"]["ImageSummary"];
+            image: components["schemas"]["ImageSummary"] | null;
             /** Format: uuid */
             list_id: string;
             metadata: {
                 [key: string]: unknown;
             };
-            price: components["schemas"]["Price"];
+            price: components["schemas"]["Price"] | null;
             /** Format: int64 */
             sort_order: number;
             title: string;
@@ -1021,7 +1021,7 @@ export interface components {
             /** Format: int64 */
             item_count: number;
             name: string;
-            path: components["schemas"]["PathSegment"][] | null;
+            path: components["schemas"]["PathSegment"][];
             pinned_fields: string[] | null;
             sort_mode: string;
             /** Format: int64 */
@@ -1128,7 +1128,7 @@ export interface components {
             type: string;
         };
         RecentItems: {
-            data: components["schemas"]["SearchResult"][] | null;
+            data: components["schemas"]["SearchResult"][];
         };
         ReorderFoldersRequest: {
             ids: string[];
@@ -1166,7 +1166,7 @@ export interface components {
             destination?: components["schemas"]["RestoreDestination"];
         };
         SearchPage: {
-            data: components["schemas"]["SearchResult"][] | null;
+            data: components["schemas"]["SearchResult"][];
             page: components["schemas"]["Page"];
         };
         SearchPathSegment: {
@@ -1181,7 +1181,7 @@ export interface components {
         };
         SearchResult: {
             item: components["schemas"]["ItemSummary"];
-            path: components["schemas"]["SearchPathSegment"][] | null;
+            path: components["schemas"]["SearchPathSegment"][];
             /** @description The display name from this workspace's type definition, null when the list has no type. */
             type_name: string | null;
         };
@@ -1229,7 +1229,7 @@ export interface components {
         };
         TmdbSuggestions: {
             available: boolean;
-            results: components["schemas"]["TmdbSuggestion"][] | null;
+            results: components["schemas"]["TmdbSuggestion"][];
         };
         TrashCounts: {
             /** Format: int64 */
@@ -1243,7 +1243,7 @@ export interface components {
             counts: components["schemas"]["TrashCounts"];
             /** Format: date-time */
             deleted_at: string;
-            former_path: components["schemas"]["PathSegment"][] | null;
+            former_path: components["schemas"]["PathSegment"][];
             /**
              * Format: uuid
              * @description The trash batch ID.
@@ -1258,19 +1258,19 @@ export interface components {
             root_type: "folder" | "list" | "item";
         };
         TrashPage: {
-            data: components["schemas"]["TrashEntry"][] | null;
+            data: components["schemas"]["TrashEntry"][];
             page: components["schemas"]["Page"];
         };
         Tree: {
-            folders: components["schemas"]["Folder"][] | null;
-            lists: components["schemas"]["List"][] | null;
+            folders: components["schemas"]["Folder"][];
+            lists: components["schemas"]["List"][];
         };
         TypeDefinition: {
             allows_price: boolean;
             default_icon: string | null;
             default_pinned_fields: string[] | null;
             default_sort_field: string | null;
-            fields: components["schemas"]["TypeField"][] | null;
+            fields: components["schemas"]["TypeField"][];
             is_locked: boolean;
             key: string;
             name: string;

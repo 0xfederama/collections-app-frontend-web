@@ -79,7 +79,7 @@ export function useContentVersions(itemId: string, enabled = true) {
           params: { path: { id: itemId } },
           signal,
         }),
-      ).then((list) => list.data ?? []),
+      ).then((list) => list.data),
   })
 }
 

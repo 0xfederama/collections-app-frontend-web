@@ -648,7 +648,7 @@ describe('F016-W1 book item detail', () => {
     const book = {
       ...base,
       fields: [
-        ...(base.fields ?? []),
+        ...base.fields,
         {
           key: 'openlibrary_id',
           label: 'Open Library id',

@@ -1,21 +1,12 @@
 import { http, HttpResponse } from 'msw/http'
 import type { components } from '../generated/schema'
 import { devTree, devTreeState } from './devData'
-import type { Tree } from './devTree/helpers'
 import { problemResponse } from './problems'
 import { mockTypes } from './types'
 
+type Tree = components['schemas']['Tree']
 type List = components['schemas']['List']
-type Price = components['schemas']['Price']
-type ImageSummary = components['schemas']['ImageSummary']
-/**
- * The fake's item summary. The contract types `price` and `image` as always present, but the fake
- * sends `null` for "no price" and "no image", which is what the client has always been served.
- */
-export type ItemSummary = Omit<components['schemas']['ItemSummary'], 'price' | 'image'> & {
-  price: Price | null
-  image: ImageSummary | null
-}
+type ItemSummary = components['schemas']['ItemSummary']
 type ItemType = ItemSummary['type']
 const PRICE_TYPES = new Set<string | null>(
   mockTypes.filter((type) => type.allows_price).map((type) => type.key),
@@ -164,7 +155,7 @@ function createItemsBackend(tree: Tree, findList: (id: string) => List | undefin
       const query = new URL(request.url).searchParams
       const sort = (query.get('sort') as SortMode | null) ?? list.sort_mode
       const definition = mockTypes.find((type) => type.key === list.type)
-      const validField = (definition?.fields ?? []).some((field) => field.key === sort)
+      const validField = definition?.fields.some((field) => field.key === sort)
       if (
         !['manual', 'title', 'updated'].includes(sort) &&
         !(sort === 'price' && PRICE_TYPES.has(list.type)) &&
