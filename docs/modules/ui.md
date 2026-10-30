@@ -12,7 +12,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `src/components/ui/fieldStyles.ts`, `returnFocus.ts`: shared input chrome; focus return.
 - `src/components/ServiceIcon.tsx`: `ServiceIcon` (streaming) and `LinkIcon` (Google, Letterboxd, IMDb, Reddit) tiles, `TILE_SIZE`.
 - `src/lib/text.ts`: `firstLetter`, shared by the letter tile and the item-cover placeholder.
-- `src/assets/services/*.webp|svg`, `README.md`: local favicons (96 px) and vendored Simple Icons SVGs (Google, IMDb), never fetched at runtime.
+- `src/assets/services/*.svg`, `README.md`: every link, store and streaming icon as a local SVG (source, licence and date per file in the README), never fetched at runtime. `src/components/serviceIcons/` is the registry (`entries.ts`, `registry.ts`: `findService`, derived `STREAMING_SERVICES`); a unit test fails on a file without an entry or the reverse.
 - `src/dev/DevUiRoute.tsx`: `/dev/ui` gallery, dev builds only.
 
 ## Interfaces

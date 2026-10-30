@@ -1,5 +1,5 @@
 import tmdbLogo from '../../assets/tmdb-logo.svg'
-import openLibraryLogo from '../../assets/services/open-library.webp'
+import openLibraryLogo from '../../assets/services/open-library.svg'
 
 const externalLink =
   'text-accent underline decoration-border-strong underline-offset-4 hover:text-accent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring'

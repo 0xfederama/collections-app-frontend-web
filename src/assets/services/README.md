@@ -1,27 +1,53 @@
-# Service and link icons
+# Service, store and link icons (F-017)
 
-Downloaded once on 2026-10-15 and resized to 96x96 WebP (`sips` + `cwebp -q 80`). They are never fetched at runtime.
-Trademarks of their owners, used for identification only.
+Every icon is a local SVG with a square viewBox, listed in `src/components/serviceIcons/registry.ts` (a unit test fails
+when a file has no entry or an entry has no file). Nothing is fetched at runtime. Trademarks and logos belong to their
+owners and are used for identification only. Sourced on 2026-10-30, in the order of the F-017 brief.
 
-| File                | Source URL                                                                                                                 | Date       |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `netflix.webp`      | https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png                                                       | 2026-10-15 |
-| `prime-video.webp`  | https://m.media-amazon.com/images/G/01/digital/video/DVUI/favicons/apple-touch-icon-152x152.png                            | 2026-10-15 |
-| `disney-plus.webp`  | https://static-assets.bamgrid.com/product/disneyplus/favicons/disPlus-favicon-180x180.7d56f648dc95f591721935193bc827cb.png | 2026-10-15 |
-| `apple-tv.webp`     | https://tv.apple.com/apple-touch-icon.png                                                                                  | 2026-10-15 |
-| `youtube.webp`      | https://www.youtube.com/s/desktop/f51d9955/img/favicon_144x144.png                                                         | 2026-10-15 |
-| `timvision.webp`    | https://www.timvision.it/apple-touch-icon-180x180.png (180x151, padded to a white square)                                  | 2026-10-15 |
-| `infinity.webp`     | apple-touch-icon (192px) linked from https://www.mediasetinfinity.mediaset.it                                              | 2026-10-15 |
-| `letterboxd.webp`   | https://letterboxd.com/favicon.ico (64px entry)                                                                            | 2026-10-15 |
-| `reddit.webp`       | https://www.redditstatic.com/shreddit/assets/favicon/192x192.png                                                           | 2026-10-15 |
-| `google.svg`        | Simple Icons `google` path (https://github.com/simple-icons/simple-icons, CC0 1.0), v16.35.0, brand colour `#4285F4`       | 2026-10-15 |
-| `imdb.svg`          | Simple Icons `imdb` path (same package and licence), brand colour `#F5C518`                                                | 2026-10-15 |
-| `open-library.webp` | https://openlibrary.org/static/images/openlibrary-192x192.png (resized to 96x96, About section)                            | 2026-10-20 |
+Kinds: **path** = a single-colour vector path with the brand colour as `fill`; **wrapped** = the brand's official raster,
+base64-embedded unmodified in a 100x100 SVG (no redrawing, no resampling); **vector** = an SVG taken as published.
 
-Google (32 px) and IMDb (32 px) favicons are under 48 px, so their marks are the Simple Icons SVGs (F008-W11). Website
-links have no file: a neutral globe symbol is drawn in the tile (`ServiceIcon.tsx`). No 1.x SVGs existed to restore.
+| File                 | Kind    | Source                                                                                                                              | Licence / note                                                              |
+| -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `google.svg`         | path    | Simple Icons 16.36.0 `google`, `#4285F4`                                                                                            | CC0; trademark of Google                                                    |
+| `imdb.svg`           | path    | Simple Icons `imdb`, `#F5C518`                                                                                                      | CC0; trademark of IMDb.com                                                  |
+| `letterboxd.svg`     | path    | Simple Icons `letterboxd`, `#202830`                                                                                                | CC0; trademark of Letterboxd                                                |
+| `reddit.svg`         | path    | Simple Icons `reddit`, `#FF4500`                                                                                                    | CC0; trademark of Reddit                                                    |
+| `goodreads.svg`      | path    | Simple Icons `goodreads`, `#1E1914`                                                                                                 | CC0; trademark of Goodreads                                                 |
+| `netflix.svg`        | path    | Simple Icons `netflix`, `#E50914`                                                                                                   | CC0; trademark of Netflix                                                   |
+| `apple-tv.svg`       | path    | Simple Icons `appletv`, `#000000`                                                                                                   | CC0; trademark of Apple                                                     |
+| `youtube.svg`        | path    | Simple Icons `youtube`, `#FF0000`                                                                                                   | CC0; trademark of Google                                                    |
+| `google-play.svg`    | path    | Simple Icons `googleplay`, `#414141` (also used for Google Play Books)                                                              | CC0; trademark of Google                                                    |
+| `paramount-plus.svg` | path    | Simple Icons `paramountplus`, `#0064FF`                                                                                             | CC0; trademark of Paramount                                                 |
+| `hbo-max.svg`        | path    | Simple Icons `hbomax`, `#000000`                                                                                                    | CC0; trademark of Warner Bros. Discovery                                    |
+| `now.svg`            | path    | Simple Icons `now`, `#001211`                                                                                                       | CC0; trademark of Sky                                                       |
+| `sky.svg`            | path    | Simple Icons `sky`, `#0072C9`                                                                                                       | CC0; trademark of Sky                                                       |
+| `mubi.svg`           | path    | Simple Icons `mubi`, `#000000`                                                                                                      | CC0; trademark of MUBI                                                      |
+| `crunchyroll.svg`    | path    | Simple Icons `crunchyroll`, `#FF5E00`                                                                                               | CC0; trademark of Crunchyroll                                               |
+| `open-library.svg`   | vector  | https://raw.githubusercontent.com/internetarchive/openlibrary/master/static/images/openlibrary-icon.svg (the site's own icon)       | Open Library repository (AGPL-3.0 code); Internet Archive mark              |
+| `hulu.svg`           | vector  | svgl https://github.com/pheralb/svgl `static/library/hulu.svg` (wordmark)                                                           | svgl is MIT; the artwork is Hulu's trademark                                |
+| `amazon.svg`         | vector  | Wikimedia Commons `File:Amazon icon.svg`                                                                                            | Public domain in the US (simple shapes, `PD-textlogo`); trademark of Amazon |
+| `apple-books.svg`    | vector  | Wikimedia Commons `File:Apple Books (macOS).svg`                                                                                    | Licence tag on the Commons file page; trademark of Apple                    |
+| `prime-video.svg`    | wrapped | https://m.media-amazon.com/images/G/01/digital/video/DVUI/favicons/apple-touch-icon-152x152.png (152 px)                            | Brand's own touch icon; trademark of Amazon                                 |
+| `disney-plus.svg`    | wrapped | https://static-assets.bamgrid.com/product/disneyplus/favicons/disPlus-favicon-180x180.7d56f648dc95f591721935193bc827cb.png (180 px) | Brand's own touch icon; trademark of Disney                                 |
+| `infinity.svg`       | wrapped | `apple-touch-icon` (192 px) linked from https://www.mediasetinfinity.mediaset.it                                                    | Brand's own touch icon; trademark of Mediaset                               |
+| `raiplay.svg`        | wrapped | https://www.raiplay.it/dl/components/img/logo-app.png (167 px)                                                                      | Brand's own app icon; trademark of RAI                                      |
+| `kobo.svg`           | wrapped | https://maint.kobo.com/kobo-maintenance/android-chrome-192x192.png (192 px, linked from https://www.kobo.com)                       | Brand's own icon; trademark of Rakuten Kobo                                 |
+| `bookshop.svg`       | wrapped | https://bookshop.org/apple-touch-icon.png (180 px)                                                                                  | Brand's own touch icon; trademark of Bookshop.org                           |
+| `discovery-plus.svg` | wrapped | https://www.discoveryplus.com/dotcom/img/dplus/apple-touch-icon.png (180 px)                                                        | Brand's own touch icon; trademark of Warner Bros. Discovery                 |
+| `peacock.svg`        | wrapped | https://www.peacocktv.com/static/peacock-toolkit/53.4.0/peacock/favicons/apple-touch-icon_180x180.png (180 px)                      | Brand's own touch icon; trademark of NBCUniversal                           |
+| `timvision.svg`      | wrapped | https://www.timvision.it/apple-touch-icon-180x180.png, downloaded 2026-10-15 and kept at 96 px (the URL now answers with JSON)      | Brand's own touch icon; trademark of TIM                                    |
+| `rakuten-tv.svg`     | wrapped | https://prod-kuato.rakuten.tv/favicon.ico (64 px entry, the only icon the site publishes; named in its manifest.json)               | Brand's own favicon; trademark of Rakuten                                   |
 
-F009-W5: the two SVGs no longer carry the white 24x24 background and the 0.6 inner scale F008-W11 added to match the
-full-bleed WebP tiles. The tile now owns the padding: every mark (logo, symbol, letter) sits in the same 18% inset and is
-contained, never cropped, so a white square would show against the neutral tile in the dark theme. The WebP favicons keep
-their own artwork as downloaded.
+## Decisions and caveats
+
+- **Simple Icons does not cover everything** (checked 2026-10-30 against 16.36.0), so there is no single pack: Amazon,
+  Prime Video, Disney+, Kobo, Bookshop.org, Open Library, Apple Books, TIMvision, Mediaset Infinity, RaiPlay, Rakuten TV,
+  Hulu, Peacock and Discovery+ are missing there. Each of those comes from the next source in the brief's order.
+- **Wrapped rasters** are the largest clean official icon each brand serves (64–192 px), embedded as published. They
+  are sharp at the largest tile (36 px), except TIMvision (96 px) and Rakuten TV (64 px), which are the best that exist.
+- **Tiles** (registry `tile` / `fit`): `inset` marks sit in the shared 18 % padding; `bleed` icons carry their own
+  background and fill the tile. Dark marks (`tile: 'light'`) get a theme-independent light tile so they read in both themes.
+- Website links have no file: the neutral globe is drawn in the tile. Unknown services get the letter tile.
+- Not used: TMDB provider logos (runtime fetching, D-089 retention rules).
+- To add an icon: drop the SVG here, add a row above and an entry in the registry; the registry test enforces both.

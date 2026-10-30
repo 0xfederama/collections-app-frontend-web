@@ -20,6 +20,7 @@
   --color-border-strong: var(--border-strong);
   --color-fill: var(--fill);
   --color-fill-hover: var(--fill-hover);
+  --color-tile-light: var(--tile-light);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-accent: var(--accent);
