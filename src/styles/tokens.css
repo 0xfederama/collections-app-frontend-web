@@ -1,29 +1,43 @@
 /*
- * Design tokens (UI_SPEC §11): Frosted Gallery (F-002). Components use the semantic tokens only; the
- * palette vars are private to this file. global.css maps the semantic tokens into Tailwind.
+ * Design tokens (UI_SPEC §11): "Editorial" (F-021, direction and values in design-docs/features/F-021-web-restyle.md).
+ * Plain surfaces, hairline borders, one blue accent, shadows only on floating layers. Components use the semantic
+ * tokens only; the palette vars are private to this file. global.css maps the semantic tokens into Tailwind.
  */
 
 :root {
-  /* Private palette: cool graphite neutrals, indigo accent, status hues. */
+  /* Private palette: near-white and near-black neutrals, one blue accent, status hues. */
   --white: #ffffff;
   /* Service-mark tiles that stay light in both themes (F017-W2: marks drawn for a white ground). */
   --tile-light: #ffffff;
 
-  --ink-900: #1d1d1f;
-  --ink-600: #5c5d66;
+  /* Light neutrals. */
+  --paper-50: #f7f7f8;
+  --paper-100: #f6f6f7;
+  --paper-150: #f0f0f1;
+  --paper-200: #e6e6e9;
 
-  --graphite-950: #121215;
-  --graphite-900: #1a1a1f;
-  --graphite-800: #232329;
-  --graphite-100: #f2f2f5;
-  --graphite-400: #a3a3ae;
+  /* Dark neutrals (near-black). */
+  --night-950: #0b0b0c;
+  --night-900: #121214;
+  --night-850: #18181b;
+  --night-800: #1d1d21;
+  --night-750: #26262b;
+  --night-100: #f4f4f5;
+  --night-400: #a8a8b0;
 
-  --indigo-300: #a5b4fc;
-  --indigo-400: #818cf8;
-  --indigo-500: #6366f1;
-  --indigo-600: #4f46e5;
-  --indigo-700: #4338ca;
-  --indigo-950: #0f0e2e;
+  /* Text greys, shared by both themes (light: body, muted; dark: body, subtle). */
+  --ink-950: #0b0b0c;
+  --ink-700: #55555c;
+  --ink-600: #6e6e78;
+  --ink-500: #8a8a93;
+
+  --blue-50: #eef2ff;
+  --blue-200: #8fa8ff;
+  --blue-300: #6686ff;
+  --blue-400: #4a72ff;
+  --blue-600: #2d5bff;
+  --blue-700: #2a52e8;
+  --blue-800: #2448d6;
 
   --green-50: #f0fdf4;
   --green-300: #86efac;
@@ -58,15 +72,13 @@
 /* Theme independent. In an @theme block so Tailwind's rounded-* and ease-* utilities read them. */
 @theme {
   --radius-*: initial;
-  /* Radius scale F008-W6: one radius per level, and a nested shape is concentric with its container
-     (inner = outer minus padding). Menus, popovers and the toolbar are lg with 6 px padding, so
-     their items and controls are md; a segmented control (md, 2 px padding) holds sm-ish segments
-     (md minus 2 px, written calc(var(--radius-md) - 2px)). */
-  --radius-sm: 8px; /* small rows, skeletons, checkboxes */
-  --radius-md: 12px; /* controls: buttons, inputs, selects, menu items, tree rows, tooltips */
-  --radius-lg: 18px; /* containers: cards, menus, popovers, toasts, toolbars */
-  --radius-xl: 24px; /* sheets, dialogs, drawer */
-  --radius-full: 9999px; /* tags only: badges, chips, avatars */
+  /* Radius scale (F021, Editorial): 8 px controls, 6 px small tiles, 12 px containers, 16 px sheets, full for tags.
+     Nested shapes stay concentric (inner = outer minus padding, F008-W6). */
+  --radius-sm: 6px; /* small tiles: row thumbnail, service tiles, checkboxes, skeleton rows */
+  --radius-md: 8px; /* controls: buttons, inputs, selects, menu items, tree rows, tooltips */
+  --radius-lg: 12px; /* containers: cards, covers, menus, popovers, toasts, toolbars */
+  --radius-xl: 16px; /* sheets, dialogs, drawer */
+  --radius-full: 9999px; /* tags only: chips, badges, avatars */
 
   --ease-*: initial;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -80,34 +92,35 @@
 :root {
   --duration-fast: 150ms;
   --duration-base: 200ms;
-
-  /* Material (blur only on sidebar, toolbar, sheet, dialogs, drawer; menus and popovers are solid bg-surface-raised). */
-  --material-blur: 28px;
-  --material-saturate: 180%;
-  --material-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
 }
 
 /* Light is the default; the inline script in index.html sets data-theme before paint. */
 :root,
 [data-theme='light'] {
-  --bg: #edeef1;
-  --bg-ambient:
-    radial-gradient(900px 480px at 75% -12%, rgb(99 102 241 / 0.1), transparent),
-    radial-gradient(700px 420px at 0% 105%, rgb(56 189 248 / 0.08), transparent);
-  --surface: var(--white);
+  --bg: var(--white);
+  --sidebar: var(--paper-50);
+  --surface: var(--paper-100);
   --surface-raised: var(--white);
-  --border: rgb(60 60 90 / 0.14);
-  --border-strong: #7f8292;
-  --fill: rgb(60 60 90 / 0.055);
-  --fill-hover: rgb(60 60 90 / 0.1);
-  --text: var(--ink-900);
-  --text-muted: var(--ink-600);
+  --border: var(--paper-200);
+  --border-soft: var(--paper-150);
+  /* Inputs, checkboxes and anything whose boundary carries meaning: 3:1 on bg and surface. */
+  --border-strong: var(--ink-500);
+  --fill: rgb(11 11 12 / 0.05);
+  --fill-hover: rgb(11 11 12 / 0.09);
+  --text: var(--ink-950);
+  --text-muted: var(--ink-700);
+  --text-subtle: var(--ink-600);
 
-  --accent: var(--indigo-600);
-  --accent-hover: var(--indigo-700);
+  --accent: var(--blue-600);
+  --accent-hover: var(--blue-700);
   --accent-fg: var(--white);
-  --accent-text: var(--indigo-600);
-  --focus-ring: var(--indigo-600);
+  --accent-text: var(--blue-800);
+  --accent-tint: var(--blue-50);
+  --focus-ring: var(--blue-600);
+
+  /* Ink button (Quick add): the one action that is not blue. */
+  --ink: var(--ink-950);
+  --ink-fg: var(--white);
 
   --success-bg: var(--green-50);
   --success-border: var(--green-300);
@@ -124,32 +137,25 @@
   --danger-hover: var(--red-800);
   --danger-fg: var(--white);
 
-  --overlay: rgb(20 20 40 / 0.4);
+  --overlay: rgb(11 11 12 / 0.4);
 
-  /* Materials. */
-  --material-bg: rgb(255 255 255 / 0.78);
-  --material-bg-strong: rgb(255 255 255 / 0.9);
-  --material-solid: #ffffff;
-  --material-hairline: rgb(60 60 90 / 0.1);
-  --material-highlight: inset 0 1px 0 rgb(255 255 255 / 0.8);
+  /* Materials: solid surfaces (no blur). material = sidebar tone, material-strong = raised floating layers. */
+  --material-bg: var(--sidebar);
+  --material-bg-strong: var(--surface-raised);
+  --material-hairline: var(--border);
 
-  /* Layered shadows: every one starts with the 1 px hairline ring. */
-  --shadow-sm: 0 0 0 1px var(--material-hairline), 0 1px 2px rgb(30 30 70 / 0.14);
-  --shadow-md:
-    0 0 0 1px var(--material-hairline), 0 1px 2px rgb(30 30 70 / 0.14),
-    0 10px 24px -16px rgb(30 30 70 / 0.14);
-  --shadow-lg:
-    0 0 0 1px var(--material-hairline), 0 4px 10px -4px rgb(30 30 70 / 0.14),
-    0 22px 44px -14px rgb(30 30 70 / 0.18);
-  --shadow-float: var(--shadow-lg), var(--material-highlight);
-  --shadow-sheet:
-    0 0 0 1px var(--material-hairline), 0 40px 80px -20px rgb(20 20 40 / 0.35),
-    var(--material-highlight);
-  --shadow-accent: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 6px 14px -4px rgb(79 70 229 / 0.45);
+  /* Hairline-based shadows: the 1 px ring does the separating, the soft drop is for floating layers only. */
+  --shadow-sm: 0 0 0 1px var(--material-hairline);
+  --shadow-md: 0 0 0 1px var(--material-hairline), 0 4px 12px -6px rgb(11 11 12 / 0.12);
+  --shadow-lg: 0 0 0 1px var(--material-hairline), 0 8px 24px -10px rgb(11 11 12 / 0.16);
+  --shadow-float: var(--shadow-lg);
+  --shadow-sheet: 0 0 0 1px var(--material-hairline), 0 24px 60px -18px rgb(11 11 12 / 0.3);
+  /* No glow: the primary button is flat. */
+  --shadow-accent: none;
 }
 
 [data-theme='dark'] {
-  /* Lifted versions preserve visible marks against graphite tiles. */
+  /* Lifted versions preserve visible marks against the dark tiles. */
   --list-icon-red: #f97066;
   --list-icon-orange: #fb8c47;
   --list-icon-amber: #fdb022;
@@ -160,24 +166,29 @@
   --list-icon-purple: #b69cff;
   --list-icon-pink: #ff85c2;
   --list-icon-gray: #c1c2cc;
-  --bg: var(--graphite-950);
-  --bg-ambient:
-    radial-gradient(900px 480px at 75% -12%, rgb(99 102 241 / 0.16), transparent),
-    radial-gradient(700px 420px at 0% 105%, rgb(56 189 248 / 0.07), transparent);
-  --surface: var(--graphite-900);
-  --surface-raised: var(--graphite-800);
-  --border: rgb(255 255 255 / 0.12);
-  --border-strong: #7d7e8c;
+
+  --bg: var(--night-950);
+  --sidebar: var(--night-900);
+  --surface: var(--night-850);
+  --surface-raised: var(--night-800);
+  --border: var(--night-750);
+  --border-soft: var(--night-800);
+  --border-strong: var(--ink-600);
   --fill: rgb(255 255 255 / 0.07);
   --fill-hover: rgb(255 255 255 / 0.12);
-  --text: var(--graphite-100);
-  --text-muted: var(--graphite-400);
+  --text: var(--night-100);
+  --text-muted: var(--night-400);
+  --text-subtle: var(--ink-500);
 
-  --accent: var(--indigo-400);
-  --accent-hover: var(--indigo-300);
-  --accent-fg: var(--indigo-950);
-  --accent-text: var(--indigo-300);
-  --focus-ring: var(--indigo-300);
+  --accent: var(--blue-400);
+  --accent-hover: var(--blue-300);
+  --accent-fg: var(--night-950);
+  --accent-text: var(--blue-200);
+  --accent-tint: rgb(74 114 255 / 0.16);
+  --focus-ring: var(--blue-400);
+
+  --ink: var(--night-100);
+  --ink-fg: var(--night-950);
 
   --success-bg: var(--green-950);
   --success-border: var(--green-800);
@@ -195,45 +206,13 @@
 
   --overlay: rgb(0 0 0 / 0.6);
 
-  --material-bg: rgb(30 30 36 / 0.78);
-  --material-bg-strong: rgb(34 34 41 / 0.9);
-  --material-solid: var(--graphite-800);
-  --material-hairline: rgb(255 255 255 / 0.1);
-  --material-highlight: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  --material-bg: var(--sidebar);
+  --material-bg-strong: var(--surface-raised);
+  --material-hairline: var(--border);
 
-  --shadow-sm: 0 0 0 1px var(--material-hairline), 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-md:
-    0 0 0 1px var(--material-hairline), 0 1px 2px rgb(0 0 0 / 0.4),
-    0 10px 24px -16px rgb(0 0 0 / 0.6);
-  --shadow-lg:
-    0 0 0 1px var(--material-hairline), 0 4px 10px -4px rgb(0 0 0 / 0.5),
-    0 22px 44px -14px rgb(0 0 0 / 0.6);
-  --shadow-sheet:
-    0 0 0 1px var(--material-hairline), 0 40px 80px -20px rgb(0 0 0 / 0.7),
-    var(--material-highlight);
-  --shadow-accent: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 6px 14px -4px rgb(129 140 248 / 0.4);
-}
-
-/*
- * Solid fallbacks: no backdrop-filter support, or the user asked for less transparency.
- * Placed last so they win over both theme blocks (same specificity).
- */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :root,
-  [data-theme='light'],
-  [data-theme='dark'] {
-    --material-bg: var(--material-solid);
-    --material-bg-strong: var(--material-solid);
-    --material-filter: none;
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  :root,
-  [data-theme='light'],
-  [data-theme='dark'] {
-    --material-bg: var(--material-solid);
-    --material-bg-strong: var(--material-solid);
-    --material-filter: none;
-    --overlay: rgb(20 20 40 / 0.6);
-  }
+  --shadow-sm: 0 0 0 1px var(--material-hairline);
+  --shadow-md: 0 0 0 1px var(--material-hairline), 0 4px 12px -6px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 0 0 1px var(--material-hairline), 0 8px 24px -10px rgb(0 0 0 / 0.6);
+  --shadow-sheet: 0 0 0 1px var(--material-hairline), 0 24px 60px -18px rgb(0 0 0 / 0.7);
+  --shadow-accent: none;
 }

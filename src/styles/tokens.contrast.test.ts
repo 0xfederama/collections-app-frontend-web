@@ -62,13 +62,20 @@ const textPairs: [string, string][] = [
   ['text', 'bg'],
   ['text', 'surface'],
   ['text', 'surface-raised'],
+  ['text', 'sidebar'],
   ['text-muted', 'bg'],
   ['text-muted', 'surface'],
   ['text-muted', 'surface-raised'],
+  ['text-muted', 'sidebar'],
+  ['text-subtle', 'bg'],
+  ['text-subtle', 'surface'],
+  ['text-subtle', 'surface-raised'],
+  ['text-subtle', 'sidebar'],
   ['accent-fg', 'accent'],
   ['accent-fg', 'accent-hover'],
   ['accent-text', 'bg'],
   ['accent-text', 'surface'],
+  ['ink-fg', 'ink'],
   ['danger-fg', 'danger'],
   ['danger-fg', 'danger-hover'],
   ['success-text', 'success-bg'],
@@ -79,9 +86,12 @@ const textPairs: [string, string][] = [
 const uiPairs: [string, string][] = [
   ['border-strong', 'bg'],
   ['border-strong', 'surface'],
+  ['border-strong', 'sidebar'],
   ['focus-ring', 'bg'],
   ['focus-ring', 'surface'],
+  ['focus-ring', 'surface-raised'],
   ['accent', 'bg'],
+  ['accent', 'surface'],
 ]
 
 describe('tokens.css contrast (WCAG 2.x)', () => {
