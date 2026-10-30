@@ -93,7 +93,7 @@ export const SERVICES: ServiceEntry[] = [
     aliases: [],
     file: 'netflix.svg',
     tile: 'neutral',
-    fit: 'bleed',
+    fit: 'inset',
     streaming: true,
   },
   {
