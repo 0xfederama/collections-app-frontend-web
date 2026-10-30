@@ -36,7 +36,7 @@ function StreamingValue({ item }: { item: Item }) {
         <ul aria-label="Platforms" className="flex flex-wrap items-center justify-start gap-2">
           {sortByServiceOrder(streaming.platforms, (name) => name).map((name) => (
             <li key={name} className="flex items-center justify-center">
-              <ServiceIcon name={name} paid={paid.has(name.toLowerCase())} size={44} />
+              <ServiceIcon name={name} paid={paid.has(name.toLowerCase())} />
             </li>
           ))}
         </ul>
@@ -80,7 +80,7 @@ function StoresValue({ item, fieldKey }: { item: Item; fieldKey: string }) {
   return (
     <ul aria-label="Where to get it" className="flex flex-wrap items-center justify-start gap-2">
       {sortStoreKeys(providers.data, keys).map((key) => {
-        const tile = <ServiceIcon name={key} label={storeName(providers.data, key)} size={44} />
+        const tile = <ServiceIcon name={key} label={storeName(providers.data, key)} />
         const href = storeLink(key, { isbn, title: item.title, country })
         return (
           <li key={key} className="flex items-center justify-center">

@@ -8,7 +8,7 @@ import type { StoreProvider } from './api'
 import { storeName } from './providers'
 
 const itemClass =
-  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-sm outline-none data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11'
+  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-ui outline-none data-[highlighted]:bg-accent-tint pointer-coarse:min-h-11'
 
 export interface StoreChoicesProps {
   /** The chosen store keys, in the order they were picked. */
@@ -44,11 +44,11 @@ export function StoreChoices({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <p id={captionId} className="text-sm text-text">
+      <p id={captionId} className="text-ui text-text">
         {label}
       </p>
       {hint && (
-        <p id={hintId} className="text-xs text-text-muted">
+        <p id={hintId} className="text-secondary text-text-muted">
           {hint}
         </p>
       )}
@@ -61,7 +61,7 @@ export function StoreChoices({
             aria-describedby={hint ? hintId : undefined}
             aria-invalid={error ? true : undefined}
             className={cx(
-              'flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-border-strong bg-surface px-3 text-start text-sm',
+              'flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-border-strong bg-surface px-3 text-start text-ui',
               focusRing,
               value.length === 0 ? 'text-text-muted' : 'text-text',
             )}
@@ -75,7 +75,7 @@ export function StoreChoices({
                   <ServiceIcon key={key} name={key} label={names[index]} size={20} />
                 ))}
                 {value.length > 4 && (
-                  <span className="text-xs text-text-muted">+{value.length - 4}</span>
+                  <span className="text-secondary text-text-muted">+{value.length - 4}</span>
                 )}
               </span>
             )}
@@ -117,7 +117,7 @@ export function StoreChoices({
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
-      {error && <p className="text-xs text-danger-text">{error}</p>}
+      {error && <p className="text-secondary text-danger-text">{error}</p>}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { LinkIcon } from '../../components/ServiceIcon'
+import { LinkIcon, TILE_SIZE } from '../../components/ServiceIcon'
 import { focusRing } from '../../components/ui'
 import { Plus } from '../../components/ui/icons'
 import type { Item } from './api'
@@ -7,8 +7,6 @@ import { buildExternalLinks } from '../links'
 // Every link is the same icon tile as the streaming row (F009-W5), one shared size, and the empty
 // "+" slot is the same square. The visible name is the tile's tooltip; the accessible name is the
 // sr-only text.
-/** F021: the link tiles are 44 px, the touch target size, on the item page. */
-const SIZE = 44
 const control = `inline-flex shrink-0 rounded-md ${focusRing}`
 
 /**
@@ -30,7 +28,7 @@ export function ExternalLinks({ item, onAddWebsite }: { item: Item; onAddWebsite
               onClick={onAddWebsite}
               title="Add website"
               className={`${control} items-center justify-center rounded-md border border-dashed border-border-strong text-text-muted hover:border-accent hover:text-text`}
-              style={{ width: SIZE, height: SIZE }}
+              style={{ width: TILE_SIZE, height: TILE_SIZE }}
             >
               <Plus aria-hidden className="size-4" />
               <span className="sr-only">Add website</span>
@@ -47,7 +45,7 @@ export function ExternalLinks({ item, onAddWebsite }: { item: Item; onAddWebsite
             className={control}
           >
             <span aria-hidden>
-              <LinkIcon name={link.label} size={SIZE} />
+              <LinkIcon name={link.label} size={TILE_SIZE} />
             </span>
             <span className="sr-only">{link.label} (opens in a new tab)</span>
           </a>

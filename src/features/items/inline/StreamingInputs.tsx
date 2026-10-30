@@ -57,7 +57,7 @@ export function StreamingInputs({ form }: { form: FieldForm }) {
                     'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-ui pointer-coarse:min-h-11',
                     focusRing,
                     isPaid(name)
-                      ? 'border-accent bg-accent/10 text-accent-text'
+                      ? 'border-accent bg-accent-tint text-accent-text'
                       : 'border-border-strong bg-surface text-text',
                   )}
                 >

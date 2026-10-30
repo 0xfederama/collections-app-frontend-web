@@ -84,7 +84,7 @@ export function DescriptionEditor({ initial, onDone }: { initial: TreeList; onDo
   }
 
   return (
-    <section aria-label="List description" className="flex max-w-prose flex-col gap-2 text-sm">
+    <section aria-label="List description" className="flex max-w-prose flex-col gap-2 text-ui">
       <div onKeyDownCapture={onKeyDown} className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <Suspense fallback={<Skeleton className="h-24 w-full" />}>
@@ -120,7 +120,7 @@ export function DescriptionEditor({ initial, onDone }: { initial: TreeList; onDo
       </div>
       <p
         role={tooLong ? 'alert' : undefined}
-        className={tooLong ? 'text-danger-text' : 'text-xs text-text-muted'}
+        className={tooLong ? 'text-danger-text' : 'text-secondary text-text-muted'}
       >
         {tooLong
           ? `The description is ${formatBytes(bytes)}; the limit is ${formatBytes(MAX_DESCRIPTION_BYTES)}. Shorten it to save.`

@@ -7,7 +7,7 @@ import { MAX_PINNED, pinnableFields, resolvePinned } from './pinned'
 import type { List } from './api'
 import type { TypeDefinition } from '../items'
 const itemClass =
-  'flex h-9 cursor-pointer items-center gap-2 rounded-md px-3 text-sm outline-none select-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11 [&_svg]:size-4'
+  'flex h-9 cursor-pointer items-center gap-2 rounded-md px-3 text-ui outline-none select-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent-tint pointer-coarse:min-h-11 [&_svg]:size-4'
 
 /**
  * Toolbar menu "Pinned fields" (F009-W3): a checklist of the fields the list's type offers, in
@@ -62,7 +62,7 @@ export function PinnedMenu({
           sideOffset={6}
           className="bg-surface-raised z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-60 overflow-y-auto rounded-lg p-1.5 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
         >
-          <DropdownMenu.Label className="px-3 pt-2 pb-1 text-xs font-semibold text-text-muted">
+          <DropdownMenu.Label className="px-3 pt-2 pb-1 text-secondary font-semibold text-text-muted">
             Up to three, in order
           </DropdownMenu.Label>
           {fields.map((field) => {
@@ -95,7 +95,7 @@ export function PinnedMenu({
                 {checked && (
                   <span
                     aria-hidden
-                    className="ml-auto text-xs font-semibold text-text-muted tabular-nums"
+                    className="ml-auto text-secondary font-semibold text-text-muted tabular-nums"
                   >
                     {position + 1}
                   </span>

@@ -6,7 +6,7 @@ import { Check, Plus } from '../../../components/ui/icons'
 import { cx } from '../../../lib/cx'
 
 const itemClass =
-  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11'
+  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-ui outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent-tint pointer-coarse:min-h-11'
 
 /** The backend stores platform names unique case-insensitively, so they are compared that way. */
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()

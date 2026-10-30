@@ -53,7 +53,7 @@ export function SidebarTree() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           {result.status === 'pending' && <TreeSkeleton />}
           {result.status === 'error' && (
-            <div role="alert" className="flex flex-col items-start gap-2 px-2 py-3 text-sm">
+            <div role="alert" className="flex flex-col items-start gap-2 px-2 py-3 text-ui">
               <p>Couldn’t load your lists.</p>
               <Button size="sm" variant="secondary" onClick={result.refetch}>
                 Retry

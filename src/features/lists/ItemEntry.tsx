@@ -81,14 +81,14 @@ export function ItemEntry({
             keys={beside}
             {...slots}
             iconSize={20}
-            className="hidden max-w-[55%] min-w-0 overflow-hidden text-sm text-text-muted sm:flex"
+            className="hidden max-w-[55%] min-w-0 overflow-hidden text-ui text-text-muted sm:flex"
           />
         </div>
         <PinnedSlot
           keys={corner}
           {...slots}
           iconSize={22}
-          className="max-w-[45%] shrink-0 justify-end text-sm"
+          className="max-w-[45%] shrink-0 justify-end text-ui"
         />
         {controls?.menu}
       </li>
@@ -139,9 +139,14 @@ export function ItemEntry({
       <ItemThumb item={item} decorative className="aspect-4/3 w-full rounded-lg" />
       <div className="flex flex-1 flex-col gap-1 px-2 pt-2.5">
         {title}
-        <PinnedSlot keys={beside} {...slots} iconSize={20} className="text-xs text-text-muted" />
+        <PinnedSlot
+          keys={beside}
+          {...slots}
+          iconSize={20}
+          className="text-secondary text-text-muted"
+        />
         {/* The corner placement ends the card's text block. */}
-        <PinnedSlot keys={corner} {...slots} iconSize={20} className="self-end text-sm" />
+        <PinnedSlot keys={corner} {...slots} iconSize={20} className="self-end text-ui" />
       </div>
       {controls && <div className="absolute top-2.5 right-2.5">{controls.menu}</div>}
     </li>

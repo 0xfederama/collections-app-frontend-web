@@ -63,7 +63,7 @@ const MARK = 'flex size-full items-center justify-center p-[18%] text-text-muted
  * The tile size of the item page (F009-W5): one size for the link tiles and the streaming tiles.
  * A tighter row (the list rows, `ItemEntry`) asks for a smaller tile; only the size changes.
  */
-export const TILE_SIZE = 36
+export const TILE_SIZE = 44
 
 export interface ServiceIconProps {
   name: string

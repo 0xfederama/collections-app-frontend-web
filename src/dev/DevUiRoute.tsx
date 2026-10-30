@@ -37,7 +37,7 @@ export function DevUiRoute() {
       <div className="mx-auto flex max-w-4xl flex-col gap-10 px-4 py-6 sm:px-6">
         <header className="sticky top-0 z-30 -mx-4 flex flex-col gap-3 material-strong px-4 py-3 shadow-sm sm:-mx-6 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-3xl font-semibold">UI gallery</h1>
+            <h1 className="text-heading font-semibold">UI gallery</h1>
             <SegmentedControl
               aria-label="Theme"
               value={preference}
@@ -46,7 +46,7 @@ export function DevUiRoute() {
             />
           </div>
           <nav aria-label="Gallery sections">
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-ui">
               {sections.map((id) => (
                 <li key={id}>
                   <a

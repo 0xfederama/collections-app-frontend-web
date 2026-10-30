@@ -12,7 +12,7 @@ const SIZES = [
 export function ServiceIconsSection() {
   return (
     <Section id="service-icons" title="Service icons">
-      <p className="text-sm text-text-muted">
+      <p className="text-ui text-text-muted">
         Every registry entry at the sizes used in the app. The page theme applies: toggle it above
         to see light and dark.
       </p>
@@ -28,10 +28,10 @@ export function ServiceIconsSection() {
                   </div>
                 ))}
               </div>
-              <div className="text-sm">
+              <div className="text-ui">
                 <div className="font-medium">{entry.label}</div>
-                <div className="font-mono text-xs text-text-muted">{entry.key}</div>
-                <div className="font-mono text-xs text-text-muted">{entry.file}</div>
+                <div className="font-mono text-label text-text-muted">{entry.key}</div>
+                <div className="font-mono text-label text-text-muted">{entry.file}</div>
               </div>
             </li>
           ))}

@@ -164,7 +164,7 @@ export function ImageSection({
         data-dragging={dragging || undefined}
         className={cx(
           'flex flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 text-center text-ui transition-colors',
-          dragging ? 'border-accent bg-accent/10' : 'border-border-strong bg-surface',
+          dragging ? 'border-accent bg-accent-tint' : 'border-border-strong bg-surface',
         )}
       >
         {uploading ? (

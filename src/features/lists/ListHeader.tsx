@@ -134,7 +134,10 @@ function TypeCountChip({
     <div className="flex w-fit max-w-full overflow-hidden rounded-md text-secondary font-medium">
       <span className="bg-accent px-2.5 py-1 text-accent-fg">{typeName(definition, type)}</span>
       {count !== undefined && (
-        <span className="bg-accent-tint px-2.5 py-1 text-accent-text tabular-nums">{count}</span>
+        <span className="bg-accent-tint px-2.5 py-1 text-accent-text tabular-nums">
+          {count}
+          <span className="sr-only"> items</span>
+        </span>
       )}
     </div>
   )
