@@ -128,7 +128,7 @@ export function ListIconPicker({
                 aria-pressed={emojiSelected === emoji}
                 onClick={() => onChange({ icon: emoji, icon_color: null })}
                 className={cx(
-                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-heading hover:bg-fill-hover aria-pressed:border-accent focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2',
+                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-section hover:bg-fill-hover aria-pressed:border-accent focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2',
                 )}
               >
                 {emoji}

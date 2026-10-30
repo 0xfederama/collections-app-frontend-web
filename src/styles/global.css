@@ -68,7 +68,7 @@
 
   /* Editorial type scale (F021). Size, line height, tracking and weight travel together in one utility. */
   --text-*: initial;
-  --text-display: clamp(2rem, 1.25rem + 3vw, 2.75rem); /* 32 px on phones, 44 px from ~1000 px */
+  --text-display: clamp(2rem, 1.25rem + 3vw, 2.75rem); /* 32 px on phones, 44 px from ~800 px */
   --text-display--line-height: 1.02;
   --text-display--letter-spacing: -0.035em;
   --text-display--font-weight: 700;
