@@ -21,7 +21,7 @@ export function DescriptionView({
           ref={placeholderRef}
           type="button"
           onClick={onEdit}
-          className={`rounded-sm text-sm text-text-muted italic hover:text-text ${focusRing}`}
+          className={`rounded-sm text-ui text-text-muted italic hover:text-text ${focusRing}`}
         >
           Click to start writing
         </button>

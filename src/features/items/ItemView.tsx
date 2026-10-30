@@ -55,7 +55,7 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
             the end of their line. Move and Delete are not here: they close the page (F009-W4). */}
         <header className="flex flex-col gap-2">
           <div className="flex min-w-0 flex-col gap-1">
-            <p className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
+            <p className="flex items-center gap-1.5 font-mono text-label text-text-subtle uppercase">
               <ListIconMark
                 icon={definition.default_icon}
                 type={item.type}
@@ -66,9 +66,7 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
             </p>
             <div className="min-w-0">
               <InlineField item={item} definition={definition} spec={titleSpec}>
-                <h1 className="text-2xl leading-tight font-bold tracking-tight break-words sm:text-3xl">
-                  {item.title}
-                </h1>
+                <h1 className="font-display text-display break-words">{item.title}</h1>
               </InlineField>
             </div>
           </div>
@@ -84,8 +82,11 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
         )}
       >
         <ItemActions actions={actions} />
-        <p className="text-xs text-text-muted">
-          Updated <time dateTime={item.updated_at}>{formatDate(item.updated_at)}</time>
+        <p className="text-secondary text-text-muted">
+          Updated{' '}
+          <time dateTime={item.updated_at} className="font-mono">
+            {formatDate(item.updated_at)}
+          </time>
         </p>
       </footer>
       {actions.dialogs}

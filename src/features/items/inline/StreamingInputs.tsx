@@ -27,7 +27,7 @@ export function StreamingInputs({ form }: { form: FieldForm }) {
           object, so the draft sends the item's own country, or the one from Settings when it has
           none (`toFields`). */}
       <div>
-        <p className="mb-1.5 text-sm text-text">Streaming platforms</p>
+        <p className="mb-1.5 text-ui text-text">Streaming platforms</p>
         <StreamingPlatforms
           value={platforms}
           onChange={(next) =>
@@ -36,12 +36,14 @@ export function StreamingInputs({ form }: { form: FieldForm }) {
           error={errors['metadata.streaming.platforms']}
         />
         {errors['metadata.streaming.country'] && (
-          <p className="mt-1.5 text-xs text-danger-text">{errors['metadata.streaming.country']}</p>
+          <p className="mt-1.5 text-secondary text-danger-text">
+            {errors['metadata.streaming.country']}
+          </p>
         )}
       </div>
       {platforms.length > 0 && (
         <div role="group" aria-label="Paid platforms" className="flex flex-col gap-1.5">
-          <p className="text-xs text-text-muted">
+          <p className="text-secondary text-text-muted">
             Mark the platforms that offer it only for payment ($).
           </p>
           <ul className="flex flex-wrap gap-2">
@@ -52,7 +54,7 @@ export function StreamingInputs({ form }: { form: FieldForm }) {
                   aria-pressed={isPaid(name)}
                   onClick={() => toggle(name)}
                   className={cx(
-                    'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-sm pointer-coarse:min-h-11',
+                    'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-ui pointer-coarse:min-h-11',
                     focusRing,
                     isPaid(name)
                       ? 'border-accent bg-accent/10 text-accent-text'

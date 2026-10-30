@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Button, useToast } from '../../../components/ui'
 
-const base = 'flex flex-col gap-2 rounded-md border p-3 text-sm'
+const base = 'flex flex-col gap-2 rounded-lg border p-3 text-ui'
 const warning = `${base} border-warning-border bg-warning-bg text-warning-text`
 const danger = `${base} border-danger-border bg-danger-bg text-danger-text`
 
@@ -25,7 +25,7 @@ function useCopy(text?: () => string) {
       rows={4}
       value={fallback}
       onFocus={(event) => event.currentTarget.select()}
-      className="w-full rounded-sm border border-border-strong bg-surface p-2 font-mono text-sm text-text"
+      className="w-full rounded-md border border-border-strong bg-surface p-2 font-mono text-secondary text-text"
     />
   )
   return { copy, fallbackBox }

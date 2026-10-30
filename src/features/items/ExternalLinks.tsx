@@ -1,4 +1,4 @@
-import { LinkIcon, TILE_SIZE } from '../../components/ServiceIcon'
+import { LinkIcon } from '../../components/ServiceIcon'
 import { focusRing } from '../../components/ui'
 import { Plus } from '../../components/ui/icons'
 import type { Item } from './api'
@@ -7,7 +7,8 @@ import { buildExternalLinks } from '../links'
 // Every link is the same icon tile as the streaming row (F009-W5), one shared size, and the empty
 // "+" slot is the same square. The visible name is the tile's tooltip; the accessible name is the
 // sr-only text.
-const SIZE = TILE_SIZE
+/** F021: the link tiles are 44 px, the touch target size, on the item page. */
+const SIZE = 44
 const control = `inline-flex shrink-0 rounded-md ${focusRing}`
 
 /**

@@ -129,7 +129,7 @@ export function DescriptionEditor({
       </div>
       <p
         role={tooLarge ? 'alert' : undefined}
-        className={tooLarge ? 'text-sm text-danger-text' : 'text-xs text-text-muted'}
+        className={tooLarge ? 'text-ui text-danger-text' : 'text-secondary text-text-muted'}
       >
         {tooLarge
           ? `The description is ${formatBytes(byteLength(draft))}; the limit is ${formatBytes(MAX_CONTENT_BYTES)}. Shorten it to save.`

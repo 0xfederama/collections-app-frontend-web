@@ -36,7 +36,7 @@ function StreamingValue({ item }: { item: Item }) {
         <ul aria-label="Platforms" className="flex flex-wrap items-center justify-start gap-2">
           {sortByServiceOrder(streaming.platforms, (name) => name).map((name) => (
             <li key={name} className="flex items-center justify-center">
-              <ServiceIcon name={name} paid={paid.has(name.toLowerCase())} />
+              <ServiceIcon name={name} paid={paid.has(name.toLowerCase())} size={44} />
             </li>
           ))}
         </ul>
@@ -46,7 +46,7 @@ function StreamingValue({ item }: { item: Item }) {
       {mismatch && (
         <p
           role="note"
-          className="flex items-start gap-2 rounded-md border border-warning-border bg-warning-bg p-2 text-warning-text"
+          className="flex items-start gap-2 rounded-lg border border-warning-border bg-warning-bg p-2 text-warning-text"
         >
           <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
           <span>
@@ -80,7 +80,7 @@ function StoresValue({ item, fieldKey }: { item: Item; fieldKey: string }) {
   return (
     <ul aria-label="Where to get it" className="flex flex-wrap items-center justify-start gap-2">
       {sortStoreKeys(providers.data, keys).map((key) => {
-        const tile = <ServiceIcon name={key} label={storeName(providers.data, key)} />
+        const tile = <ServiceIcon name={key} label={storeName(providers.data, key)} size={44} />
         const href = storeLink(key, { isbn, title: item.title, country })
         return (
           <li key={key} className="flex items-center justify-center">
@@ -210,20 +210,20 @@ export function FieldBlock({
         >
           {rows.length > 0 && (
             <>
-              <h2 id="item-details" className="text-sm font-semibold text-text-muted">
+              <h2 id="item-details" className="font-display text-section text-text">
                 Details
               </h2>
-              <dl className="flex flex-col gap-1.5 text-sm">
+              <dl className="flex flex-col border-t border-border text-ui">
                 {rows.map((spec) => (
                   <div
                     key={spec.id}
-                    className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] items-center gap-x-3 gap-y-1"
+                    className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] items-center gap-x-3 border-b border-border-soft py-1"
                   >
                     {/* F011-W5: the label takes the same height as the value row, so the name and
                         its value sit on one line instead of drifting apart. */}
                     <dt
                       className={cx(
-                        'flex min-h-8 min-w-0 items-center text-text-muted',
+                        'flex min-h-8 min-w-0 items-center text-secondary text-text-subtle',
                         // The price editor is taller than one line: the name stays on the first.
                         spec.id === 'price' && 'self-start',
                       )}
@@ -242,7 +242,11 @@ export function FieldBlock({
                 align="start"
                 items={menu}
                 trigger={
-                  <Button variant="secondary" size="sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="border border-dashed border-border-strong"
+                  >
                     <Plus aria-hidden className="size-4" />
                     Add field
                   </Button>
@@ -253,10 +257,10 @@ export function FieldBlock({
         </section>
       )}
       {showStreaming && streamingSpec && (
-        <section aria-labelledby="item-streaming" className="flex flex-col gap-2 text-sm">
+        <section aria-labelledby="item-streaming" className="flex flex-col gap-2 text-ui">
           {/* W6: the country lives in Settings, so the heading does not repeat it; it is only named
               when the item's country differs (the note under the platforms). */}
-          <h2 id="item-streaming" className="text-sm font-semibold text-text-muted">
+          <h2 id="item-streaming" className="font-display text-section text-text">
             Streaming
           </h2>
           {/* W6: a taller hover bar with even padding around the tiles. */}

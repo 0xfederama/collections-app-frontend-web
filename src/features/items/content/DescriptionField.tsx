@@ -39,7 +39,7 @@ export function DescriptionField({ itemId, listId }: { itemId: string; listId: s
   return (
     <section aria-labelledby="item-description" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="item-description" className="text-sm font-semibold text-text-muted">
+        <h2 id="item-description" className="font-display text-section text-text">
           Description
         </h2>
         {data && (
@@ -64,13 +64,13 @@ export function DescriptionField({ itemId, listId }: { itemId: string; listId: s
         />
       )}
       {content.status === 'pending' && (
-        <p role="status" className="text-sm text-text-muted">
+        <p role="status" className="text-ui text-text-muted">
           Loading description…
         </p>
       )}
       {/* A failed background refetch keeps the cached data, so an open draft is never dropped. */}
       {content.status === 'error' && !data && (
-        <div role="alert" className="flex flex-col items-start gap-2 text-sm">
+        <div role="alert" className="flex flex-col items-start gap-2 text-ui">
           <p>The description could not be loaded.</p>
           <Button size="sm" variant="secondary" onClick={() => void content.refetch()}>
             Retry

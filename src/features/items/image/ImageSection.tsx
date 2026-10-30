@@ -163,7 +163,7 @@ export function ImageSection({
         {...dragProps}
         data-dragging={dragging || undefined}
         className={cx(
-          'flex flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 text-center text-sm transition-colors',
+          'flex flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 text-center text-ui transition-colors',
           dragging ? 'border-accent bg-accent/10' : 'border-border-strong bg-surface',
         )}
       >
@@ -187,7 +187,7 @@ export function ImageSection({
                 browse
               </Button>
             </p>
-            <p className="text-xs text-text-muted">JPEG, PNG or WebP, up to 10 MiB.</p>
+            <p className="text-secondary text-text-muted">JPEG, PNG or WebP, up to 10 MiB.</p>
           </>
         )}
         <input
@@ -240,7 +240,7 @@ export function ImageSection({
       </div>
 
       {error && (
-        <p role="alert" className="text-sm font-medium text-danger-text">
+        <p role="alert" className="text-ui font-medium text-danger-text">
           {error}
         </p>
       )}
