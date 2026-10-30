@@ -44,10 +44,14 @@ describe('F002-T5 ServiceIcon', () => {
     )
     const tiles = screen.getAllByRole('img')
     expect(tiles).toHaveLength(5)
-    // identical tiles: same size and classes
+    // identical tiles: same size and shape. The background differs only for a light mark (F017-W2:
+    // Letterboxd is `bg-tile-light`), so the classes are compared without it.
+    const shape = (tile: HTMLElement) =>
+      tile.className.replace(/\bbg-(fill|tile-light)\b/, '').trim()
+    expect(new Set(tiles.map(shape)).size).toBe(1)
     for (const tile of tiles) {
       expect(tile).toHaveStyle({ width: '36px', height: '36px' })
-      expect(tile.className).toBe(tiles[0]?.className)
+      expect(tile).toHaveClass('rounded-md', 'border-border')
       expect(tile).not.toHaveTextContent(/\w/)
     }
     expect(container.querySelectorAll('img')).toHaveLength(4)
@@ -113,12 +117,12 @@ describe('F009-W5 one tile for every icon', () => {
     render(
       <>
         <LinkIcon name="Website" />
-        <ServiceIcon name="Hulu" />
+        <ServiceIcon name="Zattoo" />
         <LinkIcon name="Google" />
       </>,
     )
     const symbol = mark('Website')
-    const letter = mark('Hulu')
+    const letter = mark('Zattoo')
     const logo = mark('Google')
     expect(symbol.className).toBe(logo.className)
     expect(letter.className).toBe(logo.className)
@@ -129,22 +133,22 @@ describe('F009-W5 one tile for every icon', () => {
     render(
       <>
         <ServiceIcon name="Netflix" />
-        <ServiceIcon name="Hulu" />
+        <ServiceIcon name="Zattoo" />
       </>,
     )
-    const unknown = tile('Hulu')
+    const unknown = tile('Zattoo')
     // The same tile as a known service.
     expect(unknown.className).toBe(tile('Netflix').className)
-    expect(unknown).toHaveAttribute('title', 'Hulu')
-    expect(unknown).not.toHaveTextContent('Hulu')
+    expect(unknown).toHaveAttribute('title', 'Zattoo')
+    expect(unknown).not.toHaveTextContent('Zattoo')
     // Only the first letter, upper case, inside the tile.
-    expect(mark('Hulu')).toHaveTextContent('H')
+    expect(mark('Zattoo')).toHaveTextContent('Z')
   })
 
   it('an unknown paid service keeps the full accessible name and the $ badge', () => {
-    render(<ServiceIcon name="Hulu" paid />)
-    expect(screen.getByRole('img', { name: 'Hulu, paid' })).toBeInTheDocument()
-    expect(tile('Hulu, paid')).toHaveTextContent('H')
+    render(<ServiceIcon name="Zattoo" paid />)
+    expect(screen.getByRole('img', { name: 'Zattoo, paid' })).toBeInTheDocument()
+    expect(tile('Zattoo, paid')).toHaveTextContent('Z')
     expect(screen.getByTestId('paid-badge')).toHaveTextContent('$')
   })
 
@@ -157,9 +161,46 @@ describe('F009-W5 one tile for every icon', () => {
 
 describe('F016-W4 store tiles are named by the display name', () => {
   it('uses the label as the tooltip, the name and the letter when the name is a key', () => {
+    // F017-W2: Bookshop has a logo now, so the letter path is checked with a key that has none.
+    render(<ServiceIcon name="zattoo_tv" label="Zattoo TV" />)
+    const tile = screen.getByRole('img', { name: 'Zattoo TV' })
+    expect(tile).toHaveAttribute('title', 'Zattoo TV')
+    expect(tile.firstElementChild).toHaveTextContent('Z')
+  })
+
+  it('a store with a logo keeps the label as its name', () => {
     render(<ServiceIcon name="bookshop" label="Bookshop.org" />)
-    const tile = screen.getByRole('img', { name: 'Bookshop.org' })
-    expect(tile).toHaveAttribute('title', 'Bookshop.org')
-    expect(tile.firstElementChild).toHaveTextContent('B')
+    expect(screen.getByRole('img', { name: 'Bookshop.org' })).toHaveAttribute(
+      'title',
+      'Bookshop.org',
+    )
+  })
+})
+
+describe('F017-W2 registry tiles: background and fit follow the entry', () => {
+  it('a light entry (Letterboxd) sits on the theme-independent light surface, not the fill', () => {
+    render(
+      <>
+        <LinkIcon name="Letterboxd" />
+        <LinkIcon name="Google" />
+      </>,
+    )
+    expect(tile('Letterboxd')).toHaveClass('bg-tile-light')
+    expect(tile('Letterboxd')).not.toHaveClass('bg-fill')
+    expect(tile('Google')).toHaveClass('bg-fill')
+  })
+
+  it('a bleed entry (Kobo) fills the tile with its mark: no inner padding, clipped by the corners', () => {
+    const { container } = render(<ServiceIcon name="Kobo" />)
+    const logo = tile('Kobo').querySelector('img')!
+    expect(logo).toHaveClass('size-full', 'object-cover')
+    expect(logo.parentElement).toHaveClass('absolute', 'inset-0', 'overflow-hidden')
+    expect(container.querySelector('.p-\\[18\\%\\]')).toBeNull()
+  })
+
+  it('an unknown name renders the letter tile', () => {
+    render(<ServiceIcon name="Zattoo" />)
+    expect(tile('Zattoo').querySelector('img')).toBeNull()
+    expect(mark('Zattoo')).toHaveTextContent('Z')
   })
 })

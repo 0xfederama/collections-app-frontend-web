@@ -1,97 +1,60 @@
-import netflix from '../assets/services/netflix.webp'
-import primeVideo from '../assets/services/prime-video.webp'
-import disneyPlus from '../assets/services/disney-plus.webp'
-import appleTv from '../assets/services/apple-tv.webp'
-import youtube from '../assets/services/youtube.webp'
-import timvision from '../assets/services/timvision.webp'
-import infinity from '../assets/services/infinity.webp'
-import letterboxd from '../assets/services/letterboxd.webp'
-import reddit from '../assets/services/reddit.webp'
-import google from '../assets/services/google.svg'
-import imdb from '../assets/services/imdb.svg'
 import { firstLetter } from '../lib/text'
 import { cx } from '../lib/cx'
 import { Globe } from './ui/icons'
+import {
+  assetUrl,
+  findService,
+  normalizeServiceName,
+  type Fit,
+  type ServiceEntry,
+  type TileStyle,
+} from './serviceIcons/registry'
 
-interface Entry {
-  /** Display name. */
+export { STREAMING_SERVICES } from './serviceIcons/registry'
+
+/** What a tile shows: a vendored mark, the neutral symbol, or the first letter of the name. */
+interface Visual {
+  /** Display name: the tooltip, the accessible name and the letter. */
   label: string
-  /** Local image (favicon or vendored brand mark), contained in the tile. */
+  /** Vendored mark (registry file). Absent for the symbol and the letter. */
   src?: string
   /** A neutral symbol instead of an image (websites). */
   neutral?: boolean
+  tile: TileStyle
+  fit: Fit
 }
 
-const entry = (label: string, src?: string, neutral?: boolean): Entry => ({
-  label,
-  src,
-  neutral,
+/** Unknown names keep the neutral letter tile (no mark). */
+const unknownVisual = (label: string): Visual => ({ label, tile: 'neutral', fit: 'inset' })
+
+const fromEntry = (entry: ServiceEntry): Visual => ({
+  label: entry.label,
+  src: assetUrl(entry.file),
+  tile: entry.tile,
+  fit: entry.fit,
 })
 
-const netflixEntry = entry('Netflix', netflix)
-const primeEntry = entry('Prime Video', primeVideo)
-const disneyEntry = entry('Disney+', disneyPlus)
-const appleEntry = entry('Apple TV+', appleTv)
-const youtubeEntry = entry('YouTube', youtube)
-const timEntry = entry('TIMvision', timvision)
-const infinityEntry = entry('Infinity', infinity)
+/** Websites are not in the registry: a neutral globe (F-009 links). */
+const WEBSITE: Visual = { label: 'Website', neutral: true, tile: 'neutral', fit: 'inset' }
 
-/** Keys are normalised: lower case, only letters, digits and `+`. */
-const serviceEntries: Record<string, Entry> = {
-  netflix: netflixEntry,
-  primevideo: primeEntry,
-  amazonprimevideo: primeEntry,
-  disney: disneyEntry,
-  'disney+': disneyEntry,
-  disneyplus: disneyEntry,
-  appletv: appleEntry,
-  'appletv+': appleEntry,
-  appletvplus: appleEntry,
-  youtube: youtubeEntry,
-  timvision: timEntry,
-  infinity: infinityEntry,
-  mediasetinfinity: infinityEntry,
+const visualFor = (name: string): Visual => {
+  const entry = findService(name)
+  return entry ? fromEntry(entry) : unknownVisual(name)
 }
-
-const linkEntries: Record<string, Entry> = {
-  google: entry('Google', google),
-  letterboxd: entry('Letterboxd', letterboxd),
-  imdb: entry('IMDb', imdb),
-  website: entry('Website', undefined, true),
-  reddit: entry('Reddit', reddit),
-}
-
-const normalize = (name: string) => name.toLowerCase().replace(/[^a-z0-9+]/g, '')
-
-/**
- * The streaming services offered in the item's picker, in display order. These are the ones with a
- * logo in `src/assets/services/`; any other service is still allowed (it gets the letter tile), but
- * it has to be typed rather than ticked.
- */
-export const STREAMING_SERVICES = [
-  netflixEntry,
-  primeEntry,
-  disneyEntry,
-  appleEntry,
-  youtubeEntry,
-  timEntry,
-  infinityEntry,
-].map((entry) => entry.label)
 
 /**
  * F009-W5: one tile geometry for every link and streaming icon. A square with the `rounded-md`
- * radius, a hairline border and the neutral `fill` surface (a translucent ink in light, a
- * translucent white in dark, both from `tokens.css`). `size` is the only thing that varies: a
- * tight list row asks for 20–26 px, the item page for the default. Shape, radius and inner padding
- * are the same at every size, and the mark inside is contained with even padding, never cropped.
+ * radius and a hairline border. The background is the neutral `fill` surface, or `bg-tile-light`
+ * for marks drawn for a white ground (F017-W2). `size` is the only thing that varies: a tight list
+ * row asks for 20–26 px, the item page for the default.
  */
 const TILE =
-  'relative inline-flex shrink-0 items-center justify-center rounded-md border border-border bg-fill'
+  'relative inline-flex shrink-0 items-center justify-center rounded-md border border-border'
 
 /**
- * The mark inside the tile. `object-contain` fits the image in its content box, and the padding is
- * a share of the tile, so a 20 px tile is padded like a 32 px one (18% ≈ the 15–20% of F009-W5)
- * instead of by a fixed number of pixels.
+ * The mark inside an inset tile (and the symbol and letter). `object-contain` fits the image in its
+ * content box, and the padding is a share of the tile, so a 20 px tile is padded like a 32 px one
+ * (18% ≈ the 15–20% of F009-W5) instead of by a fixed number of pixels.
  */
 const MARK = 'flex size-full items-center justify-center p-[18%] text-text-muted'
 
@@ -110,45 +73,65 @@ export interface ServiceIconProps {
   label?: string
 }
 
+/** The content of an inset tile: the padded image, the symbol or the letter. */
+function InsetMark({ visual }: { visual: Visual }) {
+  return (
+    <span aria-hidden className={MARK}>
+      {visual.src ? (
+        <img
+          src={visual.src}
+          alt=""
+          draggable={false}
+          referrerPolicy="no-referrer"
+          className="size-full object-contain"
+        />
+      ) : visual.neutral ? (
+        <Globe className="size-full" />
+      ) : (
+        <span className="leading-none font-semibold">{firstLetter(visual.label)}</span>
+      )}
+    </span>
+  )
+}
+
+/** The mark of a bleed tile: the image fills the tile, clipped by its rounded corners. */
+function BleedMark({ src }: { src: string }) {
+  return (
+    <span aria-hidden className="absolute inset-0 overflow-hidden rounded-md">
+      <img
+        src={src}
+        alt=""
+        draggable={false}
+        referrerPolicy="no-referrer"
+        className="size-full object-cover"
+      />
+    </span>
+  )
+}
+
 function Tile({
-  entry: e,
+  visual,
   paid,
   size = TILE_SIZE,
 }: {
-  entry: Entry
+  visual: Visual
   paid?: boolean
   size?: number
 }) {
-  const label = paid ? `${e.label}, paid` : e.label
+  const label = paid ? `${visual.label}, paid` : visual.label
   return (
     <span
       role="img"
       aria-label={label}
       title={label}
       style={{ width: size, height: size }}
-      className={TILE}
+      className={cx(TILE, visual.tile === 'light' ? 'bg-tile-light' : 'bg-fill')}
     >
-      {/* One inner box for all three marks (logo, symbol, letter), so their padding is identical. */}
-      <span aria-hidden className={MARK}>
-        {e.src ? (
-          <img
-            src={e.src}
-            alt=""
-            draggable={false}
-            referrerPolicy="no-referrer"
-            className="size-full object-contain"
-          />
-        ) : e.neutral ? (
-          <Globe className="size-full" />
-        ) : (
-          <span
-            className="leading-none font-semibold"
-            style={{ fontSize: Math.round(size * 0.45) }}
-          >
-            {firstLetter(e.label)}
-          </span>
-        )}
-      </span>
+      {visual.fit === 'bleed' && visual.src ? (
+        <BleedMark src={visual.src} />
+      ) : (
+        <InsetMark visual={visual} />
+      )}
       {paid && (
         <span
           aria-hidden
@@ -171,15 +154,16 @@ function Tile({
 }
 
 /**
- * Streaming platform as a tile. A service with no local file gets the same tile with the first
+ * Streaming platform as a tile. A service with no registry entry gets the same tile with the first
  * letter of its name (F009-W5): no text chip, no second shape.
  */
 export function ServiceIcon({ name, paid, size, label }: ServiceIconProps) {
-  const known = serviceEntries[normalize(name)] ?? entry(name)
-  return <Tile entry={label ? { ...known, label } : known} paid={paid} size={size} />
+  const visual = visualFor(name)
+  return <Tile visual={label ? { ...visual, label } : visual} paid={paid} size={size} />
 }
 
 /** External link site (Google, Letterboxd, IMDb, Reddit, Website) as a tile, same geometry. */
 export function LinkIcon({ name, size }: { name: string; size?: number }) {
-  return <Tile entry={linkEntries[normalize(name)] ?? entry(name)} size={size} />
+  const visual = normalizeServiceName(name) === 'website' ? WEBSITE : visualFor(name)
+  return <Tile visual={visual} size={size} />
 }

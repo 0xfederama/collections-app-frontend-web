@@ -6,6 +6,8 @@
 :root {
   /* Private palette: cool graphite neutrals, indigo accent, status hues. */
   --white: #ffffff;
+  /* Service-mark tiles that stay light in both themes (F017-W2: marks drawn for a white ground). */
+  --tile-light: #ffffff;
 
   --ink-900: #1d1d1f;
   --ink-600: #5c5d66;
