@@ -105,7 +105,7 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
         <span aria-hidden className="grid size-[22px] shrink-0 place-items-center text-text-muted">
           <Icon className="size-[18px]" />
         </span>
-        <span className="min-w-0 flex-1 truncate font-mono text-label text-text-subtle uppercase">
+        <span className="min-w-0 flex-1 truncate font-medium text-text-muted">
           {node.folder.name}
         </span>
         <TreeRowActions node={node} />
