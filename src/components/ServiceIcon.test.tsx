@@ -89,22 +89,22 @@ describe('F009-W5 one tile for every icon', () => {
   it('holds that geometry at the smaller list-row sizes too', () => {
     render(
       <>
-        <ServiceIcon name="Netflix" size={26} />
+        <ServiceIcon name="YouTube" size={26} />
         <LinkIcon name="IMDb" size={20} />
       </>,
     )
-    const tight = tile('Netflix')
+    const tight = tile('YouTube')
     const small = tile('IMDb')
     expect(tight).toHaveStyle({ width: '26px', height: '26px' })
     expect(small).toHaveStyle({ width: '20px', height: '20px' })
     // Only the size differs: same shape, radius, background and inner padding.
     expect(small.className).toBe(tight.className)
-    expect(mark('IMDb').className).toBe(mark('Netflix').className)
+    expect(mark('IMDb').className).toBe(mark('YouTube').className)
   })
 
   it('contains the logo with even proportional padding, never cropped or overflowing', () => {
-    render(<ServiceIcon name="Netflix" />)
-    const inner = mark('Netflix')
+    render(<ServiceIcon name="YouTube" />)
+    const inner = mark('YouTube')
     // 18% of the tile on every side, as a share and not as pixels, so it scales with the tile.
     expect(inner).toHaveClass('p-[18%]', 'size-full')
     const logo = inner.querySelector('img')!
