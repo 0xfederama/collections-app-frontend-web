@@ -14,7 +14,7 @@ export function TreeNewButton(): ReactNode {
       trigger={
         <Button
           variant="ghost"
-          className="w-full justify-start text-text-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring focus-visible:bg-fill-hover"
+          className="w-full justify-start px-2 text-text-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring focus-visible:bg-fill-hover"
         >
           <Plus aria-hidden className="size-4" />
           New
