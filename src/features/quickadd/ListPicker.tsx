@@ -23,7 +23,7 @@ interface ListPickerProps {
 export function ListPicker({ lists, loading, listId, error, onPick }: ListPickerProps) {
   return (
     <div className="flex items-center gap-2">
-      <span aria-hidden className="text-sm text-text-muted">
+      <span aria-hidden className="text-ui text-text-muted">
         In
       </span>
       <div className="w-52 min-w-0 [&>div>label]:sr-only [&_button]:h-8 [&_button]:rounded-md">

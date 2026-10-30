@@ -15,7 +15,7 @@ export function OperationBanner({
   return (
     <div
       role="alert"
-      className="fixed inset-x-6 bottom-6 z-[60] mx-auto max-w-lg rounded-lg border border-warning-border bg-warning-bg p-4 text-sm text-warning-text shadow-float"
+      className="fixed inset-x-6 bottom-6 z-[60] mx-auto max-w-lg rounded-lg border border-warning-border bg-warning-bg p-4 text-ui text-warning-text shadow-float"
     >
       <p>{errorText(error)}</p>
       {conflict ? (

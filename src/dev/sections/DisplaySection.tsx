@@ -24,7 +24,7 @@ export function DisplaySection() {
           <a href="#display" className="font-medium after:absolute after:inset-0">
             Interactive card
           </a>
-          <p className="tabular text-sm text-text-muted">€1,200–1,500</p>
+          <p className="tabular text-ui text-text-muted">€1,200–1,500</p>
         </Card>
       </Row>
       <Card>
@@ -35,7 +35,7 @@ export function DisplaySection() {
           action={<Button>Create list</Button>}
         />
       </Card>
-      <p className="text-sm text-text-muted">Types: {Object.values(typeLabels).join(', ')}</p>
+      <p className="text-ui text-text-muted">Types: {Object.values(typeLabels).join(', ')}</p>
     </Section>
   )
 }

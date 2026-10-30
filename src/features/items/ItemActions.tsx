@@ -14,7 +14,7 @@ function ErrorBox({ error }: { error: ItemError }) {
   return (
     <div
       role="alert"
-      className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
+      className="rounded-lg border border-danger-border bg-danger-bg p-3 text-ui text-danger-text"
     >
       {error.message}
     </div>
@@ -77,7 +77,7 @@ export function ItemActions({ actions }: { actions: ItemActionsState }) {
         <FolderInput aria-hidden className="size-4" />
         Move
       </Button>
-      <Button variant="secondary" size="sm" onClick={actions.remove}>
+      <Button variant="secondary" size="sm" onClick={actions.remove} className="text-danger-text!">
         <Trash2 aria-hidden className="size-4" />
         Delete
       </Button>

@@ -169,7 +169,7 @@ export function ItemsView(props: ItemsViewProps) {
   const draftRow = props.draft ? <DraftRow key="draft" mode={mode} /> : null
   return (
     <div className="flex flex-col gap-3">
-      {hint && items.length > 1 && <p className="text-sm text-text-muted">{hint}</p>}
+      {hint && items.length > 1 && <p className="text-ui text-text-muted">{hint}</p>}
       {canReorder ? (
         <SortableProvider onMove={move}>
           <ul aria-label="Items" className={cx(containerClass[mode])}>
@@ -199,7 +199,7 @@ export function ItemsView(props: ItemsViewProps) {
           </Button>
         </div>
       )}
-      <p className="text-sm text-text-muted">{props.countLabel}</p>
+      <p className="text-ui text-text-muted">{props.countLabel}</p>
     </div>
   )
 }

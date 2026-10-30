@@ -103,7 +103,7 @@ export function HistoryDrawer({
     >
       {versions.status === 'pending' && <Skeleton className="h-24 w-full" />}
       {versions.status === 'error' && (
-        <div role="alert" className="flex flex-col items-start gap-2 text-sm">
+        <div role="alert" className="flex flex-col items-start gap-2 text-ui">
           <p>The history could not be loaded.</p>
           <Button size="sm" variant="secondary" onClick={() => void versions.refetch()}>
             Retry
@@ -112,7 +112,7 @@ export function HistoryDrawer({
       )}
       {versions.status === 'success' &&
         (versions.data.length === 0 ? (
-          <p className="text-sm text-text-muted">No saved versions yet.</p>
+          <p className="text-ui text-text-muted">No saved versions yet.</p>
         ) : (
           <ul aria-label="Versions" className="flex flex-col gap-1">
             {versions.data.map((entry) => (
@@ -121,16 +121,18 @@ export function HistoryDrawer({
                   type="button"
                   aria-pressed={selected === entry.version}
                   onClick={() => select(entry.version)}
-                  className="flex w-full items-center justify-between gap-2 rounded-sm border border-border px-3 py-2 text-left text-sm hover:bg-border aria-pressed:border-accent aria-pressed:bg-border pointer-coarse:min-h-11"
+                  className="flex w-full items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-left text-ui hover:bg-border aria-pressed:border-accent aria-pressed:bg-border pointer-coarse:min-h-11"
                 >
                   <span>
                     Version {entry.version}
                     {entry.version === currentVersion && ' (current)'}
-                    <span className="block text-xs text-text-muted">
+                    <span className="block font-mono text-secondary text-text-muted">
                       <time dateTime={entry.created_at}>{relativeTime(entry.created_at)}</time>
                     </span>
                   </span>
-                  <span className="text-xs text-text-muted">{formatBytes(entry.size_bytes)}</span>
+                  <span className="font-mono text-secondary text-text-muted">
+                    {formatBytes(entry.size_bytes)}
+                  </span>
                 </button>
               </li>
             ))}
@@ -138,7 +140,7 @@ export function HistoryDrawer({
         ))}
 
       {problem && (
-        <p role="alert" className="text-sm text-danger-text">
+        <p role="alert" className="text-ui text-danger-text">
           {problem}
         </p>
       )}
@@ -150,7 +152,7 @@ export function HistoryDrawer({
         >
           {preview.status === 'pending' && <Skeleton className="h-16 w-full" />}
           {pruned && (
-            <div role="alert" className="flex flex-col items-start gap-2 text-sm">
+            <div role="alert" className="flex flex-col items-start gap-2 text-ui">
               <p>This version is no longer available (older versions are pruned).</p>
               <Button
                 size="sm"
@@ -165,7 +167,7 @@ export function HistoryDrawer({
             </div>
           )}
           {preview.status === 'error' && !pruned && (
-            <div role="alert" className="flex flex-col items-start gap-2 text-sm">
+            <div role="alert" className="flex flex-col items-start gap-2 text-ui">
               <p>This version could not be loaded.</p>
               <Button size="sm" variant="secondary" onClick={() => void preview.refetch()}>
                 Retry
@@ -177,7 +179,7 @@ export function HistoryDrawer({
               {preview.data.body.trim() ? (
                 <MarkdownView source={preview.data.body} />
               ) : (
-                <p className="text-sm text-text-muted">This version is empty.</p>
+                <p className="text-ui text-text-muted">This version is empty.</p>
               )}
               {selected !== currentVersion && (
                 <Button onClick={() => setConfirming(true)}>Restore this version</Button>

@@ -18,7 +18,7 @@ export function FieldShell({
 }: FieldChromeProps & { id: string; children: ReactNode; required?: boolean }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-text">
+      <label htmlFor={id} className="text-ui font-medium text-text">
         {label}
         {required && (
           <span aria-hidden className="text-danger-text">
@@ -29,12 +29,12 @@ export function FieldShell({
       </label>
       {children}
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-xs text-text-muted">
+        <p id={`${id}-hint`} className="text-secondary text-text-muted">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} className="text-xs font-medium text-danger-text">
+        <p id={`${id}-error`} className="text-secondary font-medium text-danger-text">
           {error}
         </p>
       )}

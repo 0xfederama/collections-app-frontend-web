@@ -179,8 +179,8 @@ export function Combobox({
                   onMouseMove={() => setActive(index)}
                   onClick={() => choose(option)}
                   className={cx(
-                    'relative flex min-h-9 cursor-pointer py-1 items-center rounded-md pr-3 pl-8 text-sm aria-disabled:cursor-not-allowed aria-disabled:opacity-50 pointer-coarse:min-h-11',
-                    index === activeIndex && 'bg-accent/10',
+                    'relative flex min-h-9 cursor-pointer py-1 items-center rounded-md pr-3 pl-8 text-ui aria-disabled:cursor-not-allowed aria-disabled:opacity-50 pointer-coarse:min-h-11',
+                    index === activeIndex && 'bg-accent-tint',
                   )}
                 >
                   {option.value === value && (
@@ -191,7 +191,7 @@ export function Combobox({
               ))}
             </ul>
             {filtered.length === 0 && (
-              <p role="status" className="px-3 py-2 text-sm text-text-muted">
+              <p role="status" className="px-3 py-2 text-ui text-text-muted">
                 {emptyMessage}
               </p>
             )}

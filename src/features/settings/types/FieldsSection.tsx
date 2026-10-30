@@ -77,7 +77,7 @@ export function FieldsSection({
         </Button>
       </div>
       {selected.is_locked && (
-        <p className="mt-2 text-xs text-text-muted">
+        <p className="mt-2 text-secondary text-text-muted">
           Built in fields are locked. You can add your own fields to this type.
         </p>
       )}
@@ -159,7 +159,7 @@ export function FieldsSection({
           </div>
         </SortableProvider>
       ) : (
-        <p className="mt-4 rounded-md bg-fill p-3 text-sm text-text-muted">
+        <p className="mt-4 rounded-lg bg-fill p-3 text-ui text-text-muted">
           No fields yet. Add a field above.
         </p>
       )}

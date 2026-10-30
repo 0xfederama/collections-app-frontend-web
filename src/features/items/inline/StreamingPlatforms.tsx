@@ -6,7 +6,7 @@ import { Check, Plus } from '../../../components/ui/icons'
 import { cx } from '../../../lib/cx'
 
 const itemClass =
-  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11'
+  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-ui outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent-tint pointer-coarse:min-h-11'
 
 /** The backend stores platform names unique case-insensitively, so they are compared that way. */
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
@@ -54,7 +54,7 @@ export function StreamingPlatforms({ value, onChange, error }: StreamingPlatform
         <span
           aria-hidden
           className={cx(
-            'grid size-4 shrink-0 place-items-center rounded-[5px] border',
+            'grid size-4 shrink-0 place-items-center rounded-sm border',
             on ? 'border-accent bg-accent text-accent-fg' : 'border-border-strong',
           )}
         >
@@ -73,7 +73,7 @@ export function StreamingPlatforms({ value, onChange, error }: StreamingPlatform
           <button
             type="button"
             className={cx(
-              'flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-border-strong bg-surface px-3 text-sm',
+              'flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-border-strong bg-surface px-3 text-ui',
               focusRing,
               value.length === 0 ? 'text-text-muted' : 'text-text',
             )}
@@ -87,7 +87,9 @@ export function StreamingPlatforms({ value, onChange, error }: StreamingPlatform
                   <ServiceIcon key={name} name={name} size={20} />
                 ))}
                 {value.length > 4 && (
-                  <span className="text-xs text-text-muted">+{value.length - 4}</span>
+                  <span className="font-mono text-secondary text-text-muted">
+                    +{value.length - 4}
+                  </span>
                 )}
               </span>
             )}
@@ -133,7 +135,7 @@ export function StreamingPlatforms({ value, onChange, error }: StreamingPlatform
         </Button>
       </div>
 
-      {error && <p className="text-xs text-danger-text">{error}</p>}
+      {error && <p className="text-secondary text-danger-text">{error}</p>}
     </div>
   )
 }

@@ -33,7 +33,7 @@ export function CurrentImage({
     <div className="flex flex-wrap items-center gap-4">
       <ItemThumb item={item} className="aspect-video w-40 shrink-0 rounded-lg" />
       <div className="flex min-w-0 flex-col items-start gap-2">
-        <p className="text-sm break-all text-text-muted">{describeCurrent(image)}</p>
+        <p className="text-ui break-all text-text-muted">{describeCurrent(image)}</p>
         <Button
           size="sm"
           variant="secondary"
@@ -67,11 +67,11 @@ export function UploadProgress({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent}
-        className="h-2 w-full overflow-hidden rounded-full bg-border"
+        className="h-2 w-full overflow-hidden rounded-sm bg-border"
       >
         <div className="h-full bg-accent transition-[width]" style={{ width: `${percent}%` }} />
       </div>
-      <p aria-live="polite" className="break-all text-text-muted">
+      <p aria-live="polite" className="text-ui break-all text-text-muted">
         {fraction >= 1 ? `Processing ${name}…` : `Uploading ${name}… ${percent}%`}
       </p>
       {fraction < 1 && (

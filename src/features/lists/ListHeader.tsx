@@ -18,7 +18,7 @@ import {
   Search,
 } from '../../components/ui/icons'
 import { type List as TreeList, ListActionsMenu, ListIconDialog } from '../tree'
-import { hasPrice, type TypeDefinition } from '../items'
+import { hasPrice, typeName, type TypeDefinition } from '../items'
 import type { DisplayMode, List, PinnedFields, SortMode } from './api'
 import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
@@ -61,8 +61,10 @@ export interface ListHeaderProps {
   treeList: TreeList
   definition: TypeDefinition
   list: List | undefined
-  /** The top-right "New item": hidden on an empty list, where the centered call to action is the only one. */
+  /** The "New item" button of the toolbar: hidden on an empty list, where the centered call to action is the only one. */
   showAddItem: boolean
+  /** The list's item count (not the filtered one), shown in the type chip above the title; undefined while loading. */
+  itemCount: number | undefined
   displayMode: DisplayMode
   onDisplayMode: (mode: DisplayMode) => void
   sort: SortMode
@@ -114,27 +116,49 @@ function ListIconButton({ list, defaultIcon }: { list: TreeList; defaultIcon?: s
   )
 }
 
-/** Name, New item (once the list has items), description, then the floating display mode / sort / filter toolbar (UI_SPEC §3). */
+/**
+ * The type and the item count as one two-part chip above the title (F021): the type on the accent
+ * half, the count on the tint half. The count stays as a number here and the full "N items" label
+ * still follows the items (a test relies on that position), so both show the same data.
+ */
+function TypeCountChip({
+  type,
+  definition,
+  count,
+}: {
+  type: TreeList['type']
+  definition: TypeDefinition
+  count: number | undefined
+}) {
+  return (
+    <div className="flex w-fit max-w-full overflow-hidden rounded-md text-secondary font-medium">
+      <span className="bg-accent px-2.5 py-1 text-accent-fg">{typeName(definition, type)}</span>
+      {count !== undefined && (
+        <span className="bg-accent-tint px-2.5 py-1 text-accent-text tabular-nums">
+          {count}
+          <span className="sr-only"> items</span>
+        </span>
+      )}
+    </div>
+  )
+}
+
+/** Type and count chip, title, description, then the sticky toolbar: search, filter, sort, pinned, display mode, New item (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   return (
     <>
-      <header className="flex flex-col gap-2">
+      <header className="flex flex-col gap-3">
+        <TypeCountChip
+          type={props.treeList.type}
+          definition={props.definition}
+          count={props.itemCount}
+        />
         <div className="flex flex-wrap items-center gap-3">
           <ListIconButton list={props.treeList} defaultIcon={props.definition.default_icon} />
-          <h1 className="min-w-0 flex-1 text-3xl leading-tight font-bold tracking-tight break-words">
+          <h1 className="min-w-0 flex-1 font-display text-display break-words">
             <ListTitle list={props.treeList} />
           </h1>
-          {props.showAddItem && (
-            <Button
-              variant="secondary"
-              onClick={props.onAddItem}
-              className="max-sm:w-10 max-sm:px-0 pointer-coarse:max-sm:w-11"
-            >
-              <Plus aria-hidden className="size-4" />
-              <span className="max-sm:sr-only">New item</span>
-            </Button>
-          )}
           <ListActionsMenu list={props.treeList} />
         </div>
         {list ? (
@@ -143,11 +167,11 @@ export function ListHeader(props: ListHeaderProps) {
           <Skeleton className="h-4 w-1/2" />
         )}
       </header>
-      {/* Sticky inside the scrolling `main`: it blurs the items that pass behind it. The wrapper is the
-          container the narrow variants measure. Option 4 (F019): search and "+ Filter" first, then
-          sort and display; an applied field filter is a chip under the bar. */}
-      <div className="@container z-10 sm:sticky sm:top-0">
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border material p-1.5 shadow-float">
+      {/* Sticky inside the scrolling `main`: the solid background keeps the items that pass behind it
+          readable. The wrapper is the container the narrow variants measure. Option 4 (F019): search and
+          "+ Filter" first, then sort and display; an applied field filter is a chip under the bar. */}
+      <div className="@container z-10 bg-bg sm:sticky sm:top-0">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
           <div className="min-w-40 flex-1 [&_label]:sr-only">
             <TextField
               label={
@@ -162,7 +186,7 @@ export function ListHeader(props: ListHeaderProps) {
               value={props.filter}
               onChange={(event) => props.onFilter(event.target.value)}
               prefix={<Search aria-hidden className="size-4" />}
-              className="h-9! border-transparent! hover:border-transparent! focus-within:border-accent!"
+              className="h-9! hover:border-text-muted! focus-within:border-accent!"
             />
           </div>
           <FieldFilterMenu
@@ -172,7 +196,7 @@ export function ListHeader(props: ListHeaderProps) {
           />
           {/* Like "+ Filter": the sort icon and the current choice; below 44rem of bar width only the
               icon stays (the name is still "Sort" for assistive tech). */}
-          <div className="relative shrink-0 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:w-auto! @max-[44rem]:[&_button]:w-full! pointer-coarse:[&_button]:h-11! [&_button]:border-transparent! [&_button]:bg-fill! [&_button]:pr-3 [&_button]:pl-9 [&_button]:font-medium [&_button]:hover:border-transparent! [&_button]:hover:bg-fill-hover! [&_button>span:last-child]:hidden @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only">
+          <div className="relative shrink-0 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:w-auto! @max-[44rem]:[&_button]:w-full! pointer-coarse:[&_button]:h-11! [&_button]:border-border! [&_button]:bg-surface! [&_button]:pr-3 [&_button]:pl-9 [&_button]:font-medium [&_button]:hover:bg-fill-hover! [&_button>span:last-child]:hidden @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only">
             <Select
               label="Sort"
               options={sortOptionsFor(props.definition)}
@@ -208,6 +232,16 @@ export function ListHeader(props: ListHeaderProps) {
             value={props.displayMode}
             onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
           />
+          {props.showAddItem && (
+            <Button
+              size="sm"
+              onClick={props.onAddItem}
+              className="h-9! max-sm:w-10 max-sm:px-0 pointer-coarse:h-11! pointer-coarse:max-sm:w-11"
+            >
+              <Plus aria-hidden className="size-4" />
+              <span className="max-sm:sr-only">New item</span>
+            </Button>
+          )}
         </div>
         {describeFieldFilter(props.definition.fields, props.fieldFilter) && (
           <div className="mt-2 flex flex-wrap gap-2">

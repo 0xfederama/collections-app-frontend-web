@@ -96,7 +96,7 @@ export function ListIconPicker({
           autoComplete="off"
         />
         <section aria-label="Built-in icons">
-          <h3 className="mb-2 text-sm font-medium">Icons</h3>
+          <h3 className="mb-2 text-ui font-medium">Icons</h3>
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
             {matches.builtins.map(({ key, name, Icon }) => (
               <button
@@ -114,11 +114,11 @@ export function ListIconPicker({
             ))}
           </div>
           {matches.builtins.length === 0 && (
-            <p className="mt-2 text-sm text-text-muted">No matching icons.</p>
+            <p className="mt-2 text-ui text-text-muted">No matching icons.</p>
           )}
         </section>
         <section aria-label="Emoji">
-          <h3 className="mb-2 text-sm font-medium">Emoji</h3>
+          <h3 className="mb-2 text-ui font-medium">Emoji</h3>
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
             {matches.emoji.map(([emoji, keywords]) => (
               <button
@@ -128,7 +128,7 @@ export function ListIconPicker({
                 aria-pressed={emojiSelected === emoji}
                 onClick={() => onChange({ icon: emoji, icon_color: null })}
                 className={cx(
-                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-2xl hover:bg-fill-hover aria-pressed:border-accent focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2',
+                  'grid size-10 pointer-coarse:size-11 place-items-center rounded-md border border-border bg-fill text-section hover:bg-fill-hover aria-pressed:border-accent focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2',
                 )}
               >
                 {emoji}
@@ -136,7 +136,7 @@ export function ListIconPicker({
             ))}
           </div>
           {matches.emoji.length === 0 && (
-            <p className="mt-2 text-sm text-text-muted">No matching emoji.</p>
+            <p className="mt-2 text-ui text-text-muted">No matching emoji.</p>
           )}
           <form
             className="mt-3 flex items-end gap-2"
@@ -170,7 +170,7 @@ export function ListIconPicker({
         </section>
         {showColorControls && (
           <section aria-label="Icon color">
-            <h3 className="mb-2 text-sm font-medium">Color</h3>
+            <h3 className="mb-2 text-ui font-medium">Color</h3>
             {selected ? (
               <div role="group" aria-label="Icon color" className="flex flex-wrap gap-2">
                 <button
@@ -178,7 +178,7 @@ export function ListIconPicker({
                   aria-label="None"
                   aria-pressed={!value.icon_color}
                   onClick={() => onChange({ ...value, icon_color: null })}
-                  className="size-8 pointer-coarse:size-11 rounded-md border border-border bg-surface text-xs text-text-muted aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2"
+                  className="size-8 pointer-coarse:size-11 rounded-md border border-border bg-surface text-secondary text-text-muted aria-pressed:outline-2 aria-pressed:outline-focus-ring focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:-outline-offset-2"
                 >
                   —
                 </button>
@@ -197,12 +197,12 @@ export function ListIconPicker({
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-text-muted">Colors apply to built-in icons.</p>
+              <p className="text-ui text-text-muted">Colors apply to built-in icons.</p>
             )}
           </section>
         )}
         <div className="flex items-center justify-between border-t border-border pt-3">
-          <span className="flex items-center gap-2 text-sm text-text-muted">
+          <span className="flex items-center gap-2 text-ui text-text-muted">
             Preview{' '}
             <ListIconMark
               icon={value.icon}

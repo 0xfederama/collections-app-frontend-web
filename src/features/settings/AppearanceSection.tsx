@@ -16,7 +16,7 @@ export function AppearanceSection() {
   const { preference, setPreference } = useThemePreference()
   return (
     <div className="flex flex-col gap-3">
-      <h3 id="settings-appearance" className="text-sm font-semibold text-text-muted">
+      <h3 id="settings-appearance" className="font-display text-section text-text">
         Appearance
       </h3>
       <SegmentedControl

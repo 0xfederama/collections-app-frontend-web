@@ -65,22 +65,22 @@ export function TrashRow({ entry, entries, onRestoreTo, onPurge, onRestored }: T
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-md md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-x-6 md:gap-y-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
+    <li className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-x-6 md:gap-y-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
       <div className="flex min-w-0 items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-fill text-text-muted">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-border bg-fill text-text-muted">
           <Icon aria-hidden className="size-5" />
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="truncate font-medium">{entry.root_name}</span>
+            <span className="truncate font-display text-row">{entry.root_name}</span>
             <Chip>{typeLabel[entry.root_type]}</Chip>
           </div>
-          <p className="truncate text-sm text-text-muted">
+          <p className="truncate text-ui text-text-muted">
             <span className="sr-only">From </span>
             {pathText(entry.former_path)}
           </p>
           {blocked && (
-            <p className="mt-1 flex items-start gap-1.5 text-sm text-warning-text">
+            <p className="mt-1 flex items-start gap-1.5 text-ui text-warning-text">
               <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
               <span>{blockedReason(blocked)}</span>
             </p>
@@ -88,8 +88,8 @@ export function TrashRow({ entry, entries, onRestoreTo, onPurge, onRestored }: T
         </div>
       </div>
 
-      <div className="flex flex-col gap-0.5 text-sm md:col-start-1 md:row-start-2 xl:row-start-1 xl:col-start-2">
-        <span>{countsText(entry.counts)}</span>
+      <div className="flex flex-col gap-0.5 text-ui md:col-start-1 md:row-start-2 xl:row-start-1 xl:col-start-2">
+        <span className="font-mono text-secondary">{countsText(entry.counts)}</span>
         <time
           dateTime={entry.deleted_at}
           title={absoluteTime(entry.deleted_at)}

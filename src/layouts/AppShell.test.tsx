@@ -241,8 +241,8 @@ describe('AT-14 sidebar content order', () => {
     mockViewport(1100)
     renderAt('/')
     expect(await within(nav()!).findByRole('link', { name: 'Our Collection' })).toHaveClass(
-      'text-xl',
-      'font-semibold',
+      'font-display',
+      'font-bold',
       'truncate',
     )
   })

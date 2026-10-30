@@ -65,8 +65,16 @@ export function Sidebar({
           )}
         >
           {showHeader && !rail && (
-            <Link to="/" className="min-w-0 truncate text-xl font-semibold tracking-tight">
-              {workspaceName}
+            <Link
+              to="/"
+              className="flex min-w-0 items-center truncate font-display text-[1.1875rem] font-bold tracking-[-0.02em]"
+            >
+              <span className="min-w-0 truncate">{workspaceName}</span>
+              {/* Decorative accent dot (F021): outside the truncating name, so it stays on long names. The name alone is the link's accessible name. */}
+              <span
+                aria-hidden
+                className="ml-1.5 inline-block size-1.5 shrink-0 rounded-full bg-accent"
+              />
             </Link>
           )}
           {onToggleRail && (
@@ -93,10 +101,16 @@ export function Sidebar({
       ) : (
         <>
           <SidebarSearch inputRef={searchRef} />
-          <Button size="sm" aria-label="Quick add" onClick={openQuickAdd} className="w-full">
+          <Button
+            variant="ink"
+            size="sm"
+            aria-label="Quick add"
+            onClick={openQuickAdd}
+            className="w-full"
+          >
             <Plus aria-hidden className="size-4 shrink-0" />
             Quick add
-            <kbd aria-hidden className="ml-auto text-xs opacity-80">
+            <kbd aria-hidden className="ml-auto font-mono text-label opacity-80">
               N
             </kbd>
           </Button>
@@ -149,7 +163,7 @@ function FooterLink({
       state={to === '/settings' && here.pathname !== to ? { background: here } : undefined}
       aria-label={rail ? label : undefined}
       className={cx(
-        'flex min-h-9 items-center gap-2 rounded-md text-sm text-text hover:bg-fill-hover aria-[current=page]:bg-accent/10 aria-[current=page]:font-medium pointer-coarse:min-h-11',
+        'flex min-h-9 items-center gap-2 rounded-md text-ui text-text hover:bg-fill-hover aria-[current=page]:bg-accent-tint aria-[current=page]:font-medium aria-[current=page]:text-accent-text pointer-coarse:min-h-11',
         rail ? 'size-11 justify-center' : 'px-2',
       )}
     >

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './tokens.css';
+@import './fonts.css';
 
 /* Dark variant follows the data-theme attribute set by the inline script and lib/theme.ts. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
@@ -14,19 +15,25 @@
   --color-transparent: transparent;
   --color-current: currentColor;
   --color-bg: var(--bg);
+  --color-sidebar: var(--sidebar);
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
   --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
   --color-border-strong: var(--border-strong);
   --color-fill: var(--fill);
   --color-fill-hover: var(--fill-hover);
   --color-tile-light: var(--tile-light);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-fg: var(--accent-fg);
   --color-accent-text: var(--accent-text);
+  --color-accent-tint: var(--accent-tint);
+  --color-ink: var(--ink);
+  --color-ink-fg: var(--ink-fg);
   --color-focus-ring: var(--focus-ring);
   --color-success-bg: var(--success-bg);
   --color-success-border: var(--success-border);
@@ -54,27 +61,39 @@
 
   --shadow-*: initial;
 
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  /* Self-hosted families (fonts.css): display for titles, sans for UI and body, mono for numbers and labels. */
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  /* Editorial type scale (F021). Size, line height, tracking and weight travel together in one utility. */
   --text-*: initial;
-  --text-xs: 0.75rem;
-  --text-xs--line-height: 1.5;
-  --text-sm: 0.875rem;
-  --text-sm--line-height: 1.5;
-  --text-base: 1rem;
-  --text-base--line-height: 1.5;
-  --text-lg: 1.125rem;
-  --text-lg--line-height: 1.5;
-  --text-xl: 1.25rem;
-  --text-xl--line-height: 1.2;
-  --text-2xl: 1.5rem;
-  --text-2xl--line-height: 1.2;
-  --text-3xl: 2rem;
-  --text-3xl--line-height: 1.2;
-  --text-4xl: 2.5rem;
-  --text-4xl--line-height: 1.2;
+  --text-display: clamp(2rem, 1.25rem + 3vw, 2.75rem); /* 32 px on phones, 44 px from ~800 px */
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 700;
+  --text-heading: 1.875rem;
+  --text-heading--line-height: 1.1;
+  --text-heading--letter-spacing: -0.03em;
+  --text-heading--font-weight: 700;
+  --text-section: 1.25rem;
+  --text-section--line-height: 1.3;
+  --text-section--letter-spacing: -0.015em;
+  --text-section--font-weight: 600;
+  --text-row: 0.96875rem;
+  --text-row--line-height: 1.35;
+  --text-row--letter-spacing: -0.01em;
+  --text-row--font-weight: 600;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.6;
+  --text-ui: 0.875rem;
+  --text-ui--line-height: 1.5;
+  --text-secondary: 0.8125rem;
+  --text-secondary--line-height: 1.5;
+  /* Mono labels; the tracking suits uppercase group labels (+0.06em). */
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.06em;
 
   --animate-fade-in: fade-in var(--duration-fast) var(--ease-out);
   --animate-fade-out: fade-out var(--duration-fast) var(--ease-out);
@@ -156,16 +175,12 @@
   box-shadow: var(--shadow-accent);
 }
 
-/* Frosted surface: sidebar, toolbar, detail sheet, menus, dialogs, drawer. Solid under the fallbacks in tokens.css. */
+/* Solid surfaces (F021: no blur). material = sidebar tone, material-strong = raised floating layers. */
 @utility material {
   background-color: var(--material-bg);
-  -webkit-backdrop-filter: var(--material-filter);
-  backdrop-filter: var(--material-filter);
 }
 @utility material-strong {
   background-color: var(--material-bg-strong);
-  -webkit-backdrop-filter: var(--material-filter);
-  backdrop-filter: var(--material-filter);
 }
 
 @layer base {
@@ -179,13 +194,10 @@
   body {
     margin: 0;
     background-color: var(--bg);
-    background-image: var(--bg-ambient);
-    background-attachment: fixed;
     color: var(--text);
     font-family: var(--font-sans);
-    font-size: 1rem;
-    line-height: 1.5;
-    letter-spacing: -0.006em;
+    font-size: var(--text-ui);
+    line-height: var(--text-ui--line-height);
     -webkit-font-smoothing: antialiased;
   }
 

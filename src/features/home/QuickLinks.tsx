@@ -47,17 +47,17 @@ export function QuickLinks({ index }: { index: TreeIndex }) {
         <li key={list.id}>
           <Link
             to={`/lists/${list.id}`}
-            className={`flex h-full items-center gap-3 rounded-lg bg-surface p-3 shadow-md transition-shadow hover:shadow-lg ${focusRing}`}
+            className={`flex h-full items-center gap-3 rounded-lg border border-border bg-surface p-3 transition-colors hover:bg-surface-raised ${focusRing}`}
           >
             <span
               aria-hidden
-              className="grid size-8 shrink-0 place-items-center rounded-md bg-fill text-text-muted shadow-[inset_0_0_0_1px_var(--material-hairline)]"
+              className="grid size-8 shrink-0 place-items-center rounded-sm border border-border bg-fill text-text-muted"
             >
               <ListIcon className="size-4" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-text">{list.name}</span>
-              <span className="block truncate text-xs text-text-muted">
+              <span className="block truncate font-display text-row text-text">{list.name}</span>
+              <span className="block truncate text-secondary text-text-muted">
                 {where && <span className="sr-only">in </span>}
                 {where && `${where} · `}
                 {list.item_count === 1 ? '1 item' : `${list.item_count} items`}

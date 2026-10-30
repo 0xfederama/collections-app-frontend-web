@@ -18,7 +18,7 @@ function TrashSkeleton() {
       {Array.from({ length: 4 }, (_, i) => (
         <div
           key={i}
-          className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-md md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]"
+          className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]"
         >
           <div className="flex items-center gap-3">
             <Skeleton className="size-9 shrink-0" />
@@ -156,14 +156,10 @@ export function TrashPage() {
   return (
     <section className={cx('flex flex-col gap-4', narrow && 'max-w-5xl')}>
       <div>
-        <h1
-          ref={headingRef}
-          tabIndex={-1}
-          className="text-3xl font-bold tracking-tight outline-none"
-        >
+        <h1 ref={headingRef} tabIndex={-1} className="font-display text-display outline-none">
           Trash
         </h1>
-        <p className="mt-1 text-sm text-text-muted">
+        <p className="mt-1 text-ui text-text-muted">
           Deleted things wait here until you restore them or delete them permanently.
         </p>
       </div>

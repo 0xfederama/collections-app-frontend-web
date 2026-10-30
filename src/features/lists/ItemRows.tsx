@@ -16,7 +16,7 @@ export function DraftRow({ mode }: { mode: DisplayMode }) {
         mode === 'grid' && 'aspect-4/3 flex-col justify-center text-center',
       )}
     >
-      <span className="rounded-sm bg-fill px-1.5 py-0.5 text-xs font-medium text-text-muted">
+      <span className="rounded-full bg-fill px-2 py-0.5 font-mono text-label text-text-muted">
         Draft
       </span>
       <span className="italic">Untitled item</span>

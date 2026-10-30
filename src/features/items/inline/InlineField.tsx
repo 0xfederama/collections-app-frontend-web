@@ -82,7 +82,7 @@ export function InlineField({
         className={cx(
           // F011-W5: the hover follows the whole row (the pen is inside this wrapper), so pointing at
           // the pen lights the same background instead of leaving it bare.
-          'grid min-h-8 cursor-text content-center rounded-sm pr-9 transition-colors group-hover/field:bg-fill/60 pointer-coarse:min-h-11 pointer-coarse:pr-12',
+          'grid min-h-8 cursor-text content-center rounded-md pr-9 transition-colors group-hover/field:bg-fill/60 pointer-coarse:min-h-11 pointer-coarse:pr-12',
           barClassName,
         )}
       >

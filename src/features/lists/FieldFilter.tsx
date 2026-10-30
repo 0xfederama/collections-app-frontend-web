@@ -199,7 +199,7 @@ export function FieldFilterChip({ fields, value, onChange }: FieldFilterProps) {
   const text = describeFieldFilter(fields, value)
   if (!text) return null
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 py-0.5 pr-1 pl-3 text-sm text-accent-text">
+    <span className="inline-flex items-center gap-1 rounded-full border border-accent-tint bg-accent-tint py-0.5 pr-1 pl-3 text-ui text-accent-text">
       {text}
       <button
         type="button"

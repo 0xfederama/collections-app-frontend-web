@@ -2,7 +2,7 @@ import type { RefObject } from 'react'
 import { Button, Dialog } from '../../components/ui'
 import type { Failure } from './form'
 
-const bannerBase = 'flex flex-col gap-3 rounded-md border p-3 text-sm'
+const bannerBase = 'flex flex-col gap-3 rounded-lg border p-3 text-ui'
 
 /** The save failure banners at the top of the settings form (UI_SPEC §9). Presentational only. */
 export function SettingsBanners({
@@ -111,7 +111,7 @@ export function CopyDraftDialog({
         rows={6}
         value={copyFallback}
         onFocus={(event) => event.currentTarget.select()}
-        className="w-full rounded-sm border border-border-strong bg-surface p-3 font-mono text-sm text-text"
+        className="w-full rounded-md border border-border-strong bg-surface p-3 font-mono text-ui text-text"
       />
     </Dialog>
   )

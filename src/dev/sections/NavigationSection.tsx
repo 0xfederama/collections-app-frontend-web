@@ -53,7 +53,9 @@ function SortableTreeDemo() {
   const [names, setNames] = useState(['Alpha', 'Beta', 'Gamma', 'Delta'])
   return (
     <div className="max-w-xs rounded-lg bg-surface p-2 shadow-sm">
-      <p className="px-2 pb-1 text-xs text-text-muted">Reorderable (drag handle, keyboard)</p>
+      <p className="px-2 pb-1 text-secondary text-text-muted">
+        Reorderable (drag handle, keyboard)
+      </p>
       <Tree
         aria-label="Reorderable lists"
         nodes={names.map((name) => ({ id: name, name }))}

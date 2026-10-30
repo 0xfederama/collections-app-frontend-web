@@ -63,7 +63,7 @@ export function useChangeType(list: TreeList): {
       {error && (
         <p
           role="alert"
-          className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
+          className="rounded-lg border border-danger-border bg-danger-bg p-3 text-ui text-danger-text"
         >
           {error}
         </p>

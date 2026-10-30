@@ -165,7 +165,7 @@ export function TitleLookupField({
         className={inputClassName}
       />
       {error && (
-        <p id={`${listboxId}-error`} className="text-xs font-medium text-danger-text">
+        <p id={`${listboxId}-error`} className="text-secondary font-medium text-danger-text">
           {error}
         </p>
       )}
@@ -174,7 +174,7 @@ export function TitleLookupField({
           id={listboxId}
           role="listbox"
           aria-label={`${active.name} title suggestions`}
-          className="absolute inset-x-0 top-full z-50 mt-1 max-h-72 overflow-auto rounded-md border border-border bg-surface p-1 shadow-float"
+          className="absolute inset-x-0 top-full z-50 mt-1 max-h-72 overflow-auto rounded-lg border border-border bg-surface p-1 shadow-float"
         >
           {results.map((row, index) => (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- a pointer shortcut; the keyboard picks a suggestion from the title input (onKeyDown, aria-activedescendant)
@@ -200,9 +200,11 @@ export function TitleLookupField({
                 <span aria-hidden className="h-12 w-8 shrink-0 rounded-sm bg-fill" />
               )}
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-text">{row.title}</span>
+                <span className="block truncate text-ui font-medium text-text">{row.title}</span>
                 {rowMeta(row) && (
-                  <span className="block truncate text-xs text-text-muted">{rowMeta(row)}</span>
+                  <span className="block truncate text-secondary text-text-muted">
+                    {rowMeta(row)}
+                  </span>
                 )}
               </span>
             </li>

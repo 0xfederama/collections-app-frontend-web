@@ -26,7 +26,7 @@ export function QuickAddStatus({
       {lookupUnavailable ? (
         <div
           role="alert"
-          className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
+          className="rounded-lg border border-danger-border bg-danger-bg p-3 text-ui text-danger-text"
         >
           <p>
             {sourceName} metadata is unavailable right now. Your title is still here; retry the
@@ -45,7 +45,7 @@ export function QuickAddStatus({
         formError && (
           <div
             role="alert"
-            className="rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
+            className="rounded-lg border border-danger-border bg-danger-bg p-3 text-ui text-danger-text"
           >
             {formError}
           </div>
@@ -64,7 +64,7 @@ interface QuickAddFooterProps {
 export function QuickAddFooter({ busy, onCancel }: QuickAddFooterProps) {
   return (
     <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-      <p className="text-xs text-text-muted max-sm:hidden [@media(hover:none)]:hidden">
+      <p className="font-mono text-secondary text-text-muted max-sm:hidden [@media(hover:none)]:hidden">
         Enter to add · Esc to cancel
       </p>
       <div className="ml-auto flex items-center gap-2">

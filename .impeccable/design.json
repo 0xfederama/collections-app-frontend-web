@@ -1,86 +1,139 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-15T00:00:00Z",
-  "title": "Design System: Collections (web 2.0.0)",
+  "generatedAt": "2026-10-30T00:00:00Z",
+  "title": "Design System: Collections (web 2.20.0, Editorial)",
   "extensions": {
     "colorMeta": {
       "accent": {
         "role": "primary",
-        "displayName": "Gallery Indigo",
-        "canonical": "#4f46e5",
-        "tonalRamp": [
-          "#0f0e2e",
-          "#312e81",
-          "#4338ca",
-          "#4f46e5",
-          "#6366f1",
-          "#818cf8",
-          "#a5b4fc",
-          "#e0e7ff"
-        ]
+        "displayName": "Editorial Blue",
+        "canonical": "#2d5bff",
+        "tonalRamp": ["#2a52e8", "#2448d6", "#4a72ff", "#6686ff", "#8fa8ff", "#eef2ff"]
+      },
+      "ink": {
+        "role": "action",
+        "displayName": "Ink",
+        "canonical": "#0b0b0c",
+        "tonalRamp": ["#0b0b0c", "#55555c", "#6e6e78", "#8a8a93", "#a8a8b0", "#f4f4f5"]
       },
       "ground": {
         "role": "neutral",
-        "displayName": "Cool Gallery Grey",
-        "canonical": "#edeef1",
+        "displayName": "Paper and Night",
+        "canonical": "#ffffff",
         "tonalRamp": [
-          "#1d1d1f",
-          "#5c5d66",
-          "#7f8292",
-          "#a3a3ae",
-          "#c9cad2",
-          "#dcdde2",
-          "#edeef1",
+          "#0b0b0c",
+          "#121214",
+          "#18181b",
+          "#1d1d21",
+          "#26262b",
+          "#e6e6e9",
+          "#f6f6f7",
+          "#f7f7f8",
           "#ffffff"
-        ]
-      },
-      "graphite-ground": {
-        "role": "neutral",
-        "displayName": "Graphite",
-        "canonical": "#121215",
-        "tonalRamp": [
-          "#121215",
-          "#1a1a1f",
-          "#232329",
-          "#5c5d66",
-          "#7d7e8c",
-          "#a3a3ae",
-          "#d4d4da",
-          "#f2f2f5"
         ]
       }
     },
     "typographyMeta": {
-      "title-page": { "displayName": "Page title", "purpose": "List heading." },
-      "body": { "displayName": "Body", "purpose": "Running text, system stack." },
-      "control": { "displayName": "Control", "purpose": "Buttons, fields, menus." },
-      "caption": { "displayName": "Caption", "purpose": "Chips, counts, key hints." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "List and item titles (Space Grotesk 700, clamp 32 to 44 px)."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "Page and dialog headings (Space Grotesk 700, 30 px)."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Section headings (Space Grotesk 600, 20 px)."
+      },
+      "row": {
+        "displayName": "Row title",
+        "purpose": "List row titles (Space Grotesk 600, 15.5 px)."
+      },
+      "body": { "displayName": "Body", "purpose": "Running text (Geist 400, 15 px, 1.6)." },
+      "ui": { "displayName": "UI", "purpose": "Buttons, fields, menus (Geist 500, 14 px)." },
+      "secondary": {
+        "displayName": "Secondary",
+        "purpose": "Secondary lines and hints (Geist, 13 px)."
+      },
+      "label": {
+        "displayName": "Mono label",
+        "purpose": "Counts, years, pages, prices, key hints, uppercase group labels (Geist Mono, 12 px)."
+      }
     },
-    "shadows": [
+    "fonts": [
+      {
+        "name": "Space Grotesk",
+        "role": "display",
+        "source": "@fontsource-variable/space-grotesk 5.3.0, Latin subset, self-hosted (OFL-1.1)"
+      },
+      {
+        "name": "Geist",
+        "role": "ui and body",
+        "source": "@fontsource-variable/geist 5.3.0, Latin subset, self-hosted (OFL-1.1)"
+      },
+      {
+        "name": "Geist Mono",
+        "role": "numbers and labels",
+        "source": "@fontsource-variable/geist-mono 5.3.0, Latin subset, self-hosted (OFL-1.1)"
+      }
+    ],
+    "radius": [
       {
         "name": "sm",
-        "value": "0 0 0 1px var(--material-hairline), 0 1px 2px rgb(30 30 70 / 0.14)",
-        "purpose": "Cards, secondary buttons."
+        "value": "6px",
+        "purpose": "Small tiles: row thumbnail, service tiles, checkboxes, skeleton rows."
+      },
+      {
+        "name": "md",
+        "value": "8px",
+        "purpose": "Controls: buttons, inputs, selects, menu items, tree rows, tooltips."
       },
       {
         "name": "lg",
-        "value": "0 0 0 1px var(--material-hairline), 0 4px 10px -4px rgb(30 30 70 / 0.14), 0 22px 44px -14px rgb(30 30 70 / 0.18)",
-        "purpose": "Interactive card hover."
+        "value": "12px",
+        "purpose": "Containers: cards, covers, menus, popovers, toasts, toolbars."
+      },
+      { "name": "xl", "value": "16px", "purpose": "Sheets, dialogs, drawer." },
+      { "name": "full", "value": "9999px", "purpose": "Tags only: chips, badges, avatars." }
+    ],
+    "shadows": [
+      {
+        "name": "sm",
+        "value": "0 0 0 1px var(--material-hairline)",
+        "purpose": "Hairline ring only, at rest."
+      },
+      {
+        "name": "md",
+        "value": "0 0 0 1px var(--material-hairline), 0 4px 12px -6px rgb(11 11 12 / 0.12)",
+        "purpose": "Hover on floating controls (dark: black at 0.5)."
       },
       {
         "name": "float",
-        "value": "var(--shadow-lg), inset 0 1px 0 rgb(255 255 255 / 0.8)",
-        "purpose": "Toolbar, menus."
+        "value": "0 0 0 1px var(--material-hairline), 0 8px 24px -10px rgb(11 11 12 / 0.16)",
+        "purpose": "Menus, popovers, toasts, toolbar sheets."
       },
       {
         "name": "sheet",
-        "value": "0 0 0 1px var(--material-hairline), 0 40px 80px -20px rgb(20 20 40 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.8)",
-        "purpose": "Detail sheet, dialogs."
+        "value": "0 0 0 1px var(--material-hairline), 0 24px 60px -18px rgb(11 11 12 / 0.3)",
+        "purpose": "Detail panel, dialogs, drawer."
       },
       {
         "name": "accent",
-        "value": "inset 0 1px 0 rgb(255 255 255 / 0.35), 0 6px 14px -4px rgb(79 70 229 / 0.45)",
-        "purpose": "Primary buttons."
+        "value": "none",
+        "purpose": "Removed: the primary button is flat."
+      }
+    ],
+    "surfaces": [
+      {
+        "name": "material",
+        "value": "var(--material-bg)",
+        "purpose": "Sidebar tone, solid. No blur."
+      },
+      {
+        "name": "material-strong",
+        "value": "var(--material-bg-strong)",
+        "purpose": "Raised layers (dialogs, drawer, detail panel), solid. No blur."
       }
     ],
     "motion": [
@@ -106,107 +159,114 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Main action; pill with accent glow.",
+      "description": "Main action; blue, 8px radius, flat.",
       "html": "<button class=\"ds-btn-primary\">Save</button>",
-      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border:0;border-radius:9999px;background:#4f46e5;color:#fff;font:500 14px/1.5 -apple-system,system-ui,sans-serif;box-shadow:inset 0 1px 0 rgb(255 255 255/.35),0 6px 14px -4px rgb(79 70 229/.45);transition:background-color 150ms cubic-bezier(.22,1,.36,1),transform 150ms;cursor:pointer}.ds-btn-primary:hover{background:#4338ca}.ds-btn-primary:active{transform:scale(.97)}.ds-btn-primary:focus-visible{outline:2px solid #4f46e5;outline-offset:2px}"
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border:0;border-radius:8px;background:#2d5bff;color:#fff;font:500 14px/1.5 Geist,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color 150ms cubic-bezier(.22,1,.36,1),transform 150ms}.ds-btn-primary:hover{background:#2a52e8}.ds-btn-primary:active{transform:scale(.97)}.ds-btn-primary:focus-visible{outline:2px solid #2d5bff;outline-offset:2px}"
+    },
+    {
+      "name": "Ink Button",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "Quick add, the one ink button. Text-colour fill; never used for other actions.",
+      "html": "<button class=\"ds-btn-ink\">Quick add <kbd>N</kbd></button>",
+      "css": ".ds-btn-ink{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border:0;border-radius:8px;background:#0b0b0c;color:#fff;font:500 14px/1.5 Geist,ui-sans-serif,system-ui,sans-serif;cursor:pointer}.ds-btn-ink:focus-visible{outline:2px solid #2d5bff;outline-offset:2px}:root[data-theme='dark'] .ds-btn-ink{background:#f4f4f5;color:#0b0b0c}"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Quiet pill on white with hairline shadow.",
+      "description": "Bordered on the ground, no shadow.",
       "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
-      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border:0;border-radius:9999px;background:#fff;color:#1d1d1f;font:500 14px/1.5 -apple-system,system-ui,sans-serif;box-shadow:0 0 0 1px rgb(60 60 90/.1),0 1px 2px rgb(30 30 70/.14);cursor:pointer;transition:box-shadow 150ms,transform 150ms}.ds-btn-secondary:hover{box-shadow:0 0 0 1px rgb(60 60 90/.1),0 1px 2px rgb(30 30 70/.14),0 10px 24px -16px rgb(30 30 70/.14)}.ds-btn-secondary:active{transform:scale(.97)}.ds-btn-secondary:focus-visible{outline:2px solid #4f46e5;outline-offset:2px}"
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border:1px solid #e6e6e9;border-radius:8px;background:#fff;color:#0b0b0c;font:500 14px/1.5 Geist,ui-sans-serif,system-ui,sans-serif;cursor:pointer}.ds-btn-secondary:hover{background:#f6f6f7}.ds-btn-secondary:focus-visible{outline:2px solid #2d5bff;outline-offset:2px}"
     },
     {
       "name": "Text Field",
       "kind": "input",
       "refersTo": "field",
-      "description": "Fill background, strong edge, surface on focus.",
+      "description": "Hairline border, 8px radius, surface on focus.",
       "html": "<input class=\"ds-input\" placeholder=\"Title\">",
-      "css": ".ds-input{width:100%;box-sizing:border-box;height:40px;padding:0 12px;border:1px solid #7f8292;border-radius:10px;background:rgb(60 60 90/.055);color:#1d1d1f;font:14px/1.5 -apple-system,system-ui,sans-serif;transition:background-color 150ms}.ds-input::placeholder{color:#5c5d66}.ds-input:hover{border-color:#5c5d66}.ds-input:focus{background:#fff}.ds-input:focus-visible{outline:2px solid #4f46e5;outline-offset:2px}"
+      "css": ".ds-input{width:100%;box-sizing:border-box;height:36px;padding:0 12px;border:1px solid #8a8a93;border-radius:8px;background:#f6f6f7;color:#0b0b0c;font:14px/1.5 Geist,ui-sans-serif,system-ui,sans-serif}.ds-input::placeholder{color:#6e6e78}.ds-input:focus{background:#fff}.ds-input:focus-visible{outline:2px solid #2d5bff;outline-offset:2px}"
     },
     {
       "name": "Chip",
       "kind": "chip",
       "refersTo": "chip",
-      "description": "Kind and status pill; accent tone shown.",
+      "description": "Full pill for tags. The list type and count chip is a two-part exception with 8px outer corners.",
       "html": "<span class=\"ds-chip\">Movies</span>",
-      "css": ".ds-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border:1px solid rgb(79 70 229/.3);border-radius:9999px;background:rgb(79 70 229/.1);color:#4f46e5;font:500 12px/1.5 -apple-system,system-ui,sans-serif;white-space:nowrap}"
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border:1px solid #e6e6e9;border-radius:9999px;background:#f6f6f7;color:#55555c;font:400 13px/1.5 Geist,ui-sans-serif,system-ui,sans-serif;white-space:nowrap}"
     },
     {
-      "name": "Item Card",
-      "kind": "card",
-      "refersTo": "card",
-      "description": "White card, 6px image inset, fallback tile.",
-      "html": "<div class=\"ds-card\"><div class=\"ds-tile\">M</div><p class=\"ds-card-title\">Heat</p></div>",
-      "css": ".ds-card{width:220px;padding:6px 6px 12px;border-radius:18px;background:#fff;box-shadow:0 0 0 1px rgb(60 60 90/.1),0 1px 2px rgb(30 30 70/.14);transition:transform 150ms,box-shadow 150ms;font-family:-apple-system,system-ui,sans-serif}.ds-card:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgb(60 60 90/.1),0 4px 10px -4px rgb(30 30 70/.14),0 22px 44px -14px rgb(30 30 70/.18)}.ds-tile{aspect-ratio:4/3;border-radius:13px;background:rgb(60 60 90/.055);color:#5c5d66;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600}.ds-card-title{margin:10px 8px 0;font-size:14px;font-weight:600;color:#1d1d1f}"
+      "name": "List Row",
+      "kind": "row",
+      "refersTo": "list-row",
+      "description": "Medium row, about 68px: 36x50 thumbnail, title with the first pinned field under it, the second pinned field on the right in mono.",
+      "html": "<div class=\"ds-row\"><div class=\"ds-thumb\">M</div><div><p class=\"ds-row-title\">Heat</p><p class=\"ds-row-sub\">1995</p></div><span class=\"ds-row-meta\">1h 50m</span></div>",
+      "css": ".ds-row{display:flex;align-items:center;gap:12px;min-height:68px;padding:9px 12px;border-bottom:1px solid #f0f0f1;font-family:Geist,ui-sans-serif,system-ui,sans-serif}.ds-thumb{width:36px;height:50px;border-radius:6px;background:rgb(11 11 12/.05);display:flex;align-items:center;justify-content:center;color:#55555c;font-size:14px;font-weight:600}.ds-row-title{margin:0;font:600 15.5px/1.35 'Space Grotesk',ui-sans-serif,system-ui,sans-serif;letter-spacing:-0.01em;color:#0b0b0c}.ds-row-sub{margin:0;font-size:13px;color:#55555c}.ds-row-meta{margin-left:auto;font:400 12px/1.4 'Geist Mono',ui-monospace,monospace;color:#6e6e78;font-variant-numeric:tabular-nums}"
     },
     {
-      "name": "Floating Toolbar",
-      "kind": "nav",
-      "refersTo": "sidebar",
-      "description": "Frosted pill over scrolling content.",
-      "html": "<div class=\"ds-toolbar\"><span>Grid</span><span>Sort</span><span>Filter</span></div>",
-      "css": ".ds-toolbar{display:inline-flex;gap:16px;padding:6px 16px;border:1px solid rgb(60 60 90/.14);border-radius:9999px;background:rgb(255 255 255/.78);-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);box-shadow:0 0 0 1px rgb(60 60 90/.1),0 4px 10px -4px rgb(30 30 70/.14),0 22px 44px -14px rgb(30 30 70/.18),inset 0 1px 0 rgb(255 255 255/.8);font:14px/1.5 -apple-system,system-ui,sans-serif;color:#1d1d1f}"
+      "name": "Floating Menu",
+      "kind": "menu",
+      "refersTo": "menu",
+      "description": "Solid raised surface, 12px radius, hairline ring and a soft shadow. No blur.",
+      "html": "<div class=\"ds-menu\"><span>Grid</span><span>Sort</span><span>Filter</span></div>",
+      "css": ".ds-menu{display:inline-flex;gap:16px;padding:6px 12px;border-radius:12px;background:#fff;box-shadow:0 0 0 1px #e6e6e9,0 8px 24px -10px rgb(11 11 12/.16);font:14px/1.5 Geist,ui-sans-serif,system-ui,sans-serif;color:#0b0b0c}"
     }
   ],
   "narrative": {
-    "northStar": "The Frosted Gallery",
-    "overview": "A calm, personal collection browser for two people. Images lead; chrome is frosted material floating over the content and recedes. Colour comes only from the single indigo accent and from real images. Apple-inspired depth (hairline, inner highlight, layered soft shadow, blur) without Liquid Glass theatrics. Operate register: standard controls, scannable rows, a clean grid. Light and graphite dark share the same materials.",
+    "northStar": "Editorial",
+    "overview": "A calm, personal collection browser for two people, set like a printed catalogue. A geometric display face carries the titles, a quiet UI face carries everything else, and near-white and near-black neutrals keep images in front. One electric blue marks what can be acted on. Hairlines separate; shadows only lift floating layers. Light and near-black dark share the same structure.",
     "keyCharacteristics": [
-      "Frosted sidebar, floating pill toolbar, floating detail sheet and dialogs are the only blurred surfaces.",
-      "White cards with a 6px inner inset around the image; neutral fallback tiles where images are missing.",
-      "One accent, used only where something can be acted on.",
-      "System font stack, no web font.",
+      "Solid surfaces only: no blur, no backdrop-filter, no gradients, no glow.",
+      "Space Grotesk for titles, Geist for UI and body, Geist Mono for numbers and labels; all three self-hosted (Latin subset).",
+      "One blue accent. Quick add is the one ink button.",
+      "Radius 6, 8, 12, 16 px; full only for tags.",
+      "Medium list rows of about 68 px with the pinned fields in two slots.",
       "150-200ms ease-out; springs only on button press."
     ],
     "rules": [
       {
         "name": "The Acting-Accent Rule",
-        "body": "Indigo marks what can be acted on or focused. It never decorates.",
+        "body": "Blue marks what can be acted on or focused. It never decorates.",
         "section": "colors"
       },
       {
-        "name": "The Image-Colour Rule",
-        "body": "Apart from the accent, hue comes from real images; missing images get neutral fill tiles (kind icon plus initial), never a colour per list.",
+        "name": "The Ink-Action Rule",
+        "body": "Quick add is the only ink button; every other primary action is blue.",
         "section": "colors"
       },
       {
         "name": "The Semantic-Only Rule",
-        "body": "Components use semantic tokens; no raw hex or Tailwind palette in components.",
+        "body": "Components use semantic tokens and the type, radius and shadow utilities; no raw hex or Tailwind palette in components.",
         "section": "colors"
       },
       {
         "name": "The Tabular-Numbers Rule",
-        "body": "Prices and counts use tabular figures.",
+        "body": "Prices, counts, years and pages are set in Geist Mono (or tabular figures).",
         "section": "typography"
       },
       {
-        "name": "The Blur-Budget Rule",
-        "body": "Backdrop blur only on sidebar, toolbar, detail sheet, dialogs and drawer. Never on cards, menus or content.",
+        "name": "The No-Blur Rule",
+        "body": "Nothing is frosted or translucent over content. Floating layers use the solid surface utilities.",
         "section": "elevation"
       },
       {
         "name": "The Hairline-First Rule",
-        "body": "Depth always includes the 1px hairline ring so a surface reads on any image behind it.",
+        "body": "Separation comes from the 1px hairline first; a shadow only lifts a floating layer.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "Do take colour, radius, shadow and spacing from the tokens in src/styles/tokens.css.",
-      "Do keep new floating chrome on material or material-strong with a shadow from the vocabulary.",
-      "Do inset images in cards by 6px with a nested radius.",
+      "Do take colour, type, radius, shadow and spacing from the tokens and utilities in src/styles.",
+      "Do use the solid surface utilities for floating chrome, with a shadow from the vocabulary.",
       "Do pair every state colour with text or an icon.",
       "Do keep motion at 150-200ms ease-out and honour reduced motion.",
-      "Do fall back to a neutral fill tile when an image is missing."
+      "Do use a neutral fill tile when an image is missing."
     ],
     "donts": [
-      "Don't add a second accent, per-list colours or decorative gradients on content.",
-      "Don't blur cards, menus or list content.",
-      "Don't use a web font or hard offset shadows.",
-      "Don't hard-code hex or Tailwind palette classes in components.",
-      "Don't add raster assets without a README row giving source URL and date."
+      "Don't blur, frost or gradient any surface.",
+      "Don't add a second accent, per-list colours or a second ink button.",
+      "Don't hard-code hex, Tailwind palette classes, radii or sizes in components.",
+      "Don't fetch fonts or icons at runtime, or add a web font outside src/styles/fonts.css."
     ]
   }
 }

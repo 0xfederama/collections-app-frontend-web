@@ -59,7 +59,7 @@ export function CreateTypeDialog({
           onChange={(event) => setName(event.target.value)}
           maxLength={100}
         />
-        <label className="flex min-h-10 items-center gap-3 text-sm">
+        <label className="flex min-h-10 items-center gap-3 text-ui">
           <input
             type="checkbox"
             checked={allowsPrice}
@@ -68,7 +68,7 @@ export function CreateTypeDialog({
           Allows a price
         </label>
         {createError !== null && (
-          <p role="alert" className="text-sm text-danger-text">
+          <p role="alert" className="text-ui text-danger-text">
             {errorText(createError)}
           </p>
         )}

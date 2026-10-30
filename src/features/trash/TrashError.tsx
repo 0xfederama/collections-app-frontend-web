@@ -14,7 +14,7 @@ export function TrashErrorMessage({
   return (
     <div
       role="alert"
-      className="flex flex-col items-start gap-2 rounded-md border border-danger-border bg-danger-bg p-3 text-sm text-danger-text"
+      className="flex flex-col items-start gap-2 rounded-lg border border-danger-border bg-danger-bg p-3 text-ui text-danger-text"
     >
       <p>{error.message}</p>
       {error.kind === 'network' && onRetry && (

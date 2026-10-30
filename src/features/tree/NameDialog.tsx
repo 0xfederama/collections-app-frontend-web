@@ -161,7 +161,7 @@ export function NameDialog({
           </div>
           {listIcon && (
             <div className="flex flex-col gap-1.5">
-              <label htmlFor={iconControlId} className="text-sm font-medium text-text">
+              <label htmlFor={iconControlId} className="text-ui font-medium text-text">
                 Icon
               </label>
               <IconButton

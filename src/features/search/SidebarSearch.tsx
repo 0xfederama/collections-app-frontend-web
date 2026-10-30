@@ -168,10 +168,6 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
               placeholder="Search"
               autoComplete="off"
               spellCheck={false}
-              // The secondary Button has no border class (its edge is the shadow-sm hairline), so the
-              // closest light token is used. `!` wins over controlBorder, and the hover and focus
-              // states are re-stated as important so they still apply.
-              className="border-border! hover:border-text-muted! focus-within:border-accent!"
               value={value}
               onChange={(event) => {
                 setValue(event.target.value)
@@ -181,7 +177,7 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
               onKeyDown={onKeyDown}
               prefix={<Search aria-hidden className="size-4" />}
               suffix={
-                <kbd aria-hidden className="text-xs opacity-80">
+                <kbd aria-hidden className="font-mono text-label opacity-80">
                   /
                 </kbd>
               }
@@ -214,21 +210,21 @@ export function SidebarSearch({ inputRef }: { inputRef?: Ref<HTMLInputElement> }
                   onMouseMove={() => setActive(index)}
                   onClick={() => openResult(result)}
                   className={cx(
-                    'flex cursor-pointer items-center gap-3 rounded-sm px-2 py-1.5 pointer-coarse:min-h-11',
-                    index === activeIndex && 'bg-accent/10',
+                    'flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 pointer-coarse:min-h-11',
+                    index === activeIndex && 'bg-accent-tint',
                   )}
                 >
                   <SearchResultBody result={result} />
                 </li>
               ))}
             </ul>
-            {body === 'loading' && <p className="px-3 py-2 text-sm text-text-muted">Searching…</p>}
+            {body === 'loading' && <p className="px-3 py-2 text-ui text-text-muted">Searching…</p>}
             {body === 'empty' && (
-              <p className="px-3 py-2 text-sm text-text-muted">No results for “{typed}”</p>
+              <p className="px-3 py-2 text-ui text-text-muted">No results for “{typed}”</p>
             )}
             {body === 'error' && (
               <div className="flex flex-col items-start gap-2 px-3 py-2">
-                <p className="text-sm text-danger-text">Couldn’t search.</p>
+                <p className="text-ui text-danger-text">Couldn’t search.</p>
                 <Button
                   size="sm"
                   variant="secondary"

@@ -13,7 +13,7 @@ import {
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-4">
-      <h2 id={id} className="text-sm font-semibold text-text-muted">
+      <h2 id={id} className="font-display text-section text-text">
         {title}
       </h2>
       {children}
@@ -73,7 +73,7 @@ export function SettingsRoute() {
             type="button"
             aria-pressed={pane === name}
             onClick={() => setPane(name)}
-            className={`shrink-0 rounded-md px-3 py-2 text-sm ${focusRing} ${pane === name ? 'bg-accent text-accent-fg' : 'text-text-muted hover:bg-fill hover:text-text'}`}
+            className={`shrink-0 rounded-md px-3 py-2 text-ui ${focusRing} ${pane === name ? 'bg-accent text-accent-fg' : 'text-text-muted hover:bg-fill hover:text-text'}`}
           >
             {name}
           </button>

@@ -50,8 +50,8 @@ describe('F002-T5 ServiceIcon', () => {
       tile.className.replace(/\bbg-(fill|tile-light)\b/, '').trim()
     expect(new Set(tiles.map(shape)).size).toBe(1)
     for (const tile of tiles) {
-      expect(tile).toHaveStyle({ width: '36px', height: '36px' })
-      expect(tile).toHaveClass('rounded-md', 'border-border')
+      expect(tile).toHaveStyle({ width: '44px', height: '44px' })
+      expect(tile).toHaveClass('rounded-sm', 'border-border')
       expect(tile).not.toHaveTextContent(/\w/)
     }
     expect(container.querySelectorAll('img')).toHaveLength(4)
@@ -75,12 +75,12 @@ describe('F009-W5 one tile for every icon', () => {
     )
     const link = tile('Google')
     const streaming = tile('Netflix')
-    expect(link).toHaveStyle({ width: '36px', height: '36px' })
-    expect(streaming).toHaveStyle({ width: '36px', height: '36px' })
+    expect(link).toHaveStyle({ width: '44px', height: '44px' })
+    expect(streaming).toHaveStyle({ width: '44px', height: '44px' })
     // Same classes, so the same square shape, radius, border and neutral background.
     expect(streaming.className).toBe(link.className)
     for (const one of [link, streaming]) {
-      expect(one).toHaveClass('rounded-md', 'bg-fill', 'border-border')
+      expect(one).toHaveClass('rounded-sm', 'bg-fill', 'border-border')
       // Square, never a circle: the radius is the md scale, not a pill.
       expect(one).not.toHaveClass('rounded-full', 'rounded-lg', 'rounded-xl')
     }

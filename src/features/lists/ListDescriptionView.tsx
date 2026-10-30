@@ -37,7 +37,7 @@ export function DescriptionView({
 
   if (!text) {
     return (
-      <section aria-label="List description" className="max-w-prose text-sm">
+      <section aria-label="List description" className="max-w-prose text-body text-text-muted">
         <button
           ref={entryRef}
           type="button"
@@ -57,8 +57,8 @@ export function DescriptionView({
     onEdit()
   }
   return (
-    <section aria-label="List description" className="max-w-prose text-sm">
-      <div className="flex items-center gap-3">
+    <section aria-label="List description" className="max-w-prose text-body text-text-muted">
+      <div className="flex items-center gap-3 text-ui">
         <button
           type="button"
           aria-expanded={!collapsed}

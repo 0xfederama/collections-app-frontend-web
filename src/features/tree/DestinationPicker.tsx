@@ -37,7 +37,7 @@ export function DestinationPicker({
     <div
       role="radiogroup"
       aria-label={label}
-      className="flex max-h-72 flex-col gap-0.5 overflow-y-auto rounded-md border border-border p-1"
+      className="flex max-h-72 flex-col gap-0.5 overflow-y-auto rounded-lg border border-border p-1"
     >
       {options.map((option) => {
         const indent = { paddingInlineStart: `${option.depth * 16 + 8}px` }
@@ -45,7 +45,7 @@ export function DestinationPicker({
           return (
             <div
               key={option.key}
-              className="flex min-h-9 items-center truncate pr-2 text-sm text-text-muted"
+              className="flex min-h-9 items-center truncate pr-2 text-ui text-text-muted"
               style={indent}
             >
               {option.name}
@@ -56,7 +56,7 @@ export function DestinationPicker({
         const row = (
           <label
             className={cx(
-              'flex min-h-9 items-center gap-2 rounded-sm pr-2 text-sm pointer-coarse:min-h-11',
+              'flex min-h-9 items-center gap-2 rounded-md pr-2 text-ui pointer-coarse:min-h-11',
               option.reason
                 ? 'cursor-not-allowed text-text-muted'
                 : 'cursor-pointer hover:bg-border',
@@ -75,7 +75,7 @@ export function DestinationPicker({
             />
             <span className="min-w-0 flex-1 truncate">{option.name}</span>
             {option.reason && (
-              <span id={reasonId} className="text-xs">
+              <span id={reasonId} className="text-secondary">
                 {option.reason}
               </span>
             )}

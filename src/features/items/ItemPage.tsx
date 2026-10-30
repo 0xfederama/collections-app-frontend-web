@@ -96,7 +96,7 @@ function ItemDetail({
       {!panel && (
         <Link
           to={backTo}
-          className="self-start text-sm text-accent-text underline underline-offset-2"
+          className="self-start text-ui text-accent-text underline underline-offset-2"
         >
           ← Back to {listName}
         </Link>
@@ -123,7 +123,7 @@ function NewItemPage({
       {!panel && (
         <Link
           to={{ pathname: `/lists/${listId}`, search }}
-          className="self-start text-sm text-accent-text underline underline-offset-2"
+          className="self-start text-ui text-accent-text underline underline-offset-2"
         >
           ← Back to {listName}
         </Link>

@@ -32,7 +32,7 @@ export interface MenuProps {
 }
 
 const itemClass =
-  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11 [&_svg]:size-4'
+  'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-ui outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent-tint pointer-coarse:min-h-11 [&_svg]:size-4'
 
 export function Menu({ trigger, items, align = 'end' }: MenuProps) {
   const opener = useRef<HTMLButtonElement>(null)
@@ -53,7 +53,7 @@ export function Menu({ trigger, items, align = 'end' }: MenuProps) {
             ) : item.type === 'radio-submenu' ? (
               <DropdownMenu.Sub key={item.label}>
                 <DropdownMenu.SubTrigger
-                  className={cx(itemClass, 'data-[state=open]:bg-accent/10')}
+                  className={cx(itemClass, 'data-[state=open]:bg-accent-tint')}
                 >
                   {item.icon && <span aria-hidden>{item.icon}</span>}
                   <span className="flex-1">{item.label}</span>

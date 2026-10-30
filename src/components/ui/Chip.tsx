@@ -5,7 +5,7 @@ export type ChipTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger'
 
 const toneClasses: Record<ChipTone, string> = {
   neutral: 'border-border bg-fill text-text',
-  accent: 'border-accent/30 bg-accent/10 text-accent-text',
+  accent: 'border-accent-tint bg-accent-tint text-accent-text',
   success: 'border-success-border bg-success-bg text-success-text',
   warning: 'border-warning-border bg-warning-bg text-warning-text',
   danger: 'border-danger-border bg-danger-bg text-danger-text',
@@ -21,7 +21,7 @@ export function Chip({ tone = 'neutral', icon, className, children, ...rest }: C
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap [&_svg]:size-3.5',
+        'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-secondary font-medium whitespace-nowrap [&_svg]:size-3.5',
         toneClasses[tone],
         className,
       )}

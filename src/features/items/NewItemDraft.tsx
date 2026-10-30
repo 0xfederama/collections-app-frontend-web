@@ -124,7 +124,7 @@ export function NewItemDraft({
   return (
     <article aria-label="New item" className="flex flex-col gap-5">
       <header className="flex flex-col gap-1">
-        <p className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
+        <p className="flex items-center gap-1.5 font-mono text-label text-text-subtle uppercase">
           <ListIconMark
             icon={definition?.default_icon}
             type={type}
@@ -189,7 +189,7 @@ export function NewItemDraft({
       ) : (
         failure && <MessageBanner>{failure}</MessageBanner>
       )}
-      <p className="text-sm text-text-muted">
+      <p className="text-ui text-text-muted">
         Press Enter to add it to {listName}, or Esc to discard it. The other fields and the
         description can be filled in once it is added.
       </p>

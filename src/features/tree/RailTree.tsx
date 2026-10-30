@@ -7,7 +7,7 @@ import { parseStringArray, readStored, STORAGE_KEYS, writeStored } from '../../l
 import { useTreeIndex } from './api'
 
 const itemClass =
-  'flex size-11 items-center justify-center rounded-md text-text-muted hover:bg-fill-hover aria-[current]:bg-accent/10 aria-[current]:text-text'
+  'flex size-11 items-center justify-center rounded-md text-text-muted hover:bg-fill-hover aria-[current]:bg-accent-tint aria-[current]:text-accent-text'
 
 /**
  * The collapsed sidebar's tree: only the top-level entries, as icon buttons. The root folder that

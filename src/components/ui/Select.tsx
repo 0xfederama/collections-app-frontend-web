@@ -94,7 +94,7 @@ export function Select({
                     key={option.value}
                     value={option.value}
                     disabled={option.disabled}
-                    className="relative flex h-9 cursor-pointer select-none items-center rounded-md pr-3 pl-8 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent/10 pointer-coarse:min-h-11"
+                    className="relative flex h-9 cursor-pointer select-none items-center rounded-md pr-3 pl-8 text-ui outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent-tint pointer-coarse:min-h-11"
                   >
                     {!option.action && (
                       <RadixSelect.ItemIndicator className="absolute left-2">

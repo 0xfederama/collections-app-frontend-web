@@ -17,7 +17,7 @@ export function ItemHero({ item }: { item: Item }) {
   const [lightbox, setLightbox] = useState(false)
   const [changing, setChanging] = useState(false)
   const [pastedFile, setPastedFile] = useState<File | null>(null)
-  const frame = 'aspect-video max-h-[45dvh] w-full rounded-xl'
+  const frame = 'aspect-video max-h-[45dvh] w-full rounded-lg'
 
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
@@ -66,7 +66,7 @@ export function ItemHero({ item }: { item: Item }) {
         <button
           type="button"
           onClick={() => setChanging(true)}
-          className={`flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong text-sm text-text-muted transition-colors hover:border-accent hover:text-text pointer-coarse:h-12 ${focusRing}`}
+          className={`flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border-strong text-ui text-text-muted transition-colors hover:border-accent hover:text-text pointer-coarse:h-12 ${focusRing}`}
         >
           <ImagePlus aria-hidden className="size-4" />
           Add image
@@ -86,7 +86,7 @@ export function ItemHero({ item }: { item: Item }) {
             type="button"
             onClick={() => setLightbox(true)}
             aria-label={`View image of ${item.title} full size`}
-            className={`block w-full cursor-zoom-in rounded-xl ${focusRing}`}
+            className={`block w-full cursor-zoom-in rounded-lg ${focusRing}`}
           >
             <img
               src={src}
@@ -115,7 +115,7 @@ export function ItemHero({ item }: { item: Item }) {
       <button
         type="button"
         onClick={() => setChanging(true)}
-        className={`bg-surface-raised absolute top-3 right-3 inline-flex h-9 items-center gap-2 rounded-md px-4 text-sm font-medium text-text opacity-0 shadow-float transition-opacity duration-150 group-focus-within/hero:opacity-100 group-hover/hero:opacity-100 focus-visible:opacity-100 pointer-coarse:h-11 [@media(hover:none)]:opacity-100 ${focusRing}`}
+        className={`bg-surface-raised absolute top-3 right-3 inline-flex h-9 items-center gap-2 rounded-md px-4 text-ui font-medium text-text opacity-0 shadow-float transition-opacity duration-150 group-focus-within/hero:opacity-100 group-hover/hero:opacity-100 focus-visible:opacity-100 pointer-coarse:h-11 [@media(hover:none)]:opacity-100 ${focusRing}`}
       >
         <ImagePlus aria-hidden className="size-4" />
         Change image
