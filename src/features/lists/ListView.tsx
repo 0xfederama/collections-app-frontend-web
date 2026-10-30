@@ -214,7 +214,6 @@ export function ListView({ treeList }: { treeList: List }) {
         definition={definition}
         list={list}
         showAddItem={!!list && (list.item_count > 0 || draft)}
-        itemCount={list?.item_count}
         displayMode={mode}
         onDisplayMode={setDisplayMode}
         sort={effectiveSort}

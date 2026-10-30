@@ -40,7 +40,7 @@ export const SERVICES: ServiceEntry[] = [
     label: 'Letterboxd',
     aliases: [],
     file: 'letterboxd.svg',
-    tile: 'light',
+    tile: 'neutral',
     fit: 'inset',
   },
   {

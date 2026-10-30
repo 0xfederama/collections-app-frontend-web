@@ -63,8 +63,6 @@ export interface ListHeaderProps {
   list: List | undefined
   /** The "New item" button of the toolbar: hidden on an empty list, where the centered call to action is the only one. */
   showAddItem: boolean
-  /** The list's item count (not the filtered one), shown in the type chip above the title; undefined while loading. */
-  itemCount: number | undefined
   displayMode: DisplayMode
   onDisplayMode: (mode: DisplayMode) => void
   sort: SortMode
@@ -95,14 +93,14 @@ function ListIconButton({ list, defaultIcon }: { list: TreeList; defaultIcon?: s
         type="button"
         aria-label="Change icon"
         onClick={() => setOpen(true)}
-        className="group/icon relative grid size-9 shrink-0 place-items-center rounded-md focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
+        className="group/icon relative grid size-11 shrink-0 place-items-center rounded-md focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
       >
         <ListIconMark
           icon={list.icon ?? defaultIcon}
           iconColor={list.icon_color}
           type={list.type}
-          className="size-9"
-          iconClassName="size-5"
+          className="size-11"
+          iconClassName="size-6"
         />
         <span
           aria-hidden
@@ -116,44 +114,21 @@ function ListIconButton({ list, defaultIcon }: { list: TreeList; defaultIcon?: s
   )
 }
 
-/**
- * The type and the item count as one two-part chip above the title (F021): the type on the accent
- * half, the count on the tint half. The count stays as a number here and the full "N items" label
- * still follows the items (a test relies on that position), so both show the same data.
- */
-function TypeCountChip({
-  type,
-  definition,
-  count,
-}: {
-  type: TreeList['type']
-  definition: TypeDefinition
-  count: number | undefined
-}) {
+/** The list's type as a chip under the title (F021); the count follows the items. */
+function TypeChip({ type, definition }: { type: TreeList['type']; definition: TypeDefinition }) {
   return (
-    <div className="flex w-fit max-w-full overflow-hidden rounded-md text-secondary font-medium">
-      <span className="bg-accent px-2.5 py-1 text-accent-fg">{typeName(definition, type)}</span>
-      {count !== undefined && (
-        <span className="bg-accent-tint px-2.5 py-1 text-accent-text tabular-nums">
-          {count}
-          <span className="sr-only"> items</span>
-        </span>
-      )}
-    </div>
+    <span className="w-fit max-w-full rounded-md bg-accent px-2.5 py-1 text-secondary font-medium text-accent-fg">
+      {typeName(definition, type)}
+    </span>
   )
 }
 
-/** Type and count chip, title, description, then the sticky toolbar: search, filter, sort, pinned, display mode, New item (UI_SPEC §3). */
+/** Title, type chip, description, then the sticky toolbar: search, filter, sort, pinned, display mode, New item (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   return (
     <>
       <header className="flex flex-col gap-3">
-        <TypeCountChip
-          type={props.treeList.type}
-          definition={props.definition}
-          count={props.itemCount}
-        />
         <div className="flex flex-wrap items-center gap-3">
           <ListIconButton list={props.treeList} defaultIcon={props.definition.default_icon} />
           <h1 className="min-w-0 flex-1 font-display text-display break-words">
@@ -161,6 +136,7 @@ export function ListHeader(props: ListHeaderProps) {
           </h1>
           <ListActionsMenu list={props.treeList} />
         </div>
+        <TypeChip type={props.treeList.type} definition={props.definition} />
         {list ? (
           <ListDescription treeList={props.treeList} text={list.description ?? null} />
         ) : (
