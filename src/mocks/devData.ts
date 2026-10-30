@@ -64,6 +64,7 @@ export const devTree: Tree = {
     list(17, 'Gadgets', 'wishlist', 6, 0, 5),
     list(18, 'Wishlist', 'wishlist', null, 0, 21),
     list(19, 'Ideas', null, null, 1, 0),
+    list(20, 'To read', 'book', null, 2, 5),
   ],
 }
 

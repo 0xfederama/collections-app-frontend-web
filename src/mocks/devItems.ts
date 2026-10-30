@@ -24,9 +24,36 @@ const cover = (hue: number) =>
 // `.invalid` never resolves, so these exercise the fallback tile after a failed load.
 const BROKEN = 'https://images.example.invalid/missing.jpg'
 
+/** Every streaming service the registry knows, so the dev lists show each icon in place. */
+const STREAMING = [
+  'Netflix',
+  'Prime Video',
+  'Disney+',
+  'Apple TV+',
+  'YouTube',
+  'TIMvision',
+  'Infinity',
+  'Paramount+',
+  'HBO Max',
+  'NOW',
+  'Sky',
+  'RaiPlay',
+  'Rakuten TV',
+  'Hulu',
+  'Discovery+',
+  'MUBI',
+  'Google Play',
+  'Peacock',
+  'Crunchyroll',
+]
+const STORES = ['amazon', 'bookshop', 'apple_books', 'google_play_books', 'kobo']
+const pick = <T>(pool: readonly T[], i: number, n: number) =>
+  Array.from({ length: n }, (_, k) => pool[(i * 3 + k) % pool.length] as T)
+
 const TITLES: Record<string, string[]> = {
   movie: ['Blade Runner 2049', 'Arrival', 'The Grand Budapest Hotel', 'Past Lives', 'Drive'],
   tv_show: ['Severance', 'The Bear', 'Slow Horses', 'Andor', 'Shōgun'],
+  book: ['Dune', 'The Left Hand of Darkness', 'Piranesi', 'Kindred', 'Solaris'],
   vehicle: [
     'Ducati Monster',
     'Triumph Speed 400',
@@ -44,8 +71,9 @@ function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
       return {
         runtime_minutes: 90 + ((i * 13) % 80),
         streaming: {
-          platforms: i % 2 ? ['Netflix', 'Prime Video'] : ['Disney+'],
-          paid_platforms: i % 3 ? [] : ['Disney+'],
+          country: 'IT',
+          platforms: pick(STREAMING, i, 5),
+          paid_platforms: i % 3 ? [] : pick(STREAMING, i, 1),
         },
       }
     case 'tv_show':
@@ -53,8 +81,10 @@ function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
         seasons: 1 + (i % 6),
         episodes_per_season: 6 + (i % 5),
         episode_minutes: 30 + ((i * 5) % 30),
-        streaming: { platforms: ['Apple TV+'] },
+        streaming: { country: 'IT', platforms: pick(STREAMING, i + 2, 4), paid_platforms: [] },
       }
+    case 'book':
+      return { author: 'Various', pages: 200 + i * 37, stores: pick(STORES, i, 4) }
     case 'vehicle':
       return { model_year: 2015 + (i % 10), power_hp: 70 + i * 10 }
     default:

@@ -1,6 +1,7 @@
 import { firstLetter } from '../lib/text'
 import { cx } from '../lib/cx'
 import { Globe } from './ui/icons'
+import { Tooltip } from './ui/Tooltip'
 import {
   assetUrl,
   findService,
@@ -120,36 +121,37 @@ function Tile({
 }) {
   const label = paid ? `${visual.label}, paid` : visual.label
   return (
-    <span
-      role="img"
-      aria-label={label}
-      title={label}
-      style={{ width: size, height: size }}
-      className={cx(TILE, visual.tile === 'light' ? 'bg-tile-light' : 'bg-fill')}
-    >
-      {visual.fit === 'bleed' && visual.src ? (
-        <BleedMark src={visual.src} />
-      ) : (
-        <InsetMark visual={visual} />
-      )}
-      {paid && (
-        <span
-          aria-hidden
-          data-testid="paid-badge"
-          className={cx(
-            'absolute -right-1 -bottom-1 inline-flex items-center justify-center rounded-full',
-            'border border-surface bg-text font-bold text-surface',
-          )}
-          style={{
-            width: Math.max(16, Math.round(size * 0.5)),
-            height: Math.max(16, Math.round(size * 0.5)),
-            fontSize: Math.max(10, Math.round(size * 0.32)),
-          }}
-        >
-          $
-        </span>
-      )}
-    </span>
+    <Tooltip content={label}>
+      <span
+        role="img"
+        aria-label={label}
+        style={{ width: size, height: size }}
+        className={cx(TILE, visual.tile === 'light' ? 'bg-tile-light' : 'bg-fill')}
+      >
+        {visual.fit === 'bleed' && visual.src ? (
+          <BleedMark src={visual.src} />
+        ) : (
+          <InsetMark visual={visual} />
+        )}
+        {paid && (
+          <span
+            aria-hidden
+            data-testid="paid-badge"
+            className={cx(
+              'absolute -right-1 -bottom-1 inline-flex items-center justify-center rounded-full',
+              'border border-surface bg-text font-bold text-surface',
+            )}
+            style={{
+              width: Math.max(16, Math.round(size * 0.5)),
+              height: Math.max(16, Math.round(size * 0.5)),
+              fontSize: Math.max(10, Math.round(size * 0.32)),
+            }}
+          >
+            $
+          </span>
+        )}
+      </span>
+    </Tooltip>
   )
 }
 
