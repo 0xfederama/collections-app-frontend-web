@@ -10,15 +10,11 @@ const def = (key: string, fieldKeys: string[], allowsPrice = false): TypeDefinit
   default_icon: null,
   allows_price: allowsPrice,
   default_sort_field: null,
-  is_locked: true,
-  version: 1,
   fields: fieldKeys.map((field, position) => ({
     key: field,
     label: field,
     type: 'text',
     position,
-    is_locked: true,
-    version: 1,
   })),
 })
 
@@ -104,16 +100,12 @@ describe('F014-W3 pinned text', () => {
         label: 'Runtime',
         type: 'number',
         position: 0,
-        is_locked: true,
-        version: 1,
       },
       {
         key: 'streaming',
         label: 'Streaming',
         type: 'streaming',
         position: 1,
-        is_locked: true,
-        version: 1,
       },
     ],
   }

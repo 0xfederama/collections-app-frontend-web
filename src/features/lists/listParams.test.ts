@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TypeDefinition } from '../settings'
+import { typeDefinition, type TypeDefinition } from '../items'
 import type { FieldFilterValue } from './FieldFilter'
 import {
   activeFieldFilter,
@@ -129,5 +129,32 @@ describe('listParams', () => {
       filterMin: null,
       filterMax: null,
     })
+  })
+})
+
+describe('?sort= with a key the type does not define', () => {
+  const movie = typeDefinition(
+    [
+      {
+        key: 'movie',
+        name: 'Movies',
+        default_icon: null,
+        allows_price: false,
+        default_sort_field: null,
+        fields: [{ key: 'director', label: 'Director', type: 'text', position: 0 }],
+      },
+    ],
+    'movie',
+  )
+
+  it.each([
+    ['an unknown key', 'rating', null],
+    ['a field the type defines', 'director', 'director'],
+  ] as const)('resolveSortOverride: %s', (_name, parsed, expected) => {
+    expect(resolveSortOverride(parsed, movie)).toBe(expected)
+  })
+
+  it('supportedSorts lists the type fields only', () => {
+    expect(supportedSorts(movie)).toEqual(new Set(['manual', 'title', 'updated', 'director']))
   })
 })

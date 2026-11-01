@@ -7,8 +7,6 @@ const field = (key: string, type: TypeField['type'], label: string): TypeField =
     key,
     label,
     type,
-    is_locked: true,
-    version: 1,
     position: 0,
   }) as TypeField
 
@@ -18,8 +16,6 @@ const book: TypeDefinition = {
   default_icon: null,
   allows_price: true,
   default_sort_field: null,
-  is_locked: true,
-  version: 1,
   fields: [
     field('author', 'text', 'Writer'),
     field('pages', 'number', 'Pages'),

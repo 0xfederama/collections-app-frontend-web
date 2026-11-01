@@ -8,33 +8,27 @@ import { mapServerErrors } from './serverErrors'
 import { validate } from './validate'
 
 const definition: TypeDefinition = {
-  key: 'board_game',
-  name: 'Board game',
+  key: 'movie',
+  name: 'Movies',
   default_icon: null,
   allows_price: false,
   default_sort_field: 'rating',
-  is_locked: false,
-  version: 1,
   fields: [
-    { key: 'notes', label: 'Notes', type: 'text', position: 0, is_locked: false, version: 1 },
-    { key: 'rating', label: 'Rating', type: 'number', position: 1, is_locked: false, version: 1 },
+    { key: 'notes', label: 'Notes', type: 'text', position: 0 },
+    { key: 'rating', label: 'Rating', type: 'number', position: 1 },
     {
       key: 'played_on',
       label: 'Played on',
       type: 'date',
       position: 2,
-      is_locked: false,
-      version: 1,
     },
     {
       key: 'recommended',
       label: 'Recommended',
       type: 'boolean',
       position: 3,
-      is_locked: false,
-      version: 1,
     },
-    { key: 'rules', label: 'Rules', type: 'link', position: 4, is_locked: false, version: 1 },
+    { key: 'rules', label: 'Rules', type: 'link', position: 4 },
   ],
 }
 
@@ -63,7 +57,7 @@ const item: Item = {
 const defaults = { country: 'IT' }
 
 describe('F014-W3 definition-backed item drafts', () => {
-  it('round-trips all five custom field types without a patch', () => {
+  it('round-trips all five field types without a patch', () => {
     const draft = draftFromItem(item, definition)
     expect(draft.meta).toEqual({
       notes: 'Two players',
@@ -116,7 +110,7 @@ describe('F014-W3 definition-backed item drafts', () => {
   it('uses the API type and field labels in the conflict-copy text', () => {
     const draft = draftFromItem(item, definition)
     draft.meta.rating = '9'
-    expect(draftDump(item, draft, defaults)).toContain('Board game details:\n  Rating: 9')
+    expect(draftDump(item, draft, defaults)).toContain('Movies details:\n  Rating: 9')
   })
 })
 
@@ -127,16 +121,12 @@ describe('F016-W4 the stores field in the item draft', () => {
     default_icon: null,
     allows_price: true,
     default_sort_field: null,
-    is_locked: true,
-    version: 1,
     fields: [
       {
         key: 'stores',
         label: 'Where to get it',
         type: 'stores',
         position: 0,
-        is_locked: true,
-        version: 1,
       },
     ],
   }

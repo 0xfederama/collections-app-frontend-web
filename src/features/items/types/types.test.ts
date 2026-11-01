@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mockTypes } from '../../../mocks/types'
-import type { TypeDefinition, TypeField } from './index'
+import type { TypeDefinition } from './index'
 import {
   formatField,
   NO_TYPE_DEFINITION,
@@ -12,71 +12,41 @@ import {
   valueToType,
 } from './index'
 
-const field = (
-  key: string,
-  label: string,
-  type: TypeField['type'],
-  position: number,
-): TypeField => ({
-  key,
-  label,
-  type,
-  position,
-  is_locked: false,
-  version: 1,
-})
-
-const boardGame: TypeDefinition = {
-  key: 'board_game',
-  name: 'Board game',
-  default_icon: null,
+// The API's definition is used as it is: every field it returns is a built-in field (api-v3.0.0).
+const movie: TypeDefinition = {
+  key: 'movie',
+  name: 'Movies',
+  default_icon: 'i:film',
   allows_price: false,
-  default_sort_field: 'rating',
-  is_locked: false,
-  version: 1,
+  default_sort_field: 'release_year',
   fields: [
-    field('rating', 'Rating', 'number', 0),
-    field('played_on', 'Played on', 'date', 1),
-    field('recommended', 'Recommended', 'boolean', 2),
-    field('rules', 'Rules', 'link', 3),
+    { key: 'release_year', label: 'Release year', type: 'number', position: 0 },
+    { key: 'director', label: 'Director', type: 'text', position: 1 },
+    { key: 'imdb_url', label: 'IMDb', type: 'link', position: 2 },
+    { key: 'streaming', label: 'Streaming', type: 'streaming', position: 3 },
   ],
 }
 
-describe('F014-W3 API-driven type fields', () => {
-  it('finds custom types and renders typed values in API field order', () => {
-    expect(typeDefinition([boardGame], 'board_game')).toBe(boardGame)
-    expect(
-      typeRows(boardGame, {
-        rating: 8.5,
-        played_on: '2026-10-19',
-        recommended: false,
-        rules: 'https://example.com/rules',
-      }).map(({ key, text }) => [key, text]),
-    ).toEqual([
-      ['rating', '8.5'],
-      ['played_on', expect.any(String)],
-      ['recommended', 'No'],
-      ['rules', 'https://example.com/rules'],
-    ])
+describe('API-driven type definitions', () => {
+  it('typeDefinition returns the API definition as it is, or undefined for an unknown key', () => {
+    expect(typeDefinition([movie], 'movie')).toBe(movie)
+    expect(typeDefinition([movie], 'book')).toBeUndefined()
   })
 
+  it('typeRows renders the set fields in API order', () => {
+    expect(
+      typeRows(movie, { release_year: 1999, director: 'Lana Wachowski' }).map(({ key }) => key),
+    ).toEqual(['release_year', 'director'])
+  })
+})
+
+describe('typed values', () => {
   it('does not display values with the wrong wire type', () => {
-    expect(formatField(boardGame.fields[0]!, '8.5')).toBeNull()
-    expect(formatField(boardGame.fields[2]!, 'false')).toBeNull()
-    expect(formatField(boardGame.fields[1]!, 'not-a-date')).toBeNull()
+    expect(formatField(movie.fields[0]!, '1999')).toBeNull()
+    expect(formatField(movie.fields[1]!, 1999)).toBeNull()
   })
 
   it('keeps built-in IMDb and streaming values out of the ordinary detail rows', () => {
-    const movie: TypeDefinition = {
-      ...boardGame,
-      key: 'movie',
-      name: 'Movie',
-      fields: [
-        field('director', 'Director', 'text', 0),
-        field('imdb_url', 'IMDb', 'link', 1),
-        field('streaming', 'Streaming', 'streaming', 2),
-      ],
-    }
     expect(
       typeRows(movie, {
         director: 'Lana Wachowski',
@@ -89,21 +59,21 @@ describe('F014-W3 API-driven type fields', () => {
 
 describe('no type (null)', () => {
   it('has an empty definition: no fields, no price, no pins', () => {
-    expect(typeDefinition([boardGame], null)).toBe(NO_TYPE_DEFINITION)
+    expect(typeDefinition([movie], null)).toBe(NO_TYPE_DEFINITION)
     expect(NO_TYPE_DEFINITION.fields).toEqual([])
     expect(NO_TYPE_DEFINITION.allows_price).toBe(false)
-    expect(typeDefinition([boardGame], 'unknown')).toBeUndefined()
+    expect(typeDefinition([movie], 'unknown')).toBeUndefined()
   })
 
   it('is named "No type" and is the first option, mapped back to null', () => {
     expect(typeName(undefined, null)).toBe('No type')
-    expect(typeOptions([boardGame])).toEqual([
+    expect(typeOptions([movie])).toEqual([
       { value: NO_TYPE_VALUE, label: 'No type' },
       { separator: true },
-      { value: 'board_game', label: 'Board game' },
+      { value: 'movie', label: 'Movies' },
     ])
     expect(valueToType(NO_TYPE_VALUE)).toBeNull()
-    expect(valueToType('board_game')).toBe('board_game')
+    expect(valueToType('movie')).toBe('movie')
   })
 })
 

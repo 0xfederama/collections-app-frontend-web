@@ -7,7 +7,6 @@ import {
   AppearanceSection,
   ConnectionSection,
   SettingsForm,
-  TypesFieldsPane,
 } from '../features/settings/screens'
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
@@ -21,7 +20,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
   )
 }
 
-const PANES = ['General', 'Media', 'Types & fields', 'About']
+const PANES = ['General', 'Media', 'About']
 
 function WorkspaceSkeleton() {
   return (
@@ -44,9 +43,7 @@ function WorkspaceSkeleton() {
  */
 export function SettingsRoute() {
   const location = useLocation()
-  const [pane, setPane] = useState(() =>
-    new URLSearchParams(location.search).get('pane') === 'types' ? 'Types & fields' : 'General',
-  )
+  const [pane, setPane] = useState('General')
   const settings = useSettings()
   const navigate = useNavigate()
   const closeRequestRef = useRef<SettingsCloseRequestRef['current']>(null)
@@ -108,11 +105,6 @@ export function SettingsRoute() {
             appearance={<AppearanceSection />}
           />
         )}
-        <div hidden={pane !== 'Types & fields'}>
-          <Section id="settings-types-fields" title="Types & fields">
-            <TypesFieldsPane />
-          </Section>
-        </div>
         <div hidden={pane !== 'About'}>
           <Section id="settings-connection" title="Connection">
             <ConnectionSection />

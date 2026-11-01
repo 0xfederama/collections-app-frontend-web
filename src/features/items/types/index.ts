@@ -14,12 +14,13 @@ export const NO_TYPE_DEFINITION: TypeDefinition = {
   default_icon: null,
   allows_price: false,
   default_sort_field: null,
-  is_locked: true,
-  version: 0,
   fields: [],
 }
 
-/** The definition of a type key; `null` (no type) gets `NO_TYPE_DEFINITION`, an unknown key `undefined`. */
+/**
+ * The definition of a type key, read from the API (`listTypes`): every field the API returns is a
+ * built-in field (F-023, api-v3.0.0). `null` (no type) gets `NO_TYPE_DEFINITION`, an unknown key `undefined`.
+ */
 export const typeDefinition = (
   definitions: readonly TypeDefinition[] | undefined,
   key: ItemType,

@@ -9,14 +9,14 @@ import type { FieldSpec } from './fields'
 import { renderWithProviders } from '../../../test-utils'
 
 const definition = {
-  name: 'Board game',
+  name: 'Movies',
   fields: [] as TypeField[],
 }
 const item: Item = {
   id: 'i1',
   list_id: 'l1',
   title: 'Brass',
-  type: 'board_game',
+  type: 'movie',
   image: null,
   price: null,
   website: null,
@@ -29,12 +29,10 @@ const item: Item = {
 }
 
 const typeField = (type: TypeField['type']): TypeField => ({
-  key: 'custom',
-  label: 'Custom field',
+  key: 'typed',
+  label: 'Typed field',
   type,
   position: 0,
-  is_locked: false,
-  version: 1,
 })
 
 function renderField(type: TypeField['type']) {
@@ -51,9 +49,9 @@ function renderField(type: TypeField['type']) {
     commit: vi.fn(),
   }
   const spec: FieldSpec = {
-    id: 'metadata.custom',
+    id: 'metadata.typed',
     label: field.label,
-    errorKeys: ['metadata.custom'],
+    errorKeys: ['metadata.typed'],
     take: (target) => target,
     isSet: () => false,
     field,
@@ -62,7 +60,7 @@ function renderField(type: TypeField['type']) {
   return { setMeta, user: userEvent.setup() }
 }
 
-describe('F014-W3 typed custom field editors', () => {
+describe('F014-W3 typed field editors', () => {
   it.each([
     ['text', undefined, undefined],
     ['number', undefined, 'decimal'],
@@ -72,7 +70,7 @@ describe('F014-W3 typed custom field editors', () => {
     'renders a %s field with the matching native input hints',
     (type, inputType, mode) => {
       renderField(type)
-      const input = screen.getByLabelText('Custom field')
+      const input = screen.getByLabelText('Typed field')
       if (inputType) expect(input).toHaveAttribute('type', inputType)
       if (mode) expect(input).toHaveAttribute('inputmode', mode)
     },
@@ -80,9 +78,9 @@ describe('F014-W3 typed custom field editors', () => {
 
   it('renders yes/no as a nullable select and sends the boolean draft token', async () => {
     const { user, setMeta } = renderField('boolean')
-    await user.click(screen.getByRole('combobox', { name: 'Custom field' }))
+    await user.click(screen.getByRole('combobox', { name: 'Typed field' }))
     await user.click(await screen.findByRole('option', { name: 'No' }))
-    expect(setMeta).toHaveBeenCalledWith('custom', 'false')
+    expect(setMeta).toHaveBeenCalledWith('typed', 'false')
   })
 })
 
@@ -101,17 +99,17 @@ describe('F016-W4 stores editor', () => {
       commit: vi.fn(),
     }
     const spec: FieldSpec = {
-      id: 'metadata.custom',
+      id: 'metadata.typed',
       label: field.label,
-      errorKeys: ['metadata.custom'],
+      errorKeys: ['metadata.typed'],
       take: (target) => target,
       isSet: () => false,
       field,
     }
     const user = userEvent.setup()
     renderWithProviders(<FieldInputs spec={spec} form={form} canRemovePrice={false} />)
-    await user.click(screen.getByRole('button', { name: /Custom field/ }))
+    await user.click(screen.getByRole('button', { name: /Typed field/ }))
     await user.click(await screen.findByRole('menuitemcheckbox', { name: /Kobo/ }))
-    expect(setMeta).toHaveBeenCalledWith('custom', 'kobo')
+    expect(setMeta).toHaveBeenCalledWith('typed', 'kobo')
   })
 })

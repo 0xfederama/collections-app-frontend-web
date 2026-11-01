@@ -22,7 +22,6 @@ async function openSettings(pane = 'General') {
   if (pane !== 'General') await user.click(screen.getByRole('button', { name: pane }))
   if (pane === 'Media') await screen.findByLabelText('Country')
   if (pane === 'About') await screen.findByRole('region', { name: 'About' })
-  if (pane === 'Types & fields') await screen.findByRole('region', { name: 'Types & fields' })
   return user
 }
 
@@ -72,15 +71,7 @@ describe('W-13 settings: saving', () => {
     const user = await openSettings()
     const dialog = screen.getByRole('dialog', { name: 'Settings' })
     expect(Array.from(dialog.querySelectorAll('h2')).map((heading) => heading.textContent)).toEqual(
-      [
-        'Settings',
-        'General',
-        'Country & language',
-        'Books',
-        'Types & fields',
-        'Connection',
-        'About',
-      ],
+      ['Settings', 'General', 'Country & language', 'Books', 'Connection', 'About'],
     )
     expect(dialog.querySelector('#settings-movies-tv')?.parentElement).toHaveAttribute('hidden')
     expect(screen.getByLabelText(/Workspace name/)).toBeInTheDocument()
@@ -418,13 +409,12 @@ describe('W-13 settings: saving', () => {
     expect(patches).toEqual([])
   })
 
-  it('offers keyboard reachable panes and the Types & fields pane', async () => {
+  it('offers keyboard reachable panes and no Types & fields pane (F-023)', async () => {
     mountBackend()
     const user = await openSettings()
     await user.tab()
     expect(screen.getByRole('button', { name: 'General' })).toHaveFocus()
-    await user.click(screen.getByRole('button', { name: 'Types & fields' }))
-    expect(await screen.findByRole('list', { name: 'Types' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Types & fields' })).not.toBeInTheDocument()
   })
 })
 
