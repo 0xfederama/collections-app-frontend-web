@@ -19,7 +19,8 @@ export const STREAMING_ENTRIES: ServiceEntry[] = [
   {
     key: 'primevideo',
     label: 'Prime Video',
-    aliases: ['amazonprimevideo'],
+    // TMDB lists the ad tier (2100) beside Prime Video (119/9): same subscription.
+    aliases: ['amazonprimevideo', 'amazonprimevideowithads'],
     file: 'prime-video.svg',
     tile: 'neutral',
     fit: 'bleed',
@@ -47,7 +48,8 @@ export const STREAMING_ENTRIES: ServiceEntry[] = [
   {
     key: 'appletv',
     label: 'Apple TV+',
-    aliases: ['appletv+', 'appletvplus'],
+    // TMDB now calls the subscription "Apple TV"; the key matches it. The channel gives the same content.
+    aliases: ['appletv+', 'appletvplus', 'appletvamazonchannel'],
     file: 'apple-tv.svg',
     tile: 'light',
     fit: 'inset',
@@ -102,7 +104,7 @@ export const STREAMING_ENTRIES: ServiceEntry[] = [
   {
     key: 'hbomax',
     label: 'HBO Max',
-    aliases: ['max', 'hbomax'],
+    aliases: ['max', 'hbomax', 'hbomaxamazonchannel'],
     file: 'hbo-max.svg',
     tile: 'light',
     fit: 'inset',
