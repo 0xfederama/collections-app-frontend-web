@@ -37,6 +37,10 @@ const initial = (): Settings => ({
 const invalid = (field: string, message: string) =>
   problemResponse(422, 'validation_failed', { errors: [{ field, message }] })
 
+/** F-022-W3: provider keys, at most 64, no duplicates (API.md Settings). */
+const PROVIDER_KEY = /^[a-z][a-z0-9_]{0,63}$/
+const OWNED_MAX = 64
+
 /** The first validation error of a PATCH body, in the shape of the backend's 422 (API.md). */
 function validationError(body: UpdateSettingsRequest) {
   const {
@@ -72,6 +76,16 @@ function validationError(body: UpdateSettingsRequest) {
   if (store !== undefined && !isStoreKey(store)) {
     return invalid('preferred_store', 'must be one of the store providers')
   }
+  const owned = body.owned_streaming_services
+  if (owned !== undefined) {
+    if (owned.length > OWNED_MAX) return invalid('owned_streaming_services', 'at most 64 services')
+    if (owned.some((key) => !PROVIDER_KEY.test(key))) {
+      return invalid('owned_streaming_services', 'each must be a provider key')
+    }
+    if (new Set(owned).size !== owned.length) {
+      return invalid('owned_streaming_services', 'must not repeat a service')
+    }
+  }
   return null
 }
 
@@ -101,8 +115,9 @@ export function createSettingsBackend(start: Settings = initial()) {
         ...(store !== undefined && isStoreKey(store) && { preferred_store: store }),
         ...(body.workspace_name !== undefined && { workspace_name: body.workspace_name.trim() }),
       }
+      // Arrays compare by value: a PATCH that repeats the stored list changes nothing (D-059).
       const changed = (Object.keys(next) as (keyof Settings)[]).some(
-        (key) => key !== 'version' && next[key] !== settings[key],
+        (key) => key !== 'version' && JSON.stringify(next[key]) !== JSON.stringify(settings[key]),
       )
       if (changed) settings = { ...next, version: settings.version + 1 }
       return respond()

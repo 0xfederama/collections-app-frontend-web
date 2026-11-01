@@ -6,7 +6,7 @@ import {
   inputId,
   type ErrorMap,
   type SettingsDraft,
-  type SettingsField,
+  type ScalarSettingsField,
 } from './form'
 
 /** The General pane: workspace name, trash retention (saved on change), history limit, appearance. */
@@ -23,7 +23,7 @@ export function CollectionFields({
   draft: SettingsDraft
   errors: ErrorMap
   isPending: boolean
-  set: (field: SettingsField, value: string) => void
+  set: (field: ScalarSettingsField, value: string) => void
   onRetentionChange: (value: string) => void
   /** The per-device theme choice, shown at the end of the General pane. */
   appearance?: ReactNode

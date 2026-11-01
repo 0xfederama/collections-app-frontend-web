@@ -19,6 +19,7 @@ const contentUrl = `${itemUrl}/content`
 const settingsUrl = `${location.origin}/api/v1/settings`
 
 const matrix = exampleResponses.getItem.body as Item
+const settingsBody = exampleResponses.getSettings.body as object
 
 const customType: TypeDefinition = {
   key: 'board_game',
@@ -171,6 +172,47 @@ describe('AT-13 item view: the example movie', () => {
     expect(within(platforms).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
     expect(within(platforms).getByRole('img', { name: 'Prime Video, paid' })).toBeInTheDocument()
     expect(within(streaming).queryByRole('note')).not.toBeInTheDocument()
+  })
+
+  it('F-022-W3 the streaming row shows only the services the user owns', async () => {
+    server.use(
+      http.get(settingsUrl, () =>
+        HttpResponse.json({
+          ...settingsBody,
+          owned_streaming_services: ['primevideo'],
+        }),
+      ),
+    )
+    await renderItem()
+    const streaming = (await screen.findByRole('heading', { name: 'Streaming', level: 2 })).closest(
+      'section',
+    )!
+    const platforms = within(streaming).getByRole('list', { name: 'Platforms' })
+    await waitFor(() =>
+      expect(within(platforms).queryByRole('img', { name: 'Netflix' })).not.toBeInTheDocument(),
+    )
+    expect(within(platforms).getByRole('img', { name: 'Prime Video, paid' })).toBeInTheDocument()
+  })
+
+  it('F-022-W3 hides every unowned platform on the item, while the editor still lists them all', async () => {
+    server.use(
+      http.get(settingsUrl, () =>
+        HttpResponse.json({
+          ...settingsBody,
+          owned_streaming_services: ['sky'],
+        }),
+      ),
+    )
+    const user = userEvent.setup()
+    await renderItem()
+    const streaming = (await screen.findByRole('heading', { name: 'Streaming', level: 2 })).closest(
+      'section',
+    )!
+    await waitFor(() => expect(within(streaming).getByText('no platforms listed')).toBeVisible())
+    expect(within(streaming).queryByRole('img', { name: /Netflix|Prime Video/ })).toBeNull()
+    await user.click(within(streaming).getByRole('button', { name: 'Edit streaming' }))
+    await user.click(await screen.findByRole('button', { name: /Netflix, Prime Video/ }))
+    expect(await screen.findByRole('menuitemcheckbox', { name: /Netflix/ })).toBeInTheDocument()
   })
 
   it('F009-W6 the streaming hover bar is taller with even padding (min-h-10 py-1)', async () => {

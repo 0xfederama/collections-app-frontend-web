@@ -1,11 +1,15 @@
 import { ApiError, failureKind, type FieldError } from '../../lib/api'
+import { serviceLabel } from '../../components/serviceIcons/owned'
 import type { Settings, UpdateSettingsRequest } from './api'
 
 /** API.md Settings: `markdown_history_limit` is 0–200, the name 1–200 characters. */
 export const HISTORY_LIMIT_MAX = 200
 export const NAME_MAX = 200
 
-/** What the inputs hold, as strings. Keys are the API field names, so a 422 finds its input. */
+/**
+ * What the inputs hold: strings, and the owned streaming services as a list of provider keys. Keys are
+ * the API field names, so a 422 finds its input.
+ */
 export interface SettingsDraft {
   workspace_name: string
   streaming_country_code: string
@@ -14,9 +18,13 @@ export interface SettingsDraft {
   trash_retention_days: string
   /** One store key (the workspace default store, never empty). */
   preferred_store: string
+  /** F-022-W3: provider keys of the services the user owns; empty shows every service. */
+  owned_streaming_services: string[]
 }
 
 export type SettingsField = keyof SettingsDraft
+/** The fields whose input holds a single string (all but the owned-services list). */
+export type ScalarSettingsField = Exclude<SettingsField, 'owned_streaming_services'>
 export type ErrorMap = Partial<Record<SettingsField, string>>
 
 /** Page order: where focus goes when several fields are invalid. */
@@ -27,6 +35,7 @@ const FIELD_ORDER: SettingsField[] = [
   'trash_retention_days',
   'markdown_history_limit',
   'preferred_store',
+  'owned_streaming_services',
 ]
 
 export const inputId = (field: SettingsField) => `settings-${field.replaceAll('_', '-')}`
@@ -38,6 +47,7 @@ const FIELD_LABELS: Record<SettingsField, string> = {
   trash_retention_days: 'Delete trash automatically',
   markdown_history_limit: 'Description history limit',
   preferred_store: 'Default store',
+  owned_streaming_services: 'My streaming services',
 }
 
 export const metadataLanguageOptions = [
@@ -60,8 +70,13 @@ export function draftFromSettings(settings: Settings): SettingsDraft {
     trash_retention_days:
       settings.trash_retention_days === null ? 'off' : String(settings.trash_retention_days),
     preferred_store: settings.preferred_store,
+    owned_streaming_services: [...settings.owned_streaming_services],
   }
 }
+
+/** Same keys in any order (the picker keeps the order it was ticked in; the server may not). */
+const sameKeys = (a: readonly string[], b: readonly string[]) =>
+  JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
 
 /** The history limit as a number, or `null` when the text is not a whole number. */
 function parseLimit(text: string): number | null {
@@ -79,6 +94,7 @@ function normalized(draft: SettingsDraft) {
     trash_retention_days:
       draft.trash_retention_days === 'off' ? null : Number(draft.trash_retention_days),
     preferred_store: draft.preferred_store,
+    owned_streaming_services: draft.owned_streaming_services,
   }
 }
 
@@ -122,6 +138,9 @@ export function buildPatch(base: Settings, draft: SettingsDraft): UpdateSettings
   if (value.preferred_store !== base.preferred_store) {
     patch.preferred_store = value.preferred_store
   }
+  if (!sameKeys(value.owned_streaming_services, base.owned_streaming_services)) {
+    patch.owned_streaming_services = value.owned_streaming_services
+  }
   return patch
 }
 
@@ -134,7 +153,8 @@ export function isDirty(base: Settings, draft: SettingsDraft): boolean {
     value.metadata_language !== base.metadata_language ||
     value.markdown_history_limit !== base.markdown_history_limit ||
     value.trash_retention_days !== base.trash_retention_days ||
-    value.preferred_store !== base.preferred_store
+    value.preferred_store !== base.preferred_store ||
+    !sameKeys(value.owned_streaming_services, base.owned_streaming_services)
   )
 }
 
@@ -146,7 +166,8 @@ export function isFormDirty(base: Settings, draft: SettingsDraft): boolean {
     value.streaming_country_code !== base.streaming_country_code ||
     value.metadata_language !== base.metadata_language ||
     value.markdown_history_limit !== base.markdown_history_limit ||
-    value.preferred_store !== base.preferred_store
+    value.preferred_store !== base.preferred_store ||
+    !sameKeys(value.owned_streaming_services, base.owned_streaming_services)
   )
 }
 
@@ -228,6 +249,10 @@ export function draftDump(base: Settings, draft: SettingsDraft): string {
   }
   if (value.preferred_store !== base.preferred_store) {
     lines.push(`${FIELD_LABELS.preferred_store}: ${value.preferred_store}`)
+  }
+  if (!sameKeys(value.owned_streaming_services, base.owned_streaming_services)) {
+    const names = value.owned_streaming_services.map(serviceLabel).join(', ') || 'All services'
+    lines.push(`${FIELD_LABELS.owned_streaming_services}: ${names}`)
   }
   if (value.trash_retention_days !== base.trash_retention_days) {
     lines.push(

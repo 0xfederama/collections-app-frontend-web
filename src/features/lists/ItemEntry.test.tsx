@@ -1,11 +1,23 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
+import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { ItemEntry } from './ItemEntry'
 import type { ItemSummary } from './api'
 import type { TypeDefinition } from '../items'
+import { exampleResponses } from '../../mocks/fixtures'
+import { server } from '../../mocks/server'
 import { mockTypes } from '../../mocks/types'
 import { renderWithProviders } from '../../test-utils'
+
+const settingsUrl = `${location.origin}/api/v1/settings`
+const settingsBody = exampleResponses.getSettings.body as object
+const withOwned = (owned: string[]) =>
+  server.use(
+    http.get(settingsUrl, () =>
+      HttpResponse.json({ ...settingsBody, owned_streaming_services: owned }),
+    ),
+  )
 
 const item = (over: Partial<ItemSummary> = {}): ItemSummary => ({
   id: 'i1',
@@ -202,6 +214,29 @@ describe('F016 row tiles open their page without opening the item', () => {
     expect(
       within(row).getByRole('link', { name: 'Sky on JustWatch (opens in a new tab)' }),
     ).toHaveAttribute('href', 'https://www.justwatch.com/it/movie/alien')
+  })
+
+  it('F-022-W3 a row shows only the streaming services the user owns', async () => {
+    withOwned(['netflix'])
+    const row = entry(['release_year', 'streaming'], 'thumbnail', {
+      metadata: { release_year: 1979, streaming: { platforms: ['Netflix', 'Sky', 'Unknown TV'] } },
+    })
+    // Until the settings load every platform shows; then only the owned one stays.
+    await waitFor(() =>
+      expect(within(row).queryByRole('img', { name: 'Sky' })).not.toBeInTheDocument(),
+    )
+    expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+    expect(within(row).queryByRole('img', { name: 'Unknown TV' })).not.toBeInTheDocument()
+  })
+
+  it('F-022-W3 with no owned services a row shows every streaming platform', async () => {
+    withOwned([])
+    const row = entry(['release_year', 'streaming'], 'thumbnail', {
+      metadata: { release_year: 1979, streaming: { platforms: ['Netflix', 'Sky'] } },
+    })
+    expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+    expect(within(row).getByRole('img', { name: 'Sky' })).toBeInTheDocument()
+    await waitFor(() => expect(within(row).getByRole('img', { name: 'Sky' })).toBeInTheDocument())
   })
 
   it('no streaming link, or a non-https one, leaves the plain tile', () => {

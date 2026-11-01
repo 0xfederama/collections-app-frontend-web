@@ -57,6 +57,7 @@ export function SettingsForm({
         errors={form.errors}
         isPending={form.isPending}
         set={form.set}
+        setOwned={form.setOwned}
         providers={form.providers.data ?? []}
       />
 

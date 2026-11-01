@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ServiceIcon, sortByServiceOrder } from '../../components/ServiceIcon'
+import { filterOwnedPlatforms } from '../../components/serviceIcons/owned'
 import { focusRing } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import type { ItemSummary } from './api'
@@ -96,7 +97,12 @@ export function PinnedSlot({
       continue
     }
     flush()
-    const services = sortByServiceOrder(streamingOf(item), (s) => s.name)
+    // F-022-W3: a row shows only the services the user owns (none owned = all).
+    const owned = settings.data?.owned_streaming_services ?? []
+    const services = sortByServiceOrder(
+      filterOwnedPlatforms(streamingOf(item), owned, (s) => s.name),
+      (s) => s.name,
+    )
     const streaming = item.metadata.streaming as { link?: string | null } | null | undefined
     // Each service the web knows opens its own search for the title; one without a search falls back
     // to the title's JustWatch page (`streaming.link`), and without either stays plain.

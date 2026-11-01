@@ -10,6 +10,7 @@ import {
   inputId,
   isFormDirty,
   isDirty,
+  isRetentionDirty,
   mapServerErrors,
   validate,
   type SettingsDraft,
@@ -41,6 +42,7 @@ describe('AT-14 settings form model', () => {
       markdown_history_limit: '20',
       trash_retention_days: 'off',
       preferred_store: 'amazon',
+      owned_streaming_services: [],
     })
   })
 
@@ -185,6 +187,61 @@ const apiError = (init: {
   detail?: string
   errors?: { field: string; message: string }[]
 }) => new ApiError({ code: 'invalid', title: 'Title', raw: null, ...init })
+
+describe('F-022-W3 owned streaming services in the settings model', () => {
+  const owning = (keys: string[]) => draftWith({ owned_streaming_services: keys })
+
+  it.each<{ why: string; saved: string[]; draft: string[]; patch: object }>([
+    { why: 'no change sends nothing', saved: [], draft: [], patch: {} },
+    {
+      why: 'a list that is ticked sends the keys',
+      saved: [],
+      draft: ['netflix', 'sky'],
+      patch: { owned_streaming_services: ['netflix', 'sky'] },
+    },
+    {
+      why: 'emptying the list sends [] (show every service)',
+      saved: ['netflix'],
+      draft: [],
+      patch: { owned_streaming_services: [] },
+    },
+    {
+      why: 'the same keys in another order are not a change',
+      saved: ['netflix', 'sky'],
+      draft: ['sky', 'netflix'],
+      patch: {},
+    },
+  ])('$why', ({ saved, draft, patch }) => {
+    const stored = { ...base, owned_streaming_services: saved }
+    expect(buildPatch(stored, owning(draft))).toEqual(patch)
+    expect(isDirty(stored, owning(draft))).toBe(Object.keys(patch).length > 0)
+    expect(isFormDirty(stored, owning(draft))).toBe(Object.keys(patch).length > 0)
+  })
+
+  it('is part of the Save settings form, never of retention', () => {
+    const stored = { ...base, owned_streaming_services: [] }
+    const draft = owning(['netflix'])
+    expect(isFormDirty(stored, draft)).toBe(true)
+    expect(isRetentionDirty(stored, draft)).toBe(false)
+  })
+
+  it('lists the chosen services by name in the copied draft, "All services" when empty', () => {
+    expect(draftDump(base, owning(['netflix', 'disneyplus']))).toBe(
+      'My streaming services: Netflix, Disney+',
+    )
+    const stored = { ...base, owned_streaming_services: ['netflix'] }
+    expect(draftDump(stored, owning([]))).toBe('My streaming services: All services')
+  })
+
+  it('maps a 422 on owned_streaming_services onto its input and focuses the Media pane', () => {
+    const mapped = mapServerErrors([
+      { field: 'owned_streaming_services', message: 'must not repeat a service' },
+    ])
+    expect(mapped.fields).toEqual({ owned_streaming_services: 'must not repeat a service' })
+    expect(firstInvalid(mapped.fields)).toBe('owned_streaming_services')
+    expect(inputId('owned_streaming_services')).toBe('settings-owned-streaming-services')
+  })
+})
 
 describe('F020 save failure classification', () => {
   it.each([

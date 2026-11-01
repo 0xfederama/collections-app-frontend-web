@@ -1,6 +1,7 @@
 import { cx } from '../../../lib/cx'
 import { useState, type ReactNode } from 'react'
 import { ServiceIcon, sortByServiceOrder } from '../../../components/ServiceIcon'
+import { filterOwnedPlatforms } from '../../../components/serviceIcons/owned'
 import { Button, focusRing, Menu, type MenuItem } from '../../../components/ui'
 import { Plus, TriangleAlert } from '../../../components/ui/icons'
 import { useSettings } from '../../settings'
@@ -30,11 +31,15 @@ function StreamingValue({ item }: { item: Item }) {
   const homeCountry = settings.data?.streaming_country_code
   const mismatch = homeCountry && homeCountry !== streaming.country
   const paid = new Set((streaming.paid_platforms ?? []).map((name) => name.toLowerCase()))
+  // F-022-W3: only the services the user owns are shown; the editor still lists them all.
+  const owned = settings.data?.owned_streaming_services ?? []
+  const shown = filterOwnedPlatforms(streaming.platforms ?? [], owned, (name) => name)
+  const platforms = sortByServiceOrder(shown, (name) => name)
   return (
     <div className="flex flex-col gap-1.5">
-      {streaming.platforms?.length ? (
+      {platforms.length ? (
         <ul aria-label="Platforms" className="flex flex-wrap items-center justify-start gap-2">
-          {sortByServiceOrder(streaming.platforms, (name) => name).map((name) => (
+          {platforms.map((name) => (
             <li key={name} className="flex items-center justify-center">
               <ServiceIcon name={name} paid={paid.has(name.toLowerCase())} />
             </li>

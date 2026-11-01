@@ -300,6 +300,69 @@ describe('W-13 settings: saving', () => {
     expect(patches).toEqual([{ ifMatch: '"s-1"', body: { preferred_store: 'kobo' } }])
   })
 
+  it('F-022-W3 saves only the owned streaming services, ticked in the Media pane', async () => {
+    const { patches } = mountBackend({
+      workspace_name: 'Our Collection',
+      streaming_country_code: 'IT',
+      markdown_history_limit: 20,
+      trash_retention_days: null,
+      owned_streaming_services: [],
+      version: 4,
+    })
+    const user = await openSettings('Media')
+    const owned = screen.getByRole('button', { name: 'My streaming services' })
+    expect(owned).toHaveTextContent('All services')
+    await user.click(owned)
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: 'Netflix' }))
+    // The menu stays open while several services are ticked.
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: 'Disney+' }))
+    await user.keyboard('{Escape}')
+    expect(screen.getByRole('button', { name: 'My streaming services' })).toHaveTextContent(
+      'Netflix, Disney+',
+    )
+    await user.click(closeSettings())
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
+    expect(patches).toEqual([
+      { ifMatch: '"s-4"', body: { owned_streaming_services: ['netflix', 'disneyplus'] } },
+    ])
+  })
+
+  it('F-022-W3 unticking every service sends an empty list, which shows all', async () => {
+    const { patches } = mountBackend({
+      workspace_name: 'Our Collection',
+      streaming_country_code: 'IT',
+      markdown_history_limit: 20,
+      trash_retention_days: null,
+      owned_streaming_services: ['sky'],
+      version: 4,
+    })
+    const user = await openSettings('Media')
+    expect(screen.getByRole('button', { name: 'My streaming services' })).toHaveTextContent('Sky')
+    await user.click(screen.getByRole('button', { name: 'My streaming services' }))
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: 'Sky' }))
+    await user.keyboard('{Escape}')
+    await user.click(closeSettings())
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
+    expect(patches).toEqual([{ ifMatch: '"s-4"', body: { owned_streaming_services: [] } }])
+  })
+
+  it('F-022-W3 leaves owned services out of the patch when they are not touched', async () => {
+    const { patches } = mountBackend({
+      workspace_name: 'Our Collection',
+      streaming_country_code: 'IT',
+      markdown_history_limit: 20,
+      trash_retention_days: null,
+      owned_streaming_services: ['netflix'],
+      version: 4,
+    })
+    const user = await openSettings('Media')
+    await user.click(screen.getByRole('combobox', { name: 'Default store' }))
+    await user.click(await screen.findByRole('option', { name: 'Kobo' }))
+    await user.click(closeSettings())
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
+    expect(patches).toEqual([{ ifMatch: '"s-4"', body: { preferred_store: 'kobo' } }])
+  })
+
   it('F016-W1 credits Open Library for book details and covers in About', async () => {
     mountBackend()
     await openSettings('About')
