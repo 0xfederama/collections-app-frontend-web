@@ -55,6 +55,7 @@ export function PinnedSlot({
 }) {
   const providers = useStoreProviders()
   const settings = useSettings()
+  const owned = settings.data?.owned_streaming_services ?? []
   const parts: ReactNode[] = []
   let run: string[] = []
   const flush = () => {
@@ -98,7 +99,6 @@ export function PinnedSlot({
     }
     flush()
     // F-022-W3: a row shows only the services the user owns (none owned = all).
-    const owned = settings.data?.owned_streaming_services ?? []
     const services = sortByServiceOrder(
       filterOwnedPlatforms(streamingOf(item), owned, (s) => s.name),
       (s) => s.name,

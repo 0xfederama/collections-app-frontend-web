@@ -208,7 +208,7 @@ describe('AT-13 item view: the example movie', () => {
     const streaming = (await screen.findByRole('heading', { name: 'Streaming', level: 2 })).closest(
       'section',
     )!
-    await waitFor(() => expect(within(streaming).getByText('no platforms listed')).toBeVisible())
+    await waitFor(() => expect(within(streaming).getByText('not on your services')).toBeVisible())
     expect(within(streaming).queryByRole('img', { name: /Netflix|Prime Video/ })).toBeNull()
     await user.click(within(streaming).getByRole('button', { name: 'Edit streaming' }))
     await user.click(await screen.findByRole('button', { name: /Netflix, Prime Video/ }))

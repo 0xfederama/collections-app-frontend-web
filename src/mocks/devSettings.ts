@@ -108,16 +108,22 @@ export function createSettingsBackend(start: Settings = initial()) {
       const body = (await request.json()) as UpdateSettingsRequest
       const bad = validationError(body)
       if (bad) return bad
-      const { preferred_store: store, ...rest } = body
+      const { preferred_store: store, owned_streaming_services: owned, ...rest } = body
       const next: Settings = {
         ...settings,
         ...rest,
         ...(store !== undefined && isStoreKey(store) && { preferred_store: store }),
+        // `null` or absent keeps the list (API.md Settings).
+        ...(owned != null && { owned_streaming_services: [...owned] }),
         ...(body.workspace_name !== undefined && { workspace_name: body.workspace_name.trim() }),
       }
-      // Arrays compare by value: a PATCH that repeats the stored list changes nothing (D-059).
+      // Arrays compare as sets: a PATCH that repeats the stored list, in any order, changes nothing (D-059).
+      const same = (a: unknown, b: unknown) =>
+        Array.isArray(a) && Array.isArray(b)
+          ? JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
+          : a === b
       const changed = (Object.keys(next) as (keyof Settings)[]).some(
-        (key) => key !== 'version' && JSON.stringify(next[key]) !== JSON.stringify(settings[key]),
+        (key) => key !== 'version' && !same(next[key], settings[key]),
       )
       if (changed) settings = { ...next, version: settings.version + 1 }
       return respond()

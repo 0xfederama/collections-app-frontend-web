@@ -46,7 +46,11 @@ function StreamingValue({ item }: { item: Item }) {
           ))}
         </ul>
       ) : (
-        <span>no platforms listed</span>
+        <span>
+          {shown.length < (streaming.platforms?.length ?? 0)
+            ? 'not on your services'
+            : 'no platforms listed'}
+        </span>
       )}
       {mismatch && (
         <p
