@@ -56,8 +56,8 @@ describe('F-022-W3 owned streaming services', () => {
     {
       platforms: ['Sky', 'Netflix', 'Sky'],
       owned: ['sky'],
-      kept: ['Sky', 'Sky'],
-      why: 'order and repeats are kept as given',
+      kept: ['Sky'],
+      why: 'order is kept and a repeated service shows once',
     },
     { platforms: [], owned: ['netflix'], kept: [], why: 'no platforms, nothing to show' },
   ])('$why', ({ platforms, owned, kept }) => {
@@ -83,5 +83,39 @@ describe('F-022-W3 owned streaming services', () => {
     expect(STREAMING_OFFERED.map((entry) => entry.key)).not.toContain('kobo')
     expect(serviceLabel('disneyplus')).toBe('Disney+')
     expect(serviceLabel('unknown_key')).toBe('unknown_key')
+  })
+
+  it('F-022 resolves TMDB provider names and shows one tile per service', () => {
+    const tmdb = [
+      'Apple TV',
+      'Apple TV Store',
+      'Amazon Prime Video',
+      'Amazon Prime Video with Ads',
+      'Amazon Video',
+      'Apple TV Amazon Channel',
+      'HBO Max Amazon Channel',
+    ]
+    expect(filterOwnedPlatforms(tmdb, [], name)).toEqual([
+      'Apple TV',
+      'Apple TV Store',
+      'Amazon Prime Video',
+      'Amazon Video',
+      'HBO Max Amazon Channel',
+    ])
+    expect(filterOwnedPlatforms(tmdb, ['appletv', 'primevideo'], name)).toEqual([
+      'Apple TV',
+      'Amazon Prime Video',
+    ])
+    expect(
+      filterOwnedPlatforms(
+        ['Amazon Prime Video Free with Ads', 'Amazon MX Player'],
+        ['primevideo'],
+        name,
+      ),
+    ).toEqual([])
+  })
+
+  it('keeps unknown names once each when nothing is owned', () => {
+    expect(filterOwnedPlatforms(['Foo TV', 'foo tv', 'Bar'], [], name)).toEqual(['Foo TV', 'Bar'])
   })
 })

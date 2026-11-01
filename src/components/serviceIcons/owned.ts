@@ -4,7 +4,7 @@
  * Lives here, not in a feature, so items and lists can both import it (F020 boundaries).
  */
 
-import { findService, SERVICES, type ServiceEntry } from './registry'
+import { findService, normalizeServiceName, SERVICES, type ServiceEntry } from './registry'
 
 /** The streaming services the Settings picker offers, in registry order. */
 export const STREAMING_OFFERED: ServiceEntry[] = SERVICES.filter(
@@ -16,19 +16,25 @@ export const serviceLabel = (key: string): string =>
   SERVICES.find((entry) => entry.key === key)?.label ?? key
 
 /**
- * The platforms to show under the owned-services setting. `owned` empty means every platform. Otherwise a
- * platform is kept only when its name resolves (label, key or alias) to a key in `owned`; a name the
- * registry does not know is hidden, since nothing tells us it is owned. Does not mutate `platforms`.
+ * The platforms to show under the owned-services setting, one per service. Names that resolve to the same
+ * registry key (TMDB lists Prime Video and its ad tier, or an Amazon Channel, together) keep only the
+ * first; unknown names are deduplicated by their normalised name. `owned` empty means every platform.
+ * Otherwise a platform is kept only when its name resolves (label, key or alias) to a key in `owned`; a
+ * name the registry does not know is hidden, since nothing tells us it is owned. Does not mutate.
  */
 export function filterOwnedPlatforms<T>(
   platforms: readonly T[],
   owned: readonly string[],
   nameOf: (platform: T) => string,
 ): T[] {
-  if (owned.length === 0) return [...platforms]
   const keys = new Set(owned)
+  const seen = new Set<string>()
   return platforms.filter((platform) => {
     const key = findService(nameOf(platform))?.key
-    return key !== undefined && keys.has(key)
+    if (owned.length > 0 && (key === undefined || !keys.has(key))) return false
+    const id = key ?? `?${normalizeServiceName(nameOf(platform))}`
+    if (seen.has(id)) return false
+    seen.add(id)
+    return true
   })
 }
