@@ -30,6 +30,7 @@ const initial = (): Settings => ({
   preferred_store: 'amazon',
   markdown_history_limit: 20,
   trash_retention_days: null,
+  owned_streaming_services: [],
   version: 1,
 })
 

@@ -32,7 +32,6 @@ const boardGame: TypeDefinition = {
   default_icon: null,
   allows_price: false,
   default_sort_field: 'rating',
-  default_pinned_fields: ['rating', 'played_on'],
   is_locked: false,
   version: 1,
   fields: [

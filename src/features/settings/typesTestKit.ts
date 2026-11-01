@@ -5,7 +5,8 @@ import { server } from '../../mocks/server'
 import { mockViewport, renderAt } from '../../test-utils'
 import type { TypeDefinition } from './api'
 
-// Fixtures and the open-the-pane helper shared by the Types & fields pane tests.
+// Fixtures and the open-the-pane helper shared by the Types & fields pane tests. Every type is a
+// built-in (is_locked true, F-022); a custom field on it is what the pane can still add and remove.
 
 export const typesUrl = `${location.origin}/api/v1/types`
 export const treeUrl = `${location.origin}/api/v1/tree`
@@ -16,28 +17,27 @@ export const movie: TypeDefinition = {
   default_icon: null,
   allows_price: false,
   default_sort_field: 'title',
-  default_pinned_fields: [],
   is_locked: true,
   version: 3,
   fields: [
     { key: 'director', label: 'Director', type: 'text', position: 0, is_locked: true, version: 1 },
   ],
 }
-export const boardGame: TypeDefinition = {
-  key: 'board_game',
-  name: 'Board game',
+export const book: TypeDefinition = {
+  key: 'book',
+  name: 'Books',
   default_icon: null,
   allows_price: false,
   default_sort_field: null,
-  default_pinned_fields: null,
-  is_locked: false,
+  is_locked: true,
   version: 2,
   fields: [
-    { key: 'rating', label: 'Rating', type: 'number', position: 0, is_locked: false, version: 1 },
+    { key: 'author', label: 'Writer', type: 'text', position: 0, is_locked: true, version: 1 },
+    { key: 'rating', label: 'Rating', type: 'number', position: 1, is_locked: false, version: 1 },
   ],
 }
 
-export async function openPane(types: TypeDefinition[] = [movie, boardGame], lists: object[] = []) {
+export async function openPane(types: TypeDefinition[] = [movie, book], lists: object[] = []) {
   mockViewport(375)
   server.use(http.get(typesUrl, () => HttpResponse.json(types)))
   server.use(http.get(treeUrl, () => HttpResponse.json({ folders: [], lists })))

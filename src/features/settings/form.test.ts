@@ -24,6 +24,7 @@ const base: Settings = {
   markdown_history_limit: 20,
   trash_retention_days: null,
   preferred_store: 'amazon',
+  owned_streaming_services: [],
   version: 4,
 }
 const draftWith = (over: Partial<SettingsDraft> = {}): SettingsDraft => ({

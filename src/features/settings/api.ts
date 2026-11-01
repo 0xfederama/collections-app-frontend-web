@@ -8,17 +8,14 @@ export type Settings = components['schemas']['Settings']
 export type UpdateSettingsRequest = components['schemas']['UpdateSettingsRequest']
 export type TypeDefinition = components['schemas']['TypeDefinition']
 export type TypeField = components['schemas']['TypeField']
-export type CreateTypeRequest = components['schemas']['CreateTypeRequest']
 export type CreateTypeFieldRequest = components['schemas']['CreateTypeFieldRequest']
-export type UpdateTypeRequest = components['schemas']['UpdateTypeRequest']
 
 // Type definitions and fields have their own typed ETags ("k-N" and "kf-N").
 const typeMatch = (version: number) => ({ 'If-Match': `"k-${version}"` })
 const fieldMatch = (version: number) => ({ 'If-Match': `"kf-${version}"` })
 
 // Provider bookkeeping (TMDB id, Open Library work id, lookup switch) lives in item metadata but is
-// never user-facing: not an editable field, and never pinnable, sortable or filterable (contract:
-// pinned_fields).
+// never user-facing: not an editable field, and never sortable or filterable.
 const BOOKKEEPING_FIELDS = new Set(['tmdb_id', 'lookup_disabled', 'openlibrary_id'])
 const withoutBookkeeping = (types: TypeDefinition[]): TypeDefinition[] =>
   types.map((type) => ({
@@ -42,35 +39,12 @@ function useTypeMutation<TVars, TData>(mutationFn: (vars: TVars) => Promise<TDat
     mutationFn,
     onSuccess: async () => {
       // A definition changes the fields rendered by items and rows. Deleting a field additionally
-      // strips stored metadata and may reset list pins/sort defaults on the server.
+      // strips stored metadata and may reset list sort defaults on the server.
       await Promise.all([
         client.invalidateQueries({ queryKey: typeKeys.types }),
         invalidateContent(client),
       ])
     },
-  })
-}
-
-export function useCreateType() {
-  return useTypeMutation((body: CreateTypeRequest) => unwrap(api.POST('/api/v1/types', { body })))
-}
-
-export function useUpdateType() {
-  return useTypeMutation(({ type, patch }: { type: TypeDefinition; patch: UpdateTypeRequest }) =>
-    unwrap(
-      api.PATCH('/api/v1/types/{key}', {
-        params: { path: { key: type.key }, header: typeMatch(type.version) },
-        body: patch,
-      }),
-    ),
-  )
-}
-
-export function useDeleteType() {
-  return useTypeMutation(async (type: TypeDefinition) => {
-    await api.DELETE('/api/v1/types/{key}', {
-      params: { path: { key: type.key }, header: typeMatch(type.version) },
-    })
   })
 }
 

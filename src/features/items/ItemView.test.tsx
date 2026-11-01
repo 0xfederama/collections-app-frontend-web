@@ -26,7 +26,6 @@ const customType: TypeDefinition = {
   default_icon: 'i:puzzle',
   allows_price: false,
   default_sort_field: 'rating',
-  default_pinned_fields: ['rating'],
   is_locked: false,
   version: 1,
   fields: [
