@@ -61,7 +61,7 @@ test.describe('F014-W4 custom field list workflow', () => {
     await expect(rows.first()).toContainText(lowerTitle)
     await expect(rows.nth(1)).toContainText(title)
 
-    await page.getByRole('button', { name: '+ Filter' }).click()
+    await page.getByRole('button', { name: 'Filter', exact: true }).click()
     await page.getByRole('combobox', { name: 'Filter field' }).click()
     await page.getByRole('option', { name: fieldName, exact: true }).click()
     await page.getByRole('spinbutton', { name: `${fieldName} minimum` }).fill('7')
