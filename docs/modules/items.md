@@ -12,7 +12,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `inline/`: `InlineField`, `FieldBlock` ("+ Add field"), `FieldEditor` (✓ / ✕ shell), `editors.tsx`, `controls.tsx`, `PriceInputs.tsx`, `StreamingInputs.tsx`, `StreamingPlatforms.tsx`, `fields.ts`, `guard.tsx`.
 - `content/`: `DescriptionView`, `DescriptionEditor` (lazy CodeMirror), `DescriptionField`, `HistoryDrawer`, `api.ts`.
 - `image/`: `ImageDialog`, `ImageSection`, `ImageStatus` (busy and status types), `api.ts`, `upload.ts`.
-- `types/index.ts`: helpers over the API type definitions (no static registry).
+- `types/index.ts`: helpers over the API type definitions (no static registry); `typeDefinition` returns built-in fields only.
 - `TitleLookupField.tsx`, `lookup.ts`, `LookupStatus.tsx`: TMDB suggestions (movie and TV) and the pending line for books.
 - `NewItemDraft.tsx`, `api.ts`: inline creation and item data. External links live in [links](links.md).
 
@@ -21,13 +21,14 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `ItemPage()`, `ItemView({ item })`, `ItemHero`.
 - `ImageDialog({ item, onClose, initialFile? })`, `ImageSection({ item, initialFile?, onChanged, onStale })`.
 - `useItem`, `useItemContent`, `useUpdateItem`, `useCreateItem`, `useDeleteItem`, `useMoveItem` (`api.ts`).
-- `typeDefinition(definitions, key)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
+- `typeDefinition(definitions, key)`, `builtinDefinition(definition)`, `isBuiltinField(field)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
 - `createLookupSelection(type, settings, selection)`, `hasSuggestions(type)`, `isBookLookup(type, settings)`, `lookupSource(type)`.
 - `DescriptionField({ itemId, listId })`, `InlineField`, `FieldBlock`.
 
 ## Gotchas
 
 - Type fields, labels, types and price support come from `GET /api/v1/types`, not from code; `hasPrice` reads `allows_price` from the definition.
+- Custom fields (`is_locked: false`) never reach the item page, "+ Add field", pins, sort or filter: `typeDefinition` strips them (F-023).
 - Built-in types (F-018, `api-v0.16.0`): Books, Vehicles, Movies, TV shows, Wishlist. Only Wishlist allows price.
 - Lookup ids: movie and TV send `tmdb_id`; a book sends only `lookup: true` (no `source_id`). The server fills the item from the first Open Library result and creates it unchanged if Open Library is slow or fails. While pending (2-5 s) `NewItemDraft` shows a `role="status"` line.
 - No re-match or refresh UI on an item; lookup suggestions appear only when creating (inline draft and Quick add).

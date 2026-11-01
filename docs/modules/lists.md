@@ -31,7 +31,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 
 - Pinned fields are fixed per built-in type (`FIXED_PINS` in `pinned.ts`, F-022); there is no per-list choice and no Pinned menu. A pin whose field the type lacks is dropped (`price` counts only where allowed); "No type" pins nothing. One pin sits beside the title; two put the second in the right corner; three put the first two beside the title and the third in the corner (`pinnedPlacements`).
 - Streaming in a row shows only the services in Settings `owned_streaming_services` (`filterOwnedPlatforms`); empty = all.
-- Sort and filter accept any field key of the list's type (plus `price` where the type allows it).
+- Sort and filter accept only the built-in field keys of the list's type (plus `price` where the type allows it); a custom key in the URL is ignored (F-023).
 - Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming and stores fields are not filterable, and stores fields are not sortable.
 - A sort the type does not define falls back to the list's `sort_mode`, so stale `?sort=` values are ignored.
 - Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally.

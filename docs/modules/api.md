@@ -20,7 +20,7 @@ Pins the backend OpenAPI contract, generates TypeScript types/examples, and prov
 - `npm run api:sync -- api-v0.N.0 [--from <backend checkout>]`, `npm run api:check`.
 - `api`, `unwrap(call)`, `ApiError`, `NetworkError`, `failureKind` (`lib/api`).
 - `GET /api/v1/tmdb/suggestions`, `POST /api/v1/items/{id}/lookup`, `GET /api/v1/store-providers`.
-- `GET /api/v1/types` (read only: no type create, update or delete since `api-v2.0.0`), field routes under `/api/v1/types/{key}/fields` (see `features/settings/api.ts`).
+- `GET /api/v1/types` (read only: the web calls no type or field write route, F-023).
 - `etag(resource, version)`, `ifMatch(resource, version)`.
 - `invalidateContent(queryClient)`, `invalidateItemWrite(queryClient, listId)` (`data/invalidate.ts`).
 - `createQueryClient()`, `shouldRetry(failureCount, error)`.
@@ -28,7 +28,7 @@ Pins the backend OpenAPI contract, generates TypeScript types/examples, and prov
 ## Gotchas
 
 - Current pinned contract: `api-v2.0.0` (web 2.21.0). Do not edit `api/openapi.yaml` or `src/generated/`; run `api:sync` and verify with `api:check`.
-- F014 (`api-v0.10.1`): type definitions and fields are API data with their own ETags (`"k-N"`, `"kf-N"`); `src/mocks/types.ts` serves them read-only to tests and the dev worker.
+- F014 (`api-v0.10.1`): type definitions are API data; `src/mocks/types.ts` serves them read-only to tests and the dev worker. F-023 (web W1, contract still `api-v2.0.0`): custom fields are hidden in the web and the field ETags (`"kf-N"`) are no longer used.
 - F-016 (`api-v0.12.0`): Open Library book suggestions and lookup (`book_lookup_available`, `source_id`), the book type, `stores` fields and the store provider list. `api-v0.13.0`: setting `preferred_store` (one key, default `amazon`) replaces `preferred_stores`, Open Library is not a store, the book has no `first_publish_year`.
 - F-022 (`api-v2.0.0`): custom types and the list pins (`pinned_fields`, `default_pinned_fields`) left the contract. Pins are fixed per built-in type in the web (`lists/pinned.ts`). Settings gained `owned_streaming_services` (absent = unchanged, `[]` = every service).
 - F013 adds TMDB suggestions and item lookup, movie `director`, the movie-only `director` sort, settings `metadata_language`, and read-only `lookup_available`.
