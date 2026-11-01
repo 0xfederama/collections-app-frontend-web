@@ -67,7 +67,6 @@ export {
   PawPrint,
   Pencil,
   Plane,
-  Lock,
   Plus,
   Puzzle,
   Rocket,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TypeDefinition } from '../settings'
+import { typeDefinition, type TypeDefinition } from '../items'
 import type { FieldFilterValue } from './FieldFilter'
 import {
   activeFieldFilter,
@@ -129,5 +129,41 @@ describe('listParams', () => {
       filterMin: null,
       filterMax: null,
     })
+  })
+})
+
+describe('F-023 custom fields are not a sort or a filter', () => {
+  // A definition as the API sends it: a built-in type that still carries a custom field.
+  const withCustom: TypeDefinition = {
+    key: 'movie',
+    name: 'Movies',
+    default_icon: null,
+    allows_price: false,
+    default_sort_field: null,
+    is_locked: true,
+    version: 1,
+    fields: [
+      {
+        key: 'director',
+        label: 'Director',
+        type: 'text',
+        position: 0,
+        is_locked: true,
+        version: 1,
+      },
+      { key: 'rating', label: 'Rating', type: 'number', position: 1, is_locked: false, version: 1 },
+    ],
+  }
+  const builtIn = typeDefinition([withCustom], 'movie')
+
+  it.each([
+    ['a custom ?sort= key', 'rating', null],
+    ['a built-in ?sort= key', 'director', 'director'],
+  ] as const)('resolveSortOverride %s', (_name, parsed, expected) => {
+    expect(resolveSortOverride(parsed, builtIn)).toBe(expected)
+  })
+
+  it('supportedSorts lists built-in keys only', () => {
+    expect(supportedSorts(builtIn)).toEqual(new Set(['manual', 'title', 'updated', 'director']))
   })
 })

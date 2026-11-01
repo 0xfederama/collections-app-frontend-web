@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import type { TypeField } from '../items'
+import { typeDefinition, type TypeDefinition, type TypeField } from '../items'
 import { describeFieldFilter, parseFieldFilter } from './FieldFilter'
 
 const fields: TypeField[] = [
-  { key: 'name', label: 'Name', type: 'text', position: 0, is_locked: false, version: 1 },
-  { key: 'url', label: 'Website', type: 'link', position: 1, is_locked: false, version: 1 },
-  { key: 'rating', label: 'Rating', type: 'number', position: 2, is_locked: false, version: 1 },
-  { key: 'released', label: 'Released', type: 'date', position: 3, is_locked: false, version: 1 },
-  { key: 'owned', label: 'Owned', type: 'boolean', position: 4, is_locked: false, version: 1 },
+  { key: 'name', label: 'Name', type: 'text', position: 0, is_locked: true, version: 1 },
+  { key: 'url', label: 'Website', type: 'link', position: 1, is_locked: true, version: 1 },
+  { key: 'rating', label: 'Rating', type: 'number', position: 2, is_locked: true, version: 1 },
+  { key: 'released', label: 'Released', type: 'date', position: 3, is_locked: true, version: 1 },
+  { key: 'owned', label: 'Owned', type: 'boolean', position: 4, is_locked: true, version: 1 },
   {
     key: 'streaming',
     label: 'Streaming',
@@ -72,6 +72,43 @@ describe('F016-W4 store keys are not a filter', () => {
       version: 1,
     }
     expect(parseFieldFilter(params('filter_field=stores&filter_value=kobo'), [stores])).toBeNull()
+  })
+})
+
+describe('F-023 custom fields are not a filter', () => {
+  it('a custom field key in filter_field is refused when the definition is read through typeDefinition', () => {
+    const movie: TypeDefinition = {
+      key: 'movie',
+      name: 'Movies',
+      default_icon: null,
+      allows_price: false,
+      default_sort_field: null,
+      is_locked: true,
+      version: 1,
+      fields: [
+        {
+          key: 'director',
+          label: 'Director',
+          type: 'text',
+          position: 0,
+          is_locked: true,
+          version: 1,
+        },
+        {
+          key: 'rating',
+          label: 'Rating',
+          type: 'number',
+          position: 1,
+          is_locked: false,
+          version: 1,
+        },
+      ],
+    }
+    const fields = typeDefinition([movie], 'movie')!.fields
+    expect(parseFieldFilter(params('filter_field=rating&filter_min=7'), fields)).toBeNull()
+    expect(
+      parseFieldFilter(params('filter_field=director&filter_value=Lana'), fields),
+    ).toMatchObject({ field: 'director', value: 'Lana' })
   })
 })
 

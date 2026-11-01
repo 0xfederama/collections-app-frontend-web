@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { mockTypes } from '../../../mocks/types'
 import type { TypeDefinition, TypeField } from './index'
 import {
+  builtinDefinition,
   formatField,
+  isBuiltinField,
   NO_TYPE_DEFINITION,
   NO_TYPE_VALUE,
   typeDefinition,
@@ -12,71 +14,93 @@ import {
   valueToType,
 } from './index'
 
+// `is_locked` is the API's built-in flag: true for the five built-in types' fields, false for a custom one.
 const field = (
   key: string,
   label: string,
   type: TypeField['type'],
   position: number,
+  is_locked = true,
 ): TypeField => ({
   key,
   label,
   type,
   position,
-  is_locked: false,
+  is_locked,
   version: 1,
 })
 
-const boardGame: TypeDefinition = {
-  key: 'board_game',
-  name: 'Board game',
-  default_icon: null,
+// A built-in type with one custom field the API still sends: the web must ignore that field.
+const movie: TypeDefinition = {
+  key: 'movie',
+  name: 'Movies',
+  default_icon: 'i:film',
   allows_price: false,
-  default_sort_field: 'rating',
-  is_locked: false,
+  default_sort_field: 'release_year',
+  is_locked: true,
   version: 1,
   fields: [
-    field('rating', 'Rating', 'number', 0),
-    field('played_on', 'Played on', 'date', 1),
-    field('recommended', 'Recommended', 'boolean', 2),
-    field('rules', 'Rules', 'link', 3),
+    field('release_year', 'Release year', 'number', 0),
+    field('director', 'Director', 'text', 1),
+    field('imdb_url', 'IMDb', 'link', 2),
+    field('streaming', 'Streaming', 'streaming', 3),
+    field('rating', 'Rating', 'number', 4, false),
   ],
 }
 
-describe('F014-W3 API-driven type fields', () => {
-  it('finds custom types and renders typed values in API field order', () => {
-    expect(typeDefinition([boardGame], 'board_game')).toBe(boardGame)
-    expect(
-      typeRows(boardGame, {
-        rating: 8.5,
-        played_on: '2026-10-19',
-        recommended: false,
-        rules: 'https://example.com/rules',
-      }).map(({ key, text }) => [key, text]),
-    ).toEqual([
-      ['rating', '8.5'],
-      ['played_on', expect.any(String)],
-      ['recommended', 'No'],
-      ['rules', 'https://example.com/rules'],
+describe('F-023 built-in fields only', () => {
+  it.each([
+    ['a built-in field', field('director', 'Director', 'text', 0, true), true],
+    ['a custom field', field('rating', 'Rating', 'number', 0, false), false],
+  ] as const)('isBuiltinField: %s', (_name, candidate, expected) => {
+    expect(isBuiltinField(candidate)).toBe(expected)
+  })
+
+  it('builtinDefinition drops custom fields and keeps the API order', () => {
+    expect(builtinDefinition(movie).fields.map((entry) => entry.key)).toEqual([
+      'release_year',
+      'director',
+      'imdb_url',
+      'streaming',
     ])
   })
 
+  it('builtinDefinition returns the same object when every field is built in', () => {
+    const builtInOnly = { ...movie, fields: movie.fields.slice(0, 2) }
+    expect(builtinDefinition(builtInOnly)).toBe(builtInOnly)
+  })
+
+  it.each<[string, TypeDefinition[], string, string[] | undefined]>([
+    ['a built-in type', [movie], 'movie', ['release_year', 'director', 'imdb_url', 'streaming']],
+    [
+      'a type of custom fields only',
+      [{ ...movie, fields: [field('rating', 'Rating', 'number', 0, false)] }],
+      'movie',
+      [],
+    ],
+    ['an unknown key', [movie], 'book', undefined],
+  ])('typeDefinition for %s offers built-in fields only', (_name, defs, key, expected) => {
+    const found = typeDefinition(defs, key)
+    expect(found?.fields.map((entry) => entry.key)).toEqual(expected)
+  })
+
+  it('typeRows over the definition from typeDefinition never shows a custom field', () => {
+    const definition = typeDefinition([movie], 'movie')!
+    expect(
+      typeRows(definition, { release_year: 1999, director: 'Lana Wachowski', rating: 9 }).map(
+        ({ key }) => key,
+      ),
+    ).toEqual(['release_year', 'director'])
+  })
+})
+
+describe('typed values', () => {
   it('does not display values with the wrong wire type', () => {
-    expect(formatField(boardGame.fields[0]!, '8.5')).toBeNull()
-    expect(formatField(boardGame.fields[2]!, 'false')).toBeNull()
-    expect(formatField(boardGame.fields[1]!, 'not-a-date')).toBeNull()
+    expect(formatField(movie.fields[0]!, '1999')).toBeNull()
+    expect(formatField(movie.fields[1]!, 1999)).toBeNull()
   })
 
   it('keeps built-in IMDb and streaming values out of the ordinary detail rows', () => {
-    const movie: TypeDefinition = {
-      ...boardGame,
-      key: 'movie',
-      name: 'Movie',
-      fields: [
-        field('director', 'Director', 'text', 0),
-        field('imdb_url', 'IMDb', 'link', 1),
-        field('streaming', 'Streaming', 'streaming', 2),
-      ],
-    }
     expect(
       typeRows(movie, {
         director: 'Lana Wachowski',
@@ -89,21 +113,21 @@ describe('F014-W3 API-driven type fields', () => {
 
 describe('no type (null)', () => {
   it('has an empty definition: no fields, no price, no pins', () => {
-    expect(typeDefinition([boardGame], null)).toBe(NO_TYPE_DEFINITION)
+    expect(typeDefinition([movie], null)).toBe(NO_TYPE_DEFINITION)
     expect(NO_TYPE_DEFINITION.fields).toEqual([])
     expect(NO_TYPE_DEFINITION.allows_price).toBe(false)
-    expect(typeDefinition([boardGame], 'unknown')).toBeUndefined()
+    expect(typeDefinition([movie], 'unknown')).toBeUndefined()
   })
 
   it('is named "No type" and is the first option, mapped back to null', () => {
     expect(typeName(undefined, null)).toBe('No type')
-    expect(typeOptions([boardGame])).toEqual([
+    expect(typeOptions([movie])).toEqual([
       { value: NO_TYPE_VALUE, label: 'No type' },
       { separator: true },
-      { value: 'board_game', label: 'Board game' },
+      { value: 'movie', label: 'Movies' },
     ])
     expect(valueToType(NO_TYPE_VALUE)).toBeNull()
-    expect(valueToType('board_game')).toBe('board_game')
+    expect(valueToType('movie')).toBe('movie')
   })
 })
 

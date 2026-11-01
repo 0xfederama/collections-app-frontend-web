@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TypeDefinition, TypeField } from '../items'
+import { typeDefinition, type TypeDefinition, type TypeField } from '../items'
 import { sortOptionsFor } from './ListHeader'
 
 const field = (key: string, type: TypeField['type'], label: string): TypeField =>
@@ -32,5 +32,18 @@ describe('F016-W4 sort choices', () => {
     const values = sortOptionsFor(book).map((option) => option.value)
     expect(values).toEqual(['manual', 'title', 'updated', 'price', 'author', 'pages'])
     expect(values).not.toContain('stores')
+  })
+})
+
+describe('F-023 sort choices offer built-in fields only', () => {
+  it('a custom field the API still sends is not a sort choice', () => {
+    const withCustom: TypeDefinition = {
+      ...book,
+      fields: [...book.fields, { ...field('rating', 'number', 'Rating'), is_locked: false }],
+    }
+    const values = sortOptionsFor(typeDefinition([withCustom], 'book')!).map(
+      (option) => option.value,
+    )
+    expect(values).toEqual(['manual', 'title', 'updated', 'price', 'author', 'pages'])
   })
 })
