@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`/settings` opens as a modal with five panes: Appearance, Collection, Media, Types & fields and About (Connection sits under About). Collection and Media save one snapshot on close; Types & fields edits the type definitions through the types API.
+`/settings` opens as a modal with five panes: Appearance, Collection, Media, Types & fields and About (Connection sits under About). Collection and Media save one snapshot on close; Types & fields manages the custom fields of the five built-in types through the types API.
 
 ## Key files
 
@@ -12,25 +12,26 @@
 - `form.ts`: Collection and Media draft, validation, `buildPatch`, `classifySaveFailure`.
 - `useSettingsForm.ts`, `useLeaveGuard.ts`: save and close state machine; blocks leaving with unsaved changes.
 - `SettingsForm.tsx`, `SettingsBanners.tsx`, `CollectionFields.tsx`, `MediaFields.tsx`: Collection and Media panes and their failure banners.
-- `TypesFieldsPane.tsx`, `types/`: Types & fields pane (`model.ts` pure helpers, `TypeList`, `TypeRow`, `TypeHeader`, `FieldsSection`, `FieldRow`, `DefaultsSection`, `OperationBanner`, create, delete and change-lists dialogs).
+- `TypesFieldsPane.tsx`, `types/`: Types & fields pane (`model.ts` pure helpers, `TypeList`, `TypeRow`, `TypeHeader`, `FieldsSection`, `FieldRow`, `useFieldDrafts`, `DeleteFieldDialog`, `OperationBanner`).
+- `OwnedServicesField.tsx`: Media picker of the owned streaming services (`owned_streaming_services`).
 - `AppearanceSection.tsx`, `ConnectionSection.tsx`, `AboutSection.tsx`: the other panes.
 - `src/mocks/devSettings.ts`, `src/mocks/types.ts`: dev and test fakes (types are read-only).
 
 ## Interfaces
 
 - `useSettings()`, `useWorkspaceName()`, `useUpdateSettings()`.
-- `useTypes()`, `useCreateType()`, `useUpdateType()`, `useDeleteType()`, `useCreateTypeField()`, `useRenameTypeField()`, `useDeleteTypeField()`, `usePreviewTypeFieldDelete()`, `useReorderTypeFields()`.
+- `useTypes()`, `useCreateTypeField()`, `useRenameTypeField()`, `useDeleteTypeField()`, `usePreviewTypeFieldDelete()`, `useReorderTypeFields()`.
 - `SettingsRoute()`, `SettingsForm({ settings, pane, onPaneChange, closeRequestRef })`, `TypesFieldsPane()`.
 - `validate`, `buildPatch`, `draftFromSettings` (`form.ts`).
 
 ## Gotchas
 
 - Collection and Media validate and save from a snapshot (`If-Match: "s-N"`, changed fields only) when the dialog closes; there is no Save button. Errors, 412 conflicts and network failures keep the dialog open with the draft.
-- Collection holds workspace name, trash retention and description history; Media holds streaming country, metadata language and a single-choice Default store (`preferred_store`, one provider from the API, saved with the workspace settings). Server 422 errors map to fields.
+- Collection holds workspace name, trash retention and description history; Media holds streaming country, owned streaming services, metadata language and a single-choice Default store (`preferred_store`, one provider from the API, saved with the workspace settings). Server 422 errors map to fields.
 - Trash retention is a separate immediate update: Off sends `null`; presets are 7, 30 and 90 days. It does not purge existing trash.
 - `useTypes()` hides provider bookkeeping (`tmdb_id`, `lookup_disabled`, `openlibrary_id`), so they are never editable, pinnable, sortable or filterable.
-- Built-in types and fields (`is_locked`) are read-only; only custom fields can be renamed, reordered or deleted. Type and field writes use their own ETags (`"k-N"`, `"kf-N"`).
-- Deleting a type that active lists use lists them by name (from the tree) and asks for a target type first.
+- Built-in types and their built-in fields (`is_locked`) are read-only; only custom fields can be added, renamed, reordered or deleted. Field writes use their own ETags (`"kf-N"`). Custom types, type rename, type delete and the defaults editor are gone (F-022, `api-v2.0.0`).
+- Owned streaming services: empty = show every platform; the choice only filters what items and list rows show (see [ui](ui.md)).
 - The About pane shows logo tiles for TMDB and Open Library (metadata sources) and has no thank-you line.
 - Every type or field change invalidates types and content, since items and rows render from the definitions.
 - Theme is per device and is not part of the settings PATCH. See [design docs](/Users/federico/Developer/collections-app/design-docs/).

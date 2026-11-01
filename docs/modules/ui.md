@@ -12,7 +12,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `src/components/ui/fieldStyles.ts`, `returnFocus.ts`: shared input chrome; focus return.
 - `src/components/ServiceIcon.tsx`: `ServiceIcon` (streaming) and `LinkIcon` (Google, Letterboxd, IMDb, Reddit) tiles, `TILE_SIZE`.
 - `src/lib/text.ts`: `firstLetter`, shared by the letter tile and the item-cover placeholder.
-- `src/assets/services/*.svg`, `README.md`: every link, store and streaming icon as a local SVG (source, licence and date per file in the README), never fetched at runtime. `src/components/serviceIcons/` is the registry (`entries.ts`, `registry.ts`: `findService`, derived `STREAMING_SERVICES`); a unit test fails on a file without an entry or the reverse.
+- `src/assets/services/*.svg`, `README.md`: every link, store and streaming icon as a local SVG (source, licence and date per file in the README), never fetched at runtime. `src/components/serviceIcons/` is the registry: `entries.ts` (link and store rows), `streamingEntries.ts` (streaming rows; one file may back several entries, e.g. Apple TV Store and Apple TV+), `registry.ts` (`findService`, `sortByServiceOrder`, derived `STREAMING_SERVICES`), `owned.ts` (`filterOwnedPlatforms`, `STREAMING_OFFERED`). A unit test fails on a file without an entry or the reverse.
 - `src/dev/DevUiRoute.tsx`: `/dev/ui` gallery, dev builds only.
 
 ## Interfaces
@@ -34,7 +34,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - "Drop into" is pointer-only: a `into:<id>` droppable on a row is live while the pointer is over its middle, and only with `acceptsDrop`. Keyboard drags never drop into.
 - `Tree` is controlled and has no expand chevron: selecting a row (click, Enter, Space) is what toggles a folder.
 - Focus anywhere in a row makes it the roving stop; keys pressed inside a row's own buttons are ignored by the tree.
-- Every link and streaming icon is the same tile (`TILE_SIZE`, `rounded-sm`, `bg-fill`): the logo, the Website globe and the letter of an unknown service all sit in the same 18% inset, contained and never cropped. An unknown service is a letter tile, never a text `Chip`; the `$` badge marks paid platforms and the tile's own text label names it.
+- Every link and streaming icon is the same tile (`TILE_SIZE`, `rounded-sm`). Each `inset` mark sits in an 18% inset on the white `tile: 'light'` surface (theme-independent); `fit: 'bleed'` icons keep their own background. `chili.svg` wraps an unmodified raster logo. An unknown service is a letter tile, never a text `Chip`; the `$` badge marks paid platforms and the tile's own text label names it.
 - Only `size` varies between callers: a tight list row asks for a smaller tile, the shape, radius and padding do not change.
 - Google and IMDb use their vendored Simple Icons SVG marks, not favicons. Those two SVGs carry no white background: the tile owns the surface.
 - Dialog, AlertDialog and Drawer return focus to the element focused when they opened; a Dialog from a Menu item returns it to the menu trigger.

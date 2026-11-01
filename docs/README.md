@@ -15,6 +15,6 @@
 - [items](modules/items.md): Item detail, metadata lookup for new movie, TV and book items, populated in-place fields, description, image dialog including clipboard paste, inline new item, Move and Delete.
 - [links](modules/links.md): Pure URL builders: item external links, store links (`amazonDomain`) and streaming search links.
 - [markdown](modules/markdown.md): Safe Markdown renderer (`MarkdownView`) and URL policy `sanitizeUrl`.
-- [settings](modules/settings.md): `/settings` modal panes: Appearance, Collection, Media (incl. preferred stores), Types & fields and About (with Connection and Open Library credit).
+- [settings](modules/settings.md): `/settings` modal panes: Appearance, Collection, Media (incl. preferred stores and owned streaming services), Types & fields (custom fields on built-in types) and About (with Connection and Open Library credit).
 - [stores](modules/stores.md): Fixed online store list (`useStoreProviders`), store names and the stores field picker.
 - [home](modules/home.md): Home at `/`: quick links to every list, "Recently updated" items (D-070) and the empty state.
