@@ -77,10 +77,10 @@ describe('F009-W5 one tile for every icon', () => {
     const streaming = tile('Netflix')
     expect(link).toHaveStyle({ width: '44px', height: '44px' })
     expect(streaming).toHaveStyle({ width: '44px', height: '44px' })
-    // Same classes, so the same square shape, radius, border and neutral background.
+    // Same classes, so the same square shape, radius, border and background (both inset marks are white).
     expect(streaming.className).toBe(link.className)
     for (const one of [link, streaming]) {
-      expect(one).toHaveClass('rounded-sm', 'bg-fill', 'border-border')
+      expect(one).toHaveClass('rounded-sm', 'bg-tile-light', 'border-border')
       // Square, never a circle: the radius is the md scale, not a pill.
       expect(one).not.toHaveClass('rounded-full', 'rounded-lg', 'rounded-xl')
     }
@@ -132,13 +132,13 @@ describe('F009-W5 one tile for every icon', () => {
   it('an unknown service is a letter tile in the same geometry, not a Chip', () => {
     render(
       <>
-        <ServiceIcon name="Netflix" />
+        <ServiceIcon name="Kobo" />
         <ServiceIcon name="Zattoo" />
       </>,
     )
     const unknown = tile('Zattoo')
-    // The same tile as a known service.
-    expect(unknown.className).toBe(tile('Netflix').className)
+    // The same tile as a known service on the fill surface.
+    expect(unknown.className).toBe(tile('Kobo').className)
     expect(unknown).toHaveAttribute('aria-label', 'Zattoo')
     expect(unknown).not.toHaveTextContent('Zattoo')
     // Only the first letter, upper case, inside the tile.
@@ -182,12 +182,29 @@ describe('F017-W2 registry tiles: background and fit follow the entry', () => {
     render(
       <>
         <LinkIcon name="Goodreads" />
-        <LinkIcon name="Google" />
+        <LinkIcon name="Kobo" />
       </>,
     )
     expect(tile('Goodreads')).toHaveClass('bg-tile-light')
     expect(tile('Goodreads')).not.toHaveClass('bg-fill')
-    expect(tile('Google')).toHaveClass('bg-fill')
+    // A bleed mark keeps its own tile background (F017-W3), not the white one.
+    expect(tile('Kobo')).toHaveClass('bg-fill')
+  })
+
+  it('an inset mark without its own background sits on the white tile, in both themes', () => {
+    render(
+      <>
+        <LinkIcon name="Google" />
+        <ServiceIcon name="Apple TV Store" />
+        <ServiceIcon name="Amazon Video" />
+      </>,
+    )
+    for (const name of ['Google', 'Apple TV Store']) {
+      expect(tile(name)).toHaveClass('bg-tile-light')
+      expect(tile(name)).not.toHaveClass('bg-fill')
+    }
+    expect(tile('Amazon Video')).toHaveClass('bg-fill')
+    expect(tile('Amazon Video').querySelector('img')).not.toBeNull()
   })
 
   it('a bleed entry (Kobo) fills the tile with its mark: no inner padding, clipped by the corners', () => {

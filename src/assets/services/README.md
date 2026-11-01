@@ -46,8 +46,10 @@ base64-embedded unmodified in a 100x100 SVG (no redrawing, no resampling); **vec
   Hulu, Peacock and Discovery+ are missing there. Each of those comes from the next source in the brief's order.
 - **Wrapped rasters** are the largest clean official icon each brand serves (64–192 px), embedded as published. They
   are sharp at the largest tile (36 px), except TIMvision (96 px) and Rakuten TV (64 px), which are the best that exist.
-- **Tiles** (registry `tile` / `fit`): `inset` marks sit in the shared 18 % padding; `bleed` icons carry their own
-  background and fill the tile. Dark marks (`tile: 'light'`) get a theme-independent light tile so they read in both themes.
+- **Tiles** (registry `tile` / `fit`): `inset` marks sit in the shared 18 % padding on the theme-independent white tile
+  (`tile: 'light'`, F-022 W4), so they read in both themes; `bleed` icons carry their own background and fill the tile.
+- **Shared files**: Apple TV Store and Apple TV+ use `apple-tv.svg`; Amazon Video and Prime Video use `prime-video.svg`
+  (separate stores, one mark each, so they are listed apart in the picker).
 - Website links have no file: the neutral globe is drawn in the tile. Unknown services get the letter tile.
 - Not used: TMDB provider logos (runtime fetching, D-089 retention rules).
 - To add an icon: drop the SVG here, add a row above and an entry in the registry; the registry test enforces both.
