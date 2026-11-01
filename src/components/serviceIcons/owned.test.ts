@@ -91,6 +91,7 @@ describe('F-022-W3 owned streaming services', () => {
       'Apple TV Store',
       'Amazon Prime Video',
       'Amazon Prime Video with Ads',
+      'Amazon Prime Video Free with Ads',
       'Amazon Video',
       'Apple TV Amazon Channel',
       'HBO Max Amazon Channel',
@@ -112,7 +113,7 @@ describe('F-022-W3 owned streaming services', () => {
         ['primevideo'],
         name,
       ),
-    ).toEqual([])
+    ).toEqual(['Amazon Prime Video Free with Ads'])
   })
 
   it('keeps unknown names once each when nothing is owned', () => {

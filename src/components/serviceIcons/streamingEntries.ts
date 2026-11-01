@@ -19,8 +19,9 @@ export const STREAMING_ENTRIES: ServiceEntry[] = [
   {
     key: 'primevideo',
     label: 'Prime Video',
-    // TMDB lists the ad tier (2100) beside Prime Video (119/9): same subscription.
-    aliases: ['amazonprimevideo', 'amazonprimevideowithads'],
+    // TMDB lists the ad tier (2100) and the US free-with-ads tier (613, formerly Freevee) beside Prime
+    // Video (119/9); they collapse into one tile.
+    aliases: ['amazonprimevideo', 'amazonprimevideowithads', 'amazonprimevideofreewithads'],
     file: 'prime-video.svg',
     tile: 'neutral',
     fit: 'bleed',
