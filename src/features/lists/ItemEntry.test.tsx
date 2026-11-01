@@ -1,11 +1,23 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
+import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it } from 'vitest'
 import { ItemEntry } from './ItemEntry'
 import type { ItemSummary } from './api'
 import type { TypeDefinition } from '../items'
+import { exampleResponses } from '../../mocks/fixtures'
+import { server } from '../../mocks/server'
 import { mockTypes } from '../../mocks/types'
 import { renderWithProviders } from '../../test-utils'
+
+const settingsUrl = `${location.origin}/api/v1/settings`
+const settingsBody = exampleResponses.getSettings.body as object
+const withOwned = (owned: string[]) =>
+  server.use(
+    http.get(settingsUrl, () =>
+      HttpResponse.json({ ...settingsBody, owned_streaming_services: owned }),
+    ),
+  )
 
 const item = (over: Partial<ItemSummary> = {}): ItemSummary => ({
   id: 'i1',
@@ -30,7 +42,6 @@ const bookDefinition: TypeDefinition = {
   default_icon: null,
   allows_price: true,
   default_sort_field: null,
-  default_pinned_fields: ['author', 'pages', 'stores'],
   is_locked: true,
   version: 1,
   fields: [
@@ -87,12 +98,13 @@ describe('F009-W3 the first pinned field reads next to the title, the second in 
     },
   )
 
-  it('a TV show combines seasons and episodes into one 5×7 piece', () => {
-    const row = entry(['seasons', 'episodes_per_season'], 'thumbnail', {
+  it('a TV show reads its seasons next to the title and its streaming in the corner', () => {
+    const row = entry(['seasons', 'streaming'], 'thumbnail', {
       type: 'tv_show',
-      metadata: { seasons: 5, episodes_per_season: 7, episode_minutes: 45 },
+      metadata: { seasons: 5, streaming: { platforms: ['Netflix'] } },
     })
-    expect(readOrder(row)).toEqual(['Alien', '5×7'])
+    expect(readOrder(row)).toEqual(['Alien', '5 seasons'])
+    expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
   })
 
   it('a second pinned field that is streaming draws service icons', () => {
@@ -103,7 +115,7 @@ describe('F009-W3 the first pinned field reads next to the title, the second in 
     expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
   })
 
-  it('pins nothing when the list stores an empty selection', () => {
+  it('pins nothing when the type has no fixed pins (the "No type" list)', () => {
     const row = entry([], 'grid')
     expect(readOrder(row)).toEqual(['Alien'])
   })
@@ -133,14 +145,6 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
       metadata: { author: 'Frank Herbert' },
     })
     expect(within(row).queryByRole('img')).not.toBeInTheDocument()
-  })
-
-  it('a TV show with seasons, episodes and a third pin keeps 5×7', () => {
-    const row = entry(['seasons', 'episodes_per_season', 'episode_minutes'], 'thumbnail', {
-      type: 'tv_show',
-      metadata: { seasons: 5, episodes_per_season: 7, episode_minutes: 45 },
-    })
-    expect(readOrder(row)).toEqual(['Alien', '5×7', '45 min'])
   })
 })
 
@@ -210,6 +214,29 @@ describe('F016 row tiles open their page without opening the item', () => {
     expect(
       within(row).getByRole('link', { name: 'Sky on JustWatch (opens in a new tab)' }),
     ).toHaveAttribute('href', 'https://www.justwatch.com/it/movie/alien')
+  })
+
+  it('F-022-W3 a row shows only the streaming services the user owns', async () => {
+    withOwned(['netflix'])
+    const row = entry(['release_year', 'streaming'], 'thumbnail', {
+      metadata: { release_year: 1979, streaming: { platforms: ['Netflix', 'Sky', 'Unknown TV'] } },
+    })
+    // Until the settings load every platform shows; then only the owned one stays.
+    await waitFor(() =>
+      expect(within(row).queryByRole('img', { name: 'Sky' })).not.toBeInTheDocument(),
+    )
+    expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+    expect(within(row).queryByRole('img', { name: 'Unknown TV' })).not.toBeInTheDocument()
+  })
+
+  it('F-022-W3 with no owned services a row shows every streaming platform', async () => {
+    withOwned([])
+    const row = entry(['release_year', 'streaming'], 'thumbnail', {
+      metadata: { release_year: 1979, streaming: { platforms: ['Netflix', 'Sky'] } },
+    })
+    expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+    expect(within(row).getByRole('img', { name: 'Sky' })).toBeInTheDocument()
+    await waitFor(() => expect(within(row).getByRole('img', { name: 'Sky' })).toBeInTheDocument())
   })
 
   it('no streaming link, or a non-https one, leaves the plain tile', () => {

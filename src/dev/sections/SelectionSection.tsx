@@ -33,7 +33,7 @@ export function SelectionSection() {
             { value: 'movie', label: 'Movies' },
             { value: 'vehicle', label: 'Vehicles' },
             { separator: true },
-            { value: 'new', label: '+ New type', action: true },
+            { value: 'new', label: '+ New folder', action: true },
           ]}
           value="none"
         />

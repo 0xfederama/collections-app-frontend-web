@@ -19,11 +19,10 @@ import {
 } from '../../components/ui/icons'
 import { type List as TreeList, ListActionsMenu, ListIconDialog } from '../tree'
 import { hasPrice, typeName, type TypeDefinition } from '../items'
-import type { DisplayMode, List, PinnedFields, SortMode } from './api'
+import type { DisplayMode, List, SortMode } from './api'
 import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
 import { ListTitle } from './ListTitle'
-import { PinnedMenu } from './PinnedMenu'
 import { toolbarControl } from './toolbarStyles'
 import {
   FieldFilterChip,
@@ -75,8 +74,6 @@ export interface ListHeaderProps {
   onFilter: (value: string) => void
   fieldFilter: FieldFilterValue | null
   onFieldFilter: (value: FieldFilterValue | null) => void
-  onPinned: (pinned: PinnedFields) => void
-  onResetPinned: () => void
   onAddItem: () => void
 }
 
@@ -123,7 +120,7 @@ function TypeChip({ type, definition }: { type: TreeList['type']; definition: Ty
   )
 }
 
-/** Title, type chip, description, then the sticky toolbar: search, filter, sort, pinned, display mode, then the + New item button (UI_SPEC §3). */
+/** Title, type chip, description, then the sticky toolbar: search, filter, sort, display mode, then the + New item button (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   return (
@@ -144,7 +141,7 @@ export function ListHeader(props: ListHeaderProps) {
         )}
       </header>
       {/* Sticky inside the scrolling `main`: the solid background keeps the items that pass behind it
-          readable. The wrapper is the container the narrow variants measure. Search and "+ Filter" first, then sort, pinned, display and the + New item; an applied field filter is a chip under the bar. */}
+          readable. The wrapper is the container the narrow variants measure. Search and "+ Filter" first, then sort, display and the + New item; an applied field filter is a chip under the bar. */}
       <div className="@container z-10 bg-bg sm:sticky sm:top-0">
         <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
           <div className="min-w-40 flex-1 [&_label]:sr-only">
@@ -192,14 +189,6 @@ export function ListHeader(props: ListHeaderProps) {
             >
               Make this the default sort
             </button>
-          )}
-          {list && (props.definition.fields.length > 0 || props.definition.allows_price) && (
-            <PinnedMenu
-              list={list}
-              definition={props.definition}
-              onChange={props.onPinned}
-              onReset={props.onResetPinned}
-            />
           )}
           <SegmentedControl
             aria-label="Display mode"

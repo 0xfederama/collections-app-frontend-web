@@ -22,7 +22,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:film',
     allows_price: false,
     default_sort_field: 'release_year',
-    default_pinned_fields: ['runtime_minutes', 'streaming'],
     is_locked: true,
     version: 1,
     fields: fields([
@@ -39,7 +38,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:tv',
     allows_price: false,
     default_sort_field: 'first_air_year',
-    default_pinned_fields: ['seasons', 'streaming'],
     is_locked: true,
     version: 1,
     fields: fields([
@@ -58,7 +56,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:car',
     allows_price: false,
     default_sort_field: 'model_year',
-    default_pinned_fields: ['model_year', 'power_hp'],
     is_locked: true,
     version: 1,
     fields: fields([
@@ -75,7 +72,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:book-open',
     allows_price: false,
     default_sort_field: null,
-    default_pinned_fields: ['author', 'pages', 'stores'],
     is_locked: true,
     version: 1,
     fields: fields([
@@ -91,7 +87,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:tag',
     allows_price: true,
     default_sort_field: null,
-    default_pinned_fields: ['price'],
     is_locked: true,
     version: 1,
     fields: [],

@@ -1,47 +1,35 @@
 import type { components } from '../../generated/schema'
-import type { PinnedFields } from './api'
 import { formatField, hasPrice, type TypeDefinition } from '../items'
 import { formatPrice } from './price'
 
 type ItemSummary = components['schemas']['ItemSummary']
 
 /**
- * The fields a list pins, by key, in order: the first reads next to the title, the second in the
- * right corner (with three, the first two next to the title and the third in the corner). At most {@link MAX_PINNED} keys (the contract's limit, D-085).
+ * The fields a list row shows, by key, in order: the first reads next to the title, the second in
+ * the right corner (with three, the first two next to the title and the third in the corner).
  */
 export type PinnedKeys = readonly string[]
 
-/** Most keys a list may pin, in order (the contract's limit). */
-export const MAX_PINNED = 3
-
-/** The type default supplied by the definition API, capped defensively at the contract limit. */
-export function defaultPinned(definition: TypeDefinition): PinnedKeys {
-  return [...(definition.default_pinned_fields ?? [])].slice(0, MAX_PINNED)
-}
-
-/** What the list shows: its own selection, else the type default. `[]` pins nothing. */
-export function resolvePinned(
-  list: { pinned_fields: PinnedFields },
-  definition: TypeDefinition,
-): PinnedKeys {
-  if (!list.pinned_fields) return defaultPinned(definition)
-  return [...list.pinned_fields]
-}
-
-export interface PinnableField {
-  key: string
-  label: string
-}
+/**
+ * The pins of each built-in type (F-022 W2): the web owns them, the API no longer stores a choice.
+ * A type not listed here, including "No type", pins nothing.
+ */
+const FIXED_PINS = new Map<string, PinnedKeys>([
+  ['movie', ['runtime_minutes', 'streaming']],
+  ['tv_show', ['seasons', 'streaming']],
+  ['book', ['author', 'pages', 'stores']],
+  ['vehicle', ['model_year', 'power_hp']],
+  ['wishlist', ['price']],
+])
 
 /**
- * Fields a list of this type can pin, followed by price when the type allows it.
+ * The pinned fields of a type: its fixed pins, minus any whose field the definition does not have.
+ * `price` is not a field: it counts only where the type allows a price.
  */
-export function pinnableFields(definition: TypeDefinition): PinnableField[] {
-  const fields = definition.fields.map(({ key, label }) => ({
-    key,
-    label: key === 'episode_minutes' ? 'Episode duration' : label,
-  }))
-  return hasPrice(definition) ? [...fields, { key: 'price', label: 'Price' }] : fields
+export function fixedPinned(definition: TypeDefinition): PinnedKeys {
+  return (FIXED_PINS.get(definition.key) ?? []).filter((key) =>
+    key === 'price' ? hasPrice(definition) : definition.fields.some((field) => field.key === key),
+  )
 }
 
 const num = (value: unknown) => (typeof value === 'number' ? value : null)
@@ -59,12 +47,8 @@ export function formatPinnedValue(
   if (key === 'streaming') return null
   if (definition.fields.find((f) => f.key === key)?.type === 'stores') return null
   const value = item.metadata[key]
-  if (definition.key === 'tv_show') {
-    if (key === 'seasons') return num(value) === null ? null : `${value} seasons`
-    if (key === 'episodes_per_season') {
-      return num(value) === null ? null : `${value} episodes per season`
-    }
-    if (key === 'episode_minutes') return num(value) === null ? null : `${value} min`
+  if (definition.key === 'tv_show' && key === 'seasons') {
+    return num(value) === null ? null : `${value} seasons`
   }
   const field = definition.fields.find((f) => f.key === key)
   return field ? formatField(field, value) : null
@@ -74,8 +58,7 @@ export function formatPinnedValue(
  * The keys each placement of a row reads (F009-W3, F016-W3). One pin sits next to the title. Two:
  * the first next to the title, the second in the right corner. Three: `first` and `second` both sit
  * next to the title and `third` is in the right corner. So the corner is `third` when it is set,
- * else `second`. A TV show's seasons and episodes read as one `5×7`, so with two pins they stay
- * together in `first` and leave the corner empty.
+ * else `second`.
  */
 export function pinnedPlacements(pinned: PinnedKeys): {
   first: string[]
@@ -84,9 +67,6 @@ export function pinnedPlacements(pinned: PinnedKeys): {
 } {
   const [lead, second, third] = pinned
   if (!lead) return { first: [], second: [], third: [] }
-  if (lead === 'seasons' && second === 'episodes_per_season' && !third) {
-    return { first: [lead, second], second: [], third: [] }
-  }
   return {
     first: [lead],
     second: second ? [second] : [],
@@ -107,19 +87,7 @@ export function pinnedTexts(
   definition: TypeDefinition,
 ): string[] {
   const texts: string[] = []
-  const meta = item.metadata
-  let combined = false
   for (const key of keys) {
-    // Seasons and episodes together read `5×7`, once, where the first of them sits.
-    if (definition.key === 'tv_show' && (key === 'seasons' || key === 'episodes_per_season')) {
-      if (keys.includes('seasons') && keys.includes('episodes_per_season')) {
-        const seasons = num(meta.seasons)
-        const episodes = num(meta.episodes_per_season)
-        if (!combined && seasons !== null && episodes !== null) texts.push(`${seasons}×${episodes}`)
-        combined = true
-        continue
-      }
-    }
     const text = formatPinnedValue(key, item, definition)
     if (text) texts.push(text)
   }

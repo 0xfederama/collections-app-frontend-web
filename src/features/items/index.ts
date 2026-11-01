@@ -20,7 +20,6 @@ export { NEW_ITEM_ID } from './newItem'
 export {
   formatField,
   hasPrice,
-  NO_TYPE_VALUE,
   typeDefinition,
   typeName,
   typeOptions,

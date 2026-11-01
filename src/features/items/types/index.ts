@@ -14,7 +14,6 @@ export const NO_TYPE_DEFINITION: TypeDefinition = {
   default_icon: null,
   allows_price: false,
   default_sort_field: null,
-  default_pinned_fields: [],
   is_locked: true,
   version: 0,
   fields: [],

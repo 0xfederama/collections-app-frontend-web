@@ -30,11 +30,16 @@ const initial = (): Settings => ({
   preferred_store: 'amazon',
   markdown_history_limit: 20,
   trash_retention_days: null,
+  owned_streaming_services: [],
   version: 1,
 })
 
 const invalid = (field: string, message: string) =>
   problemResponse(422, 'validation_failed', { errors: [{ field, message }] })
+
+/** F-022-W3: provider keys, at most 64, no duplicates (API.md Settings). */
+const PROVIDER_KEY = /^[a-z][a-z0-9_]{0,63}$/
+const OWNED_MAX = 64
 
 /** The first validation error of a PATCH body, in the shape of the backend's 422 (API.md). */
 function validationError(body: UpdateSettingsRequest) {
@@ -71,6 +76,16 @@ function validationError(body: UpdateSettingsRequest) {
   if (store !== undefined && !isStoreKey(store)) {
     return invalid('preferred_store', 'must be one of the store providers')
   }
+  const owned = body.owned_streaming_services
+  if (owned !== undefined) {
+    if (owned.length > OWNED_MAX) return invalid('owned_streaming_services', 'at most 64 services')
+    if (owned.some((key) => !PROVIDER_KEY.test(key))) {
+      return invalid('owned_streaming_services', 'each must be a provider key')
+    }
+    if (new Set(owned).size !== owned.length) {
+      return invalid('owned_streaming_services', 'must not repeat a service')
+    }
+  }
   return null
 }
 
@@ -93,15 +108,22 @@ export function createSettingsBackend(start: Settings = initial()) {
       const body = (await request.json()) as UpdateSettingsRequest
       const bad = validationError(body)
       if (bad) return bad
-      const { preferred_store: store, ...rest } = body
+      const { preferred_store: store, owned_streaming_services: owned, ...rest } = body
       const next: Settings = {
         ...settings,
         ...rest,
         ...(store !== undefined && isStoreKey(store) && { preferred_store: store }),
+        // `null` or absent keeps the list (API.md Settings).
+        ...(owned != null && { owned_streaming_services: [...owned] }),
         ...(body.workspace_name !== undefined && { workspace_name: body.workspace_name.trim() }),
       }
+      // Arrays compare as sets: a PATCH that repeats the stored list, in any order, changes nothing (D-059).
+      const same = (a: unknown, b: unknown) =>
+        Array.isArray(a) && Array.isArray(b)
+          ? JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
+          : a === b
       const changed = (Object.keys(next) as (keyof Settings)[]).some(
-        (key) => key !== 'version' && next[key] !== settings[key],
+        (key) => key !== 'version' && !same(next[key], settings[key]),
       )
       if (changed) settings = { ...next, version: settings.version + 1 }
       return respond()

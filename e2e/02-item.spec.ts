@@ -204,8 +204,8 @@ test.describe('D-085 price only on the types that have one', () => {
   })
 })
 
-test.describe('F009-W3 pinned fields: up to three, in order', () => {
-  test('three fields in order: the first two beside the title, the third in the corner; unpinning promotes', async ({
+test.describe('F-022 W2 fixed pins per type', () => {
+  test('a movie row shows its fixed runtime pin, and the list has no Pinned control', async ({
     page,
     request,
   }) => {
@@ -221,42 +221,9 @@ test.describe('F009-W3 pinned fields: up to three, in order', () => {
     const row = page.getByRole('list', { name: 'Items' }).getByRole('listitem').filter({
       hasText: title,
     })
-
-    const pinnedMenu = page.getByRole('button', { name: 'Pinned fields' })
-    await pinnedMenu.click()
-    const checkbox = (name: string) => page.getByRole('menuitemcheckbox', { name })
-    // Each tick is its own PATCH with the list's version: wait for it before the next tick.
-    const tick = async (name: string) => {
-      const saved = page.waitForResponse(
-        (response) => response.request().method() === 'PATCH' && response.url().includes('/lists/'),
-      )
-      await checkbox(name).click()
-      await saved
-    }
-    // Clear the movie defaults (runtime + streaming) before selecting populated fields.
-    await tick('Runtime')
-    await tick('Streaming')
-    // Fields in the order they are ticked; a fourth cannot be added.
-    await tick('Release year')
-    await tick('Runtime')
-    await tick('Director')
-    await expect(checkbox('Streaming')).toBeDisabled()
-    await page.keyboard.press('Escape')
-
-    // The first two pinned fields read next to the title (one run), the third at the right end of the row.
-    const titleBox = await row.getByRole('link', { name: title }).boundingBox()
-    const besideBox = await row.getByText('2005 · 117 min', { exact: true }).boundingBox()
-    const cornerBox = await row.getByText('Ada Auteur', { exact: true }).boundingBox()
-    expect(Math.abs(besideBox!.y - titleBox!.y)).toBeLessThan(24)
-    expect(cornerBox!.x).toBeGreaterThan(besideBox!.x)
-
-    // Unpinning the first promotes the others: runtime becomes the first, beside the title.
-    await pinnedMenu.click()
-    await tick('Release year')
-    await page.keyboard.press('Escape')
-    const promoted = await row.getByText('117 min', { exact: true }).boundingBox()
-    expect(Math.abs(promoted!.y - titleBox!.y)).toBeLessThan(24)
-    await expect(row.getByText('2005')).toBeHidden()
+    await expect(row.getByText('117 min', { exact: true })).toBeVisible()
+    await expect(row.getByText('2005', { exact: true })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Pinned fields' })).toHaveCount(0)
   })
 })
 

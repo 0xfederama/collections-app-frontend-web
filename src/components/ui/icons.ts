@@ -77,7 +77,6 @@ export {
   Smile,
   ShoppingBag,
   Smartphone,
-  SlidersHorizontal,
   Sparkles,
   Star,
   Sun,

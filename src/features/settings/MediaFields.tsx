@@ -1,27 +1,31 @@
 import { Select } from '../../components/ui'
 import { CountrySelect } from '../../components/ui/IsoSelects'
+import { OwnedServicesField } from './OwnedServicesField'
 import {
   inputId,
   metadataLanguageOptions,
   type ErrorMap,
   type SettingsDraft,
-  type SettingsField,
+  type ScalarSettingsField,
 } from './form'
 
-/** The Media pane: country, metadata language and the default book store. */
+/** The Media pane: country, owned streaming services, metadata language and the default book store. */
 export function MediaFields({
   hidden,
   draft,
   errors,
   isPending,
   set,
+  setOwned,
   providers,
 }: {
   hidden: boolean
   draft: SettingsDraft
   errors: ErrorMap
   isPending: boolean
-  set: (field: SettingsField, value: string) => void
+  set: (field: ScalarSettingsField, value: string) => void
+  /** F-022-W3: replaces the owned streaming services (provider keys). */
+  setOwned: (keys: string[]) => void
   /** The store providers, from `useStoreProviders()`; `[]` while loading. */
   providers: readonly { key: string; name: string }[]
 }) {
@@ -42,6 +46,12 @@ export function MediaFields({
         value={draft.streaming_country_code}
         onValueChange={(value) => set('streaming_country_code', value)}
         error={errors.streaming_country_code}
+      />
+      <OwnedServicesField
+        value={draft.owned_streaming_services}
+        onChange={setOwned}
+        error={errors.owned_streaming_services}
+        disabled={isPending}
       />
       <Select
         id={inputId('metadata_language')}

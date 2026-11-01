@@ -77,27 +77,23 @@ describe('AT-03 tree CRUD (web): create', () => {
     expect(backend.state.lists.find((l) => l.name === 'Garage')?.type).toBe('vehicle')
   })
 
-  it('F015 the type picker lists "No type" first, a separator, then the types, then "+ New type", which opens Settings', async () => {
-    const { user, router } = await openTree()
+  it('F015 the type picker lists "No type" first, a separator, then the five built-in types, with no action to create one (F-022 W1)', async () => {
+    const { user } = await openTree()
     await pickHeaderAction(user, 'List')
     const dlg = await dialog()
     await user.click(within(dlg).getByRole('combobox', { name: 'Type' }))
     const options = await screen.findAllByRole('option')
-    expect(options.length).toBeGreaterThan(3)
-    expect(options[0]).toHaveTextContent('No type')
-    expect(options.at(-1)).toHaveTextContent('+ New type')
-    // Radix draws the separators as aria-hidden divs: one after "No type", one before "+ New type".
-    const listbox = screen.getByRole('listbox')
+    expect(options.map((option) => option.textContent)).toEqual([
+      'No type',
+      'Movies',
+      'TV shows',
+      'Vehicles',
+      'Books',
+      'Wishlist',
+    ])
+    // Radix draws the separator as an aria-hidden div after "No type".
     expect(options[0]!.nextElementSibling).toHaveAttribute('aria-hidden', 'true')
-    expect(options.at(-1)!.previousElementSibling).toHaveAttribute('aria-hidden', 'true')
-    expect(listbox).toBeInTheDocument()
-    await user.click(options.at(-1)!)
-
-    await waitFor(() =>
-      expect(screen.queryByRole('textbox', { name: 'Name' })).not.toBeInTheDocument(),
-    )
-    await waitFor(() => expect(router.state.location.pathname).toBe('/settings'))
-    expect(router.state.location.search).toBe('?pane=types')
+    expect(screen.queryByRole('option', { name: /New type/ })).not.toBeInTheDocument()
   })
 
   it('F012-W1 creates a list with a searchable built-in icon and named color', async () => {

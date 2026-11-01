@@ -15,7 +15,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`, `ItemRows.tsx` (`DraftRow`, `SortableEntry`), `ItemControls.tsx`, `ItemPinned.tsx`, `ItemsSkeleton.tsx`: header, rows and their parts.
 - `listParams.ts`: URL parsing (`parseSort`, `buildItemsParams`); `useDebouncedFilter.ts`: debounced `?q=`.
 - `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
-- `pinned.ts`, `PinnedMenu.tsx`, `toolbarStyles.ts`: pinned fields and toolbar. The bar is: search ("Search by title"), "+ Filter", sort, Pinned, display mode.
+- `pinned.ts`, `toolbarStyles.ts`: fixed pinned fields per built-in type and toolbar. The bar is: search ("Search by title"), "+ Filter", sort, display mode.
 - `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
 ## Interfaces
@@ -25,11 +25,13 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
 - `FieldFilter({ fields, value, onChange })`, `parseFieldFilter(params, fields)`.
 - `useList`, `useListItems`, `useUpdateList`, `useReorderItems` (`api.ts`); `listKeys` from `src/data/keys.ts`.
-- `resolvePinned`, `defaultPinned`, `pinnableFields`, `pinnedPlacements`, `formatPrice`, `sortOptionsFor`: display helpers.
+- `fixedPinned(definition)`, `pinnedPlacements`, `formatPinnedValue`, `formatPrice`; `sortOptionsFor` (in `ListHeader.tsx`): display helpers.
 
 ## Gotchas
 
-- Pinned fields, sort and filter accept any field key of the list's type (plus `price` where the type allows it); at most three pins (`MAX_PINNED`), `null` = type default. One pin sits beside the title; two put the second in the right corner; three put the first two beside the title and the third in the corner (`pinnedPlacements`).
+- Pinned fields are fixed per built-in type (`FIXED_PINS` in `pinned.ts`, F-022); there is no per-list choice and no Pinned menu. A pin whose field the type lacks is dropped (`price` counts only where allowed); "No type" pins nothing. One pin sits beside the title; two put the second in the right corner; three put the first two beside the title and the third in the corner (`pinnedPlacements`).
+- Streaming in a row shows only the services in Settings `owned_streaming_services` (`filterOwnedPlatforms`); empty = all.
+- Sort and filter accept any field key of the list's type (plus `price` where the type allows it).
 - Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming and stores fields are not filterable, and stores fields are not sortable.
 - A sort the type does not define falls back to the list's `sort_mode`, so stale `?sort=` values are ignored.
 - Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally.

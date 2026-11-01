@@ -19,7 +19,7 @@ export function DeleteFieldDialog({
       description={
         target.count === 0
           ? 'No items have a value for this field.'
-          : `${target.count} ${target.count === 1 ? 'item has' : 'items have'} a value (including trashed items). Deleting the field removes those values, and any sort or pin that uses it falls back to the type defaults.`
+          : `${target.count} ${target.count === 1 ? 'item has' : 'items have'} a value (including trashed items). Deleting the field removes those values, and any sort that uses it falls back to the type default.`
       }
       confirmLabel="Delete field"
       destructive

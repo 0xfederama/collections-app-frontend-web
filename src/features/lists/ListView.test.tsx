@@ -196,10 +196,10 @@ describe('W-06 display modes', () => {
   it.each(['compact', 'thumbnail', 'grid'] as const)(
     '%s renders title link and price, no type label, status or summary (F007-W4, W7)',
     async (mode) => {
-      // A wishlist pins price by default, so the row shows it.
+      // A wishlist pins its price, so the row shows it.
       treeWithType('wishlist')
       useBackend({
-        list: { display_mode: mode, type: 'wishlist', pinned_fields: null },
+        list: { display_mode: mode, type: 'wishlist' },
         items: rich,
       })
       renderList(at())
@@ -438,17 +438,6 @@ describe('W-06 URL state: sort and filter', () => {
     expect(screen.getByRole('option', { name: 'Release year' })).toBeInTheDocument()
   })
 
-  it('F009-W2 a movie list cannot pin price, a wishlist can', async () => {
-    treeWithType('movie')
-    useBackend({ list: { type: 'movie' } })
-    const user = userEvent.setup()
-    renderList(at())
-    await itemsList()
-    await user.click(await screen.findByRole('button', { name: /Pinned fields/ }))
-    const menu = await screen.findByRole('menu')
-    expect(within(menu).queryByRole('menuitemcheckbox', { name: 'Price' })).not.toBeInTheDocument()
-  })
-
   it('F007-W9 ?sort=<field key> is ignored on a list with no type', async () => {
     treeWithType(null)
     const backend = useBackend({ list: { type: null } })
@@ -468,7 +457,6 @@ describe('W-06 URL state: sort and filter', () => {
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
     await user.click(sortSelect())
     expect(screen.queryByRole('option', { name: 'Price' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Pinned fields/ })).not.toBeInTheDocument()
   })
 
   it('typing in the filter updates ?q= after the debounce and the request carries q', async () => {
@@ -548,7 +536,7 @@ describe('W-06 URL state: sort and filter', () => {
   })
 })
 
-describe('F002-W2 pinned fields', () => {
+describe('F-022 W2 fixed pinned fields per type', () => {
   const movie = makeItem(1, {
     title: 'Alien',
     metadata: {
@@ -564,10 +552,10 @@ describe('F002-W2 pinned fields', () => {
   })
 
   it.each(['compact', 'thumbnail', 'grid'] as const)(
-    '%s shows the type default: runtime next to the title, streaming icon with the paid badge',
+    '%s shows the movie pins: runtime next to the title, streaming icon with the paid badge',
     async (mode) => {
       useBackend({
-        list: { display_mode: mode, type: 'movie', pinned_fields: null },
+        list: { display_mode: mode, type: 'movie' },
         items: [movie],
       })
       renderList(at())
@@ -578,7 +566,7 @@ describe('F002-W2 pinned fields', () => {
   )
 
   it('a movie row from the API shows runtime and a streaming icon with $ for a paid platform', async () => {
-    useBackend({ list: { type: 'movie', pinned_fields: null }, items: [movie] })
+    useBackend({ list: { type: 'movie' }, items: [movie] })
     renderList(at())
     const ul = await itemsList()
     expect(within(ul).getByText('117 min')).toBeInTheDocument()
@@ -586,48 +574,19 @@ describe('F002-W2 pinned fields', () => {
     expect(icon).toHaveTextContent('$')
   })
 
-  it('shows the list selection instead of the default, in its order, and [] pins nothing', async () => {
-    useBackend({
-      list: { type: 'wishlist', pinned_fields: ['price'] },
+  it('a wishlist row shows its fixed price pin and no year, with no Pinned control in the toolbar', async () => {
+    treeWithType('wishlist')
+    const backend = useBackend({
+      list: { type: 'wishlist', version: 2 },
       items: [wish],
     })
     renderList(at())
     const ul = await itemsList()
     expect(within(ul).getByText(/€\s1,200–1,500/)).toBeInTheDocument()
     expect(within(ul).queryByText('1999')).not.toBeInTheDocument()
-  })
-
-  it('the menu shows the effective selection, ticking a field appends it with If-Match', async () => {
-    const backend = useBackend({
-      list: { type: 'movie', pinned_fields: ['runtime_minutes'], version: 4 },
-      items: [movie],
-    })
-    const user = userEvent.setup()
-    renderList(at())
-    await itemsList()
-    await user.click(await screen.findByRole('button', { name: /Pinned fields/ }))
-    const menu = await screen.findByRole('menu')
-    expect(within(menu).getByRole('menuitemcheckbox', { name: 'Runtime' })).toBeChecked()
-    await user.click(within(menu).getByRole('menuitemcheckbox', { name: 'Release year' }))
-    await waitFor(() => expect(backend.patches).toHaveLength(1))
-    expect(backend.patches[0]).toEqual({
-      ifMatch: '"l-4"',
-      body: { pinned_fields: ['runtime_minutes', 'release_year'] },
-    })
-  })
-
-  it('Reset to default PATCHes pinned_fields null', async () => {
-    const backend = useBackend({
-      list: { type: 'wishlist', pinned_fields: ['price'], version: 2 },
-      items: [wish],
-    })
-    const user = userEvent.setup()
-    renderList(at())
-    await itemsList()
-    await user.click(await screen.findByRole('button', { name: /Pinned fields/ }))
-    await user.click(await screen.findByRole('menuitem', { name: 'Reset to default' }))
-    await waitFor(() => expect(backend.patches).toHaveLength(1))
-    expect(backend.patches[0]).toEqual({ ifMatch: '"l-2"', body: { pinned_fields: null } })
+    expect(screen.queryByRole('button', { name: /Pinned fields/ })).not.toBeInTheDocument()
+    // The pins come from the web's table, so the list is never PATCHed for them.
+    expect(backend.patches).toHaveLength(0)
   })
 })
 

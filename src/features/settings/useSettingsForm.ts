@@ -18,6 +18,7 @@ import {
   validate,
   type ErrorMap,
   type Failure,
+  type ScalarSettingsField,
   type SettingsDraft,
   type SettingsField,
 } from './form'
@@ -78,7 +79,8 @@ export function useSettingsForm({
         onPaneChange(
           field === 'streaming_country_code' ||
             field === 'metadata_language' ||
-            field === 'preferred_store'
+            field === 'preferred_store' ||
+            field === 'owned_streaming_services'
             ? 'Media'
             : 'General',
         )
@@ -88,14 +90,23 @@ export function useSettingsForm({
     [onPaneChange],
   )
 
-  const set = (field: SettingsField, value: string) => {
-    setDraft((current) => ({ ...current, [field]: value }))
+  const clearError = (field: SettingsField) =>
     setErrors((current) => {
       if (!(field in current)) return current
       const next = { ...current }
       delete next[field]
       return next
     })
+
+  const set = (field: ScalarSettingsField, value: string) => {
+    setDraft((current) => ({ ...current, [field]: value }))
+    clearError(field)
+  }
+
+  // F-022-W3: the owned streaming services are a list of provider keys, saved with the other Media fields.
+  const setOwned = (keys: string[]) => {
+    setDraft((current) => ({ ...current, owned_streaming_services: keys }))
+    clearError('owned_streaming_services')
   }
 
   const fail = useCallback(
@@ -272,6 +283,7 @@ export function useSettingsForm({
     blocker,
     isPending,
     set,
+    setOwned,
     saveRetention,
     copyDraft,
     reloadLatest,

@@ -33,6 +33,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - No re-match or refresh UI on an item; lookup suggestions appear only when creating (inline draft and Quick add).
 - `isHiddenTmdbField` and `isStreamingField` keep IMDb and streaming out of plain field rows.
 - The stores field is an editor of ticked provider keys (see [stores](stores.md)); it is never sorted or filtered.
+- The item's streaming row shows only the services in Settings `owned_streaming_services` (`filterOwnedPlatforms`); the streaming editor still lists every service. Empty = all.
 - Pasting an image file while an item's detail page is open opens the image dialog and uploads through the normal path.
 - Image changes and field editors use the item's `If-Match` (version captured when opened); 412/404 keeps the draft and offers Copy draft and Reload latest.
 - Every populated editable field is shown by default; empty fields are available from "+ Add field".

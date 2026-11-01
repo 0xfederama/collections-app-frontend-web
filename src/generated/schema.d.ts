@@ -512,7 +512,7 @@ export interface paths {
         head?: never;
         /**
          * Update workspace settings
-         * @description Requires `If-Match` (`"s-N"`). Lowering `markdown_history_limit` prunes on the next save per item, not immediately. `trash_retention_days`: absent = unchanged, `null` = off, otherwise 1 to 365. `preferred_store` is the one default store of the workspace, never null.
+         * @description Requires `If-Match` (`"s-N"`). Lowering `markdown_history_limit` prunes on the next save per item, not immediately. `trash_retention_days`: absent = unchanged, `null` = off, otherwise 1 to 365. `preferred_store` is the one default store of the workspace, never null. `owned_streaming_services`: absent = unchanged, `[]` = show every service, otherwise the provider keys of the services the user owns.
          */
         patch: operations["updateSettings"];
         trace?: never;
@@ -652,36 +652,11 @@ export interface paths {
         /** List type definitions and fields */
         get: operations["listTypes"];
         put?: never;
-        /** Create a custom type */
-        post: operations["createType"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/api/v1/types/{key}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete a custom type not used by any list
-         * @description Requires `If-Match` (`"k-N"`).
-         */
-        delete: operations["deleteType"];
-        options?: never;
-        head?: never;
-        /**
-         * Update a custom type
-         * @description Requires `If-Match` (`"k-N"`). Send `null` to clear a nullable default.
-         */
-        patch: operations["updateType"];
         trace?: never;
     };
     "/api/v1/types/{key}/fields": {
@@ -883,20 +858,12 @@ export interface components {
             icon?: string | null;
             icon_color?: string | null;
             name: string;
-            pinned_fields?: string[] | null;
             sort_mode?: string | null;
             type?: string | null;
         };
         CreateTypeFieldRequest: {
             label: string;
             type: string;
-        };
-        CreateTypeRequest: {
-            allows_price?: boolean;
-            default_icon?: string | null;
-            default_pinned_fields?: string[] | null;
-            default_sort_field?: string | null;
-            name: string;
         };
         FieldError: {
             field: string;
@@ -995,7 +962,6 @@ export interface components {
             /** Format: int64 */
             item_count: number;
             name: string;
-            pinned_fields: string[] | null;
             sort_mode: string;
             /** Format: int64 */
             sort_order: number;
@@ -1022,7 +988,6 @@ export interface components {
             item_count: number;
             name: string;
             path: components["schemas"]["PathSegment"][];
-            pinned_fields: string[] | null;
             sort_mode: string;
             /** Format: int64 */
             sort_order: number;
@@ -1101,7 +1066,6 @@ export interface components {
          *     - `parent_in_trash`: A restore without a destination whose parent is trashed (409). `blocking_parent` names it.
          *     - `destination_unavailable`: A move, restore or create targets a folder or list that is missing or trashed (409).
          *     - `type_mismatch`: An item would move to a list of another type (409).
-         *     - `type_key_taken`: A type would take a key that another type of the workspace already has (409).
          *     - `order_stale`: A reorder names an id set that no longer matches the stored one (409).
          *     - `lookup_disabled`: A lookup was requested but its integration is not configured on this server (503).
          *     - `upstream_unavailable`: A lookup provider could not be reached or answered in time (503).
@@ -1194,6 +1158,8 @@ export interface components {
             markdown_history_limit: number;
             /** @example it-IT */
             metadata_language: string;
+            /** @description Provider keys of the streaming services the user owns; [] shows all. */
+            owned_streaming_services: string[];
             /** @enum {string} */
             preferred_store: "amazon" | "bookshop" | "apple_books" | "google_play_books" | "kobo";
             streaming_country_code: string;
@@ -1268,7 +1234,6 @@ export interface components {
         TypeDefinition: {
             allows_price: boolean;
             default_icon: string | null;
-            default_pinned_fields: string[] | null;
             default_sort_field: string | null;
             fields: components["schemas"]["TypeField"][];
             is_locked: boolean;
@@ -1320,7 +1285,6 @@ export interface components {
             icon?: string | null;
             icon_color?: string | null;
             name?: string;
-            pinned_fields?: string[] | null;
             sort_mode?: string;
             type?: string | null;
         };
@@ -1328,6 +1292,7 @@ export interface components {
             /** Format: int64 */
             markdown_history_limit?: number;
             metadata_language?: string;
+            owned_streaming_services?: string[];
             preferred_store?: string;
             streaming_country_code?: string;
             /** Format: int64 */
@@ -1336,13 +1301,6 @@ export interface components {
         };
         UpdateTypeFieldRequest: {
             label: string;
-        };
-        UpdateTypeRequest: {
-            allows_price?: boolean;
-            default_icon?: string | null;
-            default_pinned_fields?: string[] | null;
-            default_sort_field?: string | null;
-            name?: string;
         };
         UploadImage: {
             /** Format: uuid */
@@ -4289,238 +4247,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TypeDefinition"][] | null;
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    createType: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateTypeRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    ETag?: string;
-                    Location?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TypeDefinition"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Request Entity Too Large */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    deleteType: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Type ETag, "k-N". */
-                "If-Match"?: string;
-            };
-            path: {
-                key: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Failed */
-            412: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Required */
-            428: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    updateType: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Type ETag, "k-N". */
-                "If-Match"?: string;
-            };
-            path: {
-                key: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateTypeRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TypeDefinition"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Failed */
-            412: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Request Entity Too Large */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Required */
-            428: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Internal Server Error */

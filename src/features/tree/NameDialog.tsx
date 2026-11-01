@@ -39,8 +39,6 @@ export interface NameDialogProps {
     icon: IconChoice,
   ) => Promise<unknown>
   onClose: () => void
-  /** Create list only: adds a "+ New type" entry to the type picker; the caller closes this dialog and opens Settings. */
-  onNewType?: () => void
   /** Refetches the tree and returns the latest name (`undefined` if the item is gone). Rename only. */
   onReload?: () => Promise<string | undefined>
   /** Where focus goes when the dialog closes; `preventDefault()` replaces the return to the opener. */
@@ -48,7 +46,6 @@ export interface NameDialogProps {
 }
 
 const MAX_LENGTH = 200
-const NEW_TYPE_VALUE = '__new_type__'
 
 /** Create and rename dialog: one name field, plus the type and the folder on a new list. */
 export function NameDialog({
@@ -62,17 +59,11 @@ export function NameDialog({
   listIcon,
   onSubmit,
   onClose,
-  onNewType,
   onReload,
   onCloseAutoFocus,
 }: NameDialogProps) {
   const definitions = useTypes()
-  const typeOptions: SelectEntry[] = [
-    ...buildTypeOptions(definitions.data),
-    ...(onNewType
-      ? [{ separator: true as const }, { value: NEW_TYPE_VALUE, label: '+ New type', action: true }]
-      : []),
-  ]
+  const typeOptions: SelectEntry[] = buildTypeOptions(definitions.data)
   const [name, setName] = useState(initialName)
   const [chosenType, setChosenType] = useState<ItemType>(type?.initial ?? null)
   const [iconChoice, setIconChoice] = useState<IconChoice>({ icon: null, icon_color: null })
@@ -191,10 +182,7 @@ export function NameDialog({
                 hint="Every item in the list has this type."
                 options={typeOptions}
                 value={typeToValue(chosenType)}
-                onValueChange={(value) => {
-                  if (value === NEW_TYPE_VALUE) onNewType?.()
-                  else setChosenType(valueToType(value))
-                }}
+                onValueChange={(value) => setChosenType(valueToType(value))}
               />
             )}
             {path && (

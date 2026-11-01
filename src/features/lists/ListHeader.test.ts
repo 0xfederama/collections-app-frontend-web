@@ -18,7 +18,6 @@ const book: TypeDefinition = {
   default_icon: null,
   allows_price: true,
   default_sort_field: null,
-  default_pinned_fields: ['author', 'pages', 'stores'],
   is_locked: true,
   version: 1,
   fields: [
