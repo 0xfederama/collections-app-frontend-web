@@ -66,6 +66,8 @@ describe('F017-W2 service registry', () => {
     ['amazon_video', 'Amazon Video'],
     ['amazonvideo', 'Amazon Video'],
     ['Amazon Prime Video', 'Prime Video'],
+    ['Chili', 'Chili'],
+    ['chili', 'Chili'],
   ])('resolves %s to %s', (name, label) => {
     expect(findService(name)?.label).toBe(label)
   })
@@ -76,6 +78,11 @@ describe('F017-W2 service registry', () => {
     ['Amazon Video', 'prime-video.svg'],
   ])('%s is drawn with the mark %s', (name, file) => {
     expect(findService(name)?.file).toBe(file)
+  })
+
+  it('offers Chili in the streaming picker, after the original entries, with its own mark', () => {
+    expect(findService('Chili')?.file).toBe('chili.svg')
+    expect(STREAMING_SERVICES.at(-1)).toBe('Chili')
   })
 
   it('lists Apple TV Store and Amazon Video in the streaming picker, next to their sibling', () => {
