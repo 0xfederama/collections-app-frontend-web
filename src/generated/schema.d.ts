@@ -649,7 +649,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List type definitions and fields */
+        /** List the built-in types and their fields */
         get: operations["listTypes"];
         put?: never;
         post?: never;
@@ -657,71 +657,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/api/v1/types/{key}/fields": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add a custom field
-         * @description Requires `If-Match` on the type (`"k-N"`).
-         */
-        post: operations["createTypeField"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/types/{key}/fields/order": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Reorder custom fields
-         * @description Requires `If-Match` on the type (`"k-N"`). `keys` must be the custom fields, in the new order.
-         */
-        put: operations["reorderTypeFields"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/types/{key}/fields/{fieldKey}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Count item values that deleting a custom field would remove */
-        get: operations["previewDeleteTypeField"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete a custom field and strip populated values
-         * @description Requires `If-Match` on the field (`"kf-N"`).
-         */
-        delete: operations["deleteTypeField"];
-        options?: never;
-        head?: never;
-        /**
-         * Rename a custom field
-         * @description Requires `If-Match` on the field (`"kf-N"`).
-         */
-        patch: operations["updateTypeField"];
         trace?: never;
     };
     "/healthz": {
@@ -860,10 +795,6 @@ export interface components {
             name: string;
             sort_mode?: string | null;
             type?: string | null;
-        };
-        CreateTypeFieldRequest: {
-            label: string;
-            type: string;
         };
         FieldError: {
             field: string;
@@ -1107,9 +1038,6 @@ export interface components {
             folder_id: string | null;
             ids: string[];
         };
-        ReorderTypeFieldsRequest: {
-            keys: string[] | null;
-        };
         RestoreContentRequest: {
             /** Format: int64 */
             version: number;
@@ -1146,7 +1074,7 @@ export interface components {
         SearchResult: {
             item: components["schemas"]["ItemSummary"];
             path: components["schemas"]["SearchPathSegment"][];
-            /** @description The display name from this workspace's type definition, null when the list has no type. */
+            /** @description The display name of the built-in type, null when the list has no type. */
             type_name: string | null;
         };
         Settings: {
@@ -1236,29 +1164,16 @@ export interface components {
             default_icon: string | null;
             default_sort_field: string | null;
             fields: components["schemas"]["TypeField"][];
-            is_locked: boolean;
             key: string;
             name: string;
-            /** Format: int64 */
-            version: number;
         };
         TypeField: {
-            is_locked: boolean;
             key: string;
             label: string;
             /** Format: int64 */
             position: number;
             /** @enum {string} */
             type: "text" | "number" | "date" | "boolean" | "link" | "streaming" | "stores";
-            /** Format: int64 */
-            version: number;
-        };
-        TypeFieldDeletePreview: {
-            /**
-             * Format: int64
-             * @description Number of items, including trashed items, with a value for this field.
-             */
-            populated_item_count: number;
         };
         UpdateContentRequest: {
             body: string;
@@ -1298,9 +1213,6 @@ export interface components {
             /** Format: int64 */
             trash_retention_days?: number | null;
             workspace_name?: string;
-        };
-        UpdateTypeFieldRequest: {
-            label: string;
         };
         UploadImage: {
             /** Format: uuid */
@@ -4247,414 +4159,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TypeDefinition"][] | null;
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    createTypeField: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Type ETag, "k-N". */
-                "If-Match"?: string;
-            };
-            path: {
-                key: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateTypeFieldRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TypeField"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Failed */
-            412: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Request Entity Too Large */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Required */
-            428: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    reorderTypeFields: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Type ETag, "k-N". */
-                "If-Match"?: string;
-            };
-            path: {
-                key: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReorderTypeFieldsRequest"];
-            };
-        };
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Failed */
-            412: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Request Entity Too Large */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Required */
-            428: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    previewDeleteTypeField: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                key: string;
-                fieldKey: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TypeFieldDeletePreview"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    deleteTypeField: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Field ETag, "kf-N". */
-                "If-Match"?: string;
-            };
-            path: {
-                key: string;
-                fieldKey: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TypeFieldDeletePreview"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Failed */
-            412: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Required */
-            428: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    updateTypeField: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Field ETag, "kf-N". */
-                "If-Match"?: string;
-            };
-            path: {
-                key: string;
-                fieldKey: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateTypeFieldRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TypeField"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Failed */
-            412: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Request Entity Too Large */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Precondition Required */
-            428: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Internal Server Error */
