@@ -11,7 +11,6 @@ import {
   useUpdateList,
   type DisplayMode,
   type List,
-  type PinnedFields,
   type SortMode,
 } from './api'
 import { listKeys } from '../../data/keys'
@@ -20,7 +19,7 @@ import { useTypes } from '../settings'
 import { ItemsView } from './ItemsView'
 import { ItemsSkeleton } from './ItemsSkeleton'
 import { ListHeader } from './ListHeader'
-import { resolvePinned } from './pinned'
+import { fixedPinned } from './pinned'
 import { useScrollRestore } from './scrollRestore'
 import { parseFieldFilter, type FieldFilterValue } from './FieldFilter'
 import { activeFieldFilter, buildItemsParams, parseSort, resolveSortOverride } from './listParams'
@@ -138,9 +137,6 @@ export function ListView({ treeList }: { treeList: List }) {
   }
   const setDisplayMode = (display_mode: DisplayMode) =>
     updateList.mutate({ display_mode }, { onError: onUpdateError })
-  const setPinned = (pinned_fields: PinnedFields) =>
-    updateList.mutate({ pinned_fields }, { onError: onUpdateError })
-  const resetPinned = () => updateList.mutate({ pinned_fields: null }, { onError: onUpdateError })
   const makeDefault = () =>
     updateList.mutate(
       { sort_mode: effectiveSort },
@@ -225,8 +221,6 @@ export function ListView({ treeList }: { treeList: List }) {
         onFilter={setFilter}
         fieldFilter={fieldFilter}
         onFieldFilter={setFieldFilter}
-        onPinned={setPinned}
-        onResetPinned={resetPinned}
         onAddItem={addItem}
       />
       {itemsQuery.isError ? (
@@ -250,7 +244,7 @@ export function ListView({ treeList }: { treeList: List }) {
           mode={mode}
           type={list.type}
           definition={definition}
-          pinned={resolvePinned(list, definition)}
+          pinned={fixedPinned(definition)}
           countLabel={countLabel}
           items={items}
           total={total}

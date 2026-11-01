@@ -86,12 +86,13 @@ describe('F009-W3 the first pinned field reads next to the title, the second in 
     },
   )
 
-  it('a TV show combines seasons and episodes into one 5×7 piece', () => {
-    const row = entry(['seasons', 'episodes_per_season'], 'thumbnail', {
+  it('a TV show reads its seasons next to the title and its streaming in the corner', () => {
+    const row = entry(['seasons', 'streaming'], 'thumbnail', {
       type: 'tv_show',
-      metadata: { seasons: 5, episodes_per_season: 7, episode_minutes: 45 },
+      metadata: { seasons: 5, streaming: { platforms: ['Netflix'] } },
     })
-    expect(readOrder(row)).toEqual(['Alien', '5×7'])
+    expect(readOrder(row)).toEqual(['Alien', '5 seasons'])
+    expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
   })
 
   it('a second pinned field that is streaming draws service icons', () => {
@@ -102,7 +103,7 @@ describe('F009-W3 the first pinned field reads next to the title, the second in 
     expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
   })
 
-  it('pins nothing when the list stores an empty selection', () => {
+  it('pins nothing when the type has no fixed pins (the "No type" list)', () => {
     const row = entry([], 'grid')
     expect(readOrder(row)).toEqual(['Alien'])
   })
@@ -132,14 +133,6 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
       metadata: { author: 'Frank Herbert' },
     })
     expect(within(row).queryByRole('img')).not.toBeInTheDocument()
-  })
-
-  it('a TV show with seasons, episodes and a third pin keeps 5×7', () => {
-    const row = entry(['seasons', 'episodes_per_season', 'episode_minutes'], 'thumbnail', {
-      type: 'tv_show',
-      metadata: { seasons: 5, episodes_per_season: 7, episode_minutes: 45 },
-    })
-    expect(readOrder(row)).toEqual(['Alien', '5×7', '45 min'])
   })
 })
 

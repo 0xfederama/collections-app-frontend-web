@@ -16,8 +16,6 @@ export type ItemSummary = components['schemas']['ItemSummary']
 export type DisplayMode = 'compact' | 'thumbnail' | 'grid'
 /** A built-in sort (`manual`, `title`, `updated`, `price`) or a field key of the list's type (the contract types it as a string). */
 export type SortMode = string
-/** The pinned field keys of a list; `null` is the type default, `[]` pins nothing. */
-export type PinnedFields = string[] | null
 
 /** Max page size of `GET /lists/{id}/items` (D-018). */
 export const ITEMS_PAGE_SIZE = 200
@@ -73,11 +71,10 @@ export function flattenItems(data: ItemsData | undefined) {
   }
 }
 
-type ListPatch =
-  { display_mode: DisplayMode } | { sort_mode: SortMode } | { pinned_fields: PinnedFields }
+type ListPatch = { display_mode: DisplayMode } | { sort_mode: SortMode }
 
 /**
- * PATCH a list's `display_mode`, `sort_mode` or `pinned_fields` (`null` resets to the type default). `If-Match` is built from the version in the cache
+ * PATCH a list's `display_mode` or `sort_mode`. `If-Match` is built from the version in the cache
  * at call time, and calls for one list run one after another so quick successive changes do not
  * conflict with each other. A 412 is never retried: the caller refetches and tells the user.
  * The change shows at once and is rolled back on failure.

@@ -26,7 +26,6 @@ function list(n: number, parent: number | null, sort_order = 0, name = `L${n}`):
     description: null,
     display_mode: 'grid',
     sort_mode: 'manual',
-    pinned_fields: null,
     icon: null,
     icon_color: null,
     sort_order,

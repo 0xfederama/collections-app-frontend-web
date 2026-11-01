@@ -64,7 +64,6 @@ export function listHandlers(db: TreeDb) {
         description: null,
         display_mode: 'grid',
         sort_mode: 'manual',
-        pinned_fields: null,
         icon: body.icon ?? null,
         icon_color: body.icon_color ?? null,
         sort_order: nextOrder(state, parent, 'list'),
@@ -119,7 +118,6 @@ export function listHandlers(db: TreeDb) {
         description?: string | null
         display_mode?: unknown
         sort_mode?: unknown
-        pinned_fields?: List['pinned_fields']
         icon?: List['icon']
         icon_color?: List['icon_color']
       }
@@ -153,14 +151,8 @@ export function listHandlers(db: TreeDb) {
           return invalid('type', 'Unknown type.')
         if (body.type !== list.type) {
           list.type = body.type as ItemType
-          list.pinned_fields = null
           changed = true
         }
-      }
-      if (body.pinned_fields !== undefined) {
-        const pins = body.pinned_fields
-        list.pinned_fields = pins === null ? null : [...pins]
-        changed = true
       }
       if (body.icon !== undefined) {
         list.icon = body.icon
