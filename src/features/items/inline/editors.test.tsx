@@ -33,8 +33,6 @@ const typeField = (type: TypeField['type']): TypeField => ({
   label: 'Typed field',
   type,
   position: 0,
-  is_locked: true,
-  version: 1,
 })
 
 function renderField(type: TypeField['type']) {

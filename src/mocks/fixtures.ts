@@ -33,36 +33,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     status: 200,
     contentType: 'application/json',
   },
-  createTypeField: {
-    method: 'post',
-    path: '/api/v1/types/{key}/fields',
-    status: 201,
-    contentType: 'application/json',
-  },
-  reorderTypeFields: {
-    method: 'put',
-    path: '/api/v1/types/{key}/fields/order',
-    status: 204,
-    contentType: null,
-  },
-  previewDeleteTypeField: {
-    method: 'get',
-    path: '/api/v1/types/{key}/fields/{fieldKey}',
-    status: 200,
-    contentType: 'application/json',
-  },
-  updateTypeField: {
-    method: 'patch',
-    path: '/api/v1/types/{key}/fields/{fieldKey}',
-    status: 200,
-    contentType: 'application/json',
-  },
-  deleteTypeField: {
-    method: 'delete',
-    path: '/api/v1/types/{key}/fields/{fieldKey}',
-    status: 200,
-    contentType: 'application/json',
-  },
   getSettings: {
     method: 'get',
     path: '/api/v1/settings',

@@ -10,8 +10,6 @@ const fields = (entries: Array<[string, string, TypeField['type']]>): TypeField[
     label,
     type,
     position,
-    is_locked: true,
-    version: 1,
   }))
 
 /** Stable built-in definitions for MSW tests and the standalone mock worker. */
@@ -22,8 +20,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:film',
     allows_price: false,
     default_sort_field: 'release_year',
-    is_locked: true,
-    version: 1,
     fields: fields([
       ['release_year', 'Release year', 'number'],
       ['runtime_minutes', 'Runtime', 'number'],
@@ -38,8 +34,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:tv',
     allows_price: false,
     default_sort_field: 'first_air_year',
-    is_locked: true,
-    version: 1,
     fields: fields([
       ['first_air_year', 'First aired', 'number'],
       ['end_year', 'Ended', 'number'],
@@ -56,8 +50,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:car',
     allows_price: false,
     default_sort_field: 'model_year',
-    is_locked: true,
-    version: 1,
     fields: fields([
       ['make', 'Make', 'text'],
       ['model', 'Model', 'text'],
@@ -72,8 +64,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:book-open',
     allows_price: false,
     default_sort_field: null,
-    is_locked: true,
-    version: 1,
     fields: fields([
       ['author', 'Writer', 'text'],
       ['pages', 'Pages', 'number'],
@@ -87,8 +77,6 @@ export const mockTypes: TypeDefinition[] = [
     default_icon: 'i:tag',
     allows_price: true,
     default_sort_field: null,
-    is_locked: true,
-    version: 1,
     fields: [],
   },
 ]

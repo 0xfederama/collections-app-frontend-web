@@ -42,12 +42,10 @@ const bookDefinition: TypeDefinition = {
   default_icon: null,
   allows_price: true,
   default_sort_field: null,
-  is_locked: true,
-  version: 1,
   fields: [
-    { key: 'author', label: 'Author', type: 'text', position: 0, is_locked: true, version: 1 },
-    { key: 'pages', label: 'Pages', type: 'number', position: 1, is_locked: true, version: 1 },
-    { key: 'stores', label: 'Stores', type: 'stores', position: 2, is_locked: true, version: 1 },
+    { key: 'author', label: 'Author', type: 'text', position: 0 },
+    { key: 'pages', label: 'Pages', type: 'number', position: 1 },
+    { key: 'stores', label: 'Stores', type: 'stores', position: 2 },
   ],
 }
 

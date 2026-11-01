@@ -627,8 +627,6 @@ describe('F016-W1 book item detail', () => {
           label: 'Open Library id',
           type: 'text' as const,
           position: 9,
-          is_locked: true,
-          version: 1,
         },
       ],
     }

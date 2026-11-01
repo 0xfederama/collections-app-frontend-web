@@ -14,36 +14,18 @@ export const NO_TYPE_DEFINITION: TypeDefinition = {
   default_icon: null,
   allows_price: false,
   default_sort_field: null,
-  is_locked: true,
-  version: 0,
   fields: [],
 }
 
 /**
- * Only the built-in fields are offered (F-023): the API marks a built-in field `is_locked` and a
- * custom one not. Custom fields are gone from the web, so one that the API still sends is ignored.
- */
-export const isBuiltinField = (field: TypeField): boolean => field.is_locked
-
-/** The definition with its custom fields left out; the same object when there are none. */
-export function builtinDefinition(definition: TypeDefinition): TypeDefinition {
-  return definition.fields.every(isBuiltinField)
-    ? definition
-    : { ...definition, fields: definition.fields.filter(isBuiltinField) }
-}
-
-/**
- * The definition of a type key, built-in fields only: every screen reads definitions through here.
- * `null` (no type) gets `NO_TYPE_DEFINITION`, an unknown key `undefined`.
+ * The definition of a type key, read from the API (`listTypes`): every field the API returns is a
+ * built-in field (F-023, api-v3.0.0). `null` (no type) gets `NO_TYPE_DEFINITION`, an unknown key `undefined`.
  */
 export const typeDefinition = (
   definitions: readonly TypeDefinition[] | undefined,
   key: ItemType,
-): TypeDefinition | undefined => {
-  if (key === null) return NO_TYPE_DEFINITION
-  const found = definitions?.find((type) => type.key === key)
-  return found ? builtinDefinition(found) : undefined
-}
+): TypeDefinition | undefined =>
+  key === null ? NO_TYPE_DEFINITION : definitions?.find((type) => type.key === key)
 
 /** The display name of a type key: the definition's name, a prettified key while loading, "No type" for `null`. */
 export const typeName = (definition: TypeDefinition | undefined, fallback: ItemType) =>

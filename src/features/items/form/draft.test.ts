@@ -13,28 +13,22 @@ const definition: TypeDefinition = {
   default_icon: null,
   allows_price: false,
   default_sort_field: 'rating',
-  is_locked: true,
-  version: 1,
   fields: [
-    { key: 'notes', label: 'Notes', type: 'text', position: 0, is_locked: true, version: 1 },
-    { key: 'rating', label: 'Rating', type: 'number', position: 1, is_locked: true, version: 1 },
+    { key: 'notes', label: 'Notes', type: 'text', position: 0 },
+    { key: 'rating', label: 'Rating', type: 'number', position: 1 },
     {
       key: 'played_on',
       label: 'Played on',
       type: 'date',
       position: 2,
-      is_locked: true,
-      version: 1,
     },
     {
       key: 'recommended',
       label: 'Recommended',
       type: 'boolean',
       position: 3,
-      is_locked: true,
-      version: 1,
     },
-    { key: 'rules', label: 'Rules', type: 'link', position: 4, is_locked: true, version: 1 },
+    { key: 'rules', label: 'Rules', type: 'link', position: 4 },
   ],
 }
 
@@ -127,16 +121,12 @@ describe('F016-W4 the stores field in the item draft', () => {
     default_icon: null,
     allows_price: true,
     default_sort_field: null,
-    is_locked: true,
-    version: 1,
     fields: [
       {
         key: 'stores',
         label: 'Where to get it',
         type: 'stores',
         position: 0,
-        is_locked: true,
-        version: 1,
       },
     ],
   }

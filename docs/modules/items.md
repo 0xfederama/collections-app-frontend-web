@@ -21,14 +21,14 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `ItemPage()`, `ItemView({ item })`, `ItemHero`.
 - `ImageDialog({ item, onClose, initialFile? })`, `ImageSection({ item, initialFile?, onChanged, onStale })`.
 - `useItem`, `useItemContent`, `useUpdateItem`, `useCreateItem`, `useDeleteItem`, `useMoveItem` (`api.ts`).
-- `typeDefinition(definitions, key)`, `builtinDefinition(definition)`, `isBuiltinField(field)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
+- `typeDefinition(definitions, key)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
 - `createLookupSelection(type, settings, selection)`, `hasSuggestions(type)`, `isBookLookup(type, settings)`, `lookupSource(type)`.
 - `DescriptionField({ itemId, listId })`, `InlineField`, `FieldBlock`.
 
 ## Gotchas
 
 - Type fields, labels, types and price support come from `GET /api/v1/types`, not from code; `hasPrice` reads `allows_price` from the definition.
-- Custom fields (`is_locked: false`) never reach the item page, "+ Add field", pins, sort or filter: `typeDefinition` strips them (F-023).
+- Custom fields are gone (api-v3.0.0, F-023): every field `GET /api/v1/types` returns is built in, so `typeDefinition` returns it unchanged and no screen sees a custom key.
 - Built-in types (F-018, `api-v0.16.0`): Books, Vehicles, Movies, TV shows, Wishlist. Only Wishlist allows price.
 - Lookup ids: movie and TV send `tmdb_id`; a book sends only `lookup: true` (no `source_id`). The server fills the item from the first Open Library result and creates it unchanged if Open Library is slow or fails. While pending (2-5 s) `NewItemDraft` shows a `role="status"` line.
 - No re-match or refresh UI on an item; lookup suggestions appear only when creating (inline draft and Quick add).
