@@ -20,6 +20,8 @@ const withoutBookkeeping = (types: TypeDefinition[]): TypeDefinition[] =>
 export function useTypes() {
   return useQuery({
     queryKey: typeKeys.types,
+    // F-023: the definitions are the backend's code (api-v3.0.0), so they cannot change while the app runs.
+    staleTime: Infinity,
     select: withoutBookkeeping,
     // The list itself is still nullable in the contract (api-v1.0.1 types `GET /types` as
     // `TypeDefinition[] | null`): an absent list is no types.
