@@ -48,7 +48,8 @@ export const STREAMING_ENTRIES: ServiceEntry[] = [
   {
     key: 'appletv',
     label: 'Apple TV+',
-    // TMDB now calls the subscription "Apple TV"; the key matches it. The channel gives the same content.
+    // TMDB names the subscription "Apple TV" (id 350, matched by the key) and the store "Apple TV Store" (id 2,
+    // its own entry). The Amazon Channel gives the same content.
     aliases: ['appletv+', 'appletvplus', 'appletvamazonchannel'],
     file: 'apple-tv.svg',
     tile: 'light',
