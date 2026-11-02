@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// The stack is started separately: `./deploy/test up -d --fresh` from the parent repo (:5183).
+// The stack is started separately: `./deploy/dev up -d --fresh` from the parent repo (:5183).
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: false,
