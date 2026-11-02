@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { server } from '../../mocks/server'
 import { mockViewport, renderAt } from '../../test-utils'
 
@@ -43,15 +43,30 @@ describe('F008 rework: theme in Settings > General', () => {
   })
 
   it('makes no network request when the theme changes', async () => {
-    const user = await openSettings()
+    // The pane loads its own data (settings, store providers) after it renders: wait until it is idle,
+    // so only requests caused by the theme clicks are counted.
+    let inFlight = 0
+    let providersLoaded = false
+    const started = () => inFlight++
+    const ended = ({ request }: { request: Request }) => {
+      inFlight--
+      if (request.url.endsWith('/store-providers')) providersLoaded = true
+    }
+    server.events.on('request:start', started)
+    server.events.on('request:end', ended)
     const requests: string[] = []
-    const listener = ({ request }: { request: Request }) => requests.push(request.method)
-    server.events.on('request:start', listener)
+    const listener = ({ request }: { request: Request }) =>
+      requests.push(`${request.method} ${request.url}`)
     try {
+      const user = await openSettings()
+      await vi.waitFor(() => expect(providersLoaded && inFlight === 0).toBe(true))
+      server.events.on('request:start', listener)
       await user.click(within(group()).getByRole('radio', { name: 'Dark' }))
       await user.click(within(group()).getByRole('radio', { name: 'System default' }))
     } finally {
       server.events.removeListener('request:start', listener)
+      server.events.removeListener('request:start', started)
+      server.events.removeListener('request:end', ended)
     }
     expect(requests).toEqual([])
   })
