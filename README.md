@@ -62,8 +62,8 @@ vite.config.ts         dev server :5173, /api + /healthz + /readyz proxy, Vitest
 
 The backend comes from the parent repo, see its [`deploy/README.md`](https://github.com/0xfederama/collections-app/blob/main/deploy/README.md):
 
-- `./deploy/dev up -d` starts the backend and this dev server at http://localhost:5173 with your persistent dev data.
-- `./deploy/test up -d --fresh` does the same at http://localhost:5183 (API on :8090) with a disposable database.
+- `./deploy/test up -d` starts the backend and this dev server at http://localhost:5173 (API on :8080) with persistent data: your manual environment.
+- `./deploy/dev up -d --fresh` does the same at http://localhost:5183 (API on :8090) with a disposable database: automated checks and e2e run here.
 
 Both run Vite on this checkout, so edits reload live. To run only the dev server on the host against a backend that is already up:
 
@@ -98,13 +98,19 @@ A few Playwright specs (`e2e/`, Chromium only) check the main user flows against
 
 ```bash
 # in the parent repo: a fresh stack on http://localhost:5183 (API :8090)
-./deploy/test up -d --fresh
+./deploy/dev up -d --fresh
 # here, once per machine
 npx playwright install chromium
 npm run e2e            # E2E_BASE_URL overrides the address
 ```
 
 Run them when a user flow changes and before a release (D-076). Each spec creates its own data with unique names, so a stack that already holds data works too, but a fresh one is the reference.
+
+## Release
+
+- Bump `version` in `package.json` (patch / minor / major), merge, then tag `main` as `vX.Y.Z` and push the tag.
+- The tag runs `.github/workflows/release-image.yml`: it builds the production image (Caddy + built SPA) for linux/arm64 and linux/amd64 and pushes it to GHCR as `ghcr.io/0xfederama/collections-app-frontend-web:X.Y.Z` (private package). It does not deploy.
+- Publishing a GitHub Release for that tag (marked latest) is the prod approval: the Pi deploys it (backend before web, D-117). A draft Release is not an approval.
 
 ## Troubleshooting
 
@@ -113,6 +119,6 @@ Run them when a user flow changes and before a release (D-076). Each spec create
 - **`api:check` reports drift:** `src/generated/` or `api/` no longer matches the pinned spec. Run `npm run api:sync -- <tag>` for the contract tag you want; don't edit those files by hand.
 - **Upload over 10 MiB returns an empty 502 in dev:** the Vite proxy hides the backend's 413 when it closes the connection early. The app's client-side size check stops such files first; straight to the backend you get a proper 413.
 - **`VITE_API_MOCKS=1` does nothing in the Claude desktop browser pane:** it refuses service workers, so MSW can't start. Use a normal browser.
-- **Port 5173 in use:** the dev server uses `strictPort`, so stop the other process (or the `./deploy/dev` stack).
+- **Port 5173 in use:** the dev server uses `strictPort`, so stop the other process (or the `./deploy/test` stack).
 - **Wrong Node version:** `nvm use` (reads `.nvmrc`). `engines` requires Node 24 or newer.
 - **`install-scripts` warning from npm:** about the optional `fsevents` package, harmless.
