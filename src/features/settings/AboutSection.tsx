@@ -49,7 +49,16 @@ export function AboutSection() {
           >
             Open Library
           </a>
-          , an open project of the Internet Archive.
+          , an open project of the Internet Archive. Missing details are filled in from{' '}
+          <a
+            className={`${externalLink} font-semibold`}
+            href="https://hardcover.app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Hardcover
+          </a>
+          .
         </p>
       </div>
       <div className="flex flex-wrap gap-x-5 gap-y-2">

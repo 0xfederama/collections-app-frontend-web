@@ -354,12 +354,22 @@ describe('W-13 settings: saving', () => {
     expect(patches).toEqual([{ ifMatch: '"s-4"', body: { preferred_store: 'kobo' } }])
   })
 
-  it('F016-W1 credits Open Library for book details and covers in About', async () => {
+  it('F016-W1 credits Open Library and Hardcover for book details in About', async () => {
     mountBackend()
     await openSettings('About')
     const about = screen.getByRole('region', { name: 'About' })
     expect(about).toHaveTextContent(
-      'Book details and covers come from Open Library, an open project of the Internet Archive.',
+      'Book details and covers come from Open Library, an open project of the Internet Archive. Missing details are filled in from Hardcover.',
+    )
+    // Text only: Hardcover publishes no brand guidelines allowing logo use.
+    expect(within(about).queryByRole('img', { name: 'Hardcover' })).not.toBeInTheDocument()
+    expect(within(about).getByRole('link', { name: 'Hardcover' })).toHaveAttribute(
+      'href',
+      'https://hardcover.app',
+    )
+    expect(within(about).getByRole('link', { name: 'Hardcover' })).toHaveAttribute(
+      'rel',
+      'noopener noreferrer',
     )
     expect(within(about).getByRole('img', { name: 'Open Library' })).toBeInTheDocument()
     expect(about).not.toHaveTextContent('Thank you')
