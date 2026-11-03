@@ -122,3 +122,7 @@ Run them when a user flow changes and before a release (D-076). Each spec create
 - **Port 5173 in use:** the dev server uses `strictPort`, so stop the other process (or the `./deploy/test` stack).
 - **Wrong Node version:** `nvm use` (reads `.nvmrc`). `engines` requires Node 24 or newer.
 - **`install-scripts` warning from npm:** about the optional `fsevents` package, harmless.
+
+## Trademarks
+
+Logos, icons and names of streaming services, stores and other third-party services shown in the app are trademarks of their respective owners. They are used only to identify those services and link to them; this project is not affiliated with, sponsored by or endorsed by any of them. Movie and TV data comes from TMDB: this product uses the TMDB API but is not endorsed or certified by TMDB.
