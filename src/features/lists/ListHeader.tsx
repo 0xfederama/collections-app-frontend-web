@@ -147,7 +147,7 @@ export function ListHeader(props: ListHeaderProps) {
       </header>
       {/* Sticky inside the scrolling `main`: the solid background keeps the items that pass behind it
           readable. The wrapper is the container the narrow variants measure. Search and "+ Filter" first, then sort, display and the + New item; an applied field filter is a chip under the bar. */}
-      <div className="@container z-10 bg-bg sm:sticky sm:top-0">
+      <div className="@container z-10 -mt-2 bg-bg sm:sticky sm:top-0">
         <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
           {/* Phones (< 768 px): the field takes the space the icon-only controls leave (F-025 W2). */}
           <div className="min-w-0 flex-1 md:min-w-40 [&_label]:sr-only">
