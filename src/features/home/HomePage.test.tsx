@@ -111,6 +111,20 @@ describe('W-13 home: empty workspace', () => {
   })
 })
 
+describe('F-025 phone home: Quick add sits below the search field', () => {
+  it('orders the title, the search field, then Quick add', async () => {
+    mockViewport(390)
+    renderAt('/')
+    const main = screen.getByRole('main')
+    const title = await within(main).findByRole('heading', { level: 1 })
+    const search = within(main).getByRole('searchbox', { name: /^Search$/ })
+    const quick = within(main).getByRole('button', { name: 'Quick add' })
+    const following = Node.DOCUMENT_POSITION_FOLLOWING
+    expect(title.compareDocumentPosition(search) & following).toBeTruthy()
+    expect(search.compareDocumentPosition(quick) & following).toBeTruthy()
+  })
+})
+
 describe('W-13 home: recently updated', () => {
   it('rows link to /lists/{list_id}/items/{id}', async () => {
     await openHome()

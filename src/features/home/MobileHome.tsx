@@ -20,8 +20,8 @@ const MOBILE_RECENT_LIMIT = 5
 
 /**
  * Phones (< 768 px, F-025 W14): Home is the root page, there is no drawer. The iOS large-title
- * pattern: a compact top bar with a labelled Quick add button, the workspace name as a large title
- * that wraps (never truncated), a full-width search field (Enter opens `/search?q=`), then the
+ * pattern: the workspace name as a large title that wraps (never truncated), a full-width search field
+ * (Enter opens `/search?q=`) with the labelled Quick add button just below it, then the
  * folders and lists (the sidebar tree, so expand, row actions and "+ New" are the same), recently
  * updated items, and Settings and Trash as plain rows last.
  */
@@ -34,18 +34,6 @@ export function MobileHome({ empty }: { empty: ReactNode }) {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
-        <div className="flex justify-end">
-          <Button
-            variant="ink"
-            size="sm"
-            aria-label="Quick add"
-            onClick={() => quickAdd.open()}
-            className="pointer-coarse:min-h-11"
-          >
-            <Plus aria-hidden className="size-4 shrink-0" />
-            Quick add
-          </Button>
-        </div>
         <h1 className="font-display text-display break-words">{workspaceName}</h1>
         <form
           role="search"
@@ -72,6 +60,18 @@ export function MobileHome({ empty }: { empty: ReactNode }) {
             />
           </div>
         </form>
+        <div className="flex">
+          <Button
+            variant="ink"
+            size="sm"
+            aria-label="Quick add"
+            onClick={() => quickAdd.open()}
+            className="pointer-coarse:min-h-11"
+          >
+            <Plus aria-hidden className="size-4 shrink-0" />
+            Quick add
+          </Button>
+        </div>
       </div>
       <section aria-labelledby="home-library" className="flex flex-col gap-3">
         <h2 id="home-library" className="font-display text-section text-text">
