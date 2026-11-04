@@ -442,20 +442,29 @@ describe('W-04 shell footer links', () => {
 })
 
 describe('F-025 W14 Home is the root page on phones', () => {
-  it('at 375 Home shows the workspace name, recent items, the tree and Settings/Trash rows, no menu', async () => {
+  it('at 375 Home shows Quick add, the large title, Search, then Lists, Recently updated, Settings/Trash, no menu', async () => {
     mockViewport(375)
     renderAt('/')
     const main = screen.getByRole('main')
-    expect(
-      await within(main).findByRole('heading', { level: 1, name: 'Our Collection' }),
-    ).toBeInTheDocument()
-    expect(within(main).getByRole('link', { name: 'Search' })).toHaveAttribute('href', '/search')
-    expect(within(main).getByRole('button', { name: 'Quick add' })).toBeInTheDocument()
-    expect(
-      await within(main).findByRole('heading', { name: 'Recently updated' }),
-    ).toBeInTheDocument()
-    expect(await within(main).findByRole('tree', { name: 'Folders and lists' })).toBeInTheDocument()
+    const title = await within(main).findByRole('heading', { level: 1, name: 'Our Collection' })
+    expect(title).toHaveClass('break-words')
+    expect(title.className).not.toMatch(/truncate|line-clamp/)
+    const quickAdd = within(main).getByRole('button', { name: 'Quick add' })
+    expect(quickAdd).toHaveTextContent('Quick add')
+    const search = within(main).getByRole('searchbox', { name: 'Search' })
+    expect(search).toHaveAttribute('placeholder', 'Search')
+    expect(within(main).queryByRole('link', { name: 'Search' })).not.toBeInTheDocument()
+    const lists = await within(main).findByRole('heading', { name: 'Lists' })
+    const recent = await within(main).findByRole('heading', { name: 'Recently updated' })
     const rows = within(main).getByRole('navigation', { name: 'Settings and Trash' })
+    expect(await within(main).findByRole('tree', { name: 'Folders and lists' })).toBeInTheDocument()
+    const follows = (a: Node, b: Node) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(follows(quickAdd, title)).toBe(true)
+    expect(follows(title, search)).toBe(true)
+    expect(follows(search, lists)).toBe(true)
+    expect(follows(lists, recent)).toBe(true)
+    expect(follows(recent, rows)).toBe(true)
     expect(within(rows).getByRole('link', { name: 'Settings' })).toHaveAttribute(
       'href',
       '/settings',
@@ -463,6 +472,15 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(within(rows).getByRole('link', { name: 'Trash' })).toHaveAttribute('href', '/trash')
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('submitting the Home search field opens /search?q=', async () => {
+    mockViewport(375)
+    const user = userEvent.setup()
+    const router = renderRouter('/')
+    await user.type(await screen.findByRole('searchbox', { name: 'Search' }), 'dune{Enter}')
+    expect(router.state.location.pathname).toBe('/search')
+    expect(router.state.location.search).toBe('?q=dune')
   })
 
   it('Settings opens as the pane over Home', async () => {
@@ -473,19 +491,15 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
   })
 
-  it('[CRUCIAL] a list shows "Back to Home" as the first control of its title row', async () => {
+  it('a list has no "Back to Home": the title row starts with the list icon or title', async () => {
     mockViewport(375)
     renderAt(`/lists/${WATCHLIST}`)
-    const heading = await screen.findByRole('heading', { level: 1 })
-    const back = screen.getByRole('link', { name: 'Back to Home' })
-    expect(back).toHaveAttribute('href', '/')
-    expect(back).toHaveTextContent('Home')
-    expect(heading.parentElement).toContainElement(back)
-    expect(back.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await screen.findByRole('heading', { level: 1 })
+    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
   })
 
-  it('[CRUCIAL] tapping a list pushes it, and "Back to Home" returns to Home', async () => {
+  it('tapping a list pushes it', async () => {
     mockViewport(375)
     localStorage.setItem('collection:tree-expanded', JSON.stringify([MEDIA, MOVIES]))
     const user = userEvent.setup()
@@ -493,15 +507,13 @@ describe('F-025 W14 Home is the root page on phones', () => {
     const tree = await screen.findByRole('tree', { name: 'Folders and lists' })
     await user.click(await within(tree).findByRole('link', { name: /Watchlist/ }))
     expect(router.state.location.pathname).toBe(`/lists/${WATCHLIST}`)
-    await user.click(await screen.findByRole('link', { name: 'Back to Home' }))
-    expect(router.state.location.pathname).toBe('/')
   })
 
-  it('the loading state of a list already has "Back to Home"', () => {
+  it('the loading state of a list has no "Back to Home" either', () => {
     mockViewport(375)
     renderAt(`/lists/${WATCHLIST}`)
     expect(screen.getByRole('status')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Back to Home' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
   })
 
   it('the item page keeps its back-to-list control and has no "Back to Home"', async () => {
@@ -515,10 +527,11 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
   })
 
-  it('Search and Trash show "Back to Home"', async () => {
+  it('Search and Trash have no "Back to Home"', async () => {
     mockViewport(375)
     renderAt('/search')
-    expect(await screen.findByRole('link', { name: 'Back to Home' })).toBeInTheDocument()
+    await screen.findByRole('heading', { name: 'Search' })
+    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
   })
 
   it('at 1024 the sidebar is unchanged: no slot, Home keeps its heading and the sidebar tree', async () => {

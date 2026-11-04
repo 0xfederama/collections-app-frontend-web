@@ -25,8 +25,8 @@ function RecentSkeleton() {
 }
 
 /** "Recently updated": the latest items across every list, rows like the search results page. */
-export function RecentItems() {
-  const recent = useRecentItems(RECENT_LIMIT)
+export function RecentItems({ limit = RECENT_LIMIT }: { limit?: number }) {
+  const recent = useRecentItems(limit)
   return (
     <section aria-labelledby="home-recent" className="flex flex-col gap-3">
       <h2 id="home-recent" className="font-display text-section text-text">

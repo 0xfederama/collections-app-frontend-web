@@ -5,7 +5,7 @@ import { createItem, createList, itemUrl, uniqueName } from './helpers'
 // Runs only in the `mobile-webkit` project.
 
 test.describe('F-025 mobile Home', () => {
-  test('W14 Home shows recents, the list row, Settings, Trash and Search', async ({
+  test('W14 Home shows Quick add, search field, lists, recents, Settings and Trash', async ({
     page,
     request,
   }) => {
@@ -20,11 +20,12 @@ test.describe('F-025 mobile Home', () => {
     await expect(main.getByRole('link', { name: new RegExp(name) }).first()).toBeVisible()
     await expect(main.getByRole('link', { name: 'Settings' })).toBeVisible()
     await expect(main.getByRole('link', { name: 'Trash' })).toBeVisible()
-    await expect(main.getByRole('link', { name: 'Search', exact: true })).toBeVisible()
+    await expect(main.getByRole('searchbox', { name: 'Search', exact: true })).toBeVisible()
+    await expect(main.getByRole('button', { name: 'Quick add' })).toContainText('Quick add')
     await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
   })
 
-  test('W14 list and item pages have back controls, Back to Home goes back in history', async ({
+  test('W14 the list has no Back to Home, the item page goes back to its list', async ({
     page,
     request,
   }) => {
@@ -40,14 +41,11 @@ test.describe('F-025 mobile Home', () => {
       .tap()
     await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`))
 
-    const home = main.getByRole('link', { name: 'Back to Home' })
+    await expect(main.getByRole('link', { name: 'Back to Home' })).toHaveCount(0)
     const heading = main.getByRole('button', { name, exact: true })
-    await expect(home).toBeVisible()
-    const [homeBox, headingBox] = [await home.boundingBox(), await heading.boundingBox()]
-    if (!homeBox || !headingBox) throw new Error('missing box')
-    expect(homeBox.x + homeBox.width).toBeLessThanOrEqual(headingBox.x + 0.5)
-    expect(homeBox.y).toBeLessThan(headingBox.y + headingBox.height)
-    expect(headingBox.y).toBeLessThan(homeBox.y + homeBox.height)
+    const headingBox = await heading.boundingBox()
+    if (!headingBox) throw new Error('missing box')
+    expect(headingBox.x).toBeLessThan(80)
 
     await page.getByRole('link', { name: title }).tap()
     await expect(page).toHaveURL(new RegExp(`${itemUrl(list.id, item.id)}$`))
@@ -55,30 +53,18 @@ test.describe('F-025 mobile Home', () => {
     await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`))
   })
 
-  test('W14 Back to Home goes back in history instead of pushing', async ({ page, request }) => {
-    const name = uniqueName('History list')
-    const list = await createList(request, name, 'movie')
+  test('W14 the Home search field opens the results for the query', async ({ page, request }) => {
+    const title = uniqueName('Findable')
+    const list = await createList(request, uniqueName('Search list'), 'movie')
+    await createItem(request, list.id, title)
     await page.goto('/')
-    const main = page.getByRole('main')
-    await main
-      .getByRole('tree')
-      .getByRole('link', { name: new RegExp(name) })
-      .tap()
-    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`))
-    const before = await page.evaluate(() => window.history.length)
-
-    await main.getByRole('link', { name: 'Back to Home' }).tap()
-    await expect(page).toHaveURL(/\/$/)
-    // It went back, it did not push: the list is still the next entry forward.
-    expect(await page.evaluate(() => window.history.length)).toBe(before)
-    await page.goForward()
-    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`))
-
-    await page.goBack()
-    await expect(page).toHaveURL(/\/$/)
+    const field = page.getByRole('main').getByRole('searchbox', { name: 'Search', exact: true })
+    await field.fill(title)
+    await field.press('Enter')
+    await expect(page).toHaveURL(/\/search\?q=/)
   })
 
-  test('W12 the display-mode radios lead the toolbar at the height of Filter', async ({
+  test('W12 the display-mode tray leads the toolbar at the height of Filter', async ({
     page,
     request,
   }) => {
@@ -87,7 +73,7 @@ test.describe('F-025 mobile Home', () => {
     await page.goto(`/lists/${list.id}`)
     const main = page.getByRole('main')
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
-    const first = main.getByRole('radiogroup', { name: 'Display mode' }).locator('label').first()
+    const first = main.getByRole('radiogroup', { name: 'Display mode' })
     const filter = main.getByRole('button', { name: 'Filter' })
     const [a, f] = [await first.boundingBox(), await filter.boundingBox()]
     if (!a || !f) throw new Error('missing box')
