@@ -194,7 +194,7 @@ test.describe('F-025 list row polish', () => {
       }
       for (const { tiles } of measured) expect(tiles).toBeLessThanOrEqual(4)
       expect(Math.max(...measured.map((m) => m.tiles))).toBe(4)
-      expect(Math.abs(measured[0].right - measured[1].right)).toBeLessThanOrEqual(1)
+      expect(Math.abs((measured[0]?.right ?? 0) - (measured[1]?.right ?? 1))).toBeLessThanOrEqual(1)
     })
   }
 
