@@ -2,12 +2,12 @@
 
 ## Purpose
 
-`/` Home: "Your lists" quick links (every list, most recently changed first) and "Recently updated" (the latest items across the workspace, D-070). An empty workspace shows a create-first-list state instead. On phones (< 768 px) Home is the root page: `MobileHome` replaces the two sections with Quick add, a large title, search, the lists, five recent items and Settings / Trash rows. Spec: `/Users/federico/Developer/collections-app/design-docs/UI_SPEC.md` §1.
+`/` Home: "Your lists" quick links (every list, most recently changed first) and "Recently updated" (the latest items across the workspace, D-070). An empty workspace shows a create-first-list state instead. On phones (< 768 px) Home is the root page: `MobileHome` replaces the two sections with a large title, search, the Quick add button, the lists, five recent items and Settings / Trash rows. Spec: `/Users/federico/Developer/collections-app/design-docs/UI_SPEC.md` §1.
 
 ## Key files
 
 - `src/features/home/HomePage.tsx`: page body, empty state, own `useTreeDialogs()` copy for New list / New folder.
-- `src/features/home/MobileHome.tsx`: phone layout, in order: Quick add button, wrapping workspace name, search field (Enter opens `/search?q=`), "Lists" (the sidebar tree), "Recently updated" (5), Settings and Trash rows.
+- `src/features/home/MobileHome.tsx`: phone layout, in order: wrapping workspace name, search field (Enter opens `/search?q=`), Quick add button, "Lists" (the sidebar tree), "Recently updated" (5), Settings and Trash rows.
 - `src/features/home/QuickLinks.tsx`: `listsByRecency`, link grid, skeleton and error states.
 - `src/features/home/RecentItems.tsx`: "Recently updated" list, rows from search's `SearchResultBody`.
 - `src/features/home/api.ts`: `useRecentItems`, `RECENT_LIMIT`; `homeKeys` is in `src/data/keys.ts`.

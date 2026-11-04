@@ -70,7 +70,8 @@ test.describe('F016-W3 book row layout', () => {
       await page.setViewportSize({ width, height: 900 })
       await page.goto(`/lists/${list.id}`)
       // Thumbnail rows show the pinned fields at every width (compact rows hide them below 640 px).
-      await page.getByRole('radio', { name: 'Thumbnail rows' }).check({ force: true })
+      await page.getByRole('button', { name: 'View options' }).click()
+      await page.getByRole('menuitemradio', { name: 'Thumbnail rows' }).click()
       const row = page.getByRole('list', { name: 'Items' }).getByRole('listitem').filter({
         hasText: title,
       })

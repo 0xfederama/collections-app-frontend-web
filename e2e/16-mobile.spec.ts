@@ -20,10 +20,10 @@ test.describe('F-025 mobile', () => {
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
 
     const controls = [
-      main.getByRole('button', { name: 'Search', exact: true }),
+      main.getByRole('button', { name: 'View options' }),
+      main.getByRole('searchbox', { name: /Search items by title/ }),
       main.getByRole('button', { name: 'Filter' }),
       main.getByRole('button', { name: 'Sort', exact: true }),
-      main.getByRole('radiogroup', { name: 'Display mode' }),
       main.getByRole('button', { name: 'New item' }),
     ]
     const viewport = page.viewportSize()
@@ -48,7 +48,7 @@ test.describe('F-025 mobile', () => {
     expect(overflow).toBeLessThanOrEqual(0)
   })
 
-  test('W8 Filter and Sort are matching buttons the size of New item, and search says "Search"', async ({
+  test('W8 Filter and Sort are matching buttons the size of New item, and View options matches them', async ({
     page,
     request,
   }) => {
@@ -59,7 +59,7 @@ test.describe('F-025 mobile', () => {
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
 
     const sizes: Record<string, { width: number; height: number }> = {}
-    for (const name of ['Search', 'Filter', 'Sort', 'New item']) {
+    for (const name of ['View options', 'Filter', 'Sort', 'New item']) {
       const button = main.getByRole('button', { name, exact: true })
       await expect(button).toBeVisible()
       const box = await button.boundingBox()
@@ -69,12 +69,16 @@ test.describe('F-025 mobile', () => {
     const filter = sizes['Filter']
     const sort = sizes['Sort']
     const create = sizes['New item']
-    const search = sizes['Search']
+    const search = sizes['View options']
     if (!filter || !sort || !create || !search) throw new Error('missing size')
-    expect(Math.abs(search.width - filter.width), 'Search vs Filter width').toBeLessThanOrEqual(1)
-    expect(Math.abs(search.height - filter.height), 'Search vs Filter height').toBeLessThanOrEqual(
-      1,
-    )
+    expect(
+      Math.abs(search.width - filter.width),
+      'View options vs Filter width',
+    ).toBeLessThanOrEqual(1)
+    expect(
+      Math.abs(search.height - filter.height),
+      'View options vs Filter height',
+    ).toBeLessThanOrEqual(1)
     expect(Math.abs(filter.width - sort.width), 'Filter vs Sort width').toBeLessThanOrEqual(1)
     expect(Math.abs(filter.height - sort.height), 'Filter vs Sort height').toBeLessThanOrEqual(1)
     expect(Math.abs(filter.width - create.width), 'Filter vs New item width').toBeLessThanOrEqual(1)
@@ -87,10 +91,7 @@ test.describe('F-025 mobile', () => {
     await expect(page.getByRole('menuitemradio', { checked: true })).toHaveCount(1)
   })
 
-  test('W11 Search expands and focuses the field, filters, and Close search keeps the query', async ({
-    page,
-    request,
-  }) => {
+  test('the Search field is always visible and filters', async ({ page, request }) => {
     const list = await createList(request, uniqueName('Search'), 'movie')
     const keep = uniqueName('Keepme')
     const other = uniqueName('Other')
@@ -100,22 +101,13 @@ test.describe('F-025 mobile', () => {
     const main = page.getByRole('main')
     const rows = main.getByRole('list', { name: 'Items' }).getByRole('listitem')
     await expect(rows).toHaveCount(2)
-    await expect(main.getByRole('searchbox', { name: /Search items by title/ })).toHaveCount(0)
-
-    await main.getByRole('button', { name: 'Search', exact: true }).tap()
     const field = main.getByRole('searchbox', { name: /Search items by title/ })
     await expect(field).toBeVisible()
-    await expect(field).toBeFocused()
     await expect(field).toHaveAttribute('placeholder', 'Search')
     await field.fill(keep)
     await expect(rows).toHaveCount(1)
     await expect(rows).toContainText(keep)
-
-    await main.getByRole('button', { name: 'Close search' }).tap()
-    await expect(field).toHaveCount(0)
     await expect(page).toHaveURL(/[?&]q=/)
-    await expect(rows).toHaveCount(1)
-    await expect(main.getByRole('button', { name: 'Search (active)', exact: true })).toBeVisible()
   })
 
   test('W11 the viewport meta has viewport-fit=cover and maximum-scale=1', async ({ page }) => {
@@ -271,4 +263,97 @@ test.describe('F-025 mobile', () => {
     await page.evaluate(() => window.scrollTo(0, 300))
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
   })
+
+  test('F-025 the phone toolbar reads View options, search, Filter, Sort, New item; search is widest', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Order'), 'movie')
+    await createItem(request, list.id, uniqueName('Film'))
+    await page.goto(`/lists/${list.id}`)
+    const main = page.getByRole('main')
+    await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
+    const controls = [
+      main.getByRole('button', { name: 'View options' }),
+      main.getByRole('searchbox', { name: /Search items by title/ }),
+      main.getByRole('button', { name: 'Filter' }),
+      main.getByRole('button', { name: 'Sort', exact: true }),
+      main.getByRole('button', { name: 'New item' }),
+    ]
+    const boxes = []
+    for (const control of controls) {
+      await expect(control).toBeVisible()
+      const box = await control.boundingBox()
+      if (!box) throw new Error('control has no box')
+      boxes.push(box)
+    }
+    for (let k = 1; k < boxes.length; k++) {
+      expect(boxes[k]?.x ?? 0, `control ${k} is right of ${k - 1}`).toBeGreaterThan(
+        (boxes[k - 1]?.x ?? 0) + (boxes[k - 1]?.width ?? 0) - 1,
+      )
+    }
+    const widths = boxes.map((box) => box.width)
+    expect(widths[1]).toBe(Math.max(...widths))
+  })
+
+  for (const mode of ['Compact rows', 'Grid'] as const) {
+    test(`F-025 ${mode}: 8 streaming platforms never touch the title and show a +N tile`, async ({
+      page,
+      request,
+    }) => {
+      const list = await createList(request, uniqueName('Many tiles'), 'movie')
+      const title = uniqueName('Film with a rather long title')
+      await createItem(request, list.id, title, {
+        metadata: {
+          streaming: {
+            country: 'IT',
+            platforms: [
+              'Netflix',
+              'Disney+',
+              'Prime Video',
+              'Hulu',
+              'Max',
+              'Apple TV+',
+              'Paramount+',
+              'Peacock',
+            ],
+          },
+        },
+      })
+      await page.goto(`/lists/${list.id}`)
+      const main = page.getByRole('main')
+      await main.getByRole('button', { name: 'View options' }).click()
+      await page.getByRole('menuitemradio', { name: mode }).click()
+      const row = main.getByRole('list', { name: 'Items' }).getByRole('listitem')
+      await expect(row).toHaveCount(1)
+      const more = row.getByRole('img', { name: /\d+ more/ })
+      await expect(more).toBeVisible()
+      // The link is inline: its box spans the whole text even where the parent clips it, so
+      // clip it to the parent (the visible part of the title).
+      const titleBox = await row.getByRole('link', { name: title }).evaluate((node) => {
+        const a = node.getBoundingClientRect()
+        const p = (node.parentElement ?? node).getBoundingClientRect()
+        const x = Math.max(a.x, p.x)
+        const right = Math.min(a.right, p.right)
+        return { x, y: a.y, width: Math.max(0, right - x), height: a.height }
+      })
+      const tiles = await more.evaluate((node) =>
+        [...(node.parentElement?.children ?? [])].map((child) => {
+          const r = child.getBoundingClientRect()
+          return { x: r.x, y: r.y, width: r.width, height: r.height }
+        }),
+      )
+      expect(tiles.length).toBeGreaterThan(1)
+      for (const tile of tiles) {
+        const apart =
+          tile.x >= titleBox.x + titleBox.width ||
+          tile.x + tile.width <= titleBox.x ||
+          tile.y >= titleBox.y + titleBox.height ||
+          tile.y + tile.height <= titleBox.y
+        expect(apart, `tile ${JSON.stringify(tile)} vs title ${JSON.stringify(titleBox)}`).toBe(
+          true,
+        )
+      }
+    })
+  }
 })

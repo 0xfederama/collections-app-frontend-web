@@ -1,7 +1,7 @@
 import { cx } from '../../../lib/cx'
 import { useState, type ReactNode } from 'react'
-import { ServiceIcon, sortByServiceOrder } from '../../../components/ServiceIcon'
-import { filterOwnedPlatforms } from '../../../components/serviceIcons/owned'
+import { ServiceIcon } from '../../../components/ServiceIcon'
+import { filterOwnedPlatforms, orderPlatforms } from '../../../components/serviceIcons/owned'
 import { Button, focusRing, Menu, type MenuItem } from '../../../components/ui'
 import { Plus, TriangleAlert } from '../../../components/ui/icons'
 import { useSettings } from '../../settings'
@@ -34,7 +34,7 @@ function StreamingValue({ item }: { item: Item }) {
   // F-022-W3: only the services the user owns are shown; the editor still lists them all.
   const owned = settings.data?.owned_streaming_services ?? []
   const shown = filterOwnedPlatforms(streaming.platforms ?? [], owned, (name) => name)
-  const platforms = sortByServiceOrder(shown, (name) => name)
+  const platforms = orderPlatforms(shown, owned, String, (name) => paid.has(name.toLowerCase()))
   return (
     <div className="flex flex-col gap-1.5">
       {platforms.length ? (

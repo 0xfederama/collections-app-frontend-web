@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { List as ListIcon } from '../../components/ui/icons'
 import { useTreeIndex, type Folder, type List } from './api'
@@ -25,6 +26,7 @@ export function ListGate({
       <div role="status" className="flex flex-col gap-3">
         <span className="sr-only">Loading list</span>
         <div className="flex items-center gap-3">
+          <BackToHomeButton />
           {slot}
           <Skeleton className="h-8 w-1/3" />
         </div>
@@ -36,6 +38,7 @@ export function ListGate({
     return (
       <div role="alert" className="flex flex-col items-start gap-2">
         <div className="flex items-center gap-3">
+          <BackToHomeButton />
           {slot}
           <p>Couldn’t load this list.</p>
         </div>
@@ -49,7 +52,10 @@ export function ListGate({
   if (!list) {
     return (
       <>
-        <div className="mb-3 flex empty:hidden">{slot}</div>
+        <div className="mb-3 flex empty:hidden">
+          <BackToHomeButton />
+          {slot}
+        </div>
         <EmptyState
           icon={ListIcon}
           headingLevel="h1"

@@ -82,7 +82,8 @@ test.describe('F016 streaming tiles in a row open each service search', () => {
     expect(patched.status(), 'PATCH item').toBe(200)
 
     await page.goto(`/lists/${list.id}`)
-    await page.getByRole('radio', { name: 'Thumbnail rows' }).check({ force: true })
+    await page.getByRole('button', { name: 'View options' }).click()
+    await page.getByRole('menuitemradio', { name: 'Thumbnail rows' }).click()
     const row = page.getByRole('list', { name: 'Items' }).getByRole('listitem')
     const tile = row.getByRole('link', { name: 'Find on Netflix (opens in a new tab)' })
     await expect(tile).toHaveAttribute('href', /^https:\/\/www\.netflix\.com\/search\?q=/)

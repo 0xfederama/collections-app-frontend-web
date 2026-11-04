@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterOwnedPlatforms, serviceLabel, STREAMING_OFFERED } from './owned'
+import { filterOwnedPlatforms, orderPlatforms, serviceLabel, STREAMING_OFFERED } from './owned'
 
 const name = (platform: string) => platform
 
@@ -118,5 +118,53 @@ describe('F-022-W3 owned streaming services', () => {
 
   it('keeps unknown names once each when nothing is owned', () => {
     expect(filterOwnedPlatforms(['Foo TV', 'foo tv', 'Bar'], [], name)).toEqual(['Foo TV', 'Bar'])
+  })
+})
+
+describe('F-025 orderPlatforms', () => {
+  const paid = new Set(['Sky', 'Disney+'])
+  const order = (platforms: string[], owned: string[]) =>
+    orderPlatforms(platforms, owned, name, (platform) => paid.has(platform))
+
+  it.each<{ platforms: string[]; owned: string[]; expected: string[]; why: string }>([
+    {
+      platforms: ['Disney+', 'Netflix', 'Hulu'],
+      owned: [],
+      expected: ['Netflix', 'Hulu', 'Disney+'],
+      why: 'empty owned: registry order, paid last',
+    },
+    {
+      platforms: ['Netflix', 'Hulu', 'Max'],
+      owned: ['hulu', 'netflix'],
+      expected: ['Hulu', 'Netflix', 'Max'],
+      why: 'the Settings order wins over the registry order',
+    },
+    {
+      platforms: ['Netflix', 'Hulu', 'Disney+'],
+      owned: ['disneyplus', 'hulu', 'netflix'],
+      expected: ['Hulu', 'Netflix', 'Disney+'],
+      why: 'a paid platform goes after the free ones even when owned first',
+    },
+    {
+      platforms: ['Sky', 'Disney+', 'Netflix'],
+      owned: ['disneyplus', 'netflix'],
+      expected: ['Netflix', 'Disney+', 'Sky'],
+      why: 'the Settings order holds inside the paid group; unknown last of its group',
+    },
+    {
+      platforms: ['Zed', 'Alpha', 'Netflix'],
+      owned: [],
+      expected: ['Netflix', 'Zed', 'Alpha'],
+      why: 'unknown names go last, in their given order',
+    },
+    { platforms: [], owned: ['netflix'], expected: [], why: 'nothing to order' },
+  ])('$why', ({ platforms, owned, expected }) => {
+    expect(order(platforms, owned)).toEqual(expected)
+  })
+
+  it('does not mutate the input', () => {
+    const input = ['Hulu', 'Netflix']
+    order(input, ['netflix', 'hulu'])
+    expect(input).toEqual(['Hulu', 'Netflix'])
   })
 })

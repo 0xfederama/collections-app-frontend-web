@@ -38,3 +38,32 @@ export function filterOwnedPlatforms<T>(
     return true
   })
 }
+
+/**
+ * The display order of streaming tiles: the user's services in the order of `owned` (Settings), or the
+ * registry order when `owned` is empty, and every paid platform after all the others, keeping that
+ * order inside each group. A name that resolves to no key goes last of its group. Does not mutate.
+ */
+export function orderPlatforms<T>(
+  platforms: readonly T[],
+  owned: readonly string[],
+  nameOf: (platform: T) => string,
+  isPaid: (platform: T) => boolean,
+): T[] {
+  const rank = (platform: T): number => {
+    const found = findService(nameOf(platform))
+    if (!found) return Number.MAX_SAFE_INTEGER
+    if (owned.length === 0) return SERVICES.indexOf(found)
+    const index = owned.indexOf(found.key)
+    return index === -1 ? Number.MAX_SAFE_INTEGER : index
+  }
+  return platforms
+    .map((platform, index) => ({
+      platform,
+      index,
+      paid: isPaid(platform) ? 1 : 0,
+      rank: rank(platform),
+    }))
+    .sort((a, b) => a.paid - b.paid || a.rank - b.rank || a.index - b.index)
+    .map((entry) => entry.platform)
+}

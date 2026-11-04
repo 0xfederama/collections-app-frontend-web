@@ -442,7 +442,7 @@ describe('W-04 shell footer links', () => {
 })
 
 describe('F-025 W14 Home is the root page on phones', () => {
-  it('at 375 Home shows Quick add, the large title, Search, then Lists, Recently updated, Settings/Trash, no menu', async () => {
+  it('at 375 Home shows the large title, Search, Quick add, then Lists, Recently updated, Settings/Trash, no menu', async () => {
     mockViewport(375)
     renderAt('/')
     const main = screen.getByRole('main')
@@ -460,9 +460,9 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(await within(main).findByRole('tree', { name: 'Folders and lists' })).toBeInTheDocument()
     const follows = (a: Node, b: Node) =>
       Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
-    expect(follows(quickAdd, title)).toBe(true)
     expect(follows(title, search)).toBe(true)
-    expect(follows(search, lists)).toBe(true)
+    expect(follows(search, quickAdd)).toBe(true)
+    expect(follows(quickAdd, lists)).toBe(true)
     expect(follows(lists, recent)).toBe(true)
     expect(follows(recent, rows)).toBe(true)
     expect(within(rows).getByRole('link', { name: 'Settings' })).toHaveAttribute(
@@ -491,11 +491,11 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
   })
 
-  it('a list has no "Back to Home": the title row starts with the list icon or title', async () => {
+  it('a list title row starts with the compact Back to Home button', async () => {
     mockViewport(375)
     renderAt(`/lists/${WATCHLIST}`)
     await screen.findByRole('heading', { level: 1 })
-    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back to Home' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
   })
 
@@ -509,11 +509,11 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(router.state.location.pathname).toBe(`/lists/${WATCHLIST}`)
   })
 
-  it('the loading state of a list has no "Back to Home" either', () => {
+  it('the loading state of a list has the Back to Home button too', () => {
     mockViewport(375)
     renderAt(`/lists/${WATCHLIST}`)
     expect(screen.getByRole('status')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back to Home' })).toBeInTheDocument()
   })
 
   it('the item page keeps its back-to-list control and has no "Back to Home"', async () => {
