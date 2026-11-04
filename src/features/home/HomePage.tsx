@@ -1,8 +1,11 @@
-import { PageHeaderSlot } from '../../components/PageHeaderSlot'
+import { useRef } from 'react'
 import { EmptyState, Button } from '../../components/ui'
 import { ListPlus } from '../../components/ui/icons'
+import { useBreakpoint } from '../../lib/breakpoints'
+import { useScrollRestore } from '../lists'
 import { useTreeIndex, useTreeDialogs } from '../tree'
 import { QuickLinks, QuickLinksError, QuickLinksSkeleton } from './QuickLinks'
+import { MobileHome } from './MobileHome'
 import { RecentItems } from './RecentItems'
 
 /** `/` (UI_SPEC §1): quick links to the lists, then the recently updated items. */
@@ -12,46 +15,57 @@ export function HomePage() {
   const { actions, dialogs } = useTreeDialogs()
   const noLists = tree.status === 'success' && tree.index.lists.size === 0
   const hasNothing = noLists && tree.index.folders.size === 0
+  // Phones: Home is the root page and also holds the tree (F-025 W14). Coming back (history POP)
+  // restores its scroll; a fresh visit starts at the top.
+  const mobile = useBreakpoint() === 'mobile'
+  const root = useRef<HTMLDivElement>(null)
+  useScrollRestore(root, mobile && tree.status === 'success')
+  const emptyState = (
+    <EmptyState
+      icon={ListPlus}
+      title="Create your first list"
+      description={
+        hasNothing
+          ? 'A list holds your items, like movies to watch or gear you own. Start with one.'
+          : 'Your folders have no lists yet. Add a list to start collecting.'
+      }
+      action={
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button onClick={() => actions.createList(null)}>New list</Button>
+          <Button variant="secondary" onClick={() => actions.createFolder(null)}>
+            New folder
+          </Button>
+        </div>
+      }
+    />
+  )
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex items-center gap-3">
-        <PageHeaderSlot />
-        <h1 className="font-display text-display">Home</h1>
-      </div>
-      {noLists ? (
-        <EmptyState
-          icon={ListPlus}
-          title="Create your first list"
-          description={
-            hasNothing
-              ? 'A list holds your items, like movies to watch or gear you own. Start with one.'
-              : 'Your folders have no lists yet. Add a list to start collecting.'
-          }
-          action={
-            <div className="flex flex-wrap justify-center gap-2">
-              <Button onClick={() => actions.createList(null)}>New list</Button>
-              <Button variant="secondary" onClick={() => actions.createFolder(null)}>
-                New folder
-              </Button>
-            </div>
-          }
-        />
+    <div ref={root} className="flex flex-col gap-8">
+      {mobile ? (
+        <MobileHome empty={hasNothing ? emptyState : null} />
       ) : (
         <>
-          <section aria-labelledby="home-lists" className="flex flex-col gap-3">
-            <h2 id="home-lists" className="font-display text-section text-text">
-              Your lists
-            </h2>
-            {tree.status === 'pending' ? (
-              <QuickLinksSkeleton />
-            ) : tree.status === 'error' ? (
-              <QuickLinksError onRetry={tree.refetch} />
-            ) : (
-              <QuickLinks index={tree.index} />
-            )}
-          </section>
-          <RecentItems />
+          <h1 className="font-display text-display">Home</h1>
+          {noLists ? (
+            emptyState
+          ) : (
+            <>
+              <section aria-labelledby="home-lists" className="flex flex-col gap-3">
+                <h2 id="home-lists" className="font-display text-section text-text">
+                  Your lists
+                </h2>
+                {tree.status === 'pending' ? (
+                  <QuickLinksSkeleton />
+                ) : tree.status === 'error' ? (
+                  <QuickLinksError onRetry={tree.refetch} />
+                ) : (
+                  <QuickLinks index={tree.index} />
+                )}
+              </section>
+              <RecentItems />
+            </>
+          )}
         </>
       )}
       {dialogs}
