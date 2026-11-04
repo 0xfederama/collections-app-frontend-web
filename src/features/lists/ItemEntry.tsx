@@ -111,7 +111,7 @@ function EntryRow({
             {...slots}
             iconSize={20}
             nowrap
-            className="flex max-w-[55%] min-w-0 overflow-hidden text-ui text-text-muted"
+            className="flex min-w-0 flex-1 overflow-hidden text-ui text-text-muted"
           />
         </div>
         <PinnedSlot

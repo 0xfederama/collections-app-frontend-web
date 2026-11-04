@@ -105,7 +105,8 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
         <span aria-hidden className="grid size-[22px] shrink-0 place-items-center text-text-muted">
           <Icon className="size-[18px]" />
         </span>
-        <span className="min-w-0 flex-1 truncate font-medium text-text-muted">
+        {/* ml-1 on top of the row's gap-1 = the 8 px gap of a list row, so every name shares one column. */}
+        <span className="ml-1 min-w-0 flex-1 truncate font-medium text-text-muted">
           {node.folder.name}
         </span>
         <TreeRowActions node={node} />
