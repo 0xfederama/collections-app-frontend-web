@@ -521,3 +521,42 @@ describe('W-04 shell footer links', () => {
     )
   })
 })
+
+describe('F-025 W3 compact mobile header', () => {
+  it('the menu button floats in the first row and the page title leaves room for it', async () => {
+    mockViewport(375)
+    renderAt(`/lists/${WATCHLIST}`)
+    const heading = await screen.findByRole('heading', { level: 1 })
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
+    // No row of its own above the content: the padding the old top bar needed is gone.
+    expect(screen.getByRole('main')).not.toHaveClass('pt-16')
+    expect(heading.parentElement).toHaveClass('max-md:pl-12')
+  })
+
+  it('Home keeps its title clear of the menu button', async () => {
+    mockViewport(375)
+    renderAt('/')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toHaveClass(
+      'max-md:pl-12',
+    )
+  })
+})
+
+describe('F-025 W4 mobile drawer padding', () => {
+  it('the drawer meets the sidebar rows at its edges', async () => {
+    mockViewport(375)
+    const user = userEvent.setup()
+    renderAt('/')
+    await user.click(screen.getByRole('button', { name: 'Open menu' }))
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveClass('px-3')
+    expect(within(dialog).getByRole('navigation', { name: 'Library' })).toHaveClass('px-0')
+  })
+
+  it('the desktop sidebar keeps its own padding', async () => {
+    mockViewport(1280)
+    renderAt('/')
+    expect(await screen.findByRole('navigation', { name: 'Library' })).toHaveClass('p-3')
+    expect(nav()).not.toHaveClass('px-0')
+  })
+})

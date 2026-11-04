@@ -6,7 +6,7 @@ import {
   PointerSensor,
   type Draggable,
 } from '@dnd-kit/dom'
-import { DragDropProvider, useDroppable } from '@dnd-kit/react'
+import { DragDropProvider, useDragDropManager, useDroppable } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { createContext, useContext, useId, useRef, useState, type ReactNode } from 'react'
 
@@ -311,7 +311,15 @@ export function useSortableRow(
     data: { dropInto: id, label: dropInto?.label ?? '' },
   })
   const instructionsId = useContext(SortableA11yContext)
+  const manager = useDragDropManager()
   return {
+    /**
+     * Abandons a drag in progress (the row goes back, nothing is saved). A touch hold starts the drag
+     * at 250 ms, so a long press (500 ms, no movement) calls this before it opens the row's menu.
+     */
+    cancelDrag: () => {
+      if (manager?.dragOperation.status.dragging) manager.actions.stop({ canceled: true })
+    },
     ref: (element: Element | null) => {
       ref(element)
       into.ref(element)

@@ -1,3 +1,4 @@
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { cx } from '../../lib/cx'
 import type { DisplayMode, ItemSummary } from './api'
@@ -5,8 +6,10 @@ import { ItemThumb } from './ItemThumb'
 import { pinnedPlacements, type PinnedKeys } from './pinned'
 import type { ItemType, TypeDefinition } from '../items'
 import { PinnedSlot } from './ItemPinned'
-import { entryControls, type EntryReorder } from './ItemControls'
+import { entryMenu, type EntryReorder } from './ItemControls'
 import { focusRing } from '../../components/ui'
+import { useLongPress } from '../../lib/useLongPress'
+import { useItemActions } from '../items'
 
 export interface ItemEntryProps {
   item: ItemSummary
@@ -33,7 +36,32 @@ const rowFrame =
   'border-b border-border-soft transition-colors hover:bg-surface has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-focus-ring'
 
 /** One item of the list in the given display mode: a row (compact, thumbnail) or a card (grid). */
-export function ItemEntry({
+export function ItemEntry(props: ItemEntryProps) {
+  const { item, reorder } = props
+  const actions = useItemActions(item)
+  const [open, setOpen] = useState(false)
+  // F-025 W5: a touch hold starts the drag at 250 ms (sortable.tsx); holding still until 500 ms
+  // abandons that drag and opens the menu instead. Holding and moving, or swiping, never gets here.
+  const press = useLongPress({
+    onLongPress: () => {
+      reorder?.cancelDrag()
+      setOpen(true)
+    },
+  })
+  const menu = entryMenu(
+    item.title,
+    { open, onOpenChange: setOpen, onMove: actions.move, onDelete: actions.remove },
+    reorder,
+  )
+  return (
+    <>
+      <EntryRow {...props} menu={menu} press={press} />
+      {actions.dialogs}
+    </>
+  )
+}
+
+function EntryRow({
   item,
   mode,
   search,
@@ -41,7 +69,12 @@ export function ItemEntry({
   reorder,
   pinned,
   definition,
-}: ItemEntryProps) {
+  menu,
+  press,
+}: ItemEntryProps & {
+  menu: ReactNode
+  press: ReturnType<typeof useLongPress>
+}) {
   const to = { pathname: `/lists/${item.list_id}/items/${item.id}`, search }
   const slots = { item, definition }
   // F009-W3 / F016-W3: one pin reads next to the title, two add one in the right corner, three put
@@ -59,10 +92,9 @@ export function ItemEntry({
       {item.title}
     </Link>
   )
-  const controls = reorder && entryControls(item.title, reorder)
 
   const shell = cx(
-    'group/entry relative list-none [-webkit-touch-callout:none]',
+    'group/entry relative list-none [-webkit-touch-callout:none] pointer-coarse:select-none',
     mode === 'thumbnail' ? rowFrame : surface,
     reorder?.isDragging && 'z-20 shadow-lg ring-2 ring-focus-ring',
   )
@@ -72,6 +104,7 @@ export function ItemEntry({
       <li
         ref={reorder?.rowRef}
         {...reorder?.rowProps}
+        {...press}
         className={cx(shell, 'flex items-center gap-3 rounded-md py-1.5 pr-3 pl-1.5')}
       >
         <ItemThumb item={item} decorative className="size-9 shrink-0 rounded-sm" />
@@ -90,7 +123,7 @@ export function ItemEntry({
           iconSize={22}
           className="max-w-[45%] shrink-0 justify-end text-ui"
         />
-        {controls?.menu}
+        {menu}
       </li>
     )
   }
@@ -100,6 +133,7 @@ export function ItemEntry({
       <li
         ref={reorder?.rowRef}
         {...reorder?.rowProps}
+        {...press}
         className={cx(shell, 'flex items-center gap-3.5 px-2 py-[9px]')}
       >
         <ItemThumb
@@ -125,7 +159,7 @@ export function ItemEntry({
           iconSize={22}
           className="max-w-[45%] shrink-0 justify-end font-mono text-secondary"
         />
-        {controls?.menu}
+        {menu}
       </li>
     )
   }
@@ -134,6 +168,7 @@ export function ItemEntry({
     <li
       ref={reorder?.rowRef}
       {...reorder?.rowProps}
+      {...press}
       className={cx(shell, 'flex flex-col rounded-lg p-1.5 pb-3')}
     >
       <ItemThumb item={item} decorative className="aspect-4/3 w-full rounded-lg" />
@@ -148,7 +183,7 @@ export function ItemEntry({
         {/* The corner placement ends the card's text block. */}
         <PinnedSlot keys={corner} {...slots} iconSize={20} className="self-end text-ui" />
       </div>
-      {controls && <div className="absolute top-2.5 right-2.5">{controls.menu}</div>}
+      <div className="absolute top-2.5 right-2.5">{menu}</div>
     </li>
   )
 }

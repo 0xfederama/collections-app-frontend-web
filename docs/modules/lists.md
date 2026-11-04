@@ -12,10 +12,11 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListIconPicker.tsx`, `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices and parsing.
 - `ListIconMark.tsx`: shared list mark renderer.
 - `index.ts`: public face; `screens.ts` holds `ListView` for the route only.
-- `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`, `ItemRows.tsx` (`DraftRow`, `SortableEntry`), `ItemControls.tsx`, `ItemPinned.tsx`, `ItemsSkeleton.tsx`: header, rows and their parts.
+- `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`, `ItemRows.tsx` (`DraftRow`, `SortableEntry`), `ItemControls.tsx` (row menu), `ItemPinned.tsx`, `ItemsSkeleton.tsx`: header, rows and their parts.
+- `src/lib/useLongPress.ts`: touch and pen long press on a row (opens its menu).
 - `listParams.ts`: URL parsing (`parseSort`, `buildItemsParams`); `useDebouncedFilter.ts`: debounced `?q=`.
 - `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
-- `pinned.ts`, `toolbarStyles.ts`: fixed pinned fields per built-in type and toolbar. The bar is: search ("Search by title"), "+ Filter", sort, display mode.
+- `pinned.ts`, `toolbarStyles.ts`: fixed pinned fields per built-in type and toolbar. The bar is: search ("Search by title"), "+ Filter", sort, display mode; below 768 px it stays one row and "+ Filter" is icon-only.
 - `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
 ## Interfaces
@@ -23,6 +24,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListIconPicker({ value, onChange, onClose, type? })`: built-in icons, emoji, mark color and default.
 - `ListIconMark({ icon, iconColor, type, className, iconClassName })`: list mark.
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
+- `entryMenu(title, state, reorder?)` (`ItemControls.tsx`), `useLongPress({ onLongPress })`: row menu and long press.
 - `FieldFilter({ fields, value, onChange })`, `parseFieldFilter(params, fields)`.
 - `useList`, `useListItems`, `useUpdateList`, `useReorderItems` (`api.ts`); `listKeys` from `src/data/keys.ts`.
 - `fixedPinned(definition)`, `pinnedPlacements`, `formatPinnedValue`, `formatPrice`; `sortOptionsFor` (in `ListHeader.tsx`): display helpers.
@@ -37,4 +39,6 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally.
 - The header icon is a button that opens `ListIconDialog` (pen on hover, focus or touch). List icon writes are owned by the tree feature and use the list version with `If-Match`.
 - A list with no type shows the Lucide `List` glyph (`typeIconFor(null)`).
+- Long press (touch or pen, 500 ms, finger within 8 px) on a row opens its menu (Move up/down when reorderable, Move, Delete) and cancels the drag the hold started. A mouse uses the "…" button.
+- The reorder hint explains only a filter or unloaded items; there is no "switch to Manual sort" hint.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.

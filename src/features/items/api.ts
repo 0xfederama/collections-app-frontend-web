@@ -5,6 +5,8 @@ import { invalidateContent, invalidateItemWrite } from '../../data/invalidate'
 import { itemKeys } from '../../data/keys'
 
 export type Item = components['schemas']['Item']
+/** What the item dialogs (move, delete) read: a list row (`ItemSummary`) has all of it. */
+export type ItemRef = Pick<Item, 'id' | 'version' | 'title' | 'list_id' | 'type'>
 /** The list's type key, `null` when the list has no type (the contract types it as a plain string). */
 export type ItemType = string | null
 export type ItemContent = components['schemas']['Content']
@@ -72,7 +74,7 @@ export function useItemContent(itemId: string) {
  * item counts of the tree, so everything is invalidated (`invalidateContent`); `PATCH` passes a
  * narrower `onDone` because its answer already replaced the cached detail.
  */
-function useItemMutation<TVars extends { item: Item }, TData>(
+function useItemMutation<TVars extends { item: ItemRef }, TData>(
   mutationFn: (vars: TVars) => Promise<TData>,
   onDone: (client: QueryClient, vars: TVars) => void = (client) => void invalidateContent(client),
 ) {
@@ -86,7 +88,7 @@ function useItemMutation<TVars extends { item: Item }, TData>(
 /** `DELETE /items/{id}`: soft delete, the item goes to Trash. */
 export function useDeleteItem() {
   const client = useQueryClient()
-  return useItemMutation(async ({ item }: { item: Item }) => {
+  return useItemMutation(async ({ item }: { item: ItemRef }) => {
     await api.DELETE('/api/v1/items/{id}', {
       params: { path: { id: item.id }, header: ifMatch('item', item.version) },
     })
@@ -99,7 +101,7 @@ export function useDeleteItem() {
 /** `POST /items/{id}/move`: appends the item to the end of another list. */
 export function useMoveItem() {
   const client = useQueryClient()
-  return useItemMutation(async ({ item, listId }: { item: Item; listId: string }) => {
+  return useItemMutation(async ({ item, listId }: { item: ItemRef; listId: string }) => {
     const moved = await unwrap(
       api.POST('/api/v1/items/{id}/move', {
         params: { path: { id: item.id }, header: ifMatch('item', item.version) },

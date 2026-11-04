@@ -47,7 +47,7 @@ export function SortableEntry({
   onOpen: () => void
   onMoveBy: (delta: -1 | 1) => void
 }) {
-  const { ref, isDragging, a11y } = useSortableRow(item.id, {
+  const { ref, isDragging, a11y, cancelDrag } = useSortableRow(item.id, {
     group: 'items',
     index,
     size,
@@ -69,6 +69,7 @@ export function SortableEntry({
         canMoveUp: index > 0,
         canMoveDown: index < size - 1,
         onMoveBy,
+        cancelDrag,
       }}
     />
   )

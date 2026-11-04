@@ -20,7 +20,8 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 
 - `ItemPage()`, `ItemView({ item })`, `ItemHero`.
 - `ImageDialog({ item, onClose, initialFile? })`, `ImageSection({ item, initialFile?, onChanged, onStale })`.
-- `useItem`, `useItemContent`, `useUpdateItem`, `useCreateItem`, `useDeleteItem`, `useMoveItem` (`api.ts`).
+- `useItem`, `useItemContent`, `useUpdateItem`, `useCreateItem`, `useDeleteItem`, `useMoveItem` (`api.ts`); `ItemRef` is the subset they read (list rows have it too).
+- `useItemActions(item: ItemRef)` (`ItemActions.tsx`): Move and Delete dialogs, shared by the item page and list rows.
 - `typeDefinition(definitions, key)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
 - `createLookupSelection(type, settings, selection)`, `hasSuggestions(type)`, `isBookLookup(type, settings)`, `lookupSource(type)`.
 - `DescriptionField({ itemId, listId })`, `InlineField`, `FieldBlock`.

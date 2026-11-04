@@ -126,7 +126,8 @@ export function ListHeader(props: ListHeaderProps) {
   return (
     <>
       <header className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
+        {/* On phones the floating menu button shares this row, so the title starts after it (F-025 W3). */}
+        <div className="flex flex-wrap items-center gap-3 max-md:pl-12">
           <ListIconButton list={props.treeList} defaultIcon={props.definition.default_icon} />
           <h1 className="min-w-0 flex-1 font-display text-display break-words">
             <ListTitle list={props.treeList} />
@@ -144,7 +145,8 @@ export function ListHeader(props: ListHeaderProps) {
           readable. The wrapper is the container the narrow variants measure. Search and "+ Filter" first, then sort, display and the + New item; an applied field filter is a chip under the bar. */}
       <div className="@container z-10 bg-bg sm:sticky sm:top-0">
         <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
-          <div className="min-w-40 flex-1 [&_label]:sr-only">
+          {/* Phones (< 768 px): the field takes the space the icon-only controls leave (F-025 W2). */}
+          <div className="min-w-0 flex-1 md:min-w-40 [&_label]:sr-only">
             <TextField
               label={
                 props.treeList.type === 'movie'
@@ -195,6 +197,7 @@ export function ListHeader(props: ListHeaderProps) {
             options={modeOptions}
             value={props.displayMode}
             onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
+            className="shrink-0 max-md:[&_label]:px-2"
           />
           {props.showAddItem && (
             <Button

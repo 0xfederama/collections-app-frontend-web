@@ -55,7 +55,7 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
             the end of their line. Move and Delete are not here: they close the page (F009-W4). */}
         <header className="flex flex-col gap-2">
           <div className="flex min-w-0 flex-col gap-1">
-            <p className="flex items-center gap-1.5 font-mono text-label text-text-subtle uppercase">
+            <p className="flex items-center gap-1.5 font-mono text-label text-text-subtle uppercase max-md:pl-12">
               <ListIconMark
                 icon={definition.default_icon}
                 type={item.type}
