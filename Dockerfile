@@ -1,8 +1,10 @@
 # Production web image (Q-03w, D-069): Node build stage, then Caddy serving dist/ and proxying /api and /readyz.
 # Build: docker build -t collections-web .   Run: see docs/modules/deploy.md
-# Base images are pinned by tag and digest (R-1). The digests are multi-arch indexes, so the same file builds on arm64 and amd64.
+# Base images are pinned by tag and digest (R-1). The digests are multi-arch indexes (arm64 and amd64 included).
+# The build stage runs on the builder's own platform ($BUILDPLATFORM): dist/ is static and identical for every target, so
+# npm ci and vite never run under emulation; only the Caddy/Alpine runtime stages are per target platform.
 
-FROM node:24.21.0-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS build
+FROM --platform=$BUILDPLATFORM node:24.21.0-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci

@@ -32,7 +32,7 @@ This repo is the `frontend-web/` submodule of the parent repo `0xfederama/collec
 
 ## Commands
 
-No CI gate (D-031, D-032): the gates run locally. The only workflow is `.github/workflows/release-image.yml` (D-117): a `vX.Y.Z` tag builds the arm64+amd64 image and pushes it to GHCR; publishing a GitHub Release (latest) is the prod approval, never done by agents. Run `npm run check` before every PR and paste the output in the PR. **`check` ends with the production image build, so Docker must be running** (it fails with a clear message otherwise).
+No CI gate (D-031, D-032): the gates run locally. The only workflow is `.github/workflows/release-image.yml` (D-117): a `vX.Y.Z` tag builds the arm64 image (native arm64 runner, Node build stage on `$BUILDPLATFORM`) and pushes it to GHCR; publishing a GitHub Release (latest) is the prod approval, never done by agents. Run `npm run check` before every PR and paste the output in the PR. **`check` ends with the production image build, so Docker must be running** (it fails with a clear message otherwise).
 
 | Purpose                                                                                                    | Command                                                                                                           |
 | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
