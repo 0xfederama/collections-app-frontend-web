@@ -228,17 +228,3 @@
 :root[data-pointer] :focus-visible:not(input, textarea, [contenteditable]) {
   outline: none !important;
 }
-
-/* iOS Safari zooms the page when a text control is focused below 16px. On touch screens the form
-   controls and the rich-text editors are at least 16px (F-025 W1). Unlayered, so it beats the
-   utility classes (`text-ui`, `text-secondary`). Pinch zoom stays on: the viewport has no
-   maximum-scale. */
-@media (pointer: coarse) {
-  input,
-  select,
-  textarea,
-  .cm-content,
-  [contenteditable]:not([contenteditable='false']) {
-    font-size: max(16px, 1em);
-  }
-}
