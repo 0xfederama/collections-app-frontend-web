@@ -148,3 +148,84 @@ test.describe('F-025 mobile Home', () => {
     expect(created).toHaveLength(30)
   })
 })
+
+test.describe('F-025 list row polish', () => {
+  for (const mode of ['Compact rows', 'Thumbnail rows'] as const) {
+    test(`${mode}: tile strips share one right edge and show at most 4 tiles`, async ({
+      page,
+      request,
+    }) => {
+      const list = await createList(request, uniqueName('Strip edge'), 'movie')
+      const many = uniqueName('Many services')
+      const few = uniqueName('Few services')
+      await createItem(request, list.id, many, {
+        metadata: {
+          streaming: {
+            country: 'IT',
+            platforms: [
+              'Netflix',
+              'Disney+',
+              'Prime Video',
+              'Hulu',
+              'Max',
+              'Apple TV+',
+              'Paramount+',
+              'Peacock',
+            ],
+          },
+        },
+      })
+      await createItem(request, list.id, few, {
+        metadata: { streaming: { country: 'IT', platforms: ['Netflix', 'Hulu'] } },
+      })
+      await page.goto(`/lists/${list.id}`)
+      const main = page.getByRole('main')
+      await main.getByRole('button', { name: 'View options' }).click()
+      await page.getByRole('menuitemradio', { name: mode }).click()
+      const rows = main.getByRole('list', { name: 'Items' }).getByRole('listitem')
+      await expect(rows).toHaveCount(2)
+      const measured: { right: number; tiles: number }[] = []
+      for (const row of await rows.all()) {
+        const strip = row.locator('span.ml-auto').first()
+        await expect(strip).toBeVisible()
+        const box = await strip.boundingBox()
+        const tiles = await strip.locator(':scope > span.absolute > *').count()
+        measured.push({ right: (box?.x ?? 0) + (box?.width ?? 0), tiles })
+      }
+      for (const { tiles } of measured) expect(tiles).toBeLessThanOrEqual(4)
+      expect(Math.max(...measured.map((m) => m.tiles))).toBe(4)
+      expect(Math.abs((measured[0]?.right ?? 0) - (measured[1]?.right ?? 1))).toBeLessThanOrEqual(1)
+    })
+  }
+
+  test('Home, list, item, back to the list: Back to Home lands on /', async ({ page, request }) => {
+    const name = uniqueName('Back list')
+    const title = uniqueName('Back film')
+    const list = await createList(request, name, 'movie')
+    const item = await createItem(request, list.id, title)
+    await page.goto('/')
+    const main = page.getByRole('main')
+    await main
+      .getByRole('tree')
+      .getByRole('link', { name: new RegExp(name) })
+      .tap()
+    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`))
+    await page.getByRole('link', { name: title }).tap()
+    await expect(page).toHaveURL(new RegExp(`${itemUrl(list.id, item.id)}$`))
+    await main.getByRole('link', { name: /^Back to / }).tap()
+    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`))
+    await main.getByRole('button', { name: 'Back to Home' }).tap()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(main.getByRole('searchbox', { name: 'Search', exact: true })).toBeVisible()
+  })
+
+  test('phone Home: Quick add is as wide as the search field', async ({ page, request }) => {
+    await createList(request, uniqueName('Width list'), 'movie')
+    await page.goto('/')
+    const main = page.getByRole('main')
+    const search = await main.getByRole('searchbox', { name: 'Search', exact: true }).boundingBox()
+    const quick = await main.getByRole('button', { name: 'Quick add' }).boundingBox()
+    expect(Math.abs((quick?.width ?? 0) - (search?.width ?? 1))).toBeLessThanOrEqual(1)
+    expect(Math.abs((quick?.x ?? 0) - (search?.x ?? 1))).toBeLessThanOrEqual(1)
+  })
+})

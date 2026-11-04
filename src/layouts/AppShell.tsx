@@ -14,6 +14,7 @@ import { QuickAddProvider } from '../features/quickadd'
 import { useSearchShortcut } from '../features/search'
 import { contentRoutes } from '../app/contentRoutes'
 import { useBreakpoint } from '../lib/breakpoints'
+import { useTrackPreviousPath } from '../lib/previousPath'
 import { ItemRoute } from '../routes/ItemRoute'
 import { Sidebar } from './Sidebar'
 import { SidebarResizer } from './SidebarResizer'
@@ -57,6 +58,7 @@ function ShellFrame() {
   const location = useLocation()
   const navigate = useNavigate()
   useScrollTopOnPhone(breakpoint === 'mobile')
+  useTrackPreviousPath()
 
   // The search field only exists while the sidebar is expanded. When it is
   // not there, `/` and the rail's search icon open it, and the ref callback focuses it once it mounts.

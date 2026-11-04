@@ -18,7 +18,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
 - `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation.
 - `ViewMenu.tsx`: the "View options" icon button (display mode radio menu). `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "View options", "+ Filter" and "Sort" buttons (one 36 px square, 44 px on touch). The toolbar is one row at every width: View options, search field (always visible), Filter, Sort, New item (`ListHeader.tsx`).
-- `TileStrip.tsx`, `tileFit.ts`: a row's service or store tiles that fit the row, then a "+N" tile.
+- `TileStrip.tsx`, `tileFit.ts`: a row's service or store tiles that fit the row, then a "+N" tile; at most `MAX_TILES` (4) slots.
 - `scrollRestore.ts`: `useScrollRestore`, the list's scroll per history entry (`main`, or the window on phones).
 - `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
@@ -49,7 +49,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - A list with no type shows the Lucide `List` glyph (`typeIconFor(null)`).
 - Long press (touch or pen, 500 ms, finger within 8 px) on a row opens its menu (Move up/down when reorderable, Move, Delete) and cancels the drag the hold started. A mouse uses the "…" button.
 - Every display mode draws its rows in the same bordered frame (`surface` in `ItemEntry.tsx`); there are no hairline dividers.
-- Row tiles: `TileStrip` shows the tiles that fit, then "+N". Streaming tiles follow the Settings service order with paid platforms last (`orderPlatforms`).
+- Row tiles: `TileStrip` shows the tiles that fit, then "+N"; more than 4 tiles draw 3 and "+N" (`cappedCount`). In compact rows the strip takes the free space and ends at the row's right edge. Streaming tiles follow the Settings service order with paid platforms last (`orderPlatforms`).
 - The list header's "…" menu hosts "Refresh details" (see [tree](tree.md)).
 - The reorder hint explains only a filter or unloaded items; there is no "switch to Manual sort" hint.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.

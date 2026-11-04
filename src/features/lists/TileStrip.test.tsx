@@ -13,9 +13,15 @@ afterEach(() => {
 })
 
 describe('F-025 TileStrip', () => {
-  it('draws every tile when nothing is measured', () => {
+  it('draws 3 tiles and "+2" for 5 when nothing is measured', () => {
     render(<TileStrip tiles={tiles} size={20} noun="services" />)
-    expect(screen.getAllByTestId('tile')).toHaveLength(5)
+    expect(screen.getAllByTestId('tile')).toHaveLength(3)
+    expect(screen.getByRole('img', { name: '2 more services' })).toHaveTextContent('+2')
+  })
+
+  it('draws all four when there are four', () => {
+    render(<TileStrip tiles={tiles.slice(0, 4)} size={20} noun="services" />)
+    expect(screen.getAllByTestId('tile')).toHaveLength(4)
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
@@ -33,10 +39,10 @@ describe('F-025 TileStrip', () => {
     expect(screen.getByRole('img', { name: '3 more stores' })).toBeInTheDocument()
   })
 
-  it('shows no "+N" when everything fits', () => {
+  it('caps at 3 and "+N" even when everything would fit', () => {
     setWidth(400)
     render(<TileStrip tiles={tiles} size={20} noun="services" />)
-    expect(screen.getAllByTestId('tile')).toHaveLength(5)
-    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    expect(screen.getAllByTestId('tile')).toHaveLength(3)
+    expect(screen.getByRole('img', { name: '2 more services' })).toBeInTheDocument()
   })
 })
