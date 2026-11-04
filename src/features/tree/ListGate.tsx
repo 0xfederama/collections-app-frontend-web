@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import { PageHeaderSlot } from '../../components/PageHeaderSlot'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { List as ListIcon } from '../../components/ui/icons'
 import { useTreeIndex, type Folder, type List } from './api'
@@ -11,8 +12,11 @@ import { useTreeIndex, type Folder, type List } from './api'
 export function ListGate({
   listId,
   children,
+  slot = <PageHeaderSlot />,
 }: {
   listId: string
+  /** The leading control of the phone header row: the menu button, or the back control of a sub-page. */
+  slot?: ReactNode
   children: (list: List, ancestors: Folder[]) => ReactNode
 }) {
   const result = useTreeIndex()
@@ -21,7 +25,10 @@ export function ListGate({
     return (
       <div role="status" className="flex flex-col gap-3">
         <span className="sr-only">Loading list</span>
-        <Skeleton className="h-8 w-1/3" />
+        <div className="flex items-center gap-3">
+          {slot}
+          <Skeleton className="h-8 w-1/3" />
+        </div>
         <Skeleton className="h-24" />
       </div>
     )
@@ -29,7 +36,10 @@ export function ListGate({
   if (result.status === 'error') {
     return (
       <div role="alert" className="flex flex-col items-start gap-2">
-        <p>Couldn’t load this list.</p>
+        <div className="flex items-center gap-3">
+          {slot}
+          <p>Couldn’t load this list.</p>
+        </div>
         <Button variant="secondary" onClick={result.refetch}>
           Retry
         </Button>
@@ -39,17 +49,20 @@ export function ListGate({
   const list = result.index.lists.get(listId)
   if (!list) {
     return (
-      <EmptyState
-        icon={ListIcon}
-        headingLevel="h1"
-        title="List not found"
-        description="It may have been deleted or moved to Trash."
-        action={
-          <Link to="/" className="text-accent-text underline underline-offset-2">
-            Back to home
-          </Link>
-        }
-      />
+      <>
+        <div className="mb-3 flex empty:hidden">{slot}</div>
+        <EmptyState
+          icon={ListIcon}
+          headingLevel="h1"
+          title="List not found"
+          description="It may have been deleted or moved to Trash."
+          action={
+            <Link to="/" className="text-accent-text underline underline-offset-2">
+              Back to home
+            </Link>
+          }
+        />
+      </>
     )
   }
   return children(list, result.index.ancestorsOf(listId))

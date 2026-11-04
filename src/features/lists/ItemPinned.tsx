@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { ServiceIcon, sortByServiceOrder } from '../../components/ServiceIcon'
 import { filterOwnedPlatforms } from '../../components/serviceIcons/owned'
 import { focusRing } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import type { ItemSummary } from './api'
-import { pinnedTexts, storesOf, streamingOf } from './pinned'
+import { isLowPriorityPin, pinnedPieces, storesOf, streamingOf } from './pinned'
 import { sortStoreKeys, storeName, useStoreProviders } from '../stores'
 import type { TypeDefinition } from '../items'
 import { safeWebsiteUrl, storeLink, streamingSearchLink } from '../links'
@@ -59,11 +59,29 @@ export function PinnedSlot({
   const parts: ReactNode[] = []
   let run: string[] = []
   const flush = () => {
-    const texts = pinnedTexts(run, item, definition)
-    if (texts.length) {
+    const pieces = pinnedPieces(run, item, definition)
+    if (pieces.length) {
+      // Each piece is its own flex item, so the low-priority ones (director, pages) truncate while the
+      // rest keep their width (F-025 W9). The run itself never wraps.
       parts.push(
-        <span key={`t${parts.length}`} className="whitespace-nowrap tabular-nums">
-          {texts.join(' · ')}
+        <span
+          key={`t${parts.length}`}
+          className="flex min-w-0 items-baseline whitespace-nowrap tabular-nums"
+        >
+          {pieces.map((piece, index) => (
+            <Fragment key={piece.key}>
+              {index > 0 && (
+                <span aria-hidden className="shrink-0 px-1">
+                  ·
+                </span>
+              )}
+              <span
+                className={cx('min-w-0', isLowPriorityPin(piece.key) ? 'truncate' : 'shrink-0')}
+              >
+                {piece.text}
+              </span>
+            </Fragment>
+          ))}
         </span>,
       )
     }

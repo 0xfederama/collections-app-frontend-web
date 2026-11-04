@@ -1,3 +1,4 @@
+import { PageHeaderSlot } from '../../components/PageHeaderSlot'
 import { EmptyState, Button } from '../../components/ui'
 import { ListPlus } from '../../components/ui/icons'
 import { useTreeIndex, useTreeDialogs } from '../tree'
@@ -14,7 +15,10 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="font-display text-display max-md:pl-12">Home</h1>
+      <div className="flex items-center gap-3">
+        <PageHeaderSlot />
+        <h1 className="font-display text-display">Home</h1>
+      </div>
       {noLists ? (
         <EmptyState
           icon={ListPlus}

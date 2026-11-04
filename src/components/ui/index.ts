@@ -10,7 +10,7 @@ export { EmptyState, type EmptyStateProps } from './EmptyState'
 export { focusRing } from './focus'
 export { IconButton, type IconButtonProps } from './IconButton'
 export { typeIconFor, typeIcons, typeLabels, NO_TYPE_LABEL, type ItemType } from './icons'
-export { Menu, type MenuItem, type MenuProps } from './Menu'
+export { Menu, menuItemClass, type MenuItem, type MenuProps } from './Menu'
 export {
   Select,
   type SelectEntry,

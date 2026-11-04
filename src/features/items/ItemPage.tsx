@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router'
+import { PageHeaderSlot } from '../../components/PageHeaderSlot'
 import { Button, EmptyState, typeIconFor } from '../../components/ui'
 import { ApiError } from '../../lib/api'
 import { cx } from '../../lib/cx'
@@ -44,6 +45,33 @@ function useEscapeToList(to: { pathname: string; search: string }) {
   }, [navigate, pathname, search])
 }
 
+/**
+ * The way back to the list above an item. Phones get the icon in the header slot (no menu button
+ * on a sub-page, F-025 W10); 768 px up to the panel breakpoint keeps the text link; the panel has none.
+ */
+function BackToList({
+  to,
+  listName,
+}: {
+  to: { pathname: string; search: string }
+  listName: string
+}) {
+  const breakpoint = useBreakpoint()
+  if (breakpoint === 'wide') return null
+  if (breakpoint === 'mobile') {
+    return (
+      <div className="flex">
+        <PageHeaderSlot back={{ to, label: `Back to ${listName}` }} />
+      </div>
+    )
+  }
+  return (
+    <Link to={to} className="self-start text-ui text-accent-text underline underline-offset-2">
+      ← Back to {listName}
+    </Link>
+  )
+}
+
 function ItemDetail({
   listId,
   itemId,
@@ -59,27 +87,36 @@ function ItemDetail({
   useEscapeToList(backTo)
   const panel = useBreakpoint() === 'wide'
 
+  const slot = (
+    <div className="flex empty:hidden">
+      <PageHeaderSlot back={{ to: backTo, label: `Back to ${listName}` }} />
+    </div>
+  )
   if (item.status === 'pending') return <ItemSkeleton />
   // A failed background refetch keeps the cached item: only show the error when there is none,
   // or an open field editor (and its draft) would vanish.
   if (item.status === 'error' && !item.data) {
     if (item.error instanceof ApiError && item.error.status === 404) {
       return (
-        <EmptyState
-          icon={typeIconFor(null)}
-          headingLevel="h1"
-          title="Item not found"
-          description="It may have been deleted or moved to Trash."
-          action={
-            <Link to={backTo} className="text-accent-text underline underline-offset-2">
-              Back to {listName}
-            </Link>
-          }
-        />
+        <div className="flex flex-col gap-3">
+          {slot}
+          <EmptyState
+            icon={typeIconFor(null)}
+            headingLevel="h1"
+            title="Item not found"
+            description="It may have been deleted or moved to Trash."
+            action={
+              <Link to={backTo} className="text-accent-text underline underline-offset-2">
+                Back to {listName}
+              </Link>
+            }
+          />
+        </div>
       )
     }
     return (
       <div role="alert" className="flex flex-col items-start gap-2">
+        {slot}
         <p>Couldn’t load this item.</p>
         <Button variant="secondary" onClick={() => void item.refetch()}>
           Retry
@@ -93,14 +130,7 @@ function ItemDetail({
   }
   return (
     <div className={cx('flex flex-col gap-4', panel && 'min-h-0 flex-1')}>
-      {!panel && (
-        <Link
-          to={backTo}
-          className="self-start text-ui text-accent-text underline underline-offset-2"
-        >
-          ← Back to {listName}
-        </Link>
-      )}
+      <BackToList to={backTo} listName={listName} />
       <ItemView item={item.data} pinned={panel} />
     </div>
   )
@@ -120,14 +150,7 @@ function NewItemPage({
   const panel = useBreakpoint() === 'wide'
   return (
     <div className={cx('flex flex-col gap-4', panel && 'min-h-0 flex-1')}>
-      {!panel && (
-        <Link
-          to={{ pathname: `/lists/${listId}`, search }}
-          className="self-start text-ui text-accent-text underline underline-offset-2"
-        >
-          ← Back to {listName}
-        </Link>
-      )}
+      <BackToList to={{ pathname: `/lists/${listId}`, search }} listName={listName} />
       <NewItemDraft listId={listId} listName={listName} type={type} />
     </div>
   )
@@ -137,7 +160,10 @@ function NewItemPage({
 export default function ItemPage() {
   const { listId = '', itemId = '' } = useParams()
   return (
-    <ListGate listId={listId}>
+    <ListGate
+      listId={listId}
+      slot={<PageHeaderSlot back={{ to: `/lists/${listId}`, label: 'Back to list' }} />}
+    >
       {(list) => (
         // Keyed by item and list: a move opens the same item in its new list with a fresh guard.
         <EditGuardProvider key={`${listId}/${itemId}`}>

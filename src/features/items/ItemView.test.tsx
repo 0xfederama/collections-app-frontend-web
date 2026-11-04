@@ -289,6 +289,22 @@ describe('AT-13 item view: the example movie', () => {
 })
 
 describe('item view: types', () => {
+  it('F-025 W10 a failed type definition keeps the back control in the header slot on phones', async () => {
+    server.use(
+      http.get(`${location.origin}/api/v1/types`, () => problemResponse(500, 'internal_error')),
+    )
+    mockViewport(375)
+    renderAt(`${PATH}?q=ma`)
+    expect(
+      await screen.findByText('Couldn’t load this item’s type definition.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to list' })).toHaveAttribute(
+      'href',
+      `/lists/${WATCHLIST}?q=ma`,
+    )
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
+  })
+
   it('tv show: ongoing run reads 2019–present', async () => {
     await renderOverride({
       title: 'Severance',

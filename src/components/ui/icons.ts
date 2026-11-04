@@ -3,6 +3,7 @@ export {
   Aperture,
   Archive,
   ArrowDown,
+  ArrowLeft,
   ArrowUp,
   ArrowUpDown,
   Baby,

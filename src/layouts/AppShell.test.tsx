@@ -522,23 +522,63 @@ describe('W-04 shell footer links', () => {
   })
 })
 
-describe('F-025 W3 compact mobile header', () => {
-  it('the menu button floats in the first row and the page title leaves room for it', async () => {
+describe('F-025 W10 menu button in the page header', () => {
+  it('a list shows the menu button as the first control of its title row, nothing floats', async () => {
     mockViewport(375)
     renderAt(`/lists/${WATCHLIST}`)
     const heading = await screen.findByRole('heading', { level: 1 })
-    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
-    // No row of its own above the content: the padding the old top bar needed is gone.
-    expect(screen.getByRole('main')).not.toHaveClass('pt-16')
-    expect(heading.parentElement).toHaveClass('max-md:pl-12')
+    const menu = screen.getByRole('button', { name: 'Open menu' })
+    expect(heading.parentElement).toContainElement(menu)
+    expect(menu.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole('main')).toContainElement(menu)
+    expect(heading.parentElement?.className).not.toContain('pl-12')
   })
 
-  it('Home keeps its title clear of the menu button', async () => {
+  it('Home has the menu button left of its title', async () => {
     mockViewport(375)
     renderAt('/')
-    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toHaveClass(
-      'max-md:pl-12',
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Home' })
+    expect(heading.parentElement).toContainElement(
+      screen.getByRole('button', { name: 'Open menu' }),
     )
+    expect(heading).not.toHaveClass('max-md:pl-12')
+  })
+
+  it('the item page shows the back control in the slot and no menu button', async () => {
+    mockViewport(375)
+    renderAt(ITEM_PATH)
+    await screen.findByRole('heading', { level: 1 })
+    expect(screen.getByRole('link', { name: /^Back to / })).toHaveAttribute(
+      'href',
+      expect.stringContaining(`/lists/${WATCHLIST}`),
+    )
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
+  })
+
+  it('the loading state of a list already has the menu slot', () => {
+    mockViewport(375)
+    renderAt(`/lists/${WATCHLIST}`)
+    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
+  })
+
+  it('there is no slot from 768 px up', async () => {
+    mockViewport(768)
+    renderAt('/')
+    await screen.findByRole('heading', { level: 1, name: 'Home' })
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
+  })
+
+  it('[CRUCIAL] focus returns to the slot menu button when the drawer closes with Escape', async () => {
+    mockViewport(375)
+    const user = userEvent.setup()
+    renderAt('/')
+    const menu = await screen.findByRole('button', { name: 'Open menu' })
+    await user.click(menu)
+    await screen.findByRole('dialog')
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(menu).toHaveFocus()
   })
 })
 

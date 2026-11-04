@@ -34,7 +34,8 @@ export interface MenuProps {
   onOpenChange?: (open: boolean) => void
 }
 
-const itemClass =
+/** The look of one menu row; shared with a menu built from Radix directly (the list sort, F-025 W8). */
+export const menuItemClass =
   'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-ui outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent-tint pointer-coarse:min-h-11 [&_svg]:size-4'
 
 export function Menu({ trigger, items, align = 'end', open, onOpenChange }: MenuProps) {
@@ -56,7 +57,7 @@ export function Menu({ trigger, items, align = 'end', open, onOpenChange }: Menu
             ) : item.type === 'radio-submenu' ? (
               <DropdownMenu.Sub key={item.label}>
                 <DropdownMenu.SubTrigger
-                  className={cx(itemClass, 'data-[state=open]:bg-accent-tint')}
+                  className={cx(menuItemClass, 'data-[state=open]:bg-accent-tint')}
                 >
                   {item.icon && <span aria-hidden>{item.icon}</span>}
                   <span className="flex-1">{item.label}</span>
@@ -79,7 +80,7 @@ export function Menu({ trigger, items, align = 'end', open, onOpenChange }: Menu
                             key={option.value}
                             value={option.value}
                             onSelect={() => rememberMenuTrigger(opener.current)}
-                            className={itemClass}
+                            className={menuItemClass}
                           >
                             <span aria-hidden className="grid size-4 shrink-0 place-items-center">
                               <DropdownMenu.ItemIndicator>
@@ -103,7 +104,7 @@ export function Menu({ trigger, items, align = 'end', open, onOpenChange }: Menu
                   item.onSelect()
                 }}
                 className={cx(
-                  itemClass,
+                  menuItemClass,
                   item.destructive && 'text-danger-text data-[highlighted]:bg-danger-bg',
                 )}
               >
