@@ -1,7 +1,8 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { http, HttpResponse } from 'msw/http'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ItemEntry } from './ItemEntry'
 import type { ItemSummary } from './api'
 import type { TypeDefinition } from '../items'
@@ -243,5 +244,46 @@ describe('F016 row tiles open their page without opening the item', () => {
     })
     expect(within(row).queryByRole('link', { name: /JustWatch/ })).not.toBeInTheDocument()
     expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+  })
+})
+
+describe('F-025 W5 long press opens the entry actions', () => {
+  afterEach(() => vi.useRealTimers())
+
+  const press = (row: HTMLElement, ms: number, moveTo?: number) => {
+    fireEvent.pointerDown(row, { pointerType: 'touch', clientX: 10, clientY: 10 })
+    if (moveTo !== undefined) fireEvent.pointerMove(window, { clientX: 10, clientY: moveTo })
+    act(() => void vi.advanceTimersByTime(ms))
+  }
+
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s: holding still opens a menu with Move and Delete, and the click that ends it is swallowed',
+    async (mode) => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      const row = entry([], mode)
+      press(row, 600)
+      expect(await screen.findByRole('menuitem', { name: 'Move' })).toBeInTheDocument()
+      expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument()
+      expect(screen.queryByRole('menuitem', { name: 'Move up' })).toBeNull()
+    },
+  )
+
+  it('a swipe (the finger moves) opens nothing', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const row = entry([], 'compact')
+    press(row, 600, 60)
+    // Let the row's own requests finish, so none is aborted by the unmount.
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    await act(async () => void (await vi.advanceTimersByTimeAsync(200)))
+    expect(screen.queryByRole('menu')).toBeNull()
+  })
+
+  it('Delete in the menu asks for confirmation', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const row = entry([], 'thumbnail')
+    press(row, 600)
+    await user.click(await screen.findByRole('menuitem', { name: 'Delete' }))
+    expect(await screen.findByRole('alertdialog', { name: /Delete “Alien”\?/ })).toBeInTheDocument()
   })
 })

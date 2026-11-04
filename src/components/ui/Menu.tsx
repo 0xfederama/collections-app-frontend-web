@@ -29,15 +29,18 @@ export interface MenuProps {
   trigger: ReactNode
   items: MenuItem[]
   align?: 'start' | 'center' | 'end'
+  /** Controlled open state, for a menu that also opens another way (a long press on a row). */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const itemClass =
   'flex h-9 cursor-pointer select-none items-center gap-2 rounded-md px-3 text-ui outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent-tint pointer-coarse:min-h-11 [&_svg]:size-4'
 
-export function Menu({ trigger, items, align = 'end' }: MenuProps) {
+export function Menu({ trigger, items, align = 'end', open, onOpenChange }: MenuProps) {
   const opener = useRef<HTMLButtonElement>(null)
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.Trigger asChild ref={opener}>
         {trigger}
       </DropdownMenu.Trigger>

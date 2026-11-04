@@ -6,7 +6,7 @@ import { FolderInput, Trash2 } from '../../components/ui/icons'
 import { useTreeIndex, type TreeIndex, type TreeNode } from '../tree'
 import { countsText } from '../trash'
 import { itemKeys, treeKeys } from '../../data/keys'
-import { useDeleteItem, useMoveItem, type Item, type ItemType } from './api'
+import { useDeleteItem, useMoveItem, type ItemRef, type ItemType } from './api'
 import { classifyItemError, type ItemError } from './errors'
 import { useEditGuard } from './inline/guard'
 
@@ -50,7 +50,7 @@ interface ItemActionsState {
 }
 
 /** Move and Delete share their dialogs with the footer buttons of `ItemView`. */
-export function useItemActions(item: Item): ItemActionsState {
+export function useItemActions(item: ItemRef): ItemActionsState {
   const [dialog, setDialog] = useState<'move' | 'delete' | null>(null)
   return {
     move: () => setDialog('move'),
@@ -86,7 +86,7 @@ export function ItemActions({ actions }: { actions: ItemActionsState }) {
 }
 
 /** Shared failure handling of the two dialogs. Returns the error to show, or null when handled. */
-function useFailure(item: Item, onClose: () => void) {
+function useFailure(item: ItemRef, onClose: () => void) {
   const client = useQueryClient()
   const toast = useToast()
   const navigate = useNavigate()
@@ -115,7 +115,7 @@ function useFailure(item: Item, onClose: () => void) {
   return { error, setError, fail, guard }
 }
 
-function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
+function MoveItemDialog({ item, onClose }: { item: ItemRef; onClose: () => void }) {
   const tree = useTreeIndex()
   const move = useMoveItem()
   const toast = useToast()
@@ -177,7 +177,7 @@ function MoveItemDialog({ item, onClose }: { item: Item; onClose: () => void }) 
   )
 }
 
-function DeleteItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
+function DeleteItemDialog({ item, onClose }: { item: ItemRef; onClose: () => void }) {
   const remove = useDeleteItem()
   const toast = useToast()
   const navigate = useNavigate()
