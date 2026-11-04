@@ -9,6 +9,7 @@ import { sortStoreKeys, storeName, useStoreProviders } from '../stores'
 import type { TypeDefinition } from '../items'
 import { safeWebsiteUrl, storeLink, streamingSearchLink } from '../links'
 import { useSettings } from '../settings'
+import { TileStrip } from './TileStrip'
 
 /**
  * A store or streaming tile that opens its page in a new tab. It sits above the row's stretched
@@ -46,12 +47,15 @@ export function PinnedSlot({
   definition,
   iconSize,
   className,
+  nowrap = false,
 }: {
   keys: readonly string[]
   item: ItemSummary
   definition: TypeDefinition
   iconSize: number
   className?: string
+  /** One line only (compact and medium rows); cards let the parts wrap. */
+  nowrap?: boolean
 }) {
   const providers = useStoreProviders()
   const settings = useSettings()
@@ -96,8 +100,11 @@ export function PinnedSlot({
       const country = settings.data?.streaming_country_code
       if (stores.length) {
         parts.push(
-          <span key={`k${parts.length}`} className="inline-flex flex-wrap items-center gap-1.5">
-            {sortStoreKeys(providers.data, stores).map((store) => {
+          <TileStrip
+            key={`k${parts.length}`}
+            size={iconSize}
+            noun="stores"
+            tiles={sortStoreKeys(providers.data, stores).map((store) => {
               const label = storeName(providers.data, store)
               const href = storeLink(store, { isbn, title: item.title, country })
               return (
@@ -106,7 +113,7 @@ export function PinnedSlot({
                 </TileLink>
               )
             })}
-          </span>,
+          />,
         )
       }
       continue
@@ -127,8 +134,11 @@ export function PinnedSlot({
     const justWatch = safeWebsiteUrl(streaming?.link ?? null)
     if (services.length) {
       parts.push(
-        <span key={`s${parts.length}`} className="inline-flex items-center gap-1.5">
-          {services.map((s) => {
+        <TileStrip
+          key={`s${parts.length}`}
+          size={iconSize}
+          noun="services"
+          tiles={services.map((s) => {
             const search = streamingSearchLink(s.name, item.title)
             return (
               <TileLink
@@ -140,11 +150,21 @@ export function PinnedSlot({
               </TileLink>
             )
           })}
-        </span>,
+        />,
       )
     }
   }
   flush()
   if (parts.length === 0) return null
-  return <div className={cx('flex flex-wrap items-center gap-x-2 gap-y-1', className)}>{parts}</div>
+  return (
+    <div
+      className={cx(
+        'flex items-center gap-x-2 gap-y-1',
+        nowrap ? 'flex-nowrap' : 'flex-wrap',
+        className,
+      )}
+    >
+      {parts}
+    </div>
+  )
 }

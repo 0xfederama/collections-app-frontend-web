@@ -109,11 +109,12 @@ function EntryRow({
       >
         <ItemThumb item={item} decorative className="size-9 shrink-0 rounded-sm" />
         <div className="flex min-w-0 flex-1 items-baseline gap-3">
-          <span className="min-w-0 shrink-0 truncate max-w-[60%]">{title}</span>
+          <span className="max-w-[60%] min-w-20 truncate">{title}</span>
           <PinnedSlot
             keys={beside}
             {...slots}
             iconSize={20}
+            nowrap
             className="flex max-w-[55%] min-w-0 overflow-hidden text-ui text-text-muted"
           />
         </div>
@@ -121,6 +122,7 @@ function EntryRow({
           keys={corner}
           {...slots}
           iconSize={22}
+          nowrap
           className="max-w-[45%] shrink-0 justify-end text-ui"
         />
         {menu}
@@ -149,6 +151,7 @@ function EntryRow({
               keys={beside}
               {...slots}
               iconSize={18}
+              nowrap
               className="min-w-0 overflow-hidden text-secondary text-text-muted"
             />
           </div>
@@ -157,6 +160,7 @@ function EntryRow({
           keys={corner}
           {...slots}
           iconSize={22}
+          nowrap
           className="max-w-[45%] shrink-0 justify-end font-mono text-secondary"
         />
         {menu}
