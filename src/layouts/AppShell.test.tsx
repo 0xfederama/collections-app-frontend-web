@@ -491,11 +491,11 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
   })
 
-  it('a list has no "Back to Home": the title row starts with the list icon or title', async () => {
+  it('a list title row starts with the compact Back to Home button', async () => {
     mockViewport(375)
     renderAt(`/lists/${WATCHLIST}`)
     await screen.findByRole('heading', { level: 1 })
-    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back to Home' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
   })
 
@@ -509,11 +509,11 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(router.state.location.pathname).toBe(`/lists/${WATCHLIST}`)
   })
 
-  it('the loading state of a list has no "Back to Home" either', () => {
+  it('the loading state of a list has the Back to Home button too', () => {
     mockViewport(375)
     renderAt(`/lists/${WATCHLIST}`)
     expect(screen.getByRole('status')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back to Home' })).toBeInTheDocument()
   })
 
   it('the item page keeps its back-to-list control and has no "Back to Home"', async () => {

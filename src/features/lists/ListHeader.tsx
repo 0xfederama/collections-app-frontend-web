@@ -16,6 +16,7 @@ import {
   Search,
   X,
 } from '../../components/ui/icons'
+import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { useBreakpoint } from '../../lib/breakpoints'
 import { type List as TreeList, ListActionsMenu, ListIconDialog } from '../tree'
 import { hasPrice, typeName, type TypeDefinition } from '../items'
@@ -167,6 +168,7 @@ export function ListHeader(props: ListHeaderProps) {
     <>
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
+          <BackToHomeButton />
           <ListIconButton list={props.treeList} defaultIcon={props.definition.default_icon} />
           <h1 className="min-w-0 flex-1 font-display text-display break-words">
             <ListTitle list={props.treeList} />
