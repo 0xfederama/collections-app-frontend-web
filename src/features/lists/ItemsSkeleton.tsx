@@ -4,7 +4,7 @@ import type { DisplayMode } from './api'
 /** Container classes per mode. Grid: 2 columns on mobile, 3 on tablet, then auto-fill (UI_SPEC §2). */
 export const containerClass: Record<DisplayMode, string> = {
   compact: 'flex flex-col gap-1.5',
-  thumbnail: 'flex flex-col',
+  thumbnail: 'flex flex-col gap-1.5',
   grid: 'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-[repeat(auto-fill,minmax(11.25rem,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(13.75rem,1fr))]',
 }
 
@@ -31,7 +31,7 @@ export function ItemsSkeleton({ mode }: { mode: DisplayMode }) {
           <div
             key={i}
             aria-hidden
-            className="flex items-center gap-3.5 border-b border-border-soft px-2 py-[9px]"
+            className="flex items-center gap-3.5 rounded-md border border-border py-1.5 pr-3 pl-1.5"
           >
             <Skeleton className="aspect-[36/50] w-9 shrink-0 rounded-sm" />
             <div className="flex flex-1 flex-col gap-2">

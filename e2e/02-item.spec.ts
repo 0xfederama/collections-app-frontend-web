@@ -221,8 +221,8 @@ test.describe('F-022 W2 fixed pins per type', () => {
     })
 
     await page.goto(`/lists/${list.id}`)
-    // The segmented control's radios are sr-only inside their label, so check it directly.
-    await page.getByRole('radio', { name: 'Thumbnail rows' }).check({ force: true })
+    await page.getByRole('button', { name: 'View options' }).click()
+    await page.getByRole('menuitemradio', { name: 'Thumbnail rows' }).click()
     const row = page.getByRole('list', { name: 'Items' }).getByRole('listitem').filter({
       hasText: title,
     })

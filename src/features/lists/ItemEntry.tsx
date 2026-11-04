@@ -31,10 +31,6 @@ const linkClass = `rounded-sm font-display text-row text-text after:absolute aft
 const surface =
   'border border-border bg-surface transition-colors hover:bg-surface-raised has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-focus-ring'
 
-/** Medium rows (F021) are not cards: hairline dividers between them, no border or fill of their own. */
-const rowFrame =
-  'border-b border-border-soft transition-colors hover:bg-surface has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-focus-ring'
-
 /** One item of the list in the given display mode: a row (compact, thumbnail) or a card (grid). */
 export function ItemEntry(props: ItemEntryProps) {
   const { item, reorder } = props
@@ -95,7 +91,7 @@ function EntryRow({
 
   const shell = cx(
     'group/entry relative list-none [-webkit-touch-callout:none] pointer-coarse:select-none',
-    mode === 'thumbnail' ? rowFrame : surface,
+    surface,
     reorder?.isDragging && 'z-20 shadow-lg ring-2 ring-focus-ring',
   )
 
@@ -136,7 +132,7 @@ function EntryRow({
         ref={reorder?.rowRef}
         {...reorder?.rowProps}
         {...press}
-        className={cx(shell, 'flex items-center gap-3.5 px-2 py-[9px]')}
+        className={cx(shell, 'flex items-center gap-3.5 rounded-md py-1.5 pr-3 pl-1.5')}
       >
         <ItemThumb
           item={item}
@@ -185,7 +181,12 @@ function EntryRow({
           className="text-secondary text-text-muted"
         />
         {/* The corner placement ends the card's text block. */}
-        <PinnedSlot keys={corner} {...slots} iconSize={20} className="self-end text-ui" />
+        <PinnedSlot
+          keys={corner}
+          {...slots}
+          iconSize={20}
+          className="max-w-full min-w-0 self-end text-ui"
+        />
       </div>
       <div className="absolute top-2.5 right-2.5">{menu}</div>
     </li>

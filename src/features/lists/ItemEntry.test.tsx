@@ -83,6 +83,20 @@ const readOrder = (row: HTMLElement) =>
     .map((node) => node.textContent?.trim() ?? '')
     .filter((text) => text !== '')
 
+describe('F-025 list rows: every display mode has the same bordered, rounded frame', () => {
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s: hairline border, radius and surface',
+    (mode) => {
+      const row = entry(['runtime_minutes', 'release_year'], mode)
+      expect(row.className).toContain('border-border')
+      expect(row.className).toContain('bg-surface')
+      expect(row.className).toMatch(/rounded-(md|lg)/)
+      expect(row.className.split(' ')).not.toContain('border-b')
+      expect(row.className).not.toContain('border-border-soft')
+    },
+  )
+})
+
 describe('F009-W3 the first pinned field reads next to the title, the second in the corner', () => {
   it.each(['compact', 'thumbnail', 'grid'] as const)(
     '%s: title, then the first pinned field, then the second',
