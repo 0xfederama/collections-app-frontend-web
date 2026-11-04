@@ -13,6 +13,12 @@ describe('F-025 visibleCount', () => {
     { available: 71, total: 3, expected: 1 }, // 2 fit -> 1 + "+2"
     { available: 500, total: 3, expected: 3 },
     { available: 100, total: 0, expected: 0 },
+    { available: 500, total: 4, expected: 4 }, // 4 or fewer: all of them
+    { available: 500, total: 5, expected: 3 }, // more than 4: 3 + "+2"
+    { available: 500, total: 9, expected: 3 },
+    { available: 98, total: 5, expected: 3 }, // 4 fit by width -> 3 + the +N
+    { available: 72, total: 5, expected: 2 }, // width is smaller than the cap
+    { available: 20, total: 5, expected: 0 },
   ])('available $available, total $total -> $expected', ({ available, total, expected }) => {
     expect(visibleCount(available, 20, 6, total)).toBe(expected)
   })

@@ -1,10 +1,10 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BADGE_ROOM, naturalWidth, TILE_GAP, visibleCount } from './tileFit'
+import { BADGE_ROOM, cappedCount, MAX_TILES, naturalWidth, TILE_GAP, visibleCount } from './tileFit'
 
 /**
  * The service or store tiles of a row (F-025): one line that never overlaps its neighbours. The
  * strip is as wide as all the tiles want (an invisible sizer), shrinks to the room the row leaves it,
- * and draws as many tiles as fit followed by a "+N" tile for the rest. Unmeasured (no layout, as in
+ * and draws as many tiles as fit (at most 4 slots: 3 and a "+N" tile when there are more) followed by a "+N" tile for the rest. Unmeasured (no layout, as in
  * jsdom) it draws every tile.
  */
 export function TileStrip({
@@ -31,19 +31,21 @@ export function TileStrip({
 
   const total = tiles.length
   const shown =
-    available === null ? total : visibleCount(available - BADGE_ROOM, size, TILE_GAP, total)
+    available === null
+      ? cappedCount(total)
+      : visibleCount(available - BADGE_ROOM, size, TILE_GAP, total)
   const rest = total - shown
   const room = available === null ? true : available - BADGE_ROOM >= size
   return (
     <span
       ref={ref}
-      className="relative flex max-w-full min-w-0 shrink overflow-hidden"
+      className="relative ml-auto flex max-w-full min-w-0 shrink overflow-hidden"
       style={{ height: size + BADGE_ROOM }}
     >
       <span
         aria-hidden
         className="invisible block shrink-0"
-        style={{ width: naturalWidth(size, TILE_GAP, total) + BADGE_ROOM }}
+        style={{ width: naturalWidth(size, TILE_GAP, Math.min(total, MAX_TILES)) + BADGE_ROOM }}
       />
       <span className="absolute inset-y-0 left-0 flex items-start gap-1.5">
         {tiles.slice(0, shown)}
