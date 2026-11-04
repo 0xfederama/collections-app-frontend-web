@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
 
-interface SegmentedOption {
+export interface SegmentedOption {
   value: string
   label: string
   icon?: ReactNode
@@ -17,6 +17,11 @@ export interface SegmentedControlProps {
   value: string
   onValueChange: (value: string) => void
   name?: string
+  /**
+   * `toolbar`: the tray is exactly the height of the list toolbar's icon buttons (36 px, 44 px on
+   * touch) and the segments are near-square, for icon-only options.
+   */
+  size?: 'default' | 'toolbar'
   className?: string
 }
 
@@ -29,6 +34,7 @@ export function SegmentedControl({
   value,
   onValueChange,
   name,
+  size = 'default',
   className,
   ...rest
 }: SegmentedControlProps) {
@@ -38,12 +44,22 @@ export function SegmentedControl({
     <div
       role="radiogroup"
       aria-label={rest['aria-label']}
-      className={cx('inline-flex gap-0.5 rounded-md bg-fill p-0.5', className)}
+      className={cx(
+        'inline-flex gap-0.5 rounded-md bg-fill p-0.5',
+        size === 'toolbar' && 'h-9 items-stretch pointer-coarse:h-11',
+        className,
+      )}
     >
       {options.map((option) => (
         <label
           key={option.value}
-          className="relative flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-sm px-3 text-ui font-medium text-text-muted transition-colors has-[:checked]:bg-surface has-[:checked]:text-text has-[:checked]:shadow-sm has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus-ring not-has-[:checked]:not-has-[:disabled]:hover:bg-fill-hover not-has-[:checked]:not-has-[:disabled]:hover:text-text pointer-coarse:min-h-11"
+          className={cx(
+            'relative flex cursor-pointer select-none items-center rounded-sm text-ui',
+            size === 'toolbar'
+              ? 'w-8 justify-center pointer-coarse:w-10'
+              : 'h-8 gap-1.5 px-3 pointer-coarse:min-h-11',
+            'font-medium text-text-muted transition-colors has-[:checked]:bg-surface has-[:checked]:text-text has-[:checked]:shadow-sm has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus-ring not-has-[:checked]:not-has-[:disabled]:hover:bg-fill-hover not-has-[:checked]:not-has-[:disabled]:hover:text-text',
+          )}
         >
           <input
             type="radio"

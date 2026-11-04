@@ -1323,7 +1323,7 @@ describe('F-025 W2 one-row toolbar on phones', () => {
 
 describe('F-025 W12 view switcher', () => {
   it.each([375, 1100])(
-    'leads the toolbar row and each segment is the toolbar icon size at %ipx',
+    'leads the toolbar row as one tray as tall as the toolbar icon buttons at %ipx',
     async (width) => {
       mockViewport(width)
       useBackend()
@@ -1338,14 +1338,15 @@ describe('F-025 W12 view switcher', () => {
         'thumbnail',
         'grid',
       ])
-      // Same square as Filter and Sort: 36 px, 44 px on touch, same radius, border, hover and focus.
-      for (const radio of radios) {
-        expect(radio.parentElement!.className).toContain(toolbarIconControl)
-      }
+      // One tray (not separate buttons) as tall as Filter and Sort: 36 px, 44 px on touch.
+      expect(mode.className).toContain('h-9')
+      expect(mode.className).toContain('pointer-coarse:h-11')
       expect(screen.getByRole('button', { name: 'Filter' }).className).toBe(toolbarIconControl)
-      // The selected segment is not colour-only: it also gets a thicker border.
+      // Neutral raised selected segment (surface + shadow), no accent colour.
       const checked = radios.find((radio) => (radio as HTMLInputElement).checked)!
-      expect(checked.parentElement!.className).toContain('has-[:checked]:border-2')
+      expect(checked.parentElement!.className).toContain('has-[:checked]:bg-surface')
+      expect(checked.parentElement!.className).toContain('has-[:checked]:shadow-sm')
+      expect(checked.parentElement!.className).not.toContain('accent')
     },
   )
 })
