@@ -845,19 +845,20 @@ describe('W-06 reorder', () => {
       expect(screen.queryByRole('button', { name: /^Actions for / })).toBeNull()
     })
 
-    it('with title sort: hint to switch to Manual', async () => {
+    // F-025 W7: no "switch to manual sorting" hint; a non-manual sort just has no handles.
+    it('with title sort: no hint, no handles', async () => {
       useBackend()
       renderList(at('?sort=title'))
       await itemsList()
-      expect(screen.getByText('Switch to Manual sort to reorder items.')).toBeInTheDocument()
+      expect(screen.queryByText(/Switch to Manual/)).toBeNull()
       noHandles()
     })
 
-    it('with a list whose saved sort is not manual', async () => {
+    it('with a list whose saved sort is not manual: no hint, no handles', async () => {
       useBackend({ list: { sort_mode: 'updated' } })
       renderList(at())
       await itemsList()
-      expect(screen.getByText('Switch to Manual sort to reorder items.')).toBeInTheDocument()
+      expect(screen.queryByText(/Switch to Manual/)).toBeNull()
       noHandles()
     })
 

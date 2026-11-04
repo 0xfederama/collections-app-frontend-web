@@ -102,11 +102,9 @@ export function ItemsView(props: ItemsViewProps) {
     ? null
     : params.q || params.filterField
       ? 'Clear the filter to reorder items.'
-      : effectiveSort !== 'manual'
-        ? 'Switch to Manual sort to reorder items.'
-        : hasNextPage
-          ? 'Load all items to reorder them.'
-          : null
+      : hasNextPage
+        ? 'Load all items to reorder them.'
+        : null
 
   const move = ({ from, to }: Pick<SortableMove, 'from' | 'to'>) => {
     if (from === to || to < 0 || to >= items.length) return
