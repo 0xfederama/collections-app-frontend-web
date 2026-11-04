@@ -175,7 +175,12 @@ test.describe('D-085 price only on the types that have one', () => {
 
     // Remove the price: the row stays (it was added), the value is gone.
     await item.getByRole('button', { name: 'Edit price' }).click()
+    // Wait for the save itself before reloading, or the reload races the PATCH.
+    const saved = page.waitForResponse(
+      (r) => r.request().method() === 'PATCH' && /\/api\/v1\/items\//.test(r.url()) && r.ok(),
+    )
     await item.getByRole('button', { name: 'Remove price' }).click()
+    await saved
     await expect(item.getByText(/10\D+20/)).toBeHidden()
     // After a reload it is not there at all.
     await page.reload()
