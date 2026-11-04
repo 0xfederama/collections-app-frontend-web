@@ -542,3 +542,21 @@ describe('F-025 W3 compact mobile header', () => {
   })
 })
 
+describe('F-025 W4 mobile drawer padding', () => {
+  it('the drawer meets the sidebar rows at its edges', async () => {
+    mockViewport(375)
+    const user = userEvent.setup()
+    renderAt('/')
+    await user.click(screen.getByRole('button', { name: 'Open menu' }))
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveClass('px-3')
+    expect(within(dialog).getByRole('navigation', { name: 'Library' })).toHaveClass('px-0')
+  })
+
+  it('the desktop sidebar keeps its own padding', async () => {
+    mockViewport(1280)
+    renderAt('/')
+    expect(await screen.findByRole('navigation', { name: 'Library' })).toHaveClass('p-3')
+    expect(nav()).not.toHaveClass('px-0')
+  })
+})

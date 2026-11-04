@@ -88,6 +88,7 @@ function ShellFrame() {
             open={drawerOpen}
             onOpenChange={(open) => setDrawerAt(open ? location.key : null)}
             title={workspaceName}
+            className="px-3"
             trigger={
               <IconButton aria-label="Open menu">
                 <MenuIcon aria-hidden />

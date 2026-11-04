@@ -13,6 +13,8 @@ export interface DrawerProps {
   title: string
   description?: string
   side?: 'left' | 'right'
+  /** Extra classes for the panel, e.g. to change its padding. */
+  className?: string
   children?: ReactNode
 }
 
@@ -24,6 +26,7 @@ export function Drawer({
   title,
   description,
   side = 'right',
+  className,
   children,
 }: DrawerProps) {
   const returnFocus = useReturnFocus()
@@ -40,6 +43,7 @@ export function Drawer({
             side === 'right'
               ? 'right-0 rounded-l-xl data-[state=closed]:animate-drawer-out-right data-[state=open]:animate-drawer-in-right'
               : 'left-0 rounded-r-xl data-[state=closed]:animate-drawer-out-left data-[state=open]:animate-drawer-in-left',
+            className,
           )}
         >
           <div className="flex items-start justify-between gap-4">
