@@ -82,7 +82,7 @@ function ShellFrame() {
 
   if (mobile) {
     return (
-      <div className="relative flex h-dvh flex-col text-text">
+      <div className="relative flex h-dvh flex-col pl-[env(safe-area-inset-left)] text-text">
         {/* [CRUCIAL] No trigger: the menu button lives in each page's header row (`PageHeaderSlot`).
             `Drawer` remembers the focused element when it opens and returns focus there on close
             (Esc included), which is that button. */}
@@ -98,7 +98,9 @@ function ShellFrame() {
         {/* Nothing floats over the content: each page's own header row starts with the menu button
             (top-level pages) or the back control (item page), F-025 W10. */}
         <MobileMenuProvider value={() => setDrawerAt(location.key)}>
-          <main className="relative min-h-0 flex-1 overflow-y-auto p-4">{content}</main>
+          <main className="relative min-h-0 flex-1 overflow-y-auto p-4 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+            {content}
+          </main>
         </MobileMenuProvider>
       </div>
     )
@@ -108,7 +110,7 @@ function ShellFrame() {
   const resizable = !rail && (breakpoint === 'desktop' || breakpoint === 'wide')
 
   return (
-    <div className="flex h-dvh text-text">
+    <div className="flex h-dvh pl-[env(safe-area-inset-left)] text-text">
       <div className="flex min-h-0 flex-1">
         <div
           id={SIDEBAR_ID}
@@ -133,7 +135,9 @@ function ShellFrame() {
           )}
         </div>
         <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-          <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto p-6">{content}</main>
+          <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto p-6 pr-[max(1.5rem,env(safe-area-inset-right))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            {content}
+          </main>
           {panelVisible && (
             <DetailPanel listId={itemMatch.params.listId} search={location.search} />
           )}

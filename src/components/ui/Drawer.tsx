@@ -39,7 +39,7 @@ export function Drawer({
           onOpenAutoFocus={returnFocus.capture}
           onCloseAutoFocus={returnFocus.restore}
           className={cx(
-            'fixed inset-y-0 z-50 flex w-[min(24rem,100%-3rem)] flex-col gap-4 material-strong overflow-y-auto p-6 text-text shadow-sheet',
+            'fixed inset-y-0 z-50 flex w-[min(24rem,100%-3rem)] flex-col gap-4 material-strong overflow-y-auto p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-text shadow-sheet',
             side === 'right'
               ? 'right-0 rounded-l-xl data-[state=closed]:animate-drawer-out-right data-[state=open]:animate-drawer-in-right'
               : 'left-0 rounded-r-xl data-[state=closed]:animate-drawer-out-left data-[state=open]:animate-drawer-in-left',

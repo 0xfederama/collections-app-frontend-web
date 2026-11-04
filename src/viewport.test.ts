@@ -11,4 +11,12 @@ describe('F-025 W1 viewport', () => {
     expect(meta).toContain('maximum-scale=1')
     expect(meta).not.toContain('user-scalable=no')
   })
+
+  // F-025 W11: the page background reaches under Safari's bars, so no white band at the bottom.
+  it('extends under the browser bars with viewport-fit=cover', () => {
+    const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8')
+    expect(/<meta name="viewport" content="([^"]+)"/.exec(html)?.[1]).toContain(
+      'viewport-fit=cover',
+    )
+  })
 })

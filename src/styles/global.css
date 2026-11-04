@@ -186,6 +186,8 @@
 @layer base {
   html {
     color-scheme: light;
+    /* The page background also under Safari's bars (viewport-fit=cover), in both themes. */
+    background-color: var(--bg);
   }
   html[data-theme='dark'] {
     color-scheme: dark;
