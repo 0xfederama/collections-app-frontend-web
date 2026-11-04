@@ -10,6 +10,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
 - `src/app/router.tsx`: `routes` (every route is registered here), `createAppRouter`, `createTestRouter`.
 - `src/app/lazyRoute.tsx`: `lazyRoute(load)`, code-split route screens with a skeleton (Settings passes `fallback: null`, so no skeleton shows while it loads).
 - `src/components/BackToHomeButton.tsx`: phone chevron that leads the list title row and the list gate states.
+- `src/lib/previousPath.ts`: `useTrackPreviousPath` (mounted in `AppShell`) and `getPreviousPath()`, the pathname before the current one (`null` when opened directly).
 - `src/components/PageHeaderSlot.tsx`: `PageHeaderSlot({ back })`, the phone back button that leads the item page's header row.
 - `src/layouts/AppShell.tsx`: layout per breakpoint, detail sheet, `/` shortcut, `QuickAddProvider`.
 - `src/layouts/Sidebar.tsx`, `SidebarResizer.tsx`, `useSidebarState.ts`: sidebar, splitter, persisted width.
@@ -27,7 +28,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
   - From 768 px the sidebar collapses to a 64 px icon rail (top-level entries only) at any width.
   - `tablet` (768–1023): sidebar. `desktop` (1024–1279): sidebar with `SidebarResizer` (expanded only).
   - `wide` (≥ 1280): as desktop, plus a 420 px floating `aside[aria-label="Item details"]` on item routes.
-- `BackToHomeButton()`: phones only (< 768 px), a 44 px chevron; goes back one step in the app, or to `/` when the page was opened directly.
+- `BackToHomeButton()`: phones only (< 768 px), a 44 px chevron; goes back one step only when the previous page was `/` (`getPreviousPath()`), otherwise navigates to `/`.
 - `PageHeaderSlot({ back })`: back link on phones, rendered by the item page, its skeleton and its error state; renders nothing from 768 px. Top pages have no slot.
 - `useBreakpoint()`: `'mobile' | 'tablet' | 'desktop' | 'wide'`, from `BREAKPOINTS` (768, 1024, 1280).
 - `useSidebarState()`: `{ collapsed, width, setCollapsed, setWidth }`; width 220–400, default 268.
@@ -36,7 +37,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
 ## Gotchas
 
 - Sidebar and detail sheet use the solid `material` classes (see [theme](theme.md)); there is no blur.
-- Phones: a back chevron (`BackToHomeButton`) leads the list title row and every `ListGate` state. The item page's back control is its `PageHeaderSlot`, first in its header row, also in loading and error states, so titles never shift.
+- Phones: a back chevron (`BackToHomeButton`) leads the list title row and every `ListGate` state. It goes back only when the previous page was `/`; from an item, a list reached by deep link, or a direct open it navigates to `/`. The item page's back control is its `PageHeaderSlot`, first in its header row, also in loading and error states, so titles never shift.
 - Phones scroll the document (`AppShell` mobile `min-h-dvh`, no inner scroller). A push or replace to a different pathname scrolls to the top; POP is left to `useScrollRestore`.
 - The desktop sidebar stays bounded to the viewport; `main` owns vertical scrolling. Flex ancestors need `min-h-0` and overflow containment for the sidebar and main scroll region to remain bounded.
 - Route screens are code-split: `ListRoute`, `SearchRoute`, `SettingsRoute`, `TrashRoute` via `lazyRoute`; `ItemRoute` has its own `Suspense`.

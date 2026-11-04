@@ -17,6 +17,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 - `ListActionsMenu.tsx`, `NodeMenu.tsx`: list and node actions.
 - `useRefreshDetails.ts`, `refreshMessage.ts`: "Refresh details" for movie and TV lists (pure helpers and toast text).
 - `order.ts`, `ListGate.tsx`: ordering rules and list route gate.
+- `slots.tsx`: sidebar slot content, including the "New" row (`TreeNewButton`).
 
 ## Interfaces
 
@@ -35,5 +36,6 @@ The folder/list tree, its query and index, and folder and list writes including 
 - New list icon choice is a compact labelled field beside Name on the same row, including mobile; picker behavior is unchanged. The list mark is rendered by [lists](lists.md) in the sidebar, rail, list header and search results.
 - `ListGate` renders its `slot` in the loading, error and not-found states, after a `BackToHomeButton` on phones. List pages pass no slot; item routes pass a `PageHeaderSlot` back control.
 - "Refresh details" is in the list header "…" menu only, shown for movie and TV lists with items. It posts `lookup-refresh` (no `If-Match`), shows a "Refreshing details…" toast, then invalidates content. "Run again" (action on the result toast) appears while `remaining` > 0. Covered by `e2e/17-refresh-details.spec.ts`.
+- Folder and list names share one text column. The "New" row uses the same 8 px inset, 22 px icon box and gap as a top-level list row; `px-2!` overrides the Button size padding. `e2e/19-tree-new-row.spec.ts` (chromium) checks the alignment.
 - Create/move bodies include `folder_id` (`null` = top level); reorder is within same-kind siblings under one parent.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for full interaction details.

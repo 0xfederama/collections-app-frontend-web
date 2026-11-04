@@ -7,7 +7,7 @@
 ## Key files
 
 - `src/features/home/HomePage.tsx`: page body, empty state, own `useTreeDialogs()` copy for New list / New folder.
-- `src/features/home/MobileHome.tsx`: phone layout, in order: wrapping workspace name, search field (Enter opens `/search?q=`), Quick add button, "Lists" (the sidebar tree), "Recently updated" (5), Settings and Trash rows.
+- `src/features/home/MobileHome.tsx`: phone layout, in order: wrapping workspace name, search field (Enter opens `/search?q=`), Quick add button (full width), "Lists" (the sidebar tree), "Recently updated" (5), Settings and Trash rows.
 - `src/features/home/QuickLinks.tsx`: `listsByRecency`, link grid, skeleton and error states.
 - `src/features/home/RecentItems.tsx`: "Recently updated" list, rows from search's `SearchResultBody`.
 - `src/features/home/api.ts`: `useRecentItems`, `RECENT_LIMIT`; `homeKeys` is in `src/data/keys.ts`.
