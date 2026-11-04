@@ -1,6 +1,7 @@
 import { useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { Button } from '../../components/ui'
+import { Button, useToast } from '../../components/ui'
+import { useBreakpoint } from '../../lib/breakpoints'
 import { ApiError, errorMessage, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemType } from './api'
 import { TitleLookupField } from './TitleLookupField'
@@ -26,6 +27,8 @@ import { typeDefinition, typeName } from './types'
  * Nothing exists on the server until the title is committed (Enter or ✓): that POSTs the item in
  * this list and replaces the URL with the real item page, where the other fields are edited in
  * place as usual. Esc, ✕, or leaving with an empty title drops the draft without a trace.
+ * On phones (F-025 W13) the draft is a full page: after the commit it goes back to the list, and a
+ * toast with an "Open" action opens the new item instead.
  */
 export function NewItemDraft({
   listId,
@@ -38,6 +41,8 @@ export function NewItemDraft({
 }) {
   const navigate = useNavigate()
   const { search } = useLocation()
+  const phone = useBreakpoint() === 'mobile'
+  const toast = useToast()
   const create = useCreateItem(listId)
   const settings = useSettings()
   const definitions = useTypes()
@@ -76,7 +81,20 @@ export function NewItemDraft({
         ...createLookupSelection(type, settings.data, selection ?? chosen),
         ...(lookup === undefined ? {} : { lookup }),
       })
-      leave(`/lists/${listId}/items/${created.id}`)
+      const itemPath = `/lists/${listId}/items/${created.id}`
+      if (phone) {
+        toast({
+          kind: 'success',
+          title: `Added “${created.title}”`,
+          action: {
+            label: 'Open',
+            onAction: () => void navigate({ pathname: itemPath, search }),
+          },
+        })
+        leave(`/lists/${listId}`)
+      } else {
+        leave(itemPath)
+      }
     } catch (caught) {
       if (isLookupUnavailable(caught)) {
         setLookupUnavailable(true)

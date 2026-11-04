@@ -1259,6 +1259,44 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await user.keyboard('{Escape}')
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
   })
+
+  it('F-025 W13 on a phone the commit goes back to the list (search kept) and the toast opens the item', async () => {
+    mockViewport(375)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at('?q=Item'))
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const title = await screen.findByRole('combobox', { name: 'Title' })
+    await user.type(title, 'Field notebook{Enter}')
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
+    expect(router.state.location.search).toBe('?q=Item')
+    expect(posts).toHaveLength(1)
+    expect(await screen.findByText('Added “Field notebook”')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Open' }))
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+  })
+
+  it('F-025 W13 at tablet width and up the commit opens the new item, with no toast', async () => {
+    mockViewport(1024)
+    useBackend()
+    useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const title = await screen.findByRole('combobox', { name: 'Title' })
+    await user.type(title, 'Field notebook{Enter}')
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+    expect(screen.queryByRole('button', { name: 'Open' })).not.toBeInTheDocument()
+  })
 })
 
 describe('F-025 W2 one-row toolbar on phones', () => {
