@@ -77,7 +77,7 @@ test.describe('F018-W3 Vehicles: no price, every field optional', () => {
     await expect(page.getByRole('menuitem', { name: 'Price', exact: true })).toBeHidden()
     await page.keyboard.press('Escape')
 
-    await page.getByRole('button', { name: 'Sort' }).click()
+    await page.getByRole('button', { name: 'Sort', exact: true }).click()
     await expect(page.getByRole('menuitemradio', { name: 'Make', exact: true })).toBeVisible()
     await expect(page.getByRole('menuitemradio', { name: 'Price', exact: true })).toBeHidden()
   })

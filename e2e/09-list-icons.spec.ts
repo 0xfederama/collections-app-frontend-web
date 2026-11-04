@@ -3,6 +3,11 @@ import { expect, test, type Page } from '@playwright/test'
 import { createList, sidebarTree, uniqueName } from './helpers'
 
 async function expectNoSeriousIssues(page: Page) {
+  // Dialogs fade in: axe reads the blended colour of text that is still partly transparent, so
+  // it reports a false contrast failure. Scan only once every animation has finished.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== 'running'),
+  )
   const { violations } = await new AxeBuilder({ page }).analyze()
   const serious = violations.filter(
     (violation) => violation.impact === 'serious' || violation.impact === 'critical',

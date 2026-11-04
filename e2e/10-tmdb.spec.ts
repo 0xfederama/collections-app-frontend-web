@@ -58,7 +58,7 @@ test.describe('F013-W3 director data and F014-W4 field filter', () => {
     await page.keyboard.press('Escape')
     await page.getByRole('button', { name: /Remove filter Director/ }).click()
     await expect(rows).toHaveCount(2)
-    await page.getByRole('button', { name: 'Sort' }).click()
+    await page.getByRole('button', { name: 'Sort', exact: true }).click()
     await page.getByRole('menuitemradio', { name: 'Director' }).click()
     await expect(page).toHaveURL(/sort=director/)
     await expect(rows.first()).toContainText(alphaTitle)

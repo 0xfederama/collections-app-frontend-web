@@ -45,7 +45,7 @@ test.describe('F003-W1 item: type field, website, sort by field key', () => {
     const links = page.getByRole('list', { name: 'Items' }).getByRole('link')
     // A movie list sorts by its type's default field (release year) until another is chosen.
     await expect(links).toHaveText([title, older])
-    await page.getByRole('button', { name: 'Sort' }).click()
+    await page.getByRole('button', { name: 'Sort', exact: true }).click()
     await page.getByRole('menuitemradio', { name: 'Manual' }).click()
     await expect(page).toHaveURL(/sort=manual/)
     await expect(links).toHaveText([older, title])
@@ -198,7 +198,7 @@ test.describe('D-085 price only on the types that have one', () => {
     await expect(page.getByRole('menuitem', { name: 'Price', exact: true })).toBeHidden()
     await page.keyboard.press('Escape')
 
-    await page.getByRole('button', { name: 'Sort' }).click()
+    await page.getByRole('button', { name: 'Sort', exact: true }).click()
     await expect(page.getByRole('menuitemradio', { name: 'Release year' })).toBeVisible()
     await expect(page.getByRole('menuitemradio', { name: 'Price' })).toBeHidden()
   })

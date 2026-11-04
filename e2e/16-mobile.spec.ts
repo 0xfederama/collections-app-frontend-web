@@ -22,7 +22,7 @@ test.describe('F-025 mobile', () => {
     const controls = [
       main.getByRole('searchbox', { name: /Search items by title/ }),
       main.getByRole('button', { name: 'Filter' }),
-      main.getByRole('button', { name: 'Sort' }),
+      main.getByRole('button', { name: 'Sort', exact: true }),
       main.getByRole('radiogroup', { name: 'Display mode' }),
       main.getByRole('button', { name: 'New item' }),
     ]
@@ -48,7 +48,75 @@ test.describe('F-025 mobile', () => {
     expect(overflow).toBeLessThanOrEqual(0)
   })
 
-  test('W3 the menu button shares the title row without overlapping it', async ({
+  test('W8 Filter and Sort are matching buttons the size of New item, and search says "Search"', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Controls'), 'movie')
+    await createItem(request, list.id, uniqueName('Film'))
+    await page.goto(`/lists/${list.id}`)
+    const main = page.getByRole('main')
+    await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
+
+    const sizes: Record<string, { width: number; height: number }> = {}
+    for (const name of ['Filter', 'Sort', 'New item']) {
+      const button = main.getByRole('button', { name, exact: true })
+      await expect(button).toBeVisible()
+      const box = await button.boundingBox()
+      if (!box) throw new Error(`${name} has no box`)
+      sizes[name] = box
+    }
+    const filter = sizes['Filter']
+    const sort = sizes['Sort']
+    const create = sizes['New item']
+    if (!filter || !sort || !create) throw new Error('missing size')
+    expect(Math.abs(filter.width - sort.width), 'Filter vs Sort width').toBeLessThanOrEqual(1)
+    expect(Math.abs(filter.height - sort.height), 'Filter vs Sort height').toBeLessThanOrEqual(1)
+    expect(Math.abs(filter.width - create.width), 'Filter vs New item width').toBeLessThanOrEqual(1)
+    expect(
+      Math.abs(filter.height - create.height),
+      'Filter vs New item height',
+    ).toBeLessThanOrEqual(1)
+
+    await expect(main.getByRole('searchbox', { name: /Search items by title/ })).toHaveAttribute(
+      'placeholder',
+      'Search',
+    )
+
+    await main.getByRole('button', { name: 'Sort', exact: true }).tap()
+    await expect(page.getByRole('menuitemradio', { checked: true })).toHaveCount(1)
+  })
+
+  test('W9 a movie row shows runtime and director, a book row the page count before the author', async ({
+    page,
+    request,
+  }) => {
+    const movies = await createList(request, uniqueName('Movies'), 'movie')
+    const film = uniqueName('Film')
+    await createItem(request, movies.id, film, {
+      metadata: { runtime_minutes: 136, director: 'Lana Wachowski' },
+    })
+    await page.goto(`/lists/${movies.id}`)
+    const movieRow = page.getByRole('list', { name: 'Items' }).getByRole('listitem')
+    await expect(movieRow).toHaveCount(1)
+    await expect(movieRow).toContainText('136')
+    await expect(movieRow).toContainText('Lana Wachowski')
+
+    const books = await createList(request, uniqueName('Books'), 'book')
+    await createItem(request, books.id, uniqueName('Novel'), {
+      metadata: { pages: 321, author: 'Ada Writer' },
+    })
+    await page.goto(`/lists/${books.id}`)
+    const bookRow = page.getByRole('list', { name: 'Items' }).getByRole('listitem')
+    await expect(bookRow).toHaveCount(1)
+    await expect(bookRow).toContainText('321 p.')
+    await expect(bookRow).toContainText('Ada Writer')
+    const text = (await bookRow.textContent()) ?? ''
+    expect(text.indexOf('321 p.')).toBeGreaterThanOrEqual(0)
+    expect(text.indexOf('321 p.')).toBeLessThan(text.indexOf('Ada Writer'))
+  })
+
+  test('W10 the menu button sits in the title row left of the title, and opens the drawer', async ({
     page,
     request,
   }) => {
@@ -65,11 +133,31 @@ test.describe('F-025 mobile', () => {
     // Same row: the vertical ranges overlap.
     expect(menuBox.y).toBeLessThan(titleBox.y + titleBox.height)
     expect(titleBox.y).toBeLessThan(menuBox.y + menuBox.height)
-    // Side by side: no horizontal overlap.
-    const apart =
-      menuBox.x + menuBox.width <= titleBox.x + 0.5 ||
-      titleBox.x + titleBox.width <= menuBox.x + 0.5
-    expect(apart).toBe(true)
+    // Left of the title, no horizontal overlap.
+    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(titleBox.x + 0.5)
+
+    await menu.tap()
+    const drawer = page.getByRole('dialog')
+    await expect(drawer).toBeVisible()
+    await expect(drawer.getByRole('navigation', { name: 'Library' })).toBeVisible()
+  })
+
+  test('W10 the item page has a back link in the slot and no menu button', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Back slot'), 'movie')
+    const item = await createItem(request, list.id, uniqueName('Film'))
+    await page.goto(itemUrl(list.id, item.id))
+    const back = page.getByRole('main').getByRole('link', { name: /^Back to / })
+    await expect(back).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
+    const backBox = await back.boundingBox()
+    const heading = await page.getByRole('heading', { level: 1 }).boundingBox()
+    if (!backBox || !heading) throw new Error('missing box')
+    expect(backBox.x).toBeLessThan(heading.x + heading.width)
+    await back.tap()
+    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`))
   })
 
   test('W5 a long press on an item opens Move and Delete', async ({ page, request }) => {
