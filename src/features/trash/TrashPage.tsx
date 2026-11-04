@@ -156,7 +156,11 @@ export function TrashPage() {
   return (
     <section className={cx('flex flex-col gap-4', narrow && 'max-w-5xl')}>
       <div>
-        <h1 ref={headingRef} tabIndex={-1} className="font-display text-display outline-none">
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-display text-display outline-none max-md:pl-12"
+        >
           Trash
         </h1>
         <p className="mt-1 text-ui text-text-muted">

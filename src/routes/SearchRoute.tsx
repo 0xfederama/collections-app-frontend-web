@@ -136,7 +136,7 @@ export function SearchRoute() {
 
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="font-display text-display">Search</h1>
+      <h1 className="font-display text-display max-md:pl-12">Search</h1>
       <form
         role="search"
         aria-label="Search all items"

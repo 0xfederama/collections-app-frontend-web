@@ -101,7 +101,9 @@ function ShellFrame() {
             />
           </Drawer>
         </div>
-        <main className="relative min-h-0 flex-1 overflow-y-auto p-4 pt-16">{content}</main>
+        {/* No top row for the menu button: it floats over the top-left corner, and the page titles
+            leave room for it (`max-md:pl-12`), so the button shares the first row with the title. */}
+        <main className="relative min-h-0 flex-1 overflow-y-auto p-4">{content}</main>
       </div>
     )
   }

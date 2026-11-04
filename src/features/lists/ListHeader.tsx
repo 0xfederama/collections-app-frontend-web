@@ -126,7 +126,8 @@ export function ListHeader(props: ListHeaderProps) {
   return (
     <>
       <header className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
+        {/* On phones the floating menu button shares this row, so the title starts after it (F-025 W3). */}
+        <div className="flex flex-wrap items-center gap-3 max-md:pl-12">
           <ListIconButton list={props.treeList} defaultIcon={props.definition.default_icon} />
           <h1 className="min-w-0 flex-1 font-display text-display break-words">
             <ListTitle list={props.treeList} />

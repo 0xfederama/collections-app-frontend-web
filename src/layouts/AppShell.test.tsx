@@ -521,3 +521,24 @@ describe('W-04 shell footer links', () => {
     )
   })
 })
+
+describe('F-025 W3 compact mobile header', () => {
+  it('the menu button floats in the first row and the page title leaves room for it', async () => {
+    mockViewport(375)
+    renderAt(`/lists/${WATCHLIST}`)
+    const heading = await screen.findByRole('heading', { level: 1 })
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
+    // No row of its own above the content: the padding the old top bar needed is gone.
+    expect(screen.getByRole('main')).not.toHaveClass('pt-16')
+    expect(heading.parentElement).toHaveClass('max-md:pl-12')
+  })
+
+  it('Home keeps its title clear of the menu button', async () => {
+    mockViewport(375)
+    renderAt('/')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toHaveClass(
+      'max-md:pl-12',
+    )
+  })
+})
+

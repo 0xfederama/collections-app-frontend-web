@@ -14,7 +14,7 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="font-display text-display">Home</h1>
+      <h1 className="font-display text-display max-md:pl-12">Home</h1>
       {noLists ? (
         <EmptyState
           icon={ListPlus}
