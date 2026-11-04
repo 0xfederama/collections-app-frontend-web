@@ -21,7 +21,14 @@ test.describe('F-025 mobile Home', () => {
     await expect(main.getByRole('link', { name: 'Settings' })).toBeVisible()
     await expect(main.getByRole('link', { name: 'Trash' })).toBeVisible()
     await expect(main.getByRole('searchbox', { name: 'Search', exact: true })).toBeVisible()
-    await expect(main.getByRole('button', { name: 'Quick add' })).toContainText('Quick add')
+    const quickAdd = main.getByRole('button', { name: 'Quick add' })
+    await expect(quickAdd).toContainText('Quick add')
+    // Quick add sits just below the search field.
+    const searchBox = await main
+      .getByRole('searchbox', { name: 'Search', exact: true })
+      .boundingBox()
+    const quickBox = await quickAdd.boundingBox()
+    expect(quickBox?.y ?? 0).toBeGreaterThan((searchBox?.y ?? 0) + (searchBox?.height ?? 0) - 1)
     await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
   })
 
