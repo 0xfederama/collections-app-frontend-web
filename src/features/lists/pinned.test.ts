@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { typeDefinition, type TypeDefinition } from '../items'
 import type { ItemSummary } from './api'
-import { fixedPinned, formatPinnedValue, pinnedPlacements, pinnedTexts } from './pinned'
+import {
+  fixedPinned,
+  formatPinnedValue,
+  isLowPriorityPin,
+  pinnedPieces,
+  pinnedPlacements,
+} from './pinned'
 
 /** A definition with the given field keys (the pins only read the keys) and price flag. */
 const def = (key: string, fieldKeys: string[], allowsPrice = false): TypeDefinition => ({
@@ -42,14 +48,14 @@ describe('F-022 W2 fixed pinned fields per built-in type', () => {
     [
       'movie',
       def('movie', ['release_year', 'runtime_minutes', 'director', 'imdb_url', 'streaming']),
-      ['runtime_minutes', 'streaming'],
+      ['runtime_minutes', 'director', 'streaming'],
     ],
     [
       'tv_show',
       def('tv_show', ['first_air_year', 'seasons', 'episodes_per_season', 'streaming']),
       ['seasons', 'streaming'],
     ],
-    ['book', def('book', ['author', 'pages', 'isbn', 'stores']), ['author', 'pages', 'stores']],
+    ['book', def('book', ['author', 'pages', 'isbn', 'stores']), ['pages', 'author', 'stores']],
     [
       'vehicle',
       def('vehicle', ['make', 'model', 'model_year', 'displacement_cc', 'power_hp']),
@@ -63,21 +69,26 @@ describe('F-022 W2 fixed pinned fields per built-in type', () => {
 
   it.each([
     [
-      'a movie without streaming pins runtime only',
-      def('movie', ['runtime_minutes']),
-      ['runtime_minutes'],
+      'a movie without a director field pins runtime and streaming',
+      def('movie', ['runtime_minutes', 'streaming']),
+      ['runtime_minutes', 'streaming'],
     ],
     [
-      'a book without stores pins author and pages',
+      'a movie without streaming pins runtime and director',
+      def('movie', ['runtime_minutes', 'director']),
+      ['runtime_minutes', 'director'],
+    ],
+    [
+      'a book without stores pins pages and author',
       def('book', ['author', 'pages']),
-      ['author', 'pages'],
+      ['pages', 'author'],
     ],
     [
       'a vehicle with no power field pins the year only',
       def('vehicle', ['model_year']),
       ['model_year'],
     ],
-    ['a type with none of its pins pins nothing', def('movie', ['director']), []],
+    ['a type with none of its pins pins nothing', def('movie', ['release_year']), []],
   ])('drops pins whose field the definition lacks: %s', (_label, definition, expected) => {
     expect(fixedPinned(definition)).toEqual(expected)
   })
@@ -115,7 +126,9 @@ describe('F014-W3 pinned text', () => {
     const row = item({ runtime_minutes: 117, streaming: { platforms: ['Netflix'] } })
     expect(formatPinnedValue('runtime_minutes', row, movie)).toBe('117 min')
     expect(formatPinnedValue('streaming', row, movie)).toBeNull()
-    expect(pinnedTexts(['runtime_minutes', 'streaming'], row, movie)).toEqual(['117 min'])
+    expect(pinnedPieces(['runtime_minutes', 'streaming'], row, movie)).toEqual([
+      { key: 'runtime_minutes', text: '117 min' },
+    ])
   })
 
   it('formats a TV show seasons count', () => {
@@ -126,7 +139,71 @@ describe('F014-W3 pinned text', () => {
   it('formats the price from the item, not the metadata', () => {
     const wishlist = def('wishlist', [], true)
     const priced = item({}, { min: '1200', max: '1500', currency: 'EUR' })
-    expect(pinnedTexts(['price'], priced, wishlist)).toEqual([expect.stringMatching(/1,200/)])
+    expect(pinnedPieces(['price'], priced, wishlist)).toEqual([
+      { key: 'price', text: expect.stringMatching(/1,200/) },
+    ])
+  })
+})
+
+describe('F-025 W9 pinned pieces keep their keys, and the low-priority ones are the metadata', () => {
+  const movie: TypeDefinition = {
+    ...def('movie', []),
+    fields: [
+      { key: 'runtime_minutes', label: 'Runtime', type: 'number', position: 0 },
+      { key: 'director', label: 'Director', type: 'text', position: 1 },
+      { key: 'streaming', label: 'Streaming', type: 'streaming', position: 2 },
+    ],
+  }
+  const book: TypeDefinition = {
+    ...def('book', []),
+    fields: [
+      { key: 'pages', label: 'Pages', type: 'number', position: 0 },
+      { key: 'author', label: 'Writer', type: 'text', position: 1 },
+      { key: 'stores', label: 'Where to get it', type: 'stores', position: 2 },
+    ],
+  }
+
+  it.each([
+    [
+      'a movie reads runtime, then director',
+      movie,
+      { runtime_minutes: 117, director: 'Ridley Scott' },
+      ['runtime_minutes', 'director'],
+      [
+        { key: 'runtime_minutes', text: '117 min' },
+        { key: 'director', text: 'Ridley Scott' },
+      ],
+    ],
+    [
+      'a book reads pages, then author',
+      book,
+      { pages: 127, author: 'Jane Austen' },
+      ['pages', 'author'],
+      [
+        { key: 'pages', text: '127 p.' },
+        { key: 'author', text: 'Jane Austen' },
+      ],
+    ],
+    [
+      'a missing value leaves its piece out',
+      movie,
+      { runtime_minutes: 117 },
+      ['runtime_minutes', 'director'],
+      [{ key: 'runtime_minutes', text: '117 min' }],
+    ],
+  ])('%s', (_label, definition, metadata, keys, expected) => {
+    expect(pinnedPieces(keys, item(metadata), definition)).toEqual(expected)
+  })
+
+  it.each([
+    ['director', true],
+    ['pages', true],
+    ['author', false],
+    ['streaming', false],
+    ['runtime_minutes', false],
+    ['stores', false],
+  ])('%s is low priority: %s', (key, expected) => {
+    expect(isLowPriorityPin(key)).toBe(expected)
   })
 })
 
@@ -142,11 +219,19 @@ describe('F016-W3 pinned placements (up to three pins)', () => {
     })
   })
 
-  it('places the fixed book pins: writer next to the title, pages next to it, stores in the corner', () => {
-    expect(pinnedPlacements(['author', 'pages', 'stores'])).toEqual({
-      first: ['author'],
-      second: ['pages'],
+  it('places the fixed book pins: pages next to the title, writer next to it, stores in the corner', () => {
+    expect(pinnedPlacements(['pages', 'author', 'stores'])).toEqual({
+      first: ['pages'],
+      second: ['author'],
       third: ['stores'],
+    })
+  })
+
+  it('places the fixed movie pins: runtime and director beside the title, streaming in the corner', () => {
+    expect(pinnedPlacements(['runtime_minutes', 'director', 'streaming'])).toEqual({
+      first: ['runtime_minutes'],
+      second: ['director'],
+      third: ['streaming'],
     })
   })
 })

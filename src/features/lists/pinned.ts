@@ -15,9 +15,9 @@ export type PinnedKeys = readonly string[]
  * A type not listed here, including "No type", pins nothing.
  */
 const FIXED_PINS = new Map<string, PinnedKeys>([
-  ['movie', ['runtime_minutes', 'streaming']],
+  ['movie', ['runtime_minutes', 'director', 'streaming']],
   ['tv_show', ['seasons', 'streaming']],
-  ['book', ['author', 'pages', 'stores']],
+  ['book', ['pages', 'author', 'stores']],
   ['vehicle', ['model_year', 'power_hp']],
   ['wishlist', ['price']],
 ])
@@ -31,6 +31,14 @@ export function fixedPinned(definition: TypeDefinition): PinnedKeys {
     key === 'price' ? hasPrice(definition) : definition.fields.some((field) => field.key === key),
   )
 }
+
+/**
+ * The metadata pins that give way first when a row runs out of room (F-025 W9): a movie's director and
+ * a book's page count truncate. Streaming, the author and the other pins are never truncated.
+ */
+const LOW_PRIORITY_PINS = new Set(['director', 'pages'])
+
+export const isLowPriorityPin = (key: string): boolean => LOW_PRIORITY_PINS.has(key)
 
 const num = (value: unknown) => (typeof value === 'number' ? value : null)
 
@@ -80,18 +88,18 @@ export function storesOf(item: ItemSummary, key: string): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
 }
 
-/** The text pieces of a run of fields, in order, ready to join with ` · `. Streaming is left to the caller. */
-export function pinnedTexts(
+/** The text pieces of a run of fields, in order, each with its key. Streaming is left to the caller. */
+export function pinnedPieces(
   keys: readonly string[],
   item: ItemSummary,
   definition: TypeDefinition,
-): string[] {
-  const texts: string[] = []
+): { key: string; text: string }[] {
+  const pieces: { key: string; text: string }[] = []
   for (const key of keys) {
     const text = formatPinnedValue(key, item, definition)
-    if (text) texts.push(text)
+    if (text) pieces.push({ key, text })
   }
-  return texts
+  return pieces
 }
 
 /** The streaming platforms of an item, with whether each is paid. */

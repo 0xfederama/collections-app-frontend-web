@@ -122,16 +122,18 @@ describe('F009-W3 the first pinned field reads next to the title, the second in 
 
 describe('F016-W3 three pins: two beside the title, the third in the corner', () => {
   it.each(['compact', 'thumbnail', 'grid'] as const)(
-    '%s: title, author and pages, then the stores as tiles',
+    '%s: title, pages and author, then the stores as tiles',
     async (mode) => {
-      const row = entry(['author', 'pages', 'stores'], mode, {
+      const row = entry(['pages', 'author', 'stores'], mode, {
         type: 'book',
         title: 'Dune',
         metadata: { author: 'Frank Herbert', pages: 412, stores: ['amazon', 'kobo'] },
       })
       const order = readOrder(row)
       expect(order.indexOf('Dune')).toBe(0)
-      expect(order.indexOf('Frank Herbert · 412 p.')).toBe(1)
+      // F-025 W9: the page count reads first, then the author.
+      expect(order.indexOf('412 p.')).toBe(1)
+      expect(order.indexOf('Frank Herbert')).toBe(2)
       // F016-W4: the tiles are named by the store's display name, once the provider list loads.
       expect(await within(row).findByRole('img', { name: 'Amazon' })).toBeInTheDocument()
       expect(within(row).getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
@@ -139,7 +141,7 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
   )
 
   it('a book with no stores selected shows no tiles', () => {
-    const row = entry(['author', 'pages', 'stores'], 'compact', {
+    const row = entry(['pages', 'author', 'stores'], 'compact', {
       type: 'book',
       metadata: { author: 'Frank Herbert' },
     })
@@ -149,7 +151,7 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
 
 describe('F016 row tiles open their page without opening the item', () => {
   it('a store tile links to the search the web builds for the Settings country, in a new tab', async () => {
-    const row = entry(['author', 'pages', 'stores'], 'thumbnail', {
+    const row = entry(['pages', 'author', 'stores'], 'thumbnail', {
       type: 'book',
       title: 'Dune',
       metadata: {
@@ -168,7 +170,7 @@ describe('F016 row tiles open their page without opening the item', () => {
   })
 
   it('a store link ignores a store_links field the server might send', async () => {
-    const row = entry(['author', 'pages', 'stores'], 'thumbnail', {
+    const row = entry(['pages', 'author', 'stores'], 'thumbnail', {
       type: 'book',
       title: 'Dune',
       metadata: {
@@ -286,4 +288,61 @@ describe('F-025 W5 long press opens the entry actions', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'Delete' }))
     expect(await screen.findByRole('alertdialog', { name: /Delete “Alien”\?/ })).toBeInTheDocument()
   })
+})
+
+describe('F-025 W9 row metadata: runtime with director, pages with author, metadata truncates first', () => {
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s: a movie reads runtime then director, and streaming stays in the corner',
+    (mode) => {
+      const row = entry(['runtime_minutes', 'director', 'streaming'], mode, {
+        metadata: {
+          runtime_minutes: 117,
+          director: 'Ridley Scott',
+          streaming: { platforms: ['Netflix'] },
+        },
+      })
+      const order = readOrder(row)
+      expect(order.indexOf('Alien')).toBe(0)
+      expect(order.indexOf('117 min')).toBe(1)
+      expect(order.indexOf('Ridley Scott')).toBe(2)
+      expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+    },
+  )
+
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s: the director truncates, the runtime and the streaming icons never do',
+    (mode) => {
+      const row = entry(['runtime_minutes', 'director', 'streaming'], mode, {
+        metadata: {
+          runtime_minutes: 117,
+          director: 'Ridley Scott',
+          streaming: { platforms: ['Netflix'] },
+        },
+      })
+      expect(within(row).getByText('Ridley Scott')).toHaveClass('truncate')
+      expect(within(row).getByText('117 min')).toHaveClass('shrink-0')
+    },
+  )
+
+  it('a movie with no director shows its runtime alone', () => {
+    const row = entry(['runtime_minutes', 'director', 'streaming'], 'thumbnail')
+    expect(readOrder(row)).toEqual(['Alien', '117 min'])
+  })
+
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s: a book reads its pages then its author, and the author never truncates',
+    (mode) => {
+      const row = entry(['pages', 'author', 'stores'], mode, {
+        type: 'book',
+        title: 'Dune',
+        metadata: { pages: 127, author: 'Frank Herbert' },
+      })
+      const order = readOrder(row)
+      expect(order.indexOf('Dune')).toBe(0)
+      expect(order.indexOf('127 p.')).toBe(1)
+      expect(order.indexOf('Frank Herbert')).toBe(2)
+      expect(within(row).getByText('127 p.')).toHaveClass('truncate')
+      expect(within(row).getByText('Frank Herbert')).toHaveClass('shrink-0')
+    },
+  )
 })

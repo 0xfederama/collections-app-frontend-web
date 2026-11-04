@@ -77,11 +77,14 @@ test.describe('F016-W3 book row layout', () => {
       await expect(row).toBeVisible()
 
       const titleBox = await row.getByRole('link', { name: title }).boundingBox()
-      const besideBox = await row.getByText('Ada Writer · 321 p.', { exact: true }).boundingBox()
+      // F-025 W9: the page count reads first, then the writer, each as its own piece.
+      const pagesBox = await row.getByText('321 p.', { exact: true }).boundingBox()
+      const writerBox = await row.getByText('Ada Writer', { exact: true }).boundingBox()
       const storeBox = await row.getByRole('img', { name: 'Kobo' }).boundingBox()
       const rowBox = await row.boundingBox()
-      expect(Math.abs(besideBox!.y - titleBox!.y)).toBeLessThan(24)
-      expect(storeBox!.x).toBeGreaterThan(besideBox!.x + besideBox!.width / 2)
+      expect(Math.abs(pagesBox!.y - titleBox!.y)).toBeLessThan(24)
+      expect(pagesBox!.x).toBeLessThan(writerBox!.x)
+      expect(storeBox!.x).toBeGreaterThan(writerBox!.x + writerBox!.width / 2)
       expect(rowBox!.x + rowBox!.width - (storeBox!.x + storeBox!.width)).toBeLessThan(40)
 
       // F016: the store tile in the row is its own link (country storefront, searched by the title) and
