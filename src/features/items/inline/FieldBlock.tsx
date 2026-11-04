@@ -34,12 +34,7 @@ function StreamingValue({ item }: { item: Item }) {
   // F-022-W3: only the services the user owns are shown; the editor still lists them all.
   const owned = settings.data?.owned_streaming_services ?? []
   const shown = filterOwnedPlatforms(streaming.platforms ?? [], owned, (name) => name)
-  const platforms = orderPlatforms(
-    shown,
-    owned,
-    (name) => name,
-    (name) => paid.has(name.toLowerCase()),
-  )
+  const platforms = orderPlatforms(shown, owned, String, (name) => paid.has(name.toLowerCase()))
   return (
     <div className="flex flex-col gap-1.5">
       {platforms.length ? (
