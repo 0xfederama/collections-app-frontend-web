@@ -19,3 +19,4 @@ Range.prototype.getClientRects ??= () =>
     item: () => null,
     [Symbol.iterator]: [][Symbol.iterator],
   }) as unknown as DOMRectList
+window.scrollTo = () => {}

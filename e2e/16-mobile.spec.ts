@@ -250,4 +250,25 @@ test.describe('F-025 mobile', () => {
     await expect(page).toHaveURL(new RegExp(`${itemUrl(list.id, item.id)}$`))
     await expect(page.getByRole('menuitem', { name: 'Delete' })).toHaveCount(0)
   })
+
+  test('F-025 the document scrolls, not main (Safari bars turn translucent)', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Long'), 'movie')
+    for (let index = 0; index < 30; index += 1) {
+      await createItem(request, list.id, uniqueName(`Film ${index}`))
+    }
+    await page.goto(`/lists/${list.id}`)
+    await expect(
+      page.getByRole('list', { name: 'Items' }).getByRole('listitem').first(),
+    ).toBeVisible()
+    const scrolls = await page.evaluate(() => {
+      const doc = document.scrollingElement ?? document.documentElement
+      return doc.scrollHeight > window.innerHeight
+    })
+    expect(scrolls).toBe(true)
+    await page.evaluate(() => window.scrollTo(0, 300))
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
+  })
 })
