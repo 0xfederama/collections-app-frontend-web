@@ -252,3 +252,23 @@ test.describe('F016 Escape closes the opened item', () => {
     await expect(itemPanel(page)).toBeHidden()
   })
 })
+
+test.describe('F-025 W12 display mode switch', () => {
+  test('the display-mode radios lead the toolbar at the height of Filter', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Modes'), 'movie')
+    await createItem(request, list.id, uniqueName('Film'))
+    await page.goto(`/lists/${list.id}`)
+    const main = page.getByRole('main')
+    await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
+    const group = main.getByRole('radiogroup', { name: 'Display mode' })
+    const first = group.locator('label').first()
+    const filter = main.getByRole('button', { name: 'Filter' })
+    const [a, f] = [await first.boundingBox(), await filter.boundingBox()]
+    if (!a || !f) throw new Error('missing box')
+    expect(Math.abs(a.height - f.height)).toBeLessThanOrEqual(1)
+    expect(a.x).toBeLessThan(f.x)
+  })
+})

@@ -193,33 +193,7 @@ test.describe('F-025 mobile', () => {
     expect(text.indexOf('321 p.')).toBeLessThan(text.indexOf('Ada Writer'))
   })
 
-  test('W10 the menu button sits in the title row left of the title, and opens the drawer', async ({
-    page,
-    request,
-  }) => {
-    const name = uniqueName('Title row')
-    const list = await createList(request, name, 'movie')
-    await page.goto(`/lists/${list.id}`)
-    const menu = page.getByRole('button', { name: 'Open menu' })
-    const title = page.getByRole('main').getByRole('button', { name, exact: true })
-    await expect(menu).toBeVisible()
-    await expect(title).toBeVisible()
-    const menuBox = await menu.boundingBox()
-    const titleBox = await title.boundingBox()
-    if (!menuBox || !titleBox) throw new Error('missing box')
-    // Same row: the vertical ranges overlap.
-    expect(menuBox.y).toBeLessThan(titleBox.y + titleBox.height)
-    expect(titleBox.y).toBeLessThan(menuBox.y + menuBox.height)
-    // Left of the title, no horizontal overlap.
-    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(titleBox.x + 0.5)
-
-    await menu.tap()
-    const drawer = page.getByRole('dialog')
-    await expect(drawer).toBeVisible()
-    await expect(drawer.getByRole('navigation', { name: 'Library' })).toBeVisible()
-  })
-
-  test('W10 the item page has a back link in the slot and no menu button', async ({
+  test('W10 the item page has a back link in the slot and no menu button (W14)', async ({
     page,
     request,
   }) => {

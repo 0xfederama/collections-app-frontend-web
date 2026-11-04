@@ -209,7 +209,7 @@ describe('F-025 W13 quick add on phones', () => {
     )
   })
 
-  it('on a phone adding from another page goes to the list, not the item', async () => {
+  it('on a phone adding from Home stays on Home', async () => {
     mockViewport(375)
     useCreate()
     const user = userEvent.setup()
@@ -226,7 +226,8 @@ describe('F-025 W13 quick add on phones', () => {
 
     // The default list is a movie list: Enter takes the first TMDB suggestion, so the title is the fixture's.
     expect(await screen.findByText(/^Added “/)).toBeInTheDocument()
-    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/lists\/[^/]+$/))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Quick add' })).toBeNull())
+    expect(router.state.location.pathname).toBe('/')
   })
 
   it('at tablet width the item opens directly, with no toast action', async () => {

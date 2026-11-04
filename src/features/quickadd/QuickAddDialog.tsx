@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { Dialog, useToast } from '../../components/ui'
 import { useBreakpoint } from '../../lib/breakpoints'
 import {
@@ -40,7 +40,6 @@ export function QuickAddDialog({
   const { lists, loading } = useListChoices()
   const settings = useSettings()
   const navigate = useNavigate()
-  const { pathname } = useLocation()
   const phone = useBreakpoint() === 'mobile'
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -139,7 +138,7 @@ export function QuickAddDialog({
     }
     void invalidateContent(queryClient)
     const itemPath = `/lists/${listId}/items/${created.id}`
-    // Phones (F-025 W13): the toast opens the item; the list is where the user ends up.
+    // Phones (F-025 W13): the toast opens the item; the user stays on the current page.
     const opened = phone
       ? { action: { label: 'Open', onAction: () => void navigate(itemPath) } }
       : {}
@@ -155,7 +154,6 @@ export function QuickAddDialog({
     }
     onClose()
     if (!phone) void navigate(itemPath)
-    else if (pathname !== `/lists/${listId}`) void navigate(`/lists/${listId}`)
   }
 
   const onTextAreaKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {

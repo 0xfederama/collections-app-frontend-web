@@ -139,9 +139,6 @@ test.describe('F012-W1 list icons', () => {
         await page.addInitScript((value) => localStorage.setItem('collection:theme', value), theme)
         const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:5183'
         await page.goto(new URL('/', baseUrl).toString())
-        if (width === 375) {
-          await page.getByRole('button', { name: 'Open menu' }).click()
-        }
         await page.getByRole('button', { name: 'New', exact: true }).click()
         await page.getByRole('menuitem', { name: 'List', exact: true }).click()
         const create = page.getByRole('dialog', { name: 'New list' })
