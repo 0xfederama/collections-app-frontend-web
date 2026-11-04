@@ -177,7 +177,15 @@ const filterField = (type: List['type'] = 'movie') =>
   screen.getByRole('searchbox', {
     name: type === 'movie' ? 'Search items by title or director' : 'Search items by title',
   })
-const sortSelect = () => screen.getByRole('combobox', { name: /Sort/ })
+const sortSelect = () => screen.getByRole('button', { name: 'Sort' })
+/** The checked choice of the sort menu, read by opening it (it closes again). */
+async function checkedSort() {
+  const user = userEvent.setup()
+  await user.click(sortSelect())
+  const label = screen.getByRole('menuitemradio', { checked: true }).textContent
+  await user.keyboard('{Escape}')
+  return label
+}
 
 const radioName = { compact: 'Compact rows', thumbnail: 'Thumbnail rows', grid: 'Grid' } as const
 
@@ -321,11 +329,11 @@ describe('F007-W10 list description', () => {
 })
 
 describe('W-06 URL state: sort and filter', () => {
-  it('?sort=title shows "Title" in the Sort select and the request carries sort=title', async () => {
+  it('?sort=title checks "Title" in the Sort menu and the request carries sort=title', async () => {
     const backend = useBackend()
     renderList(at('?sort=title'))
     await itemsList()
-    expect(sortSelect()).toHaveTextContent('Title')
+    expect(await checkedSort()).toBe('Title')
     expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('title')
   })
 
@@ -333,7 +341,7 @@ describe('W-06 URL state: sort and filter', () => {
     const backend = useBackend()
     renderList(at())
     await itemsList()
-    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(await checkedSort()).toBe('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
   })
 
@@ -343,7 +351,7 @@ describe('W-06 URL state: sort and filter', () => {
     const router = renderList(at())
     await itemsList()
     await user.click(sortSelect())
-    await user.click(await screen.findByRole('option', { name: 'Release year' }))
+    await user.click(await screen.findByRole('menuitemradio', { name: 'Release year' }))
     expect(router.state.location.search).toBe('?sort=release_year')
     await waitFor(() =>
       expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('release_year'),
@@ -356,7 +364,7 @@ describe('W-06 URL state: sort and filter', () => {
     const router = renderList(at())
     await itemsList()
     await user.click(sortSelect())
-    await user.click(await screen.findByRole('option', { name: 'Director' }))
+    await user.click(await screen.findByRole('menuitemradio', { name: 'Director' }))
     expect(router.state.location.search).toBe('?sort=director')
     await waitFor(() =>
       expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('director'),
@@ -369,10 +377,10 @@ describe('W-06 URL state: sort and filter', () => {
     const user = userEvent.setup()
     renderList(at('?sort=director'))
     await itemsList()
-    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(await checkedSort()).toBe('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
     await user.click(sortSelect())
-    expect(screen.queryByRole('option', { name: 'Director' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitemradio', { name: 'Director' })).not.toBeInTheDocument()
   })
 
   it('F014-W4 serializes a type-aware number range and sends the field filter contract', async () => {
@@ -418,7 +426,7 @@ describe('W-06 URL state: sort and filter', () => {
     const router = renderList(at())
     await itemsList()
     await user.click(sortSelect())
-    await user.click(await screen.findByRole('option', { name: 'Price' }))
+    await user.click(await screen.findByRole('menuitemradio', { name: 'Price' }))
     expect(router.state.location.search).toBe('?sort=price')
     await waitFor(() => expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('price'))
   })
@@ -430,12 +438,12 @@ describe('W-06 URL state: sort and filter', () => {
     renderList(at('?sort=price'))
     await itemsList()
     // A stale bookmark cannot put the list in a sort the server rejects.
-    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(await checkedSort()).toBe('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
     await user.click(sortSelect())
-    expect(screen.queryByRole('option', { name: 'Price' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitemradio', { name: 'Price' })).not.toBeInTheDocument()
     // The rest of the type's sort keys are still there.
-    expect(screen.getByRole('option', { name: 'Release year' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitemradio', { name: 'Release year' })).toBeInTheDocument()
   })
 
   it('F007-W9 ?sort=<field key> is ignored on a list with no type', async () => {
@@ -443,7 +451,7 @@ describe('W-06 URL state: sort and filter', () => {
     const backend = useBackend({ list: { type: null } })
     renderList(at('?sort=release_year'))
     await itemsList()
-    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(await checkedSort()).toBe('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
   })
 
@@ -453,10 +461,10 @@ describe('W-06 URL state: sort and filter', () => {
     const user = userEvent.setup()
     renderList(at('?sort=price'))
     await itemsList()
-    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(await checkedSort()).toBe('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
     await user.click(sortSelect())
-    expect(screen.queryByRole('option', { name: 'Price' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitemradio', { name: 'Price' })).not.toBeInTheDocument()
   })
 
   it('typing in the filter updates ?q= after the debounce and the request carries q', async () => {
@@ -497,7 +505,7 @@ describe('W-06 URL state: sort and filter', () => {
     await itemsList()
     expect(screen.queryByRole('button', { name: 'Make this the default sort' })).toBeNull()
     await user.click(sortSelect())
-    await user.click(await screen.findByRole('option', { name: 'Title' }))
+    await user.click(await screen.findByRole('menuitemradio', { name: 'Title' }))
     expect(router.state.location.search).toBe('?sort=title')
     await waitFor(() => expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('title'))
     expect(screen.getByRole('button', { name: 'Make this the default sort' })).toBeInTheDocument()
@@ -523,7 +531,7 @@ describe('W-06 URL state: sort and filter', () => {
     const router = renderList(at('?sort=title'))
     await itemsList()
     await user.click(sortSelect())
-    await user.click(await screen.findByRole('option', { name: 'Manual' }))
+    await user.click(await screen.findByRole('menuitemradio', { name: 'Manual' }))
     expect(router.state.location.search).toBe('')
   })
 
@@ -531,7 +539,7 @@ describe('W-06 URL state: sort and filter', () => {
     const backend = useBackend()
     renderList(at('?sort=bogus'))
     await itemsList()
-    expect(sortSelect()).toHaveTextContent('Manual')
+    expect(await checkedSort()).toBe('Manual')
     expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
   })
 })
@@ -1258,17 +1266,40 @@ describe('F-025 W2 one-row toolbar on phones', () => {
     useBackend()
     renderList(at())
     await itemsList()
+    // The accessible name keeps the full label; only the placeholder is short on phones (F-025 W8).
     expect(
       screen.getByRole('searchbox', { name: 'Search items by title or director' }),
-    ).toBeInTheDocument()
+    ).toHaveAttribute('placeholder', 'Search')
     const filter = screen.getByRole('button', { name: 'Filter' })
-    // The text is visually hidden below md; the name comes from it.
-    expect(filter.querySelector('span')).toHaveClass('max-md:sr-only')
+    // Filter and Sort are icon buttons at every width; the name comes from the visually hidden text.
+    expect(filter.querySelector('span')).toHaveClass('sr-only')
     expect(sortSelect()).toBeInTheDocument()
+    expect(sortSelect().querySelector('span')).toHaveClass('sr-only')
     const mode = screen.getByRole('radiogroup', { name: 'Display mode' })
     expect(within(mode).getByRole('radio', { name: radioName.compact })).toBeInTheDocument()
     expect(within(mode).getByRole('radio', { name: radioName.thumbnail })).toBeInTheDocument()
     expect(within(mode).getByRole('radio', { name: radioName.grid })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'New item' }).length).toBeGreaterThan(0)
+  })
+})
+
+describe('F-025 W8 filter and sort controls', () => {
+  it('Filter and Sort are icon buttons named by their label, Sort showing the checked choice in its menu', async () => {
+    mockViewport(1280)
+    useBackend()
+    renderList(at('?sort=title'))
+    await itemsList()
+    // The desktop placeholder comes back above md.
+    expect(screen.getByRole('searchbox', { name: /Search items by title/ })).toHaveAttribute(
+      'placeholder',
+      'Search by title or director',
+    )
+    // The only visible text of an icon button is nothing: its label is screen-reader text.
+    expect(screen.getByRole('button', { name: 'Filter' })).toHaveTextContent(/^Filter$/)
+    expect(sortSelect()).toHaveTextContent(/^Sort$/)
+    const user = userEvent.setup()
+    await user.click(sortSelect())
+    expect(screen.getByRole('menuitemradio', { name: 'Title' })).toBeChecked()
+    expect(screen.getByRole('menuitemradio', { name: 'Manual' })).not.toBeChecked()
   })
 })

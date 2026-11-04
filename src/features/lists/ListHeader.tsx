@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   Button,
-  Select,
   SegmentedControl,
   Skeleton,
   TextField,
@@ -9,7 +8,6 @@ import {
   type SegmentedOption,
 } from '../../components/ui'
 import {
-  ArrowUpDown,
   LayoutGrid,
   List as ListIcon,
   Pencil,
@@ -17,12 +15,14 @@ import {
   Rows3,
   Search,
 } from '../../components/ui/icons'
+import { useBreakpoint } from '../../lib/breakpoints'
 import { type List as TreeList, ListActionsMenu, ListIconDialog } from '../tree'
 import { hasPrice, typeName, type TypeDefinition } from '../items'
 import type { DisplayMode, List, SortMode } from './api'
 import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
 import { ListTitle } from './ListTitle'
+import { SortMenu } from './SortMenu'
 import { toolbarControl } from './toolbarStyles'
 import {
   FieldFilterChip,
@@ -123,6 +123,8 @@ function TypeChip({ type, definition }: { type: TreeList['type']; definition: Ty
 /** Title, type chip, description, then the sticky toolbar: search, filter, sort, display mode, then the + New item button (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
+  // Phones get the short placeholder (F-025 W8); the label keeps the full name for assistive tech.
+  const phone = useBreakpoint() === 'mobile'
   return (
     <>
       <header className="flex flex-col gap-3">
@@ -155,7 +157,11 @@ export function ListHeader(props: ListHeaderProps) {
               }
               type="search"
               placeholder={
-                props.treeList.type === 'movie' ? 'Search by title or director' : 'Search by title'
+                phone
+                  ? 'Search'
+                  : props.treeList.type === 'movie'
+                    ? 'Search by title or director'
+                    : 'Search by title'
               }
               value={props.filter}
               onChange={(event) => props.onFilter(event.target.value)}
@@ -168,20 +174,12 @@ export function ListHeader(props: ListHeaderProps) {
             value={props.fieldFilter}
             onChange={props.onFieldFilter}
           />
-          {/* Like "+ Filter": the sort icon and the current choice; below 44rem of bar width only the
-              icon stays (the name is still "Sort" for assistive tech). */}
-          <div className="relative shrink-0 @max-[44rem]:w-9 pointer-coarse:@max-[44rem]:w-11 [&>div>label]:sr-only [&_button]:h-9! [&_button]:w-auto! @max-[44rem]:[&_button]:w-full! pointer-coarse:[&_button]:h-11! [&_button]:border-border! [&_button]:bg-surface! [&_button]:pr-3 [&_button]:pl-9 [&_button]:font-medium [&_button]:hover:bg-fill-hover! [&_button>span:last-child]:hidden @max-[44rem]:[&_button]:justify-center @max-[44rem]:[&_button]:px-0 @max-[44rem]:[&_button>span:first-child]:sr-only">
-            <Select
-              label="Sort"
-              options={sortOptionsFor(props.definition)}
-              value={props.sort}
-              onValueChange={(value) => props.onSort(value as SortMode)}
-            />
-            <ArrowUpDown
-              aria-hidden
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text @max-[44rem]:inset-0 @max-[44rem]:left-0 @max-[44rem]:m-auto @max-[44rem]:translate-y-0"
-            />
-          </div>
+          {/* Like "+ Filter": an icon button, the active sort is checked inside its menu (F-025 W8). */}
+          <SortMenu
+            options={sortOptionsFor(props.definition)}
+            value={props.sort}
+            onValueChange={(value) => props.onSort(value as SortMode)}
+          />
           {props.canMakeDefault && (
             <button
               type="button"
@@ -197,7 +195,7 @@ export function ListHeader(props: ListHeaderProps) {
             options={modeOptions}
             value={props.displayMode}
             onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
-            className="shrink-0 max-md:[&_label]:px-2"
+            className="shrink-0 [&_label]:size-8 [&_label]:justify-center [&_label]:px-0 pointer-coarse:[&_label]:size-11"
           />
           {props.showAddItem && (
             <Button

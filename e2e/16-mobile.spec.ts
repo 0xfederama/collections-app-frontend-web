@@ -22,7 +22,7 @@ test.describe('F-025 mobile', () => {
     const controls = [
       main.getByRole('searchbox', { name: /Search items by title/ }),
       main.getByRole('button', { name: 'Filter' }),
-      main.getByRole('combobox', { name: 'Sort' }),
+      main.getByRole('button', { name: 'Sort' }),
       main.getByRole('radiogroup', { name: 'Display mode' }),
       main.getByRole('button', { name: 'New item' }),
     ]
