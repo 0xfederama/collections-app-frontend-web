@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router'
+import { PageHeaderSlot } from '../../components/PageHeaderSlot'
 import { Button } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import { useTypes } from '../settings'
@@ -29,12 +31,18 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
   const definitions = useTypes()
   const definition = typeDefinition(definitions.data, item.type)
   const actions = useItemActions(item)
+  const { search } = useLocation()
   // "Add website" in the links row asks the details block to open the website editor.
   const [websiteRequest, setWebsiteRequest] = useState(0)
   if (!definition) {
     if (definitions.isPending) return <ItemSkeleton />
     return (
       <div role="alert" className="flex flex-col items-start gap-2">
+        <div className="flex empty:hidden">
+          <PageHeaderSlot
+            back={{ to: { pathname: `/lists/${item.list_id}`, search }, label: 'Back to list' }}
+          />
+        </div>
         <p>Couldn’t load this item’s type definition.</p>
         <Button variant="secondary" onClick={() => void definitions.refetch()}>
           Retry
