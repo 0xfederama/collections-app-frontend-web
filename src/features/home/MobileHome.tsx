@@ -66,7 +66,7 @@ export function MobileHome({ empty }: { empty: ReactNode }) {
             size="sm"
             aria-label="Quick add"
             onClick={() => quickAdd.open()}
-            className="pointer-coarse:min-h-11"
+            className="w-full pointer-coarse:min-h-11"
           >
             <Plus aria-hidden className="size-4 shrink-0" />
             Quick add
