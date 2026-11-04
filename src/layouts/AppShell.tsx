@@ -102,8 +102,8 @@ function ShellFrame() {
       <div className="relative flex min-h-dvh flex-col pl-[env(safe-area-inset-left)] text-text">
         {/* The document scrolls here (no inner scroller), so Safari's bars turn translucent and
             collapse; the bottom safe-area padding only lets the last row scroll above the bar. */}
-        {/* Nothing floats over the content: each page's own header row starts with "‹ Home" (or the
-            item page's back control), F-025 W14. */}
+        {/* Nothing floats over the content: pages have no leading control on phones (the user
+            swipes back); only the item page has its back control, F-025 W14. */}
         <main className="relative flex-1 p-4 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
           {content}
         </main>

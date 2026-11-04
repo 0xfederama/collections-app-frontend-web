@@ -22,6 +22,10 @@ async function seed(request: APIRequestContext) {
 }
 
 async function expectNoSeriousIssues(page: Page) {
+  // Same guard as 09-list-icons: axe misreads the contrast of text that is still fading in.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== 'running'),
+  )
   const { violations } = await new AxeBuilder({ page }).analyze()
   const bad = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
   expect(bad.map((v) => `${v.id} (${v.impact}): ${v.nodes.length} node(s)`)).toEqual([])
