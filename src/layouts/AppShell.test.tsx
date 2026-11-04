@@ -542,4 +542,14 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(within(nav()!).getByRole('link', { name: 'Settings' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Settings and Trash' })).not.toBeInTheDocument()
   })
+
+  it('F-025 on a phone the document scrolls: main is not a scroll container', async () => {
+    mockViewport(375)
+    renderAt('/')
+    const main = await screen.findByRole('main')
+    expect(main).not.toHaveClass('overflow-y-auto')
+    expect(main).toHaveClass('relative')
+    expect(main.parentElement).toHaveClass('min-h-dvh')
+    expect(main.parentElement).not.toHaveClass('h-dvh')
+  })
 })
