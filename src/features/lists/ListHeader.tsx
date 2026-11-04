@@ -1,13 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
-import { PageHeaderSlot } from '../../components/PageHeaderSlot'
-import { Button, Skeleton, TextField, type SelectOption } from '../../components/ui'
-import { Pencil, Plus, Search, X } from '../../components/ui/icons'
+import {
+  Button,
+  SegmentedControl,
+  Skeleton,
+  TextField,
+  type SelectOption,
+  type SegmentedOption,
+} from '../../components/ui'
+import {
+  LayoutGrid,
+  List as ListIcon,
+  Pencil,
+  Plus,
+  Rows3,
+  Search,
+  X,
+} from '../../components/ui/icons'
 import { useBreakpoint } from '../../lib/breakpoints'
 import { type List as TreeList, ListActionsMenu, ListIconDialog } from '../tree'
 import { hasPrice, typeName, type TypeDefinition } from '../items'
 import type { DisplayMode, List, SortMode } from './api'
 import { ListDescription } from './ListDescription'
-import { DisplayModeControl } from './DisplayModeControl'
 import { ListIconMark } from './ListIconMark'
 import { ListTitle } from './ListTitle'
 import { SortMenu } from './SortMenu'
@@ -18,6 +31,12 @@ import {
   describeFieldFilter,
   type FieldFilterValue,
 } from './FieldFilter'
+
+const modeOptions: SegmentedOption[] = [
+  { value: 'compact', label: 'Compact rows', icon: <ListIcon />, iconOnly: true },
+  { value: 'thumbnail', label: 'Thumbnail rows', icon: <Rows3 />, iconOnly: true },
+  { value: 'grid', label: 'Grid', icon: <LayoutGrid />, iconOnly: true },
+]
 
 const baseSortOptions: SelectOption[] = [
   { value: 'manual', label: 'Manual' },
@@ -147,9 +166,7 @@ export function ListHeader(props: ListHeaderProps) {
   return (
     <>
       <header className="flex flex-col gap-3">
-        {/* On phones the row starts with the menu button (F-025 W10). */}
         <div className="flex flex-wrap items-center gap-3">
-          <PageHeaderSlot />
           <ListIconButton list={props.treeList} defaultIcon={props.definition.default_icon} />
           <h1 className="min-w-0 flex-1 font-display text-display break-words">
             <ListTitle list={props.treeList} />
@@ -177,7 +194,14 @@ export function ListHeader(props: ListHeaderProps) {
           ) : (
             <>
               {/* F-025 W12: the view switch leads the row at every width. */}
-              <DisplayModeControl value={props.displayMode} onChange={props.onDisplayMode} />
+              <SegmentedControl
+                aria-label="Display mode"
+                size="toolbar"
+                options={modeOptions}
+                value={props.displayMode}
+                onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
+                className="shrink-0"
+              />
               {phone ? (
                 <button
                   type="button"

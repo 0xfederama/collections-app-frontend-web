@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react'
-import { PageHeaderSlot } from '../../components/PageHeaderSlot'
 import { Button, EmptyState, Skeleton, useToast } from '../../components/ui'
 import { Trash2 } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
@@ -158,7 +157,6 @@ export function TrashPage() {
     <section className={cx('flex flex-col gap-4', narrow && 'max-w-5xl')}>
       <div>
         <div className="flex items-center gap-3">
-          <PageHeaderSlot />
           <h1 ref={headingRef} tabIndex={-1} className="font-display text-display outline-none">
             Trash
           </h1>

@@ -18,7 +18,11 @@ export {
   type SelectProps,
   type SelectSeparator,
 } from './Select'
-export { SegmentedControl, type SegmentedControlProps } from './SegmentedControl'
+export {
+  SegmentedControl,
+  type SegmentedControlProps,
+  type SegmentedOption,
+} from './SegmentedControl'
 export { Skeleton } from './Skeleton'
 export { TextArea, type TextAreaProps } from './TextArea'
 export { TextField, type TextFieldProps } from './TextField'

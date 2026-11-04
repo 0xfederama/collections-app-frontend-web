@@ -20,7 +20,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `Button` (`variant`: `primary`, `ink`, `secondary`, `ghost`, `danger`; `size`, `pending`), `IconButton` (plus required `aria-label`). `ink` is the Quick add button only.
 - `TextField` / `TextArea`: `label`, `hint`, `error`; TextField adds `prefix`, `suffix`.
 - `Select`, `Combobox`: `options`, `value`, `onValueChange`. `CountrySelect`, `CurrencySelect` (`IsoSelects.tsx`, not in the barrel).
-- `SegmentedControl`, `Menu` (`trigger`, `items`; optional controlled `open` / `onOpenChange`), `Tooltip`, `Chip` (`tone`, `icon`), `Badge` (`type`), `Card`, `EmptyState`, `Skeleton`.
+- `SegmentedControl` (`options` with `iconOnly`, `size` `default` | `toolbar` for the 36 px toolbar tray; `SegmentedOption` type), `Menu` (`trigger`, `items`; optional controlled `open` / `onOpenChange`), `Tooltip`, `Chip` (`tone`, `icon`), `Badge` (`type`), `Card`, `EmptyState`, `Skeleton`.
 - `Dialog`, `AlertDialog`, `Drawer`: `open` / `onOpenChange`, `initialFocus`; solid surface. `Drawer` also takes `className` (panel padding).
 - `ToastProvider` / `useToast()`: `(options: { kind?, title, description?, action? })`.
 - `Tree<T>`: `nodes`, `expanded`, `selected`, `renderRow`, `sortable(node)`, `onReorder(move)`, `acceptsDrop(target, sourceId)`.

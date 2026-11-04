@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
-import { PageHeaderSlot } from '../../components/PageHeaderSlot'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { List as ListIcon } from '../../components/ui/icons'
 import { useTreeIndex, type Folder, type List } from './api'
@@ -12,10 +11,10 @@ import { useTreeIndex, type Folder, type List } from './api'
 export function ListGate({
   listId,
   children,
-  slot = <PageHeaderSlot />,
+  slot,
 }: {
   listId: string
-  /** The leading control of the phone header row: the menu button, or the back control of a sub-page. */
+  /** The leading control of the header row: the back control of a sub-page; none for top pages. */
   slot?: ReactNode
   children: (list: List, ancestors: Folder[]) => ReactNode
 }) {

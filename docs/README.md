@@ -4,10 +4,10 @@
 - [api](modules/api.md): Pinned OpenAPI contract, generated types, `lib/api` client, TanStack Query defaults, metadata lookup endpoints and MSW mocks.
 - [deploy](modules/deploy.md): Production web image: Caddy static server and `/api` proxy, CSP hash, `npm run docker:build`.
 - [health](modules/health.md): Backend readiness probe (`/readyz`), shown in Settings > Connection.
-- [lists](modules/lists.md): List view and list icon picker, mark, display-mode radios, up to three pinned fields, sort, field filters and item rows.
+- [lists](modules/lists.md): List view and list icon picker, mark, display-mode segmented control, up to three pinned fields, sort, field filters and item rows.
 - [quickadd](modules/quickadd.md): Quick add dialog (`N` shortcut, sidebar button): create an item with optional metadata match, website, description and image.
 - [search](modules/search.md): Global search dropdown and `/search?q=` results page, including list marks.
-- [shell](modules/shell.md): Providers, router, responsive frame (sidebar, rail, detail sheet), page header slot (phone "‹ Home" or back) and lazy route loading.
+- [shell](modules/shell.md): Providers, router, responsive frame (sidebar, rail, detail sheet), phone back control on the item page, phone scroll and lazy route loading.
 - [theme](modules/theme.md): Light, dark and system theme (sidebar footer toggle), Editorial tokens, solid surfaces, type scale and self-hosted fonts.
 - [trash](modules/trash.md): Trash page at `/trash`: restore, permanent deletion, empty trash and paginated query.
 - [tree](modules/tree.md): Sidebar folder and list tree, list icon create/edit flows, queries, mutations, reorder and list "Refresh details".
@@ -17,4 +17,4 @@
 - [markdown](modules/markdown.md): Safe Markdown renderer (`MarkdownView`) and URL policy `sanitizeUrl`.
 - [settings](modules/settings.md): `/settings` modal panes: General (Appearance, Collection), Media (incl. default store and owned streaming services) and About (with Connection and Open Library credit).
 - [stores](modules/stores.md): Fixed online store list (`useStoreProviders`), store names and the stores field picker.
-- [home](modules/home.md): Home at `/`: quick links to every list, "Recently updated" items (D-070), the empty state and the phone root page (lists, Settings, Trash).
+- [home](modules/home.md): Home at `/`: quick links to every list, "Recently updated" items (D-070), the empty state and the phone root page (Quick add, search, lists, recent items, Settings, Trash).

@@ -35,12 +35,13 @@ describe('Unknown route', () => {
     expect(screen.getByRole('navigation', { name: 'Library' })).toBeInTheDocument()
   })
 
-  it('renders "Page not found" inside the mobile shell (Back to Home and main)', async () => {
+  it('renders "Page not found" inside the mobile shell (main, no Back to Home)', async () => {
     mockViewport(375)
     renderAt('/does/not/exist')
     expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Back to Home' })).toHaveAttribute('href', '/')
+    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
   })
 })
 

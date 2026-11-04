@@ -1,6 +1,13 @@
-import { useCallback, useRef } from 'react'
-import { Outlet, useLocation, useMatch, useNavigate, useRoutes, type Location } from 'react-router'
-import { useRecordHistory } from '../components/PageHeaderSlot'
+import { useCallback, useLayoutEffect, useRef } from 'react'
+import {
+  Outlet,
+  useLocation,
+  useMatch,
+  useNavigate,
+  useNavigationType,
+  useRoutes,
+  type Location,
+} from 'react-router'
 import { IconButton } from '../components/ui'
 import { X } from '../components/ui/icons'
 import { QuickAddProvider } from '../features/quickadd'
@@ -29,12 +36,27 @@ export function AppShell() {
   )
 }
 
+/**
+ * Phones scroll the document, which a client-side navigation leaves where it was. A push or replace to
+ * another page starts at the top; back/forward (POP) is left to `useScrollRestore`, which restores lists.
+ */
+function useScrollTopOnPhone(phone: boolean) {
+  const { pathname } = useLocation()
+  const type = useNavigationType()
+  const previous = useRef(pathname)
+  useLayoutEffect(() => {
+    const changed = previous.current !== pathname
+    previous.current = pathname
+    if (phone && changed && type !== 'POP') window.scrollTo(0, 0)
+  }, [phone, pathname, type])
+}
+
 function ShellFrame() {
   const breakpoint = useBreakpoint()
   const sidebar = useSidebarState()
   const location = useLocation()
   const navigate = useNavigate()
-  useRecordHistory()
+  useScrollTopOnPhone(breakpoint === 'mobile')
 
   // The search field only exists while the sidebar is expanded. When it is
   // not there, `/` and the rail's search icon open it, and the ref callback focuses it once it mounts.
@@ -77,10 +99,12 @@ function ShellFrame() {
 
   if (mobile) {
     return (
-      <div className="relative flex h-dvh flex-col pl-[env(safe-area-inset-left)] text-text">
-        {/* Nothing floats over the content: each page's own header row starts with "‹ Home" (or the
-            item page's back control), F-025 W14. */}
-        <main className="relative min-h-0 flex-1 overflow-y-auto p-4 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="relative flex min-h-dvh flex-col pl-[env(safe-area-inset-left)] text-text">
+        {/* The document scrolls here (no inner scroller), so Safari's bars turn translucent and
+            collapse; the bottom safe-area padding only lets the last row scroll above the bar. */}
+        {/* Nothing floats over the content: pages have no leading control on phones (the user
+            swipes back); only the item page has its back control, F-025 W14. */}
+        <main className="relative flex-1 p-4 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
           {content}
         </main>
       </div>

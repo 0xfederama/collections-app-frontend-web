@@ -2,14 +2,14 @@
 
 ## Purpose
 
-Top-level providers, router, and the responsive frame every route renders into: solid sidebar, page header rows (phone "‹ Home" or back control) and the item detail sheet. Spec: `design-docs/UI_SPEC.md` §2; redesign: `design-docs/features/F-002-ui-refresh.md`.
+Top-level providers, router, and the responsive frame every route renders into: solid sidebar, phone root page (Home, see [home](home.md)), the item page's phone back control and the item detail sheet. Spec: `design-docs/UI_SPEC.md` §2; redesign: `design-docs/features/F-002-ui-refresh.md`.
 
 ## Key files
 
 - `src/app/App.tsx`: mounts `QueryClientProvider`, `ToastProvider` and `RouterProvider`.
 - `src/app/router.tsx`: `routes` (every route is registered here), `createAppRouter`, `createTestRouter`.
 - `src/app/lazyRoute.tsx`: `lazyRoute(load)`, code-split route screens with a skeleton (Settings passes `fallback: null`, so no skeleton shows while it loads).
-- `src/components/PageHeaderSlot.tsx`: `PageHeaderSlot({ back? })` and `useRecordHistory()`; the phone "‹ Home" or back button in a page's header row.
+- `src/components/PageHeaderSlot.tsx`: `PageHeaderSlot({ back })`, the phone back button that leads the item page's header row.
 - `src/layouts/AppShell.tsx`: layout per breakpoint, detail sheet, `/` shortcut, `QuickAddProvider`.
 - `src/layouts/Sidebar.tsx`, `SidebarResizer.tsx`, `useSidebarState.ts`: sidebar, splitter, persisted width.
 - `src/features/tree/RailTree.tsx`: top-level entries of the collapsed sidebar.
@@ -26,8 +26,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
   - From 768 px the sidebar collapses to a 64 px icon rail (top-level entries only) at any width.
   - `tablet` (768–1023): sidebar. `desktop` (1024–1279): sidebar with `SidebarResizer` (expanded only).
   - `wide` (≥ 1280): as desktop, plus a 420 px floating `aside[aria-label="Item details"]` on item routes.
-- `PageHeaderSlot({ back? })`: on phones, "‹ Home" on pages other than Home (goes back when Home is the previous entry), or a back link when `back` is set; renders nothing from 768 px.
-- `useRecordHistory()`: called once by `AppShell`; records each history entry's path for the "‹ Home" check.
+- `PageHeaderSlot({ back })`: back link on phones, rendered by the item page, its skeleton and its error state; renders nothing from 768 px. Top pages have no slot.
 - `useBreakpoint()`: `'mobile' | 'tablet' | 'desktop' | 'wide'`, from `BREAKPOINTS` (768, 1024, 1280).
 - `useSidebarState()`: `{ collapsed, width, setCollapsed, setWidth }`; width 220–400, default 268.
 - `Sidebar({ rail, showHeader, onToggleRail, searchRef, onSearch, onQuickAdd })`: `nav[aria-label="Library"]`; workspace name and collapse toggle, search, Quick add, tree, then Trash and Settings.
@@ -35,7 +34,8 @@ Top-level providers, router, and the responsive frame every route renders into: 
 ## Gotchas
 
 - Sidebar and detail sheet use the solid `material` classes (see [theme](theme.md)); there is no blur.
-- Phones: the header slot is the first control of each page's header row (`PageHeaderSlot`), also in loading and error states, so titles never shift.
+- Phones: the item page's back control is the first control of its header row, also in loading and error states, so titles never shift. Other pages have no "‹ Home".
+- Phones scroll the document (`AppShell` mobile `min-h-dvh`, no inner scroller). A push or replace to a different pathname scrolls to the top; POP is left to `useScrollRestore`.
 - The desktop sidebar stays bounded to the viewport; `main` owns vertical scrolling. Flex ancestors need `min-h-0` and overflow containment for the sidebar and main scroll region to remain bounded.
 - Route screens are code-split: `ListRoute`, `SearchRoute`, `SettingsRoute`, `TrashRoute` via `lazyRoute`; `ItemRoute` has its own `Suspense`.
 - Below 1280 px the item route replaces `main`'s `Outlet`, so `ListRoute` unmounts while an item is open. At ≥ 1280 the list stays mounted; the sheet's close button goes to `/lists/:listId` and keeps `?q=` and `?sort=`.

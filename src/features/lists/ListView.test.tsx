@@ -1323,7 +1323,7 @@ describe('F-025 W2 one-row toolbar on phones', () => {
 
 describe('F-025 W12 view switcher', () => {
   it.each([375, 1100])(
-    'leads the toolbar row and each segment is the toolbar icon size at %ipx',
+    'leads the toolbar row as one tray as tall as the toolbar icon buttons at %ipx',
     async (width) => {
       mockViewport(width)
       useBackend()
@@ -1338,14 +1338,15 @@ describe('F-025 W12 view switcher', () => {
         'thumbnail',
         'grid',
       ])
-      // Same square as Filter and Sort: 36 px, 44 px on touch, same radius, border, hover and focus.
-      for (const radio of radios) {
-        expect(radio.parentElement!.className).toContain(toolbarIconControl)
-      }
+      // One tray (not separate buttons) as tall as Filter and Sort: 36 px, 44 px on touch.
+      expect(mode.className).toContain('h-9')
+      expect(mode.className).toContain('pointer-coarse:h-11')
       expect(screen.getByRole('button', { name: 'Filter' }).className).toBe(toolbarIconControl)
-      // The selected segment is not colour-only: it also gets a thicker border.
+      // Neutral raised selected segment (surface + shadow), no accent colour.
       const checked = radios.find((radio) => (radio as HTMLInputElement).checked)!
-      expect(checked.parentElement!.className).toContain('has-[:checked]:border-2')
+      expect(checked.parentElement!.className).toContain('has-[:checked]:bg-surface')
+      expect(checked.parentElement!.className).toContain('has-[:checked]:shadow-sm')
+      expect(checked.parentElement!.className).not.toContain('accent')
     },
   )
 })
@@ -1400,5 +1401,27 @@ describe('F-025 W8 filter and sort controls', () => {
     await user.click(sortSelect())
     expect(screen.getByRole('menuitemradio', { name: 'Title' })).toBeChecked()
     expect(screen.getByRole('menuitemradio', { name: 'Manual' })).not.toBeChecked()
+  })
+
+  it('F-025 on a phone the window scrolls, not main, and is restored', async () => {
+    mockViewport(375)
+    useBackend()
+    const user = userEvent.setup()
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    const router = renderList(at())
+    await itemsList()
+    const main = screen.getByRole('main')
+    expect(main).not.toHaveClass('overflow-y-auto')
+    expect(main).not.toHaveClass('overflow-auto')
+    Object.defineProperty(window, 'scrollY', { value: 180, configurable: true })
+    window.dispatchEvent(new Event('scroll'))
+    await user.click(screen.getByRole('link', { name: 'Item 2' }))
+    await waitFor(() => expect(router.state.location.pathname).toContain('/items/'))
+    scrollTo.mockClear()
+    await router.navigate(-1)
+    await itemsList()
+    await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 180))
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true })
+    scrollTo.mockRestore()
   })
 })
