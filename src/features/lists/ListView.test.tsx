@@ -12,6 +12,7 @@ import type { ItemSummary } from './api'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { createTestQueryClient, mockViewport } from '../../test-utils'
+import { toolbarIconControl } from './toolbarStyles'
 
 type List = components['schemas']['List']
 
@@ -1280,6 +1281,35 @@ describe('F-025 W2 one-row toolbar on phones', () => {
     expect(within(mode).getByRole('radio', { name: radioName.grid })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'New item' }).length).toBeGreaterThan(0)
   })
+})
+
+describe('F-025 W12 view switcher', () => {
+  it.each([375, 1100])(
+    'leads the toolbar row and each segment is the toolbar icon size at %ipx',
+    async (width) => {
+      mockViewport(width)
+      useBackend()
+      renderList(at())
+      await itemsList()
+      const mode = screen.getByRole('radiogroup', { name: 'Display mode' })
+      // First child of the toolbar row, so it sits before search, filter and sort.
+      expect(mode.parentElement!.firstElementChild).toBe(mode)
+      const radios = within(mode).getAllByRole('radio')
+      expect(radios.map((radio) => (radio as HTMLInputElement).value)).toEqual([
+        'compact',
+        'thumbnail',
+        'grid',
+      ])
+      // Same square as Filter and Sort: 36 px, 44 px on touch, same radius, border, hover and focus.
+      for (const radio of radios) {
+        expect(radio.parentElement!.className).toContain(toolbarIconControl)
+      }
+      expect(screen.getByRole('button', { name: 'Filter' }).className).toBe(toolbarIconControl)
+      // The selected segment is not colour-only: it also gets a thicker border.
+      const checked = radios.find((radio) => (radio as HTMLInputElement).checked)!
+      expect(checked.parentElement!.className).toContain('has-[:checked]:border-2')
+    },
+  )
 })
 
 describe('F-025 W11 phone search', () => {
