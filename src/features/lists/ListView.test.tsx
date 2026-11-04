@@ -1266,10 +1266,9 @@ describe('F-025 W2 one-row toolbar on phones', () => {
     useBackend()
     renderList(at())
     await itemsList()
-    // The accessible name keeps the full label; only the placeholder is short on phones (F-025 W8).
-    expect(
-      screen.getByRole('searchbox', { name: 'Search items by title or director' }),
-    ).toHaveAttribute('placeholder', 'Search')
+    // Search is an icon button on phones (F-025 W11).
+    expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument()
+    expect(screen.queryByRole('searchbox')).toBeNull()
     const filter = screen.getByRole('button', { name: 'Filter' })
     // Filter and Sort are icon buttons at every width; the name comes from the visually hidden text.
     expect(filter.querySelector('span')).toHaveClass('sr-only')
@@ -1280,6 +1279,38 @@ describe('F-025 W2 one-row toolbar on phones', () => {
     expect(within(mode).getByRole('radio', { name: radioName.thumbnail })).toBeInTheDocument()
     expect(within(mode).getByRole('radio', { name: radioName.grid })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'New item' }).length).toBeGreaterThan(0)
+  })
+})
+
+describe('F-025 W11 phone search', () => {
+  it('the Search button expands the field, focused; Close and Esc collapse it', async () => {
+    mockViewport(375)
+    useBackend()
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    const field = screen.getByRole('searchbox', { name: 'Search items by title or director' })
+    expect(field).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Close search' }))
+    expect(screen.queryByRole('searchbox')).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('searchbox')).toBeNull()
+  })
+
+  it('keeps the query when collapsed and marks the button active', async () => {
+    mockViewport(375)
+    useBackend()
+    const user = userEvent.setup()
+    renderList(at('?q=item'))
+    await itemsList()
+    expect(screen.getByRole('button', { name: 'Search (active)' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Search (active)' }))
+    const field = screen.getByRole('searchbox')
+    expect(field).toHaveValue('item')
+    await user.click(screen.getByRole('button', { name: 'Close search' }))
+    expect(screen.getByRole('button', { name: 'Search (active)' })).toBeInTheDocument()
   })
 })
 

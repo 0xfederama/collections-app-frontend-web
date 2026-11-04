@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PageHeaderSlot } from '../../components/PageHeaderSlot'
 import {
   Button,
@@ -15,6 +15,7 @@ import {
   Plus,
   Rows3,
   Search,
+  X,
 } from '../../components/ui/icons'
 import { useBreakpoint } from '../../lib/breakpoints'
 import { type List as TreeList, ListActionsMenu, ListIconDialog } from '../tree'
@@ -24,7 +25,7 @@ import { ListDescription } from './ListDescription'
 import { ListIconMark } from './ListIconMark'
 import { ListTitle } from './ListTitle'
 import { SortMenu } from './SortMenu'
-import { toolbarControl } from './toolbarStyles'
+import { toolbarControl, toolbarIconControl } from './toolbarStyles'
 import {
   FieldFilterChip,
   FieldFilterMenu,
@@ -124,8 +125,45 @@ function TypeChip({ type, definition }: { type: TreeList['type']; definition: Ty
 /** Title, type chip, description, then the sticky toolbar: search, filter, sort, display mode, then the + New item button (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
-  // Phones get the short placeholder (F-025 W8); the label keeps the full name for assistive tech.
+  // Phones: short placeholder (F-025 W8) and a Search icon button that swaps the row for the field (W11).
   const phone = useBreakpoint() === 'mobile'
+  const [open, setOpen] = useState(false)
+  const searching = phone && open
+  const searchRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (searching) searchRef.current?.focus()
+  }, [searching])
+  const searchField = (
+    <div className="min-w-0 flex-1 md:min-w-40 [&_label]:sr-only">
+      <TextField
+        label={
+          props.treeList.type === 'movie'
+            ? 'Search items by title or director'
+            : 'Search items by title'
+        }
+        type="search"
+        ref={searchRef}
+        placeholder={
+          phone
+            ? 'Search'
+            : props.treeList.type === 'movie'
+              ? 'Search by title or director'
+              : 'Search by title'
+        }
+        value={props.filter}
+        onChange={(event) => props.onFilter(event.target.value)}
+        onKeyDown={(event) => {
+          if (searching && event.key === 'Escape') {
+            event.preventDefault()
+            event.stopPropagation()
+            setOpen(false)
+          }
+        }}
+        prefix={<Search aria-hidden className="size-4" />}
+        className="h-9! hover:border-text-muted! focus-within:border-accent!"
+      />
+    </div>
+  )
   return (
     <>
       <header className="flex flex-col gap-3">
@@ -145,69 +183,76 @@ export function ListHeader(props: ListHeaderProps) {
           <Skeleton className="h-4 w-1/2" />
         )}
       </header>
-      {/* Sticky inside the scrolling `main`: the solid background keeps the items that pass behind it
-          readable. The wrapper is the container the narrow variants measure. Search and "+ Filter" first, then sort, display and the + New item; an applied field filter is a chip under the bar. */}
+      {/* Sticky inside the scrolling `main`; the solid background keeps passing items readable. The wrapper is the container the narrow variants measure. An applied field filter is a chip under the bar. */}
       <div className="@container z-10 -mt-2 bg-bg sm:sticky sm:top-0">
         <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
-          {/* Phones (< 768 px): the field takes the space the icon-only controls leave (F-025 W2). */}
-          <div className="min-w-0 flex-1 md:min-w-40 [&_label]:sr-only">
-            <TextField
-              label={
-                props.treeList.type === 'movie'
-                  ? 'Search items by title or director'
-                  : 'Search items by title'
-              }
-              type="search"
-              placeholder={
-                phone
-                  ? 'Search'
-                  : props.treeList.type === 'movie'
-                    ? 'Search by title or director'
-                    : 'Search by title'
-              }
-              value={props.filter}
-              onChange={(event) => props.onFilter(event.target.value)}
-              prefix={<Search aria-hidden className="size-4" />}
-              className="h-9! hover:border-text-muted! focus-within:border-accent!"
-            />
-          </div>
-          <FieldFilterMenu
-            fields={props.definition.fields}
-            value={props.fieldFilter}
-            onChange={props.onFieldFilter}
-          />
-          {/* Like "+ Filter": an icon button, the active sort is checked inside its menu (F-025 W8). */}
-          <SortMenu
-            options={sortOptionsFor(props.definition)}
-            value={props.sort}
-            onValueChange={(value) => props.onSort(value as SortMode)}
-          />
-          {props.canMakeDefault && (
-            <button
-              type="button"
-              onClick={props.onMakeDefault}
-              disabled={props.makeDefaultPending}
-              className={toolbarControl}
-            >
-              Make this the default sort
-            </button>
-          )}
-          <SegmentedControl
-            aria-label="Display mode"
-            options={modeOptions}
-            value={props.displayMode}
-            onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
-            className="shrink-0 [&_label]:size-8 [&_label]:justify-center [&_label]:px-0 pointer-coarse:[&_label]:size-11"
-          />
-          {props.showAddItem && (
-            <Button
-              size="sm"
-              aria-label="New item"
-              onClick={props.onAddItem}
-              className="size-9! shrink-0 px-0! pointer-coarse:size-11!"
-            >
-              <Plus aria-hidden className="size-4" />
-            </Button>
+          {searching ? (
+            <>
+              {searchField}
+              <button type="button" className={toolbarIconControl} onClick={() => setOpen(false)}>
+                <X aria-hidden className="size-4" />
+                <span className="sr-only">Close search</span>
+              </button>
+            </>
+          ) : (
+            <>
+              {phone ? (
+                <button
+                  type="button"
+                  className={`${toolbarIconControl} relative`}
+                  onClick={() => setOpen(true)}
+                >
+                  <Search aria-hidden className="size-4" />
+                  <span className="sr-only">Search{props.filter ? ' (active)' : ''}</span>
+                  {props.filter && (
+                    <span
+                      aria-hidden
+                      className="absolute top-1 right-1 size-2 rounded-full bg-accent"
+                    />
+                  )}
+                </button>
+              ) : (
+                searchField
+              )}
+              <FieldFilterMenu
+                fields={props.definition.fields}
+                value={props.fieldFilter}
+                onChange={props.onFieldFilter}
+              />
+              {/* Like "+ Filter": an icon button, the active sort is checked inside its menu (F-025 W8). */}
+              <SortMenu
+                options={sortOptionsFor(props.definition)}
+                value={props.sort}
+                onValueChange={(value) => props.onSort(value as SortMode)}
+              />
+              {props.canMakeDefault && (
+                <button
+                  type="button"
+                  onClick={props.onMakeDefault}
+                  disabled={props.makeDefaultPending}
+                  className={toolbarControl}
+                >
+                  Make this the default sort
+                </button>
+              )}
+              <SegmentedControl
+                aria-label="Display mode"
+                options={modeOptions}
+                value={props.displayMode}
+                onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
+                className="shrink-0 [&_label]:size-8 [&_label]:justify-center [&_label]:px-0 pointer-coarse:[&_label]:size-11"
+              />
+              {props.showAddItem && (
+                <Button
+                  size="sm"
+                  aria-label="New item"
+                  onClick={props.onAddItem}
+                  className="size-9! shrink-0 px-0! pointer-coarse:size-11!"
+                >
+                  <Plus aria-hidden className="size-4" />
+                </Button>
+              )}
+            </>
           )}
         </div>
         {describeFieldFilter(props.definition.fields, props.fieldFilter) && (
