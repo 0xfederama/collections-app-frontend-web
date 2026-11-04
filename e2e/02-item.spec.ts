@@ -259,7 +259,7 @@ test.describe('F016 Escape closes the opened item', () => {
 })
 
 test.describe('F-025 W12 display mode switch', () => {
-  test('the display-mode radios lead the toolbar at the height of Filter', async ({
+  test('the View options button leads the toolbar at the height of Filter', async ({
     page,
     request,
   }) => {
@@ -268,7 +268,7 @@ test.describe('F-025 W12 display mode switch', () => {
     await page.goto(`/lists/${list.id}`)
     const main = page.getByRole('main')
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
-    const group = main.getByRole('radiogroup', { name: 'Display mode' })
+    const group = main.getByRole('button', { name: 'View options' })
     const filter = main.getByRole('button', { name: 'Filter' })
     const [a, f] = [await group.boundingBox(), await filter.boundingBox()]
     if (!a || !f) throw new Error('missing box')

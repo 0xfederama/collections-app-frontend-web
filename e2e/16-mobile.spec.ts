@@ -20,10 +20,10 @@ test.describe('F-025 mobile', () => {
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
 
     const controls = [
-      main.getByRole('button', { name: 'Search', exact: true }),
+      main.getByRole('button', { name: 'View options' }),
+      main.getByRole('searchbox', { name: /Search items by title/ }),
       main.getByRole('button', { name: 'Filter' }),
       main.getByRole('button', { name: 'Sort', exact: true }),
-      main.getByRole('radiogroup', { name: 'Display mode' }),
       main.getByRole('button', { name: 'New item' }),
     ]
     const viewport = page.viewportSize()
@@ -48,7 +48,7 @@ test.describe('F-025 mobile', () => {
     expect(overflow).toBeLessThanOrEqual(0)
   })
 
-  test('W8 Filter and Sort are matching buttons the size of New item, and search says "Search"', async ({
+  test('W8 Filter and Sort are matching buttons the size of New item, and View options matches them', async ({
     page,
     request,
   }) => {
@@ -59,7 +59,7 @@ test.describe('F-025 mobile', () => {
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
 
     const sizes: Record<string, { width: number; height: number }> = {}
-    for (const name of ['Search', 'Filter', 'Sort', 'New item']) {
+    for (const name of ['View options', 'Filter', 'Sort', 'New item']) {
       const button = main.getByRole('button', { name, exact: true })
       await expect(button).toBeVisible()
       const box = await button.boundingBox()
@@ -69,12 +69,16 @@ test.describe('F-025 mobile', () => {
     const filter = sizes['Filter']
     const sort = sizes['Sort']
     const create = sizes['New item']
-    const search = sizes['Search']
+    const search = sizes['View options']
     if (!filter || !sort || !create || !search) throw new Error('missing size')
-    expect(Math.abs(search.width - filter.width), 'Search vs Filter width').toBeLessThanOrEqual(1)
-    expect(Math.abs(search.height - filter.height), 'Search vs Filter height').toBeLessThanOrEqual(
-      1,
-    )
+    expect(
+      Math.abs(search.width - filter.width),
+      'View options vs Filter width',
+    ).toBeLessThanOrEqual(1)
+    expect(
+      Math.abs(search.height - filter.height),
+      'View options vs Filter height',
+    ).toBeLessThanOrEqual(1)
     expect(Math.abs(filter.width - sort.width), 'Filter vs Sort width').toBeLessThanOrEqual(1)
     expect(Math.abs(filter.height - sort.height), 'Filter vs Sort height').toBeLessThanOrEqual(1)
     expect(Math.abs(filter.width - create.width), 'Filter vs New item width').toBeLessThanOrEqual(1)
@@ -87,10 +91,7 @@ test.describe('F-025 mobile', () => {
     await expect(page.getByRole('menuitemradio', { checked: true })).toHaveCount(1)
   })
 
-  test('W11 Search expands and focuses the field, filters, and Close search keeps the query', async ({
-    page,
-    request,
-  }) => {
+  test('the Search field is always visible and filters', async ({ page, request }) => {
     const list = await createList(request, uniqueName('Search'), 'movie')
     const keep = uniqueName('Keepme')
     const other = uniqueName('Other')
@@ -100,22 +101,13 @@ test.describe('F-025 mobile', () => {
     const main = page.getByRole('main')
     const rows = main.getByRole('list', { name: 'Items' }).getByRole('listitem')
     await expect(rows).toHaveCount(2)
-    await expect(main.getByRole('searchbox', { name: /Search items by title/ })).toHaveCount(0)
-
-    await main.getByRole('button', { name: 'Search', exact: true }).tap()
     const field = main.getByRole('searchbox', { name: /Search items by title/ })
     await expect(field).toBeVisible()
-    await expect(field).toBeFocused()
     await expect(field).toHaveAttribute('placeholder', 'Search')
     await field.fill(keep)
     await expect(rows).toHaveCount(1)
     await expect(rows).toContainText(keep)
-
-    await main.getByRole('button', { name: 'Close search' }).tap()
-    await expect(field).toHaveCount(0)
     await expect(page).toHaveURL(/[?&]q=/)
-    await expect(rows).toHaveCount(1)
-    await expect(main.getByRole('button', { name: 'Search (active)', exact: true })).toBeVisible()
   })
 
   test('W11 the viewport meta has viewport-fit=cover and maximum-scale=1', async ({ page }) => {

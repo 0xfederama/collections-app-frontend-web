@@ -217,7 +217,8 @@ describe('W-06 display modes', () => {
       expect(link).toHaveAttribute('href', `/lists/${LIST}/items/${rich[0]!.id}`)
       expect(within(ul).getByText(/1,200.*1,500/)).toBeInTheDocument()
       expect(within(ul).queryByText('Wishlist')).not.toBeInTheDocument()
-      expect(screen.getByRole('radio', { name: radioName[mode] })).toBeChecked()
+      await userEvent.setup().click(screen.getByRole('button', { name: 'View options' }))
+      expect(await screen.findByRole('menuitemradio', { name: radioName[mode] })).toBeChecked()
     },
   )
 
@@ -599,6 +600,17 @@ describe('F-022 W2 fixed pinned fields per type', () => {
   })
 })
 
+async function chooseMode(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(screen.getByRole('button', { name: 'View options' }))
+  await user.click(await screen.findByRole('menuitemradio', { name }))
+}
+
+async function expectMode(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(screen.getByRole('button', { name: 'View options' }))
+  expect(await screen.findByRole('menuitemradio', { name })).toBeChecked()
+  await user.keyboard('{Escape}')
+}
+
 describe('W-06 display mode', () => {
   it('clicking Grid PATCHes display_mode with If-Match and switches at once', async () => {
     let release!: () => void
@@ -613,13 +625,14 @@ describe('W-06 display mode', () => {
     const user = userEvent.setup()
     renderList(at())
     await itemsList()
-    await user.click(screen.getByRole('radio', { name: 'Grid' }))
+    await chooseMode(user, 'Grid')
     // Optimistic: checked before the server answered.
-    expect(screen.getByRole('radio', { name: 'Grid' })).toBeChecked()
+    await expectMode(user, 'Grid')
     expect(backend.patches).toHaveLength(1)
     expect(backend.patches[0]).toEqual({ ifMatch: '"l-4"', body: { display_mode: 'grid' } })
     release()
-    await waitFor(() => expect(screen.getByRole('radio', { name: 'Grid' })).toBeChecked())
+    await waitFor(() => expect(backend.patches).toHaveLength(1))
+    await expectMode(user, 'Grid')
   })
 
   it('rolls back, toasts and refetches the list on 412', async () => {
@@ -631,9 +644,9 @@ describe('W-06 display mode', () => {
     renderList(at())
     await itemsList()
     const getsBefore = backend.listGets
-    await user.click(screen.getByRole('radio', { name: 'Grid' }))
+    await chooseMode(user, 'Grid')
     expect(await screen.findByText('This list was changed elsewhere')).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'Compact rows' })).toBeChecked()
+    await expectMode(user, 'Compact rows')
     await waitFor(() => expect(backend.listGets).toBeGreaterThan(getsBefore))
   })
 
@@ -645,9 +658,9 @@ describe('W-06 display mode', () => {
     const user = userEvent.setup()
     renderList(at())
     await itemsList()
-    await user.click(screen.getByRole('radio', { name: 'Grid' }))
+    await chooseMode(user, 'Grid')
     expect(await screen.findByText('Couldn’t save the change')).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'Compact rows' })).toBeChecked()
+    await expectMode(user, 'Compact rows')
   })
 })
 
@@ -1004,7 +1017,8 @@ describe('W-06 list actions menu (W-05) in the header', () => {
     await user.type(field, 'Seen it{Enter}')
     expect(await within(main).findByRole('heading', { name: 'Seen it' })).toBeInTheDocument()
 
-    await user.click(within(main).getByRole('radio', { name: radioName.compact }))
+    await user.click(within(main).getByRole('button', { name: 'View options' }))
+    await user.click(await screen.findByRole('menuitemradio', { name: radioName.compact }))
     await waitFor(() => expect(backend.patches.at(-1)?.body).toEqual({ display_mode: 'compact' }))
     // The rename PATCH went out with the version the tree had; the display PATCH with the bumped one.
     const renameVersion = backend.patches[0]?.ifMatch
@@ -1305,81 +1319,82 @@ describe('F-025 W2 one-row toolbar on phones', () => {
     useBackend()
     renderList(at())
     await itemsList()
-    // Search is an icon button on phones (F-025 W11).
-    expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument()
-    expect(screen.queryByRole('searchbox')).toBeNull()
+    // Search is always a field, with the short placeholder on phones.
+    expect(screen.getByRole('searchbox')).toHaveAttribute('placeholder', 'Search')
     const filter = screen.getByRole('button', { name: 'Filter' })
     // Filter and Sort are icon buttons at every width; the name comes from the visually hidden text.
     expect(filter.querySelector('span')).toHaveClass('sr-only')
     expect(sortSelect()).toBeInTheDocument()
     expect(sortSelect().querySelector('span')).toHaveClass('sr-only')
-    const mode = screen.getByRole('radiogroup', { name: 'Display mode' })
-    expect(within(mode).getByRole('radio', { name: radioName.compact })).toBeInTheDocument()
-    expect(within(mode).getByRole('radio', { name: radioName.thumbnail })).toBeInTheDocument()
-    expect(within(mode).getByRole('radio', { name: radioName.grid })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'View options' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'New item' }).length).toBeGreaterThan(0)
   })
 })
 
-describe('F-025 W12 view switcher', () => {
+describe('F-025 view options menu', () => {
   it.each([375, 1100])(
-    'leads the toolbar row as one tray as tall as the toolbar icon buttons at %ipx',
+    'leads the toolbar row as an icon button the size of Filter, before the search field, at %ipx',
     async (width) => {
       mockViewport(width)
       useBackend()
       renderList(at())
       await itemsList()
-      const mode = screen.getByRole('radiogroup', { name: 'Display mode' })
-      // First child of the toolbar row, so it sits before search, filter and sort.
-      expect(mode.parentElement!.firstElementChild).toBe(mode)
-      const radios = within(mode).getAllByRole('radio')
-      expect(radios.map((radio) => (radio as HTMLInputElement).value)).toEqual([
-        'compact',
-        'thumbnail',
-        'grid',
-      ])
-      // One tray (not separate buttons) as tall as Filter and Sort: 36 px, 44 px on touch.
-      expect(mode.className).toContain('h-9')
-      expect(mode.className).toContain('pointer-coarse:h-11')
+      const view = screen.getByRole('button', { name: 'View options' })
+      expect(view.className).toBe(toolbarIconControl)
       expect(screen.getByRole('button', { name: 'Filter' }).className).toBe(toolbarIconControl)
-      // Neutral raised selected segment (surface + shadow), no accent colour.
-      const checked = radios.find((radio) => (radio as HTMLInputElement).checked)!
-      expect(checked.parentElement!.className).toContain('has-[:checked]:bg-surface')
-      expect(checked.parentElement!.className).toContain('has-[:checked]:shadow-sm')
-      expect(checked.parentElement!.className).not.toContain('accent')
+      expect(view.parentElement!.firstElementChild).toBe(view)
+      const search = screen.getByRole('searchbox')
+      expect(view.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(search.closest('div.flex-1')).not.toBeNull()
     },
   )
-})
 
-describe('F-025 W11 phone search', () => {
-  it('the Search button expands the field, focused; Close and Esc collapse it', async () => {
+  it('lists the three modes as radios, the current one checked', async () => {
     mockViewport(375)
-    useBackend()
+    useBackend({ list: { display_mode: 'thumbnail' } })
     const user = userEvent.setup()
     renderList(at())
     await itemsList()
-    await user.click(screen.getByRole('button', { name: 'Search' }))
-    const field = screen.getByRole('searchbox', { name: 'Search items by title or director' })
-    expect(field).toHaveFocus()
-    await user.click(screen.getByRole('button', { name: 'Close search' }))
-    expect(screen.queryByRole('searchbox')).toBeNull()
-    await user.click(screen.getByRole('button', { name: 'Search' }))
-    await user.keyboard('{Escape}')
-    expect(screen.queryByRole('searchbox')).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'View options' }))
+    const radios = await screen.findAllByRole('menuitemradio')
+    expect(radios.map((radio) => radio.textContent)).toEqual([
+      radioName.compact,
+      radioName.thumbnail,
+      radioName.grid,
+    ])
+    expect(screen.getByRole('menuitemradio', { name: radioName.thumbnail })).toBeChecked()
   })
 
-  it('keeps the query when collapsed and marks the button active', async () => {
+  it('keeps the search field and its query visible on phones, with no Search button', async () => {
+    mockViewport(375)
+    useBackend()
+    renderList(at('?q=item'))
+    await itemsList()
+    expect(screen.getByRole('searchbox')).toHaveValue('item')
+    expect(screen.queryByRole('button', { name: /^Search/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Close search' })).toBeNull()
+  })
+})
+
+describe('Back to Home on phones', () => {
+  it('sits before the list icon on phones and opens Home when the list was opened directly', async () => {
     mockViewport(375)
     useBackend()
     const user = userEvent.setup()
-    renderList(at('?q=item'))
+    const router = renderList(at())
     await itemsList()
-    expect(screen.getByRole('button', { name: 'Search (active)' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Search (active)' }))
-    const field = screen.getByRole('searchbox')
-    expect(field).toHaveValue('item')
-    await user.click(screen.getByRole('button', { name: 'Close search' }))
-    expect(screen.getByRole('button', { name: 'Search (active)' })).toBeInTheDocument()
+    const back = screen.getByRole('button', { name: 'Back to Home' })
+    expect(back.nextElementSibling).toBe(screen.getByRole('button', { name: 'Change icon' }))
+    await user.click(back)
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'))
+  })
+
+  it('is absent from 768 px', async () => {
+    mockViewport(768)
+    useBackend()
+    renderList(at())
+    await itemsList()
+    expect(screen.queryByRole('button', { name: 'Back to Home' })).toBeNull()
   })
 })
 

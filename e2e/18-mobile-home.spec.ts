@@ -25,7 +25,7 @@ test.describe('F-025 mobile Home', () => {
     await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
   })
 
-  test('W14 the list has no Back to Home, the item page goes back to its list', async ({
+  test('W14 the list has a Back to Home button, the item page goes back to its list', async ({
     page,
     request,
   }) => {
@@ -41,11 +41,7 @@ test.describe('F-025 mobile Home', () => {
       .tap()
     await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`))
 
-    await expect(main.getByRole('link', { name: 'Back to Home' })).toHaveCount(0)
-    const heading = main.getByRole('button', { name, exact: true })
-    const headingBox = await heading.boundingBox()
-    if (!headingBox) throw new Error('missing box')
-    expect(headingBox.x).toBeLessThan(80)
+    await expect(main.getByRole('button', { name: 'Back to Home' })).toBeVisible()
 
     await page.getByRole('link', { name: title }).tap()
     await expect(page).toHaveURL(new RegExp(`${itemUrl(list.id, item.id)}$`))
@@ -64,7 +60,7 @@ test.describe('F-025 mobile Home', () => {
     await expect(page).toHaveURL(/\/search\?q=/)
   })
 
-  test('W12 the display-mode tray leads the toolbar at the height of Filter', async ({
+  test('W12 the View options button leads the toolbar at the height of Filter', async ({
     page,
     request,
   }) => {
@@ -73,13 +69,15 @@ test.describe('F-025 mobile Home', () => {
     await page.goto(`/lists/${list.id}`)
     const main = page.getByRole('main')
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
-    const first = main.getByRole('radiogroup', { name: 'Display mode' })
+    const first = main.getByRole('button', { name: 'View options' })
     const filter = main.getByRole('button', { name: 'Filter' })
     const [a, f] = [await first.boundingBox(), await filter.boundingBox()]
     if (!a || !f) throw new Error('missing box')
     expect(Math.abs(a.height - f.height)).toBeLessThanOrEqual(1)
     expect(a.x).toBeLessThan(f.x)
-    const search = await main.getByRole('button', { name: 'Search', exact: true }).boundingBox()
+    const search = await main
+      .getByRole('searchbox', { name: /Search items by title/ })
+      .boundingBox()
     if (!search) throw new Error('missing box')
     expect(a.x).toBeLessThan(search.x)
   })

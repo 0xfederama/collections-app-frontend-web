@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
 
-export interface SegmentedOption {
+interface SegmentedOption {
   value: string
   label: string
   icon?: ReactNode
