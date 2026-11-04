@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from 'react'
-import { ServiceIcon, sortByServiceOrder } from '../../components/ServiceIcon'
-import { filterOwnedPlatforms } from '../../components/serviceIcons/owned'
+import { ServiceIcon } from '../../components/ServiceIcon'
+import { filterOwnedPlatforms, orderPlatforms } from '../../components/serviceIcons/owned'
 import { focusRing } from '../../components/ui'
 import { cx } from '../../lib/cx'
 import type { ItemSummary } from './api'
@@ -124,9 +124,12 @@ export function PinnedSlot({
     }
     flush()
     // F-022-W3: a row shows only the services the user owns (none owned = all).
-    const services = sortByServiceOrder(
+    // Order: the Settings order, paid platforms after the others.
+    const services = orderPlatforms(
       filterOwnedPlatforms(streamingOf(item), owned, (s) => s.name),
+      owned,
       (s) => s.name,
+      (s) => s.paid,
     )
     const streaming = item.metadata.streaming as { link?: string | null } | null | undefined
     // Each service the web knows opens its own search for the title; one without a search falls back
