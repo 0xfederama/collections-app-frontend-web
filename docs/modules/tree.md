@@ -23,7 +23,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 - `useCreateList()`, `useUpdateListIcon()`, `useMoveList()`, `useDeleteList()`, `useReorderSiblings()`: mutations.
 - `useTreeDialogs()`: tree actions and dialogs.
 - `ListIconDialog({ list, onClose })`: list icon editor.
-- `ListActionsMenu({ list })`, `SidebarTree()`, `ListGate({ listId, children })`.
+- `ListActionsMenu({ list })`, `SidebarTree()`, `ListGate({ listId, children, slot? })`.
 
 ## Gotchas
 
@@ -31,5 +31,6 @@ The folder/list tree, its query and index, and folder and list writes including 
 - "Change icon" is in the sidebar row "…" only (`NodeMenu` `changeIcon`); the list header opens the same dialog from its icon button.
 - A 412 on icon update preserves the selected mark and offers Copy draft or Reload latest; reload requires confirmation and refreshes the tree before replacing the snapshot.
 - New list icon choice is a compact labelled field beside Name on the same row, including mobile; picker behavior is unchanged. The list mark is rendered by [lists](lists.md) in the sidebar, rail, list header and search results.
+- `ListGate` renders its `slot` (default `PageHeaderSlot`, menu on phones) in the loading, error and not-found states; item routes pass a back control there.
 - Create/move bodies include `folder_id` (`null` = top level); reorder is within same-kind siblings under one parent.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for full interaction details.

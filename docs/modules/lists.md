@@ -16,7 +16,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `src/lib/useLongPress.ts`: touch and pen long press on a row (opens its menu).
 - `listParams.ts`: URL parsing (`parseSort`, `buildItemsParams`); `useDebouncedFilter.ts`: debounced `?q=`.
 - `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
-- `pinned.ts`, `toolbarStyles.ts`: fixed pinned fields per built-in type and toolbar. The bar is: search ("Search by title"), "+ Filter", sort, display mode; below 768 px it stays one row and "+ Filter" is icon-only.
+- `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation. `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "Sort" and "+ Filter" buttons (one 36 px square, 44 px on touch). The bar is search, Filter, Sort, display mode, one row at every width; phones use the placeholder "Search".
 - `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
 ## Interfaces
@@ -27,11 +27,14 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `entryMenu(title, state, reorder?)` (`ItemControls.tsx`), `useLongPress({ onLongPress })`: row menu and long press.
 - `FieldFilter({ fields, value, onChange })`, `parseFieldFilter(params, fields)`.
 - `useList`, `useListItems`, `useUpdateList`, `useReorderItems` (`api.ts`); `listKeys` from `src/data/keys.ts`.
-- `fixedPinned(definition)`, `pinnedPlacements`, `formatPinnedValue`, `formatPrice`; `sortOptionsFor` (in `ListHeader.tsx`): display helpers.
+- `fixedPinned(definition)`, `pinnedPlacements`, `pinnedPieces`, `isLowPriorityPin`, `formatPinnedValue`, `formatPrice`; `sortOptionsFor` (in `ListHeader.tsx`): display helpers.
+- `SortMenu({ options, value, onValueChange })`: icon button that opens radio items; the active sort is checked.
 
 ## Gotchas
 
-- Pinned fields are fixed per built-in type (`FIXED_PINS` in `pinned.ts`, F-022); there is no per-list choice and no Pinned menu. A pin whose field the type lacks is dropped (`price` counts only where allowed); "No type" pins nothing. One pin sits beside the title; two put the second in the right corner; three put the first two beside the title and the third in the corner (`pinnedPlacements`).
+- Pinned fields are fixed per built-in type (`FIXED_PINS` in `pinned.ts`, F-022): movie runtime, director, streaming; TV seasons, streaming; book pages, author, stores; vehicle model year, power; wishlist price. There is no per-list choice. A pin whose field the type lacks is dropped (`price` counts only where allowed); "No type" pins nothing. One pin sits beside the title; two put the second in the right corner; three put the first two beside the title and the third in the corner (`pinnedPlacements`).
+- Director and pages are low-priority (`isLowPriorityPin`): they truncate with an ellipsis first; the other pins keep their width.
+- Compact rows show the pins beside the title at every width (they were hidden below `sm`).
 - Streaming in a row shows only the services in Settings `owned_streaming_services` (`filterOwnedPlatforms`); empty = all.
 - Sort and filter accept only the built-in field keys of the list's type (plus `price` where the type allows it); a custom key in the URL is ignored (F-023).
 - Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming and stores fields are not filterable, and stores fields are not sortable.
