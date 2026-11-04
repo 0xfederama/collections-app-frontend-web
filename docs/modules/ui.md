@@ -12,7 +12,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `src/components/ui/fieldStyles.ts`, `returnFocus.ts`: shared input chrome; focus return.
 - `src/components/ServiceIcon.tsx`: `ServiceIcon` (streaming) and `LinkIcon` (Google, Letterboxd, IMDb, Reddit) tiles, `TILE_SIZE`.
 - `src/lib/text.ts`: `firstLetter`, shared by the letter tile and the item-cover placeholder.
-- `src/assets/services/*.svg`, `README.md`: every link, store and streaming icon as a local SVG (source, licence and date per file in the README), never fetched at runtime. `src/components/serviceIcons/` is the registry: `entries.ts` (link and store rows), `streamingEntries.ts` (streaming rows; one file may back several entries, e.g. Apple TV Store and Apple TV+), `registry.ts` (`findService`, `sortByServiceOrder`, derived `STREAMING_SERVICES`), `owned.ts` (`filterOwnedPlatforms`, `STREAMING_OFFERED`). A unit test fails on a file without an entry or the reverse.
+- `src/assets/services/*.svg`, `README.md`: every link, store and streaming icon as a local SVG (source, licence and date per file in the README), never fetched at runtime. `src/components/serviceIcons/` is the registry: `entries.ts` (link and store rows), `streamingEntries.ts` (streaming rows; one file may back several entries, e.g. Apple TV Store and Apple TV+), `registry.ts` (`findService`, `sortByServiceOrder`, derived `STREAMING_SERVICES`), `owned.ts` (`filterOwnedPlatforms`, `orderPlatforms`, `STREAMING_OFFERED`). A unit test fails on a file without an entry or the reverse.
 - `src/dev/DevUiRoute.tsx`: `/dev/ui` gallery, dev builds only.
 
 ## Interfaces
@@ -20,7 +20,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `Button` (`variant`: `primary`, `ink`, `secondary`, `ghost`, `danger`; `size`, `pending`), `IconButton` (plus required `aria-label`). `ink` is the Quick add button only.
 - `TextField` / `TextArea`: `label`, `hint`, `error`; TextField adds `prefix`, `suffix`.
 - `Select`, `Combobox`: `options`, `value`, `onValueChange`. `CountrySelect`, `CurrencySelect` (`IsoSelects.tsx`, not in the barrel).
-- `SegmentedControl` (`options` with `iconOnly`, `size` `default` | `toolbar` for the 36 px toolbar tray; `SegmentedOption` type), `Menu` (`trigger`, `items`; optional controlled `open` / `onOpenChange`), `Tooltip`, `Chip` (`tone`, `icon`), `Badge` (`type`), `Card`, `EmptyState`, `Skeleton`.
+- `SegmentedControl` (`options` with `iconOnly`, `size` `default` | `toolbar` for the 36 px toolbar tray), `Menu` (`trigger`, `items`; optional controlled `open` / `onOpenChange`), `Tooltip`, `Chip` (`tone`, `icon`), `Badge` (`type`), `Card`, `EmptyState`, `Skeleton`.
 - `Dialog`, `AlertDialog`, `Drawer`: `open` / `onOpenChange`, `initialFocus`; solid surface. `Drawer` also takes `className` (panel padding).
 - `ToastProvider` / `useToast()`: `(options: { kind?, title, description?, action? })`.
 - `Tree<T>`: `nodes`, `expanded`, `selected`, `renderRow`, `sortable(node)`, `onReorder(move)`, `acceptsDrop(target, sourceId)`.

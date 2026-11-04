@@ -16,7 +16,9 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `src/lib/useLongPress.ts`: touch and pen long press on a row (opens its menu).
 - `listParams.ts`: URL parsing (`parseSort`, `buildItemsParams`); `useDebouncedFilter.ts`: debounced `?q=`.
 - `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
-- `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation. `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "Sort" and "+ Filter" buttons (one 36 px square, 44 px on touch). The bar is display mode (`SegmentedControl` `size="toolbar"`), search, Filter, Sort, one row at every width. Phones show a Search icon button that swaps the row for the field (`ListHeader.tsx`, Close search or Esc returns).
+- `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation.
+- `ViewMenu.tsx`: the "View options" icon button (display mode radio menu). `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "View options", "+ Filter" and "Sort" buttons (one 36 px square, 44 px on touch). The toolbar is one row at every width: View options, search field (always visible), Filter, Sort, New item (`ListHeader.tsx`).
+- `TileStrip.tsx`, `tileFit.ts`: a row's service or store tiles that fit the row, then a "+N" tile.
 - `scrollRestore.ts`: `useScrollRestore`, the list's scroll per history entry (`main`, or the window on phones).
 - `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
@@ -27,7 +29,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
 - `entryMenu(title, state, reorder?)` (`ItemControls.tsx`), `useLongPress({ onLongPress })`: row menu and long press.
 - `FieldFilter({ fields, value, onChange })`, `parseFieldFilter(params, fields)`.
-- Display mode: `SegmentedControl` (`size="toolbar"`, icon-only) in `ListHeader` with compact, thumbnail and grid options; `onDisplayMode(mode)`.
+- `ViewMenu({ value, onValueChange })`: display mode menu (compact, thumbnail, grid).
 - `useScrollRestore(anchor, ready)`: returns `remember`, called before navigating away.
 - `useList`, `useListItems`, `useUpdateList`, `useReorderItems` (`api.ts`); `listKeys` from `src/data/keys.ts`.
 - `fixedPinned(definition)`, `pinnedPlacements`, `pinnedPieces`, `isLowPriorityPin`, `formatPinnedValue`, `formatPrice`; `sortOptionsFor` (in `ListHeader.tsx`): display helpers.
@@ -46,6 +48,8 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - The header icon is a button that opens `ListIconDialog` (pen on hover, focus or touch). List icon writes are owned by the tree feature and use the list version with `If-Match`.
 - A list with no type shows the Lucide `List` glyph (`typeIconFor(null)`).
 - Long press (touch or pen, 500 ms, finger within 8 px) on a row opens its menu (Move up/down when reorderable, Move, Delete) and cancels the drag the hold started. A mouse uses the "…" button.
-- Phones: the Search button shows a dot and "Search (active)" while `?q=` is set; closing the field keeps the filter. The list header's "…" menu hosts "Refresh details" (see [tree](tree.md)).
+- Every display mode draws its rows in the same bordered frame (`surface` in `ItemEntry.tsx`); there are no hairline dividers.
+- Row tiles: `TileStrip` shows the tiles that fit, then "+N". Streaming tiles follow the Settings service order with paid platforms last (`orderPlatforms`).
+- The list header's "…" menu hosts "Refresh details" (see [tree](tree.md)).
 - The reorder hint explains only a filter or unloaded items; there is no "switch to Manual sort" hint.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.
