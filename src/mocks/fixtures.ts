@@ -380,6 +380,13 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     status: 204,
     contentType: null,
   },
+  refreshListLookups: {
+    method: 'post',
+    path: '/api/v1/lists/{id}/lookup-refresh',
+    status: 200,
+    contentType: 'application/json',
+    body: { updated: 0, failed: 0, skipped: 0, remaining: 0 },
+  },
   moveList: {
     method: 'post',
     path: '/api/v1/lists/{id}/move',

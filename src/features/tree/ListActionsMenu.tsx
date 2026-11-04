@@ -4,9 +4,12 @@ import { useTreeDialogs } from './useTreeDialogs'
 import { NodeMenu } from './NodeMenu'
 import type { List } from './api'
 import { useChangeType } from './useChangeType'
+import { canRefreshDetails } from './refreshMessage'
+import { useRefreshDetails } from './useRefreshDetails'
 
 /**
- * The list's overflow menu for the list header (W-06): Type, rename, move, delete.
+ * The list's overflow menu for the list header (W-06): Type, rename, move, delete, and (movie / TV lists with items)
+ * Refresh details (F-025 W11; header only, not the sidebar row).
  * The icon is changed from the header icon button (F018-W1), not from here.
  * It owns its dialogs, so it works outside the sidebar. After a delete it navigates home when
  * that list was open. Type lives here (F008-W5); a change on a list with items asks first.
@@ -14,6 +17,7 @@ import { useChangeType } from './useChangeType'
 export function ListActionsMenu({ list }: { list: List }) {
   const { actions, dialogs } = useTreeDialogs()
   const type = useChangeType(list)
+  const refresh = useRefreshDetails(list.id)
   const leading: MenuItem[] = [
     {
       type: 'radio-submenu',
@@ -23,6 +27,16 @@ export function ListActionsMenu({ list }: { list: List }) {
       onValueChange: (value) => type.pick(valueToType(value)),
     },
     { type: 'separator' },
+    ...(canRefreshDetails(list)
+      ? ([
+          {
+            label: 'Refresh details',
+            disabled: refresh.pending,
+            onSelect: () => void refresh.run(),
+          },
+          { type: 'separator' },
+        ] satisfies MenuItem[])
+      : []),
   ]
   return (
     <>

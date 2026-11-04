@@ -15,6 +15,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 - `listFolderMemory.ts`: folder a new list goes into (session only).
 - `ListIconDialog.tsx`: edit a list mark with a version snapshot.
 - `ListActionsMenu.tsx`, `NodeMenu.tsx`: list and node actions.
+- `useRefreshDetails.ts`, `refreshMessage.ts`: "Refresh details" for movie and TV lists (pure helpers and toast text).
 - `order.ts`, `ListGate.tsx`: ordering rules and list route gate.
 
 ## Interfaces
@@ -24,6 +25,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 - `useTreeDialogs()`: tree actions and dialogs.
 - `ListIconDialog({ list, onClose })`: list icon editor.
 - `ListActionsMenu({ list })`, `SidebarTree()`, `ListGate({ listId, children, slot? })`.
+- `useRefreshDetails(listId)` → `{ run, pending }`; `canRefreshDetails(list)`, `refreshSummary(counts)`.
 
 ## Gotchas
 
@@ -32,5 +34,6 @@ The folder/list tree, its query and index, and folder and list writes including 
 - A 412 on icon update preserves the selected mark and offers Copy draft or Reload latest; reload requires confirmation and refreshes the tree before replacing the snapshot.
 - New list icon choice is a compact labelled field beside Name on the same row, including mobile; picker behavior is unchanged. The list mark is rendered by [lists](lists.md) in the sidebar, rail, list header and search results.
 - `ListGate` renders its `slot` (default `PageHeaderSlot`, menu on phones) in the loading, error and not-found states; item routes pass a back control there.
+- "Refresh details" is in the list header "…" menu only, shown for movie and TV lists with items. It posts `lookup-refresh` (no `If-Match`), shows a "Refreshing details…" toast, then invalidates content. "Run again" (action on the result toast) appears while `remaining` > 0. Covered by `e2e/17-refresh-details.spec.ts`.
 - Create/move bodies include `folder_id` (`null` = top level); reorder is within same-kind siblings under one parent.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for full interaction details.

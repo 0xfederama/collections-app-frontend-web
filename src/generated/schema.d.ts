@@ -290,8 +290,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Fill or replace an item's looked-up metadata
-         * @description Requires `If-Match` (`"i-N"`) and is available only for movie, TV and book items (TMDB for movie and TV, Open Library for books). `fill` preserves every non-empty user value and fills empty fields; `rematch` searches from the current title unless `tmdb_id` (movie and TV) or `source_id` (book) selects a suggestion, then replaces the title and all fields fetched from the provider; `refresh` uses the stored `metadata.tmdb_id` or `metadata.openlibrary_id` unless the id is supplied and likewise replaces fetched fields. All modes preserve an existing item image. A poster or cover is stored through the normal image pipeline only when the item has no image. On a book, `fill` also sets `stores` to `[preferred_store]` (the workspace default store) when `stores` is empty; no mode ever removes or replaces the user's store choices. The default mode is `fill`. When a search has no result, the operation returns the unchanged item and its current ETag. An explicit lookup while the integration is disabled or the provider cannot be reached returns `503 lookup_disabled` or `503 upstream_unavailable` respectively. Imported fields and lookup-owned posters retain server-side provenance, for every provider, so that fill, rematch and refresh never overwrite user edits. TMDB data has a retention rule: maintenance refreshes owned values after five calendar months; at six months, a value that still cannot be refreshed is removed only when it still equals its imported snapshot. User edits and user-supplied images are preserved. Poster age is tracked separately from metadata age. An item's `lookup_disabled` flag stops automatic refresh and lets its owned values expire under the same rules. Open Library data has no retention duty: it is kept until the user changes it.
+         * Fill, replace or refresh an item's looked-up metadata
+         * @description Requires `If-Match` (`"i-N"`) and is available only for movie, TV and book items (TMDB for movie and TV, Open Library for books). `fill` preserves every non-empty user value and fills empty fields; `rematch` searches from the current title unless `tmdb_id` (movie and TV) or `source_id` (book) selects a suggestion, then replaces the title and all fields fetched from the provider, user edits to those fields included. `refresh` (movie and TV only, otherwise `422 validation_failed`) re-fetches the item's TMDB id, or the `tmdb_id` given, and overwrites the title and every fetched field, user edits included, as the weekly refresh does; a field TMDB no longer returns is removed. An item's `lookup_disabled` flag does not stop an explicit refresh. A refresh that fails changes nothing. All modes preserve an existing item image. A poster or cover is stored through the normal image pipeline only when the item has no image. On a book, `fill` also sets `stores` to `[preferred_store]` (the workspace default store) when `stores` is empty; no mode ever removes or replaces the user's store choices. The default mode is `fill`. When a search has no result, the operation returns the unchanged item and its current ETag. An explicit lookup while the integration is disabled or the provider cannot be reached returns `503 lookup_disabled` or `503 upstream_unavailable` respectively. The server keeps the provenance of imported fields and posters. Movie and TV items are also refreshed from TMDB once a week by the server, which overwrites every fetched field and the title and keeps a user-supplied image; an item's `lookup_disabled` flag stops that refresh. Open Library data is never refreshed: it is kept until the user changes it.
          */
         post: operations["lookupItemMetadata"];
         delete?: never;
@@ -432,6 +432,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lists/{id}/lookup-refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh the TMDB details of a list's movie and TV items
+         * @description Refreshes every active movie and TV item of the list that has a TMDB id and is not `lookup_disabled`, one at a time through the server's TMDB pacing, with the weekly refresh's rule: the title and every fetched field are overwritten, user edits included, and a user-supplied image is kept. Books, items without a TMDB id and `lookup_disabled` items are skipped. No `If-Match` is needed: each item is versioned internally, and an item changed during the run is counted as skipped. Answers the counts. Each call refreshes at most 50 items, oldest fetch first; `remaining` counts the eligible items left for later calls, so run again until it is 0. A TMDB rate limit or outage stops the run, and the items not yet refreshed are counted as failed; a failed item keeps its values. Unknown or trashed lists answer 404. TMDB disabled on the server answers `503 lookup_disabled`.
+         */
+        post: operations["refreshListLookups"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lists/{id}/move": {
         parameters: {
             query?: never;
@@ -546,7 +566,7 @@ export interface paths {
         };
         /**
          * Suggest movie or TV matches
-         * @description Searches TMDB using the workspace's `metadata_language`. When the server has no TMDB key, returns `{ "available": false, "results": [] }`; this endpoint does not fail merely because lookup is disabled. Results retain TMDB's ranking. The returned poster URL is for suggestion display only and is not an item image.
+         * @description Searches TMDB using the workspace's `metadata_language`. When the server has no TMDB key, returns `{ "available": false, "results": [] }`; this endpoint does not fail merely because lookup is disabled. Results retain TMDB's ranking. Titles are in Latin script: the localized title when it is Latin, else the English title, else the Latin original; a non-Latin title is returned only when TMDB has no Latin form. The returned poster URL is for suggestion display only and is not an item image.
          */
         get: operations["listTmdbSuggestions"];
         put?: never;
@@ -902,6 +922,28 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        ListLookupRefresh: {
+            /**
+             * Format: int64
+             * @description Refreshes that failed, plus the items not reached after a rate limit or an outage. Their values are unchanged.
+             */
+            failed: number;
+            /**
+             * Format: int64
+             * @description Eligible items beyond the 50-item batch of this call. Run again to refresh them.
+             */
+            remaining: number;
+            /**
+             * Format: int64
+             * @description Items not refreshed: books, no TMDB id, lookup_disabled, or changed during the run.
+             */
+            skipped: number;
+            /**
+             * Format: int64
+             * @description Items refreshed from TMDB.
+             */
+            updated: number;
+        };
         ListWithPath: {
             /** Format: date-time */
             created_at: string;
@@ -929,13 +971,13 @@ export interface components {
             version: number;
         };
         LookupItemRequest: {
-            /** @description fill (default), rematch or refresh. */
+            /** @description fill (default), rematch, or refresh (movie and TV only). */
             mode?: string;
-            /** @description Selects a known Open Library work (book items). Without it, fill and rematch search by title and refresh uses the stored metadata.openlibrary_id. */
+            /** @description Selects a known Open Library work (book items). Without it, the lookup searches by title. */
             source_id?: string;
             /**
              * Format: int64
-             * @description Selects a known TMDB match (movie and TV items). Without it, fill and rematch search by title and refresh uses the stored metadata.tmdb_id.
+             * @description Selects a known TMDB match (movie and TV items). Without it, the lookup searches by title.
              */
             tmdb_id?: number;
         };
@@ -3482,6 +3524,64 @@ export interface operations {
             };
             /** @description Internal Server Error */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    refreshListLookups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListLookupRefresh"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

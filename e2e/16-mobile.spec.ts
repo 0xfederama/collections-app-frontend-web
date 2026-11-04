@@ -20,7 +20,7 @@ test.describe('F-025 mobile', () => {
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
 
     const controls = [
-      main.getByRole('searchbox', { name: /Search items by title/ }),
+      main.getByRole('button', { name: 'Search', exact: true }),
       main.getByRole('button', { name: 'Filter' }),
       main.getByRole('button', { name: 'Sort', exact: true }),
       main.getByRole('radiogroup', { name: 'Display mode' }),
@@ -59,7 +59,7 @@ test.describe('F-025 mobile', () => {
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
 
     const sizes: Record<string, { width: number; height: number }> = {}
-    for (const name of ['Filter', 'Sort', 'New item']) {
+    for (const name of ['Search', 'Filter', 'Sort', 'New item']) {
       const button = main.getByRole('button', { name, exact: true })
       await expect(button).toBeVisible()
       const box = await button.boundingBox()
@@ -69,7 +69,12 @@ test.describe('F-025 mobile', () => {
     const filter = sizes['Filter']
     const sort = sizes['Sort']
     const create = sizes['New item']
-    if (!filter || !sort || !create) throw new Error('missing size')
+    const search = sizes['Search']
+    if (!filter || !sort || !create || !search) throw new Error('missing size')
+    expect(Math.abs(search.width - filter.width), 'Search vs Filter width').toBeLessThanOrEqual(1)
+    expect(Math.abs(search.height - filter.height), 'Search vs Filter height').toBeLessThanOrEqual(
+      1,
+    )
     expect(Math.abs(filter.width - sort.width), 'Filter vs Sort width').toBeLessThanOrEqual(1)
     expect(Math.abs(filter.height - sort.height), 'Filter vs Sort height').toBeLessThanOrEqual(1)
     expect(Math.abs(filter.width - create.width), 'Filter vs New item width').toBeLessThanOrEqual(1)
@@ -78,13 +83,85 @@ test.describe('F-025 mobile', () => {
       'Filter vs New item height',
     ).toBeLessThanOrEqual(1)
 
-    await expect(main.getByRole('searchbox', { name: /Search items by title/ })).toHaveAttribute(
-      'placeholder',
-      'Search',
-    )
-
     await main.getByRole('button', { name: 'Sort', exact: true }).tap()
     await expect(page.getByRole('menuitemradio', { checked: true })).toHaveCount(1)
+  })
+
+  test('W11 Search expands and focuses the field, filters, and Close search keeps the query', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Search'), 'movie')
+    const keep = uniqueName('Keepme')
+    const other = uniqueName('Other')
+    await createItem(request, list.id, keep)
+    await createItem(request, list.id, other)
+    await page.goto(`/lists/${list.id}`)
+    const main = page.getByRole('main')
+    const rows = main.getByRole('list', { name: 'Items' }).getByRole('listitem')
+    await expect(rows).toHaveCount(2)
+    await expect(main.getByRole('searchbox', { name: /Search items by title/ })).toHaveCount(0)
+
+    await main.getByRole('button', { name: 'Search', exact: true }).tap()
+    const field = main.getByRole('searchbox', { name: /Search items by title/ })
+    await expect(field).toBeVisible()
+    await expect(field).toBeFocused()
+    await expect(field).toHaveAttribute('placeholder', 'Search')
+    await field.fill(keep)
+    await expect(rows).toHaveCount(1)
+    await expect(rows).toContainText(keep)
+
+    await main.getByRole('button', { name: 'Close search' }).tap()
+    await expect(field).toHaveCount(0)
+    await expect(page).toHaveURL(/[?&]q=/)
+    await expect(rows).toHaveCount(1)
+    await expect(main.getByRole('button', { name: 'Search (active)', exact: true })).toBeVisible()
+  })
+
+  test('W11 the viewport meta has viewport-fit=cover and maximum-scale=1', async ({ page }) => {
+    await page.goto('/')
+    const content = await page.locator('meta[name="viewport"]').getAttribute('content')
+    expect(content).toMatch(/viewport-fit=cover/)
+    expect(content).toMatch(/maximum-scale=1(?!\d)/)
+  })
+
+  test('W11 the page does not overflow horizontally', async ({ page, request }) => {
+    const list = await createList(request, uniqueName('Overflow'), 'movie')
+    await createItem(request, list.id, uniqueName('Film'))
+    await page.goto(`/lists/${list.id}`)
+    await expect(page.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    )
+    expect(overflow).toBeLessThanOrEqual(0)
+  })
+
+  test.describe('dark', () => {
+    test.use({ colorScheme: 'dark' })
+
+    test('W11 the html background is the --bg token, same as body, and not white', async ({
+      page,
+    }) => {
+      await page.goto('/')
+      await expect(page.getByRole('main')).toBeVisible()
+      const colors = await page.evaluate(() => {
+        const probe = document.createElement('div')
+        probe.style.backgroundColor = getComputedStyle(document.documentElement)
+          .getPropertyValue('--bg')
+          .trim()
+        document.body.appendChild(probe)
+        const token = getComputedStyle(probe).backgroundColor
+        probe.remove()
+        return {
+          html: getComputedStyle(document.documentElement).backgroundColor,
+          body: getComputedStyle(document.body).backgroundColor,
+          token,
+        }
+      })
+      expect(colors.html).toBe(colors.body)
+      expect(colors.html).toBe(colors.token)
+      expect(colors.html).not.toBe('rgb(255, 255, 255)')
+    })
   })
 
   test('W9 a movie row shows runtime and director, a book row the page count before the author', async ({

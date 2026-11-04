@@ -39,7 +39,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
 - Route screens are code-split: `ListRoute`, `SearchRoute`, `SettingsRoute`, `TrashRoute` via `lazyRoute`; `ItemRoute` has its own `Suspense`.
 - Below 1280 px the item route replaces `main`'s `Outlet`, so `ListRoute` unmounts while an item is open. At ≥ 1280 the list stays mounted; the sheet's close button goes to `/lists/:listId` and keeps `?q=` and `?sort=`.
 - The drawer is open for one `location.key`, so any navigation closes it. Its panel takes `className` (`px-3`); the drawer's Sidebar drops its side padding (`showHeader={false}`) so rows meet the edges.
-- `index.html` viewport has `maximum-scale=1` so iOS does not zoom on field focus (pinch zoom stays; `src/viewport.test.ts`).
+- `index.html` viewport has `maximum-scale=1` (no iOS focus zoom; pinch stays) and `viewport-fit=cover`; `html` takes the theme background, and the shell, drawer and toast viewport pad with `env(safe-area-inset-*)` (`src/viewport.test.ts`).
 - E2E phone spec `e2e/16-mobile.spec.ts` runs only in the `mobile-webkit` Playwright project (iPhone 15, WebKit); chromium ignores it.
 - Sidebar state persists as `collection:sidebar` (`{ collapsed, width }`); `collapsed` applies at every breakpoint from 768 px.
 - Resizer: `role="separator"` "Resize sidebar", `aria-controls="app-sidebar"`; ←/→ move 16 px, Home/End jump to min/max.

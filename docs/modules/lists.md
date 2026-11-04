@@ -16,7 +16,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `src/lib/useLongPress.ts`: touch and pen long press on a row (opens its menu).
 - `listParams.ts`: URL parsing (`parseSort`, `buildItemsParams`); `useDebouncedFilter.ts`: debounced `?q=`.
 - `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
-- `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation. `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "Sort" and "+ Filter" buttons (one 36 px square, 44 px on touch). The bar is search, Filter, Sort, display mode, one row at every width; phones use the placeholder "Search".
+- `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation. `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "Sort" and "+ Filter" buttons (one 36 px square, 44 px on touch). The bar is search, Filter, Sort, display mode, one row at every width. Phones show a Search icon button that swaps the row for the field (`ListHeader.tsx`, Close search or Esc returns).
 - `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
 ## Interfaces
@@ -43,5 +43,6 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - The header icon is a button that opens `ListIconDialog` (pen on hover, focus or touch). List icon writes are owned by the tree feature and use the list version with `If-Match`.
 - A list with no type shows the Lucide `List` glyph (`typeIconFor(null)`).
 - Long press (touch or pen, 500 ms, finger within 8 px) on a row opens its menu (Move up/down when reorderable, Move, Delete) and cancels the drag the hold started. A mouse uses the "…" button.
+- Phones: the Search button shows a dot and "Search (active)" while `?q=` is set; closing the field keeps the filter. The list header's "…" menu hosts "Refresh details" (see [tree](tree.md)).
 - The reorder hint explains only a filter or unloaded items; there is no "switch to Manual sort" hint.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.
