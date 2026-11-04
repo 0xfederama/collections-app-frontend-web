@@ -86,6 +86,14 @@ describe('W-04 sidebar tree states', () => {
     await within(sidebar()).findByRole('tree')
     expect(within(sidebar()).getByRole('button', { name: 'New' })).toBeInTheDocument()
   })
+
+  it('aligns the New row with a top-level row: 8 px inset, 22 px icon box, 8 px gap', async () => {
+    renderAt('/')
+    await within(sidebar()).findByRole('tree')
+    const button = within(sidebar()).getByRole('button', { name: 'New' })
+    expect(button).toHaveClass('px-2', 'gap-2')
+    expect(button.firstElementChild).toHaveClass('size-[22px]')
+  })
 })
 
 describe('W-04 sidebar tree behaviour', () => {
