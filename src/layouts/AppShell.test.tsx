@@ -3,7 +3,7 @@ import { ToastProvider } from '../components/ui'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from '../app/router'
 import { problemResponse } from '../mocks/problems'
@@ -551,5 +551,33 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(main).toHaveClass('relative')
     expect(main.parentElement).toHaveClass('min-h-dvh')
     expect(main.parentElement).not.toHaveClass('h-dvh')
+  })
+
+  it('F-025 on a phone a push to another page scrolls to the top, back is left to restore', async () => {
+    mockViewport(375)
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    const router = renderRouter('/')
+    await screen.findByRole('main')
+    scrollTo.mockClear()
+    await router.navigate('/trash')
+    await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 0))
+    // Back (POP) is left to the page's scroll restore: the shell itself does not scroll.
+    scrollTo.mockClear()
+    await router.navigate('/trash?x=1')
+    await router.navigate(-1)
+    await waitFor(() => expect(router.state.location.search).toBe(''))
+    expect(scrollTo).not.toHaveBeenCalled()
+    scrollTo.mockRestore()
+  })
+
+  it('at 1024 a push does not touch the window scroll', async () => {
+    mockViewport(1024)
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    const router = renderRouter('/')
+    await screen.findByRole('main')
+    await router.navigate('/trash')
+    await waitFor(() => expect(router.state.location.pathname).toBe('/trash'))
+    expect(scrollTo).not.toHaveBeenCalled()
+    scrollTo.mockRestore()
   })
 })

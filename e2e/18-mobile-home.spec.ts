@@ -106,4 +106,40 @@ test.describe('F-025 mobile Home', () => {
     await page.getByRole('button', { name: 'Open', exact: true }).tap()
     await expect(page).toHaveURL(new RegExp(`/lists/${list.id}/items/[^/]+$`))
   })
+
+  test('W14 opening an item starts at the top, going back restores the list scroll', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Long'), 'wishlist')
+    const names: string[] = []
+    for (let n = 0; n < 30; n++) names.push(uniqueName(`Row ${String(n).padStart(2, '0')}`))
+    const created: { id: string }[] = []
+    for (const name of names) created.push(await createItem(request, list.id, name))
+    await page.goto(`/lists/${list.id}`)
+    const main = page.getByRole('main')
+    await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(30)
+    await page.evaluate(() => window.scrollTo(0, 600))
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(300)
+    const before = await page.evaluate(() => window.scrollY)
+    // Open whichever row is in view.
+    const visible = await page.evaluate(() => {
+      const links = [...document.querySelectorAll<HTMLAnchorElement>('main a[href*="/items/"]')]
+      const hit = links.find((a) => {
+        const r = a.getBoundingClientRect()
+        return r.top > 80 && r.bottom < window.innerHeight - 80
+      })
+      return hit?.getAttribute('href') ?? null
+    })
+    if (!visible) throw new Error('no visible item link')
+    await page.locator(`main a[href="${visible}"]`).first().tap()
+    await expect(page).toHaveURL(new RegExp(`${visible}$`))
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+    await page.goBack()
+    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`))
+    await expect
+      .poll(async () => Math.abs((await page.evaluate(() => window.scrollY)) - before))
+      .toBeLessThan(60)
+    expect(created).toHaveLength(30)
+  })
 })

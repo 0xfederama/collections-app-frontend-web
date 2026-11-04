@@ -7,12 +7,6 @@ import { ArrowLeft } from './ui/icons'
 const slotClass = `inline-flex size-9 shrink-0 select-none items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-fill-hover pointer-coarse:size-11 [&_svg]:size-5 ${focusRing}`
 
 /**
- * Obsolete: the "‹ Home" control and its history map are gone (phones go back with the browser's edge
- * swipe). `AppShell` still calls this until its import is removed; delete both together.
- */
-export function useRecordHistory() {}
-
-/**
  * The back control of a sub-page's header row on phones (the item page, back to its list). It renders
  * nothing from 768 px. Top pages (lists, Search, Trash) have no leading slot: the title starts at the
  * left edge. Put it first in the row that holds the title, in loading and error states too.

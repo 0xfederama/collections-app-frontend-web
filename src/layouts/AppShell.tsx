@@ -1,6 +1,13 @@
-import { useCallback, useRef } from 'react'
-import { Outlet, useLocation, useMatch, useNavigate, useRoutes, type Location } from 'react-router'
-import { useRecordHistory } from '../components/PageHeaderSlot'
+import { useCallback, useLayoutEffect, useRef } from 'react'
+import {
+  Outlet,
+  useLocation,
+  useMatch,
+  useNavigate,
+  useNavigationType,
+  useRoutes,
+  type Location,
+} from 'react-router'
 import { IconButton } from '../components/ui'
 import { X } from '../components/ui/icons'
 import { QuickAddProvider } from '../features/quickadd'
@@ -29,12 +36,27 @@ export function AppShell() {
   )
 }
 
+/**
+ * Phones scroll the document, which a client-side navigation leaves where it was. A push or replace to
+ * another page starts at the top; back/forward (POP) is left to `useScrollRestore`, which restores lists.
+ */
+function useScrollTopOnPhone(phone: boolean) {
+  const { pathname } = useLocation()
+  const type = useNavigationType()
+  const previous = useRef(pathname)
+  useLayoutEffect(() => {
+    const changed = previous.current !== pathname
+    previous.current = pathname
+    if (phone && changed && type !== 'POP') window.scrollTo(0, 0)
+  }, [phone, pathname, type])
+}
+
 function ShellFrame() {
   const breakpoint = useBreakpoint()
   const sidebar = useSidebarState()
   const location = useLocation()
   const navigate = useNavigate()
-  useRecordHistory()
+  useScrollTopOnPhone(breakpoint === 'mobile')
 
   // The search field only exists while the sidebar is expanded. When it is
   // not there, `/` and the rail's search icon open it, and the ref callback focuses it once it mounts.

@@ -264,9 +264,8 @@ test.describe('F-025 W12 display mode switch', () => {
     const main = page.getByRole('main')
     await expect(main.getByRole('list', { name: 'Items' }).getByRole('listitem')).toHaveCount(1)
     const group = main.getByRole('radiogroup', { name: 'Display mode' })
-    const first = group.locator('label').first()
     const filter = main.getByRole('button', { name: 'Filter' })
-    const [a, f] = [await first.boundingBox(), await filter.boundingBox()]
+    const [a, f] = [await group.boundingBox(), await filter.boundingBox()]
     if (!a || !f) throw new Error('missing box')
     expect(Math.abs(a.height - f.height)).toBeLessThanOrEqual(1)
     expect(a.x).toBeLessThan(f.x)
