@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from 'react'
 import { Outlet, useLocation, useMatch, useNavigate, useRoutes, type Location } from 'react-router'
+import { MobileMenuProvider } from '../components/PageHeaderSlot'
 import { Drawer, IconButton } from '../components/ui'
-import { MenuIcon, X } from '../components/ui/icons'
+import { X } from '../components/ui/icons'
 import { QuickAddProvider } from '../features/quickadd'
 import { useSearchShortcut } from '../features/search'
 import { useWorkspaceName } from '../features/settings'
@@ -16,7 +17,7 @@ const SIDEBAR_ID = 'app-sidebar'
 const RAIL_WIDTH = 64
 
 /**
- * Responsive frame (UI_SPEC §2): no top bar. Drawer (floating menu button) below 768 px;
+ * Responsive frame (UI_SPEC §2): no top bar. Drawer below 768 px (opened from the menu button in each page's header row);
  * from 768 a sidebar that collapses to an icon rail at any width, resizable from 1024 while expanded,
  * and a detail panel from 1280. Routes render in `main`; the item route
  * renders in `main` (full page) below 1280 and in the panel beside the list at ≥ 1280.
@@ -82,29 +83,23 @@ function ShellFrame() {
   if (mobile) {
     return (
       <div className="relative flex h-dvh flex-col text-text">
-        <div className="absolute left-2 top-2 z-10 rounded-md material shadow-float">
-          <Drawer
-            side="left"
-            open={drawerOpen}
-            onOpenChange={(open) => setDrawerAt(open ? location.key : null)}
-            title={workspaceName}
-            className="px-3"
-            trigger={
-              <IconButton aria-label="Open menu">
-                <MenuIcon aria-hidden />
-              </IconButton>
-            }
-          >
-            <Sidebar
-              showHeader={false}
-              searchRef={searchRef}
-              onQuickAdd={() => setDrawerAt(null)}
-            />
-          </Drawer>
-        </div>
-        {/* No top row for the menu button: it floats over the top-left corner, and the page titles
-            leave room for it (`max-md:pl-12`), so the button shares the first row with the title. */}
-        <main className="relative min-h-0 flex-1 overflow-y-auto p-4">{content}</main>
+        {/* [CRUCIAL] No trigger: the menu button lives in each page's header row (`PageHeaderSlot`).
+            `Drawer` remembers the focused element when it opens and returns focus there on close
+            (Esc included), which is that button. */}
+        <Drawer
+          side="left"
+          open={drawerOpen}
+          onOpenChange={(open) => setDrawerAt(open ? location.key : null)}
+          title={workspaceName}
+          className="px-3"
+        >
+          <Sidebar showHeader={false} searchRef={searchRef} onQuickAdd={() => setDrawerAt(null)} />
+        </Drawer>
+        {/* Nothing floats over the content: each page's own header row starts with the menu button
+            (top-level pages) or the back control (item page), F-025 W10. */}
+        <MobileMenuProvider value={() => setDrawerAt(location.key)}>
+          <main className="relative min-h-0 flex-1 overflow-y-auto p-4">{content}</main>
+        </MobileMenuProvider>
       </div>
     )
   }

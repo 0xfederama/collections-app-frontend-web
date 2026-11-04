@@ -109,12 +109,12 @@ function EntryRow({
       >
         <ItemThumb item={item} decorative className="size-9 shrink-0 rounded-sm" />
         <div className="flex min-w-0 flex-1 items-baseline gap-3">
-          <span className="min-w-0 shrink-0 truncate sm:max-w-[60%]">{title}</span>
+          <span className="min-w-0 shrink-0 truncate max-w-[60%]">{title}</span>
           <PinnedSlot
             keys={beside}
             {...slots}
             iconSize={20}
-            className="hidden max-w-[55%] min-w-0 overflow-hidden text-ui text-text-muted sm:flex"
+            className="flex max-w-[55%] min-w-0 overflow-hidden text-ui text-text-muted"
           />
         </div>
         <PinnedSlot

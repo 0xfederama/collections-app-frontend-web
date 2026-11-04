@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { PageHeaderSlot } from '../../components/PageHeaderSlot'
 import { Button, EmptyState, Skeleton, useToast } from '../../components/ui'
 import { Trash2 } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
@@ -156,13 +157,12 @@ export function TrashPage() {
   return (
     <section className={cx('flex flex-col gap-4', narrow && 'max-w-5xl')}>
       <div>
-        <h1
-          ref={headingRef}
-          tabIndex={-1}
-          className="font-display text-display outline-none max-md:pl-12"
-        >
-          Trash
-        </h1>
+        <div className="flex items-center gap-3">
+          <PageHeaderSlot />
+          <h1 ref={headingRef} tabIndex={-1} className="font-display text-display outline-none">
+            Trash
+          </h1>
+        </div>
         <p className="mt-1 text-ui text-text-muted">
           Deleted things wait here until you restore them or delete them permanently.
         </p>

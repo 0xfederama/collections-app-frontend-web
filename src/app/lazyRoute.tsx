@@ -1,4 +1,5 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from 'react'
+import { PageHeaderSlot } from '../components/PageHeaderSlot'
 import { Skeleton } from '../components/ui'
 
 /** Placeholder while a route's code loads; the shell around it stays on screen. */
@@ -6,7 +7,10 @@ function RouteSkeleton() {
   return (
     <div role="status" className="flex flex-col gap-3">
       <span className="sr-only">Loading</span>
-      <Skeleton className="h-8 w-1/3" />
+      <div className="flex items-center gap-3">
+        <PageHeaderSlot />
+        <Skeleton className="h-8 w-1/3" />
+      </div>
       <Skeleton className="h-24" />
       <Skeleton className="h-24" />
     </div>
