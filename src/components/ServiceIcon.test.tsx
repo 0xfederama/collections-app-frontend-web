@@ -50,7 +50,7 @@ describe('F002-T5 ServiceIcon', () => {
       tile.className.replace(/\bbg-(fill|tile-light)\b/, '').trim()
     expect(new Set(tiles.map(shape)).size).toBe(1)
     for (const tile of tiles) {
-      expect(tile).toHaveStyle({ width: '44px', height: '44px' })
+      expect(tile).toHaveStyle({ width: '32px', height: '32px' })
       expect(tile).toHaveClass('rounded-sm', 'border-border')
       expect(tile).not.toHaveTextContent(/\w/)
     }
@@ -75,8 +75,8 @@ describe('F009-W5 one tile for every icon', () => {
     )
     const link = tile('Google')
     const streaming = tile('Netflix')
-    expect(link).toHaveStyle({ width: '44px', height: '44px' })
-    expect(streaming).toHaveStyle({ width: '44px', height: '44px' })
+    expect(link).toHaveStyle({ width: '32px', height: '32px' })
+    expect(streaming).toHaveStyle({ width: '32px', height: '32px' })
     // Same classes, so the same square shape, radius, border and background (both inset marks are white).
     expect(streaming.className).toBe(link.className)
     for (const one of [link, streaming]) {
