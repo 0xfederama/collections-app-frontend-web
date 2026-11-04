@@ -52,6 +52,7 @@ export {
   Laptop,
   LayoutGrid,
   List,
+  ListFilter,
   ListPlus,
   LoaderCircle,
   Map,

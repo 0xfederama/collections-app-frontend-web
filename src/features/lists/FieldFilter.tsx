@@ -1,6 +1,7 @@
 import * as Popover from '@radix-ui/react-popover'
 import { Button, Select, TextField, type SelectOption } from '../../components/ui'
-import { Plus, X } from '../../components/ui/icons'
+import { ListFilter, X } from '../../components/ui/icons'
+import { cx } from '../../lib/cx'
 import type { TypeField } from '../items'
 import { toolbarControl } from './toolbarStyles'
 
@@ -175,9 +176,10 @@ export function FieldFilterMenu(props: FieldFilterProps) {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <button type="button" className={toolbarControl}>
-          <Plus aria-hidden className="size-4" />
-          Filter
+        {/* On phones only the icon shows; the name stays "Filter" for assistive tech (F-025 W2). */}
+        <button type="button" className={cx(toolbarControl, 'shrink-0 max-md:w-9 max-md:px-0')}>
+          <ListFilter aria-hidden className="size-4" />
+          <span className="max-md:sr-only">Filter</span>
         </button>
       </Popover.Trigger>
       <Popover.Portal>

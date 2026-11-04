@@ -1251,3 +1251,24 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
   })
 })
+
+describe('F-025 W2 one-row toolbar on phones', () => {
+  it('at 375px every control is on the toolbar and the icon-only ones keep their names', async () => {
+    mockViewport(375)
+    useBackend()
+    renderList(at())
+    await itemsList()
+    expect(
+      screen.getByRole('searchbox', { name: 'Search items by title or director' }),
+    ).toBeInTheDocument()
+    const filter = screen.getByRole('button', { name: 'Filter' })
+    // The text is visually hidden below md; the name comes from it.
+    expect(filter.querySelector('span')).toHaveClass('max-md:sr-only')
+    expect(sortSelect()).toBeInTheDocument()
+    const mode = screen.getByRole('radiogroup', { name: 'Display mode' })
+    expect(within(mode).getByRole('radio', { name: radioName.compact })).toBeInTheDocument()
+    expect(within(mode).getByRole('radio', { name: radioName.thumbnail })).toBeInTheDocument()
+    expect(within(mode).getByRole('radio', { name: radioName.grid })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'New item' }).length).toBeGreaterThan(0)
+  })
+})
