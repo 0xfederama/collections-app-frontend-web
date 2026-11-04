@@ -19,49 +19,30 @@ import { cx } from '../lib/cx'
 export interface SidebarProps {
   /** Collapsed icon rail: only the top-level entries, as icons. */
   rail?: boolean
-  /** The drawer shows the workspace name as its own title. */
-  showHeader?: boolean
-  /** Collapse / expand toggle (top right of the header). Absent in the drawer. */
+  /** Collapse / expand toggle (top right of the header). */
   onToggleRail?: () => void
   /** Ref of the search input (the `/` shortcut focuses it). */
   searchRef?: Ref<HTMLInputElement>
   /** Rail only: the search icon expands the sidebar and focuses the field. */
   onSearch?: () => void
-  /** Called before Quick add opens (the drawer closes itself). */
-  onQuickAdd?: () => void
 }
 
 /**
  * Sidebar content (landmark `nav`): workspace name, search, Quick add, the tree, then Trash and
  * Settings. Collapsed, it is a rail with the top-level entries only.
  */
-export function Sidebar({
-  rail = false,
-  showHeader = true,
-  onToggleRail,
-  searchRef,
-  onSearch,
-  onQuickAdd,
-}: SidebarProps) {
+export function Sidebar({ rail = false, onToggleRail, searchRef, onSearch }: SidebarProps) {
   const workspaceName = useWorkspaceName()
   const quickAdd = useQuickAdd()
-  const openQuickAdd = () => {
-    onQuickAdd?.()
-    quickAdd.open()
-  }
+  const openQuickAdd = () => quickAdd.open()
 
   return (
     <nav
       aria-label="Library"
-      className={cx(
-        'flex min-h-0 flex-1 flex-col gap-3',
-        rail ? 'items-center p-2' : 'p-3 pt-4',
-        // The mobile drawer supplies the side inset itself (F-025 W4), so the rows meet its edges.
-        !showHeader && 'px-0',
-      )}
+      className={cx('flex min-h-0 flex-1 flex-col gap-3', rail ? 'items-center p-2' : 'p-3 pt-4')}
     >
       {/* Same element in both modes, so the toggle keeps keyboard focus when it flips. */}
-      {(showHeader || onToggleRail) && (
+      {onToggleRail && (
         <div
           className={cx(
             'flex items-center gap-2',
@@ -69,7 +50,7 @@ export function Sidebar({
             !rail && 'w-full',
           )}
         >
-          {showHeader && !rail && (
+          {!rail && (
             <Link
               to="/"
               className="flex min-w-0 items-center truncate font-display text-[1.1875rem] font-bold tracking-[-0.02em]"

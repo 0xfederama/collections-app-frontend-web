@@ -35,11 +35,11 @@ function renderRouter(path: string) {
 }
 
 describe('AT-14 landmarks per breakpoint', () => {
-  it('mobile (375): no top bar, a menu button and main; the navigation lives in the drawer', async () => {
+  it('mobile (375): no top bar, no menu button, no sidebar; main only', async () => {
     mockViewport(375)
     renderAt('/')
     expect(screen.queryByRole('banner')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(nav()).not.toBeInTheDocument()
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
@@ -116,13 +116,13 @@ describe('AT-14 landmarks per breakpoint', () => {
     expect(await screen.findByRole('complementary', { name: 'Item details' })).toBeInTheDocument()
   })
 
-  it('drops the sidebar for the drawer button when the viewport shrinks below 768', async () => {
+  it('drops the sidebar when the viewport shrinks below 768 (Home holds the lists)', async () => {
     mockViewport(1100)
     renderAt('/')
     expect(nav()).toBeInTheDocument()
     mockViewport(700)
-    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
     expect(nav()).not.toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Settings' })).toBeInTheDocument()
   })
 })
 
@@ -145,79 +145,6 @@ describe('AT-14 scroll containment', () => {
     const main = screen.getByRole('main')
     expect(main).toHaveClass('min-h-0', 'overflow-y-auto')
     expect(main.parentElement).toHaveClass('min-h-0', 'overflow-hidden')
-  })
-})
-
-describe('AT-14 mobile drawer', () => {
-  it('opens from "Open menu" with the tree, and the menu button is labelled', async () => {
-    mockViewport(375)
-    const user = userEvent.setup()
-    renderAt('/')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-
-    const dialog = await screen.findByRole('dialog')
-    expect(within(dialog).getByRole('navigation', { name: 'Library' })).toBeInTheDocument()
-    expect(await within(dialog).findByRole('treeitem', { name: /Media/ })).toBeInTheDocument()
-    expect(within(dialog).getByRole('combobox', { name: 'Search' })).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Quick add' })).toBeInTheDocument()
-    expect(within(dialog).queryByRole('button', { name: /sidebar$/ })).not.toBeInTheDocument()
-    expect(within(dialog).getByRole('link', { name: 'Trash' })).toHaveAttribute('href', '/trash')
-    expect(within(dialog).getByRole('link', { name: 'Settings' })).toHaveAttribute(
-      'href',
-      '/settings',
-    )
-  })
-
-  it('closes with the Close button and with Escape', async () => {
-    mockViewport(375)
-    const user = userEvent.setup()
-    renderAt('/')
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    await user.click(await screen.findByRole('button', { name: 'Close' }))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    await screen.findByRole('dialog')
-    await user.keyboard('{Escape}')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
-
-  it('closes after a list is chosen and shows that list', async () => {
-    mockViewport(375)
-    localStorage.setItem('collection:tree-expanded', JSON.stringify([MEDIA, MOVIES]))
-    const user = userEvent.setup()
-    renderAt('/')
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    const dialog = await screen.findByRole('dialog')
-    await user.click(await within(dialog).findByRole('link', { name: /Watchlist/ }))
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(
-      await within(screen.getByRole('main')).findByRole('heading', { name: 'Watchlist' }),
-    ).toBeInTheDocument()
-  })
-
-  it('closes after navigating to Settings', async () => {
-    mockViewport(375)
-    const user = userEvent.setup()
-    renderAt('/')
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    const dialog = await screen.findByRole('dialog')
-    await user.click(within(dialog).getByRole('link', { name: 'Settings' }))
-    // The drawer is gone; the dialog left is the Settings pane.
-    expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
-  })
-
-  it('stays closed after navigating and can be opened again', async () => {
-    mockViewport(375)
-    const user = userEvent.setup()
-    renderAt('/')
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    await user.click(within(await screen.findByRole('dialog')).getByRole('link', { name: 'Trash' }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    expect(await screen.findByRole('dialog')).toBeInTheDocument()
   })
 })
 
@@ -486,14 +413,6 @@ describe('W-04 workspace name', () => {
     renderAt('/')
     expect(within(nav()!).getByRole('link', { name: 'Collection' })).toBeInTheDocument()
   })
-
-  it('shows the name as the drawer title', async () => {
-    mockViewport(375)
-    const user = userEvent.setup()
-    renderAt('/')
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    expect(await screen.findByRole('dialog', { name: 'Our Collection' })).toBeInTheDocument()
-  })
 })
 
 describe('W-04 shell footer links', () => {
@@ -522,81 +441,92 @@ describe('W-04 shell footer links', () => {
   })
 })
 
-describe('F-025 W10 menu button in the page header', () => {
-  it('a list shows the menu button as the first control of its title row, nothing floats', async () => {
+describe('F-025 W14 Home is the root page on phones', () => {
+  it('at 375 Home shows the workspace name, recent items, the tree and Settings/Trash rows, no menu', async () => {
+    mockViewport(375)
+    renderAt('/')
+    const main = screen.getByRole('main')
+    expect(
+      await within(main).findByRole('heading', { level: 1, name: 'Our Collection' }),
+    ).toBeInTheDocument()
+    expect(within(main).getByRole('link', { name: 'Search' })).toHaveAttribute('href', '/search')
+    expect(within(main).getByRole('button', { name: 'Quick add' })).toBeInTheDocument()
+    expect(
+      await within(main).findByRole('heading', { name: 'Recently updated' }),
+    ).toBeInTheDocument()
+    expect(await within(main).findByRole('tree', { name: 'Folders and lists' })).toBeInTheDocument()
+    const rows = within(main).getByRole('navigation', { name: 'Settings and Trash' })
+    expect(within(rows).getByRole('link', { name: 'Settings' })).toHaveAttribute(
+      'href',
+      '/settings',
+    )
+    expect(within(rows).getByRole('link', { name: 'Trash' })).toHaveAttribute('href', '/trash')
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('Settings opens as the pane over Home', async () => {
+    mockViewport(375)
+    const user = userEvent.setup()
+    renderAt('/')
+    await user.click(await screen.findByRole('link', { name: 'Settings' }))
+    expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+  })
+
+  it('[CRUCIAL] a list shows "Back to Home" as the first control of its title row', async () => {
     mockViewport(375)
     renderAt(`/lists/${WATCHLIST}`)
     const heading = await screen.findByRole('heading', { level: 1 })
-    const menu = screen.getByRole('button', { name: 'Open menu' })
-    expect(heading.parentElement).toContainElement(menu)
-    expect(menu.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(screen.getByRole('main')).toContainElement(menu)
-    expect(heading.parentElement?.className).not.toContain('pl-12')
-  })
-
-  it('Home has the menu button left of its title', async () => {
-    mockViewport(375)
-    renderAt('/')
-    const heading = await screen.findByRole('heading', { level: 1, name: 'Home' })
-    expect(heading.parentElement).toContainElement(
-      screen.getByRole('button', { name: 'Open menu' }),
-    )
-    expect(heading).not.toHaveClass('max-md:pl-12')
-  })
-
-  it('the item page shows the back control in the slot and no menu button', async () => {
-    mockViewport(375)
-    renderAt(ITEM_PATH)
-    await screen.findByRole('heading', { level: 1 })
-    expect(screen.getByRole('link', { name: /^Back to / })).toHaveAttribute(
-      'href',
-      expect.stringContaining(`/lists/${WATCHLIST}`),
-    )
+    const back = screen.getByRole('link', { name: 'Back to Home' })
+    expect(back).toHaveAttribute('href', '/')
+    expect(back).toHaveTextContent('Home')
+    expect(heading.parentElement).toContainElement(back)
+    expect(back.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
   })
 
-  it('the loading state of a list already has the menu slot', () => {
+  it('[CRUCIAL] tapping a list pushes it, and "Back to Home" returns to Home', async () => {
+    mockViewport(375)
+    localStorage.setItem('collection:tree-expanded', JSON.stringify([MEDIA, MOVIES]))
+    const user = userEvent.setup()
+    const router = renderRouter('/')
+    const tree = await screen.findByRole('tree', { name: 'Folders and lists' })
+    await user.click(await within(tree).findByRole('link', { name: /Watchlist/ }))
+    expect(router.state.location.pathname).toBe(`/lists/${WATCHLIST}`)
+    await user.click(await screen.findByRole('link', { name: 'Back to Home' }))
+    expect(router.state.location.pathname).toBe('/')
+  })
+
+  it('the loading state of a list already has "Back to Home"', () => {
     mockViewport(375)
     renderAt(`/lists/${WATCHLIST}`)
     expect(screen.getByRole('status')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to Home' })).toBeInTheDocument()
   })
 
-  it('there is no slot from 768 px up', async () => {
-    mockViewport(768)
+  it('the item page keeps its back-to-list control and has no "Back to Home"', async () => {
+    mockViewport(375)
+    renderAt(ITEM_PATH)
+    await screen.findByRole('heading', { level: 1 })
+    expect(screen.getByRole('link', { name: /^Back to (?!Home)/ })).toHaveAttribute(
+      'href',
+      expect.stringContaining(`/lists/${WATCHLIST}`),
+    )
+    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
+  })
+
+  it('Search and Trash show "Back to Home"', async () => {
+    mockViewport(375)
+    renderAt('/search')
+    expect(await screen.findByRole('link', { name: 'Back to Home' })).toBeInTheDocument()
+  })
+
+  it('at 1024 the sidebar is unchanged: no slot, Home keeps its heading and the sidebar tree', async () => {
+    mockViewport(1024)
     renderAt('/')
     await screen.findByRole('heading', { level: 1, name: 'Home' })
-    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
-  })
-
-  it('[CRUCIAL] focus returns to the slot menu button when the drawer closes with Escape', async () => {
-    mockViewport(375)
-    const user = userEvent.setup()
-    renderAt('/')
-    const menu = await screen.findByRole('button', { name: 'Open menu' })
-    await user.click(menu)
-    await screen.findByRole('dialog')
-    await user.keyboard('{Escape}')
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(menu).toHaveFocus()
-  })
-})
-
-describe('F-025 W4 mobile drawer padding', () => {
-  it('the drawer meets the sidebar rows at its edges', async () => {
-    mockViewport(375)
-    const user = userEvent.setup()
-    renderAt('/')
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    const dialog = await screen.findByRole('dialog')
-    expect(dialog).toHaveClass('px-3')
-    expect(within(dialog).getByRole('navigation', { name: 'Library' })).toHaveClass('px-0')
-  })
-
-  it('the desktop sidebar keeps its own padding', async () => {
-    mockViewport(1280)
-    renderAt('/')
-    expect(await screen.findByRole('navigation', { name: 'Library' })).toHaveClass('p-3')
-    expect(nav()).not.toHaveClass('px-0')
+    expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
+    expect(within(nav()!).getByRole('link', { name: 'Settings' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Settings and Trash' })).not.toBeInTheDocument()
   })
 })

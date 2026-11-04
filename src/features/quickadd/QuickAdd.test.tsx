@@ -176,3 +176,74 @@ describe('F016-W2 quick add on a book list', () => {
     expect(suggestions).toEqual([])
   })
 })
+
+describe('F-025 W13 quick add on phones', () => {
+  function useCreate() {
+    server.use(
+      http.post(`${origin}/api/v1/lists/${LIST}/items`, async ({ request }) => {
+        const body = (await request.json()) as { title: string }
+        const created = { ...matrix, id: NEW_ID, title: body.title, metadata: {}, version: 1 }
+        server.use(http.get(`${origin}/api/v1/items/${NEW_ID}`, () => HttpResponse.json(created)))
+        return HttpResponse.json(created, { status: 201 })
+      }),
+    )
+  }
+
+  it('on a phone the list stays on screen and the toast opens the new item', async () => {
+    mockViewport(375)
+    useCreate()
+    const user = userEvent.setup()
+    const router = createTestRouter([`/lists/${LIST}`])
+    renderWithProviders(<RouterProvider router={router} />)
+
+    await user.keyboard('n')
+    const dialog = await screen.findByRole('dialog', { name: 'Quick add' })
+    await user.type(within(dialog).getByLabelText(/^Title/), 'Field notebook{Enter}')
+
+    expect(await screen.findByText('Added “Field notebook”')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Quick add' })).toBeNull())
+    expect(router.state.location.pathname).toBe(`/lists/${LIST}`)
+    await user.click(screen.getByRole('button', { name: 'Open' }))
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+  })
+
+  it('on a phone adding from Home stays on Home', async () => {
+    mockViewport(375)
+    useCreate()
+    const user = userEvent.setup()
+    const router = createTestRouter(['/'])
+    renderWithProviders(<RouterProvider router={router} />)
+
+    await user.keyboard('n')
+    const dialog = await screen.findByRole('dialog', { name: 'Quick add' })
+    // Opened from Home there is no current list: the first one is chosen once the tree has loaded.
+    await waitFor(() =>
+      expect(within(dialog).queryByText('Loading lists…')).not.toBeInTheDocument(),
+    )
+    await user.type(within(dialog).getByLabelText(/^Title/), 'Field notebook{Enter}')
+
+    // The default list is a movie list: Enter takes the first TMDB suggestion, so the title is the fixture's.
+    expect(await screen.findByText(/^Added “/)).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Quick add' })).toBeNull())
+    expect(router.state.location.pathname).toBe('/')
+  })
+
+  it('at tablet width the item opens directly, with no toast action', async () => {
+    mockViewport(1024)
+    useCreate()
+    const user = userEvent.setup()
+    const router = createTestRouter([`/lists/${LIST}`])
+    renderWithProviders(<RouterProvider router={router} />)
+
+    await user.keyboard('n')
+    const dialog = await screen.findByRole('dialog', { name: 'Quick add' })
+    await user.type(within(dialog).getByLabelText(/^Title/), 'Field notebook{Enter}')
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+    expect(screen.queryByRole('button', { name: 'Open' })).not.toBeInTheDocument()
+  })
+})

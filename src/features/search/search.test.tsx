@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from '../../components/ui'
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { RouterProvider } from 'react-router/dom'
@@ -96,15 +96,12 @@ describe('W-04 "/" focuses the search field', () => {
     await waitFor(() => expect(field()).toHaveFocus())
   })
 
-  it('on mobile "/" opens the drawer and focuses the field in it', async () => {
+  it('on mobile "/" goes to the search page (there is no sidebar field)', async () => {
     mockViewport(375)
     const user = userEvent.setup()
-    renderRouter()
+    const router = renderRouter()
     await user.keyboard('/')
-    await waitFor(() => expect(field()).toHaveFocus())
-    expect(within(screen.getByRole('dialog')).getByRole('combobox', { name: 'Search' })).toBe(
-      field(),
-    )
+    await waitFor(() => expect(router.state.location.pathname).toBe('/search'))
   })
 })
 

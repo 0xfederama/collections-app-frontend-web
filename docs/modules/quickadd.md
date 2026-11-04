@@ -9,7 +9,7 @@ Quick add (F-002): one dialog to create an item from anywhere: a title, destinat
 - `index.ts`: public face (`useQuickAdd`, `QuickAddProvider`).
 - `QuickAddProvider.tsx`: mounted once in `AppShell`; owns the dialog, the `N` shortcut and `open()`.
 - `QuickAddContext.tsx`: `QuickAddContext`, `useQuickAdd()`.
-- `QuickAddDialog.tsx`: the form, title suggestions, validation, create-then-attach submit and navigation to the new item.
+- `QuickAddDialog.tsx`: the form, title suggestions, validation, create-then-attach submit and navigation to the new item (not on phones).
 - `model.ts`: pure form model (`QuickAddInput`, error `Field`); `ListPicker.tsx` ("In [list]", `useListChoices`); `OptionalFields.tsx` (website, description, image); `QuickAddFooter.tsx` (lookup status, errors, buttons).
 - `QuickAdd.test.tsx`: shortcut and submit tests.
 
@@ -24,6 +24,7 @@ Quick add (F-002): one dialog to create an item from anywhere: a title, destinat
 - `N` opens it unless focus is in a field, a modifier is held, a key repeats, or another dialog is open.
 - Destination default: the `listId` passed to `open()`, else the open list, else the most recently updated list.
 - Enter in a text field or Ctrl/Cmd+Enter adds; Esc cancels.
+- Phones (< 768 px): the user stays on the current page after a create; the toast's "Open" action opens the item.
 - The item is created first. The description and the image are separate requests after it; if one fails, the item still opens and a toast names what failed.
 - Create errors: 422 maps to the title or website field; 409 means the list is gone or in Trash; network or 5xx says nothing was created.
 - Client checks (image type and size, length limits) run before the request.

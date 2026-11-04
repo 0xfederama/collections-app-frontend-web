@@ -1,11 +1,10 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef } from 'react'
 import { Outlet, useLocation, useMatch, useNavigate, useRoutes, type Location } from 'react-router'
-import { MobileMenuProvider } from '../components/PageHeaderSlot'
-import { Drawer, IconButton } from '../components/ui'
+import { useRecordHistory } from '../components/PageHeaderSlot'
+import { IconButton } from '../components/ui'
 import { X } from '../components/ui/icons'
 import { QuickAddProvider } from '../features/quickadd'
 import { useSearchShortcut } from '../features/search'
-import { useWorkspaceName } from '../features/settings'
 import { contentRoutes } from '../app/contentRoutes'
 import { useBreakpoint } from '../lib/breakpoints'
 import { ItemRoute } from '../routes/ItemRoute'
@@ -17,8 +16,8 @@ const SIDEBAR_ID = 'app-sidebar'
 const RAIL_WIDTH = 64
 
 /**
- * Responsive frame (UI_SPEC §2): no top bar. Drawer below 768 px (opened from the menu button in each page's header row);
- * from 768 a sidebar that collapses to an icon rail at any width, resizable from 1024 while expanded,
+ * Responsive frame (UI_SPEC §2): no top bar. Below 768 px there is no sidebar or drawer: Home is the
+ * root page and holds the lists, Settings and Trash (F-025 W14); from 768 a sidebar that collapses to an icon rail at any width, resizable from 1024 while expanded,
  * and a detail panel from 1280. Routes render in `main`; the item route
  * renders in `main` (full page) below 1280 and in the panel beside the list at ≥ 1280.
  */
@@ -34,13 +33,10 @@ function ShellFrame() {
   const breakpoint = useBreakpoint()
   const sidebar = useSidebarState()
   const location = useLocation()
-  const workspaceName = useWorkspaceName()
+  const navigate = useNavigate()
+  useRecordHistory()
 
-  // The drawer is open for the location it was opened at, so any navigation closes it.
-  const [drawerAt, setDrawerAt] = useState<string | null>(null)
-  const drawerOpen = drawerAt === location.key
-
-  // The search field only exists while the sidebar is expanded (or the drawer is open). When it is
+  // The search field only exists while the sidebar is expanded. When it is
   // not there, `/` and the rail's search icon open it, and the ref callback focuses it once it mounts.
   const searchEl = useRef<HTMLInputElement | null>(null)
   const focusWhenMounted = useRef(false)
@@ -53,13 +49,12 @@ function ShellFrame() {
   }, [])
   const { setCollapsed } = sidebar
   const mobile = breakpoint === 'mobile'
-  const locationKey = location.key
   const revealSearch = useCallback(() => {
+    if (mobile) return void navigate('/search')
     if (searchEl.current) return searchEl.current.focus()
     focusWhenMounted.current = true
-    if (mobile) setDrawerAt(locationKey)
-    else setCollapsed(false)
-  }, [mobile, locationKey, setCollapsed])
+    setCollapsed(false)
+  }, [mobile, navigate, setCollapsed])
   useSearchShortcut(revealSearch)
 
   const itemMatch = useMatch('/lists/:listId/items/:itemId')
@@ -83,25 +78,11 @@ function ShellFrame() {
   if (mobile) {
     return (
       <div className="relative flex h-dvh flex-col pl-[env(safe-area-inset-left)] text-text">
-        {/* [CRUCIAL] No trigger: the menu button lives in each page's header row (`PageHeaderSlot`).
-            `Drawer` remembers the focused element when it opens and returns focus there on close
-            (Esc included), which is that button. */}
-        <Drawer
-          side="left"
-          open={drawerOpen}
-          onOpenChange={(open) => setDrawerAt(open ? location.key : null)}
-          title={workspaceName}
-          className="px-3"
-        >
-          <Sidebar showHeader={false} searchRef={searchRef} onQuickAdd={() => setDrawerAt(null)} />
-        </Drawer>
-        {/* Nothing floats over the content: each page's own header row starts with the menu button
-            (top-level pages) or the back control (item page), F-025 W10. */}
-        <MobileMenuProvider value={() => setDrawerAt(location.key)}>
-          <main className="relative min-h-0 flex-1 overflow-y-auto p-4 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
-            {content}
-          </main>
-        </MobileMenuProvider>
+        {/* Nothing floats over the content: each page's own header row starts with "‹ Home" (or the
+            item page's back control), F-025 W14. */}
+        <main className="relative min-h-0 flex-1 overflow-y-auto p-4 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+          {content}
+        </main>
       </div>
     )
   }

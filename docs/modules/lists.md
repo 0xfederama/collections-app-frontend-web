@@ -9,6 +9,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `src/features/lists/ListView.tsx`: list screen and URL state (`?q=`, `?sort=`, `filter_*`).
 - `ListTitle.tsx`: the list title, renamed in place by clicking it.
 - `FieldFilter.tsx`: per-field filter control, `parseFieldFilter` for URL params, `FieldFilterMenu` (the "+ Filter" popover) and `FieldFilterChip` (the applied filter, removable, under the bar).
+- `DisplayModeControl.tsx`: display-mode radios drawn as toolbar icon buttons, first in the toolbar row.
 - `ListIconPicker.tsx`, `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices and parsing.
 - `ListIconMark.tsx`: shared list mark renderer.
 - `index.ts`: public face; `screens.ts` holds `ListView` for the route only.
@@ -16,7 +17,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `src/lib/useLongPress.ts`: touch and pen long press on a row (opens its menu).
 - `listParams.ts`: URL parsing (`parseSort`, `buildItemsParams`); `useDebouncedFilter.ts`: debounced `?q=`.
 - `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
-- `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation. `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "Sort" and "+ Filter" buttons (one 36 px square, 44 px on touch). The bar is search, Filter, Sort, display mode, one row at every width. Phones show a Search icon button that swaps the row for the field (`ListHeader.tsx`, Close search or Esc returns).
+- `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation. `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "Sort" and "+ Filter" buttons (one 36 px square, 44 px on touch). The bar is display mode, search, Filter, Sort, one row at every width. Phones show a Search icon button that swaps the row for the field (`ListHeader.tsx`, Close search or Esc returns).
 - `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
 ## Interfaces
@@ -26,6 +27,7 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
 - `entryMenu(title, state, reorder?)` (`ItemControls.tsx`), `useLongPress({ onLongPress })`: row menu and long press.
 - `FieldFilter({ fields, value, onChange })`, `parseFieldFilter(params, fields)`.
+- `DisplayModeControl({ value, onChange })`: compact, thumbnail and grid radios.
 - `useList`, `useListItems`, `useUpdateList`, `useReorderItems` (`api.ts`); `listKeys` from `src/data/keys.ts`.
 - `fixedPinned(definition)`, `pinnedPlacements`, `pinnedPieces`, `isLowPriorityPin`, `formatPinnedValue`, `formatPrice`; `sortOptionsFor` (in `ListHeader.tsx`): display helpers.
 - `SortMenu({ options, value, onValueChange })`: icon button that opens radio items; the active sort is checked.

@@ -10,11 +10,11 @@ describe('AppShell', () => {
     expect(screen.queryByRole('banner')).not.toBeInTheDocument()
   })
 
-  it('renders main and the menu button, with no top bar, on mobile', async () => {
+  it('renders main and Home (no menu button, no top bar) on mobile', async () => {
     mockViewport(375)
     renderAt('/')
     expect(screen.queryByRole('banner')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
   })
 })
@@ -35,12 +35,12 @@ describe('Unknown route', () => {
     expect(screen.getByRole('navigation', { name: 'Library' })).toBeInTheDocument()
   })
 
-  it('renders "Page not found" inside the mobile shell (menu button and main)', async () => {
+  it('renders "Page not found" inside the mobile shell (Back to Home and main)', async () => {
     mockViewport(375)
     renderAt('/does/not/exist')
     expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to Home' })).toHaveAttribute('href', '/')
   })
 })
 
