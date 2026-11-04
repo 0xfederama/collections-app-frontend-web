@@ -91,7 +91,7 @@ describe('W-04 sidebar tree states', () => {
     renderAt('/')
     await within(sidebar()).findByRole('tree')
     const button = within(sidebar()).getByRole('button', { name: 'New' })
-    expect(button).toHaveClass('px-2', 'gap-2')
+    expect(button).toHaveClass('px-2!', 'gap-2')
     expect(button.firstElementChild).toHaveClass('size-[22px]')
   })
 })

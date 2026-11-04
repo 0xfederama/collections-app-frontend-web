@@ -14,7 +14,7 @@ export function TreeNewButton(): ReactNode {
       trigger={
         <Button
           variant="ghost"
-          className="w-full justify-start gap-2 px-2 text-text-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring focus-visible:bg-fill-hover"
+          className="w-full justify-start gap-2 px-2! text-text-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring focus-visible:bg-fill-hover"
         >
           {/* Same 8 px inset, 22 px icon box and 8 px gap as a top-level list row (SidebarTree). */}
           <span aria-hidden className="grid size-[22px] shrink-0 place-items-center">
