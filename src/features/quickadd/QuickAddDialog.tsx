@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { Dialog, useToast } from '../../components/ui'
+import { useBreakpoint } from '../../lib/breakpoints'
 import {
   useCreateItem,
   TitleLookupField,
@@ -27,6 +28,7 @@ import { describeCreateFailure, resolveListId, validateQuickAdd, type Field } fr
  * Quick add (F-002): a title, a destination list and, optionally, a website, a Markdown description
  * and an image. Enter adds, Esc cancels. The item is created first; the description and the image
  * are separate requests after it, so if one fails the item still opens and a toast says what.
+ * On phones (F-025 W13) the list stays on screen and the toast's "Open" action opens the item.
  */
 export function QuickAddDialog({
   initialListId,
@@ -38,6 +40,8 @@ export function QuickAddDialog({
   const { lists, loading } = useListChoices()
   const settings = useSettings()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const phone = useBreakpoint() === 'mobile'
   const toast = useToast()
   const queryClient = useQueryClient()
   const [pickedList, setPickedList] = useState<string>()
@@ -134,17 +138,24 @@ export function QuickAddDialog({
       }
     }
     void invalidateContent(queryClient)
+    const itemPath = `/lists/${listId}/items/${created.id}`
+    // Phones (F-025 W13): the toast opens the item; the list is where the user ends up.
+    const opened = phone
+      ? { action: { label: 'Open', onAction: () => void navigate(itemPath) } }
+      : {}
     if (failed.length) {
       toast({
         kind: 'error',
         title: `“${created.title}” was added, but ${failed.join(' and ')} could not be saved`,
         description: 'Open the item and edit it to add them again.',
+        ...opened,
       })
     } else {
-      toast({ kind: 'success', title: `Added “${created.title}”` })
+      toast({ kind: 'success', title: `Added “${created.title}”`, ...opened })
     }
     onClose()
-    void navigate(`/lists/${listId}/items/${created.id}`)
+    if (!phone) void navigate(itemPath)
+    else if (pathname !== `/lists/${listId}`) void navigate(`/lists/${listId}`)
   }
 
   const onTextAreaKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {

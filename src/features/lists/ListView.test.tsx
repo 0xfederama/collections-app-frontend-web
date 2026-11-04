@@ -12,6 +12,7 @@ import type { ItemSummary } from './api'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { createTestQueryClient, mockViewport } from '../../test-utils'
+import { toolbarIconControl } from './toolbarStyles'
 
 type List = components['schemas']['List']
 
@@ -1258,6 +1259,44 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await user.keyboard('{Escape}')
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
   })
+
+  it('F-025 W13 on a phone the commit goes back to the list (search kept) and the toast opens the item', async () => {
+    mockViewport(375)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at('?q=Item'))
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const title = await screen.findByRole('combobox', { name: 'Title' })
+    await user.type(title, 'Field notebook{Enter}')
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
+    expect(router.state.location.search).toBe('?q=Item')
+    expect(posts).toHaveLength(1)
+    expect(await screen.findByText('Added “Field notebook”')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Open' }))
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+  })
+
+  it('F-025 W13 at tablet width and up the commit opens the new item, with no toast', async () => {
+    mockViewport(1024)
+    useBackend()
+    useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const title = await screen.findByRole('combobox', { name: 'Title' })
+    await user.type(title, 'Field notebook{Enter}')
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
+    )
+    expect(screen.queryByRole('button', { name: 'Open' })).not.toBeInTheDocument()
+  })
 })
 
 describe('F-025 W2 one-row toolbar on phones', () => {
@@ -1280,6 +1319,35 @@ describe('F-025 W2 one-row toolbar on phones', () => {
     expect(within(mode).getByRole('radio', { name: radioName.grid })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'New item' }).length).toBeGreaterThan(0)
   })
+})
+
+describe('F-025 W12 view switcher', () => {
+  it.each([375, 1100])(
+    'leads the toolbar row and each segment is the toolbar icon size at %ipx',
+    async (width) => {
+      mockViewport(width)
+      useBackend()
+      renderList(at())
+      await itemsList()
+      const mode = screen.getByRole('radiogroup', { name: 'Display mode' })
+      // First child of the toolbar row, so it sits before search, filter and sort.
+      expect(mode.parentElement!.firstElementChild).toBe(mode)
+      const radios = within(mode).getAllByRole('radio')
+      expect(radios.map((radio) => (radio as HTMLInputElement).value)).toEqual([
+        'compact',
+        'thumbnail',
+        'grid',
+      ])
+      // Same square as Filter and Sort: 36 px, 44 px on touch, same radius, border, hover and focus.
+      for (const radio of radios) {
+        expect(radio.parentElement!.className).toContain(toolbarIconControl)
+      }
+      expect(screen.getByRole('button', { name: 'Filter' }).className).toBe(toolbarIconControl)
+      // The selected segment is not colour-only: it also gets a thicker border.
+      const checked = radios.find((radio) => (radio as HTMLInputElement).checked)!
+      expect(checked.parentElement!.className).toContain('has-[:checked]:border-2')
+    },
+  )
 })
 
 describe('F-025 W11 phone search', () => {

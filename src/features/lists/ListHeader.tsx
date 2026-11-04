@@ -1,27 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { PageHeaderSlot } from '../../components/PageHeaderSlot'
-import {
-  Button,
-  SegmentedControl,
-  Skeleton,
-  TextField,
-  type SelectOption,
-  type SegmentedOption,
-} from '../../components/ui'
-import {
-  LayoutGrid,
-  List as ListIcon,
-  Pencil,
-  Plus,
-  Rows3,
-  Search,
-  X,
-} from '../../components/ui/icons'
+import { Button, Skeleton, TextField, type SelectOption } from '../../components/ui'
+import { Pencil, Plus, Search, X } from '../../components/ui/icons'
 import { useBreakpoint } from '../../lib/breakpoints'
 import { type List as TreeList, ListActionsMenu, ListIconDialog } from '../tree'
 import { hasPrice, typeName, type TypeDefinition } from '../items'
 import type { DisplayMode, List, SortMode } from './api'
 import { ListDescription } from './ListDescription'
+import { DisplayModeControl } from './DisplayModeControl'
 import { ListIconMark } from './ListIconMark'
 import { ListTitle } from './ListTitle'
 import { SortMenu } from './SortMenu'
@@ -32,12 +18,6 @@ import {
   describeFieldFilter,
   type FieldFilterValue,
 } from './FieldFilter'
-
-const modeOptions: SegmentedOption[] = [
-  { value: 'compact', label: 'Compact rows', icon: <ListIcon />, iconOnly: true },
-  { value: 'thumbnail', label: 'Thumbnail rows', icon: <Rows3 />, iconOnly: true },
-  { value: 'grid', label: 'Grid', icon: <LayoutGrid />, iconOnly: true },
-]
 
 const baseSortOptions: SelectOption[] = [
   { value: 'manual', label: 'Manual' },
@@ -122,7 +102,7 @@ function TypeChip({ type, definition }: { type: TreeList['type']; definition: Ty
   )
 }
 
-/** Title, type chip, description, then the sticky toolbar: search, filter, sort, display mode, then the + New item button (UI_SPEC §3). */
+/** Title, type chip, description, then the sticky toolbar: display mode, search, filter, sort, then the + New item button (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   // Phones: short placeholder (F-025 W8) and a Search icon button that swaps the row for the field (W11).
@@ -196,6 +176,8 @@ export function ListHeader(props: ListHeaderProps) {
             </>
           ) : (
             <>
+              {/* F-025 W12: the view switch leads the row at every width. */}
+              <DisplayModeControl value={props.displayMode} onChange={props.onDisplayMode} />
               {phone ? (
                 <button
                   type="button"
@@ -235,13 +217,6 @@ export function ListHeader(props: ListHeaderProps) {
                   Make this the default sort
                 </button>
               )}
-              <SegmentedControl
-                aria-label="Display mode"
-                options={modeOptions}
-                value={props.displayMode}
-                onValueChange={(value) => props.onDisplayMode(value as DisplayMode)}
-                className="shrink-0 [&_label]:size-8 [&_label]:justify-center [&_label]:px-0 pointer-coarse:[&_label]:size-11"
-              />
               {props.showAddItem && (
                 <Button
                   size="sm"
