@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { typeDefinition, type TypeDefinition } from '../items'
 import type { ItemSummary } from './api'
 import {
+  compactPinned,
   fixedPinned,
   formatPinnedValue,
   isLowPriorityPin,
@@ -233,5 +234,37 @@ describe('F016-W3 pinned placements (up to three pins)', () => {
       second: ['director'],
       third: ['streaming'],
     })
+  })
+})
+
+describe('F026-W3 compact rows keep the length and the tiles, not the director or author', () => {
+  it.each([
+    [
+      'a movie keeps runtime and streaming',
+      ['runtime_minutes', 'director', 'streaming'],
+      ['runtime_minutes', 'streaming'],
+    ],
+    ['a book keeps pages and stores', ['pages', 'author', 'stores'], ['pages', 'stores']],
+    ['a TV show is unchanged', ['seasons', 'streaming'], ['seasons', 'streaming']],
+    ['a vehicle is unchanged', ['model_year', 'power_hp'], ['model_year', 'power_hp']],
+    ['a wishlist price is unchanged', ['price'], ['price']],
+    ['no pins stay none', [], []],
+  ])('%s', (_label, pinned, expected) => {
+    expect(compactPinned(pinned)).toEqual(expected)
+  })
+
+  it.each([
+    [
+      'a movie: runtime beside the title, streaming in the corner',
+      ['runtime_minutes', 'director', 'streaming'],
+      { first: ['runtime_minutes'], second: ['streaming'], third: [] },
+    ],
+    [
+      'a book: pages beside the title, stores in the corner',
+      ['pages', 'author', 'stores'],
+      { first: ['pages'], second: ['stores'], third: [] },
+    ],
+  ])('%s', (_label, pinned, expected) => {
+    expect(pinnedPlacements(compactPinned(pinned))).toEqual(expected)
   })
 })

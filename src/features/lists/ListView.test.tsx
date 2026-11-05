@@ -12,7 +12,7 @@ import type { ItemSummary } from './api'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { createTestQueryClient, mockViewport } from '../../test-utils'
-import { toolbarIconControl } from './toolbarStyles'
+import { toolbarIconControl, toolbarSearchControl } from './toolbarStyles'
 
 type List = components['schemas']['List']
 
@@ -1356,6 +1356,28 @@ describe('F-025 W2 one-row toolbar on phones', () => {
     expect(screen.getByRole('button', { name: 'View options' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'New item' }).length).toBeGreaterThan(0)
   })
+})
+
+describe('F026-W1 toolbar search field', () => {
+  it.each([375, 1100])(
+    'is drawn with the toolbar icon buttons look, no white field or outline of its own, at %ipx',
+    async (width) => {
+      mockViewport(width)
+      useBackend()
+      renderList(at())
+      await itemsList()
+      const search = screen.getByRole('searchbox')
+      const frame = search.parentElement!
+      expect(frame.className).toBe(toolbarSearchControl)
+      // The fill, radius and hover are the icon buttons': the field's own surface is transparent.
+      expect(toolbarIconControl).toContain('bg-surface')
+      expect(frame.className).toContain('bg-surface')
+      expect(frame.className).toContain('hover:bg-fill-hover')
+      expect(frame.className).not.toContain('border-border-strong')
+      expect(search.className).toContain('bg-transparent')
+      expect(search.className).toContain('appearance-none')
+    },
+  )
 })
 
 describe('F-025 view options menu', () => {

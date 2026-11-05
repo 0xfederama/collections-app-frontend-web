@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Button, Skeleton, TextField, type SelectOption } from '../../components/ui'
+import { useId, useState } from 'react'
+import { Button, Skeleton, type SelectOption } from '../../components/ui'
 import { Pencil, Plus, Search } from '../../components/ui/icons'
 import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { useBreakpoint } from '../../lib/breakpoints'
@@ -11,7 +11,7 @@ import { ListIconMark } from './ListIconMark'
 import { ListTitle } from './ListTitle'
 import { SortMenu } from './SortMenu'
 import { ViewMenu } from './ViewMenu'
-import { toolbarControl } from './toolbarStyles'
+import { toolbarControl, toolbarSearchControl } from './toolbarStyles'
 import {
   FieldFilterChip,
   FieldFilterMenu,
@@ -107,27 +107,32 @@ export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   // Phones: short placeholder (F-025 W8); the field is always visible at every width.
   const phone = useBreakpoint() === 'mobile'
+  const searchId = useId()
+  // F026 W1: the field is drawn like the icon buttons beside it (no white field, no outline), not as a TextField.
+  const searchLabel =
+    props.treeList.type === 'movie' ? 'Search items by title or director' : 'Search items by title'
   const searchField = (
-    <div className="min-w-0 flex-1 md:min-w-40 [&_label]:sr-only">
-      <TextField
-        label={
-          props.treeList.type === 'movie'
-            ? 'Search items by title or director'
-            : 'Search items by title'
-        }
-        type="search"
-        placeholder={
-          phone
-            ? 'Search'
-            : props.treeList.type === 'movie'
-              ? 'Search by title or director'
-              : 'Search by title'
-        }
-        value={props.filter}
-        onChange={(event) => props.onFilter(event.target.value)}
-        prefix={<Search aria-hidden className="size-4" />}
-        className="h-9! hover:border-text-muted! focus-within:border-accent!"
-      />
+    <div className="min-w-0 flex-1 md:min-w-40">
+      <label htmlFor={searchId} className="sr-only">
+        {searchLabel}
+      </label>
+      <div className={toolbarSearchControl}>
+        <Search aria-hidden className="size-4 shrink-0 text-text-muted" />
+        <input
+          id={searchId}
+          type="search"
+          placeholder={
+            phone
+              ? 'Search'
+              : props.treeList.type === 'movie'
+                ? 'Search by title or director'
+                : 'Search by title'
+          }
+          value={props.filter}
+          onChange={(event) => props.onFilter(event.target.value)}
+          className="min-w-0 flex-1 appearance-none bg-transparent outline-none placeholder:text-text-muted"
+        />
+      </div>
     </div>
   )
   return (

@@ -40,6 +40,16 @@ const LOW_PRIORITY_PINS = new Set(['director', 'pages'])
 
 export const isLowPriorityPin = (key: string): boolean => LOW_PRIORITY_PINS.has(key)
 
+/**
+ * The pins a compact row drops (F026 W3): the director and the author. A compact row keeps the length
+ * (runtime, pages) and the streaming or store tiles. The other display modes keep every pin.
+ */
+const COMPACT_HIDDEN_PINS = new Set(['director', 'author'])
+
+/** The pins of a compact row: `pinned` without the director and the author. */
+export const compactPinned = (pinned: PinnedKeys): PinnedKeys =>
+  pinned.filter((key) => !COMPACT_HIDDEN_PINS.has(key))
+
 const num = (value: unknown) => (typeof value === 'number' ? value : null)
 
 /**
