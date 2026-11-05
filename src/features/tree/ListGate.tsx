@@ -15,19 +15,23 @@ export function ListGate({
   slot,
 }: {
   listId: string
-  /** The leading control of the header row: the back control of a sub-page; none for top pages. */
+  /**
+   * The leading control of the header row. A sub-page passes its own back control (the item page, back
+   * to its list), which replaces the compact "Back to Home" button; a top page (the list) has none, so
+   * it gets that button (F-026 W5).
+   */
   slot?: ReactNode
   children: (list: List, ancestors: Folder[]) => ReactNode
 }) {
   const result = useTreeIndex()
+  const leading = slot ?? <BackToHomeButton />
 
   if (result.status === 'pending') {
     return (
       <div role="status" className="flex flex-col gap-3">
         <span className="sr-only">Loading list</span>
         <div className="flex items-center gap-3">
-          <BackToHomeButton />
-          {slot}
+          {leading}
           <Skeleton className="h-8 w-1/3" />
         </div>
         <Skeleton className="h-24" />
@@ -38,8 +42,7 @@ export function ListGate({
     return (
       <div role="alert" className="flex flex-col items-start gap-2">
         <div className="flex items-center gap-3">
-          <BackToHomeButton />
-          {slot}
+          {leading}
           <p>Couldn’t load this list.</p>
         </div>
         <Button variant="secondary" onClick={result.refetch}>
@@ -52,10 +55,7 @@ export function ListGate({
   if (!list) {
     return (
       <>
-        <div className="mb-3 flex empty:hidden">
-          <BackToHomeButton />
-          {slot}
-        </div>
+        <div className="mb-3 flex empty:hidden">{leading}</div>
         <EmptyState
           icon={ListIcon}
           headingLevel="h1"

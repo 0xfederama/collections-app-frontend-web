@@ -159,10 +159,15 @@ function NewItemPage({
 /** `/lists/:listId/items/:itemId` content: the shell puts it in `main` or in the detail panel. */
 export default function ItemPage() {
   const { listId = '', itemId = '' } = useParams()
+  const { search } = useLocation()
   return (
     <ListGate
       listId={listId}
-      slot={<PageHeaderSlot back={{ to: `/lists/${listId}`, label: 'Back to list' }} />}
+      slot={
+        <PageHeaderSlot
+          back={{ to: { pathname: `/lists/${listId}`, search }, label: 'Back to list' }}
+        />
+      }
     >
       {(list) => (
         // Keyed by item and list: a move opens the same item in its new list with a fresh guard.

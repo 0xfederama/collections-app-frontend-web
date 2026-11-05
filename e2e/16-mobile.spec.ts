@@ -185,6 +185,18 @@ test.describe('F-025 mobile', () => {
     expect(text.indexOf('321 p.')).toBeLessThan(text.indexOf('Ada Writer'))
   })
 
+  test('W5 the item back control goes to its list and keeps the list search and sort', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Back query'), 'movie')
+    const item = await createItem(request, list.id, uniqueName('Film'))
+    await page.goto(`${itemUrl(list.id, item.id)}?q=Film&sort=title`)
+    const back = page.getByRole('main').getByRole('link', { name: /^Back to / })
+    await back.tap()
+    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}\\?q=Film&sort=title$`))
+  })
+
   test('W10 the item page has a back link in the slot and no menu button (W14)', async ({
     page,
     request,
