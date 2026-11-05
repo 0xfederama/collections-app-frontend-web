@@ -8,7 +8,9 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 
 - `src/features/lists/ListView.tsx`: list screen and URL state (`?q=`, `?sort=`, `filter_*`).
 - `ListTitle.tsx`: the list title, renamed in place by clicking it.
-- `FieldFilter.tsx`: per-field filter control, `parseFieldFilter` for URL params, `FieldFilterMenu` (the "+ Filter" popover) and `FieldFilterChip` (the applied filter, removable, under the bar).
+- `FieldFilter.tsx`: per-field filter control, `parseFieldFilter` for URL params, `FieldFilterMenu` (the "+ Filter" popover, with the availability choices on movie and TV) and `FieldFilterChip` / `AvailabilityChip` (the applied filters, removable, under the bar).
+- `availability.ts`: the two availability values, their labels and `parseAvailability` (`?availability=`, movie and TV only).
+- `src/lib/keyboardProxy.ts`: iOS keyboard proxy used by "New item" (`focusKeyboardProxy`, `releaseKeyboardProxy`).
 - `ListIconPicker.tsx`, `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices and parsing.
 - `ListIconMark.tsx`: shared list mark renderer.
 - `index.ts`: public face; `screens.ts` holds `ListView` for the route only.
@@ -28,7 +30,8 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListIconMark({ icon, iconColor, type, className, iconClassName })`: list mark.
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
 - `entryMenu(title, state, reorder?)` (`ItemControls.tsx`), `useLongPress({ onLongPress })`: row menu and long press.
-- `FieldFilter({ fields, value, onChange })`, `parseFieldFilter(params, fields)`.
+- `FieldFilter({ fields, value, onChange })`, `parseFieldFilter(params, fields)`; `FieldFilterMenu` takes an optional `availability` prop.
+- `supportsAvailability(definition)`, `parseAvailability(value, definition)`, `availabilityLabel(value)`, `compactPinned(pinned)`.
 - `ViewMenu({ value, onValueChange })`: display mode menu (compact, thumbnail, grid).
 - `useScrollRestore(anchor, ready)`: returns `remember`, called before navigating away.
 - `useList`, `useListItems`, `useUpdateList`, `useReorderItems` (`api.ts`); `listKeys` from `src/data/keys.ts`.
@@ -39,7 +42,10 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 
 - Pinned fields are fixed per built-in type (`FIXED_PINS` in `pinned.ts`, F-022): movie runtime, director, streaming; TV seasons, streaming; book pages, author, stores; vehicle model year, power; wishlist price. There is no per-list choice. A pin whose field the type lacks is dropped (`price` counts only where allowed); "No type" pins nothing. One pin sits beside the title; two put the second in the right corner; three put the first two beside the title and the third in the corner (`pinnedPlacements`).
 - Director and pages are low-priority (`isLowPriorityPin`): they truncate with an ellipsis first; the other pins keep their width.
-- Compact rows show the pins beside the title at every width (they were hidden below `sm`).
+- Compact rows show the pins beside the title at every width (they were hidden below `sm`) and drop director and author (`compactPinned`, F-026 W3); thumbnail and grid keep every pin.
+- The toolbar search is a bare `input type="search"` drawn with `toolbarSearchControl` (F-026 W1); its label is visually hidden.
+- Availability (F-026 W4): `?availability=available|included`, movie and TV only (the type has a `streaming` field), sent to `GET /lists/{id}/items` as `availability`. Unknown or unsupported values are dropped. Applied, it is a removable chip under the bar, counts as a filter (no manual reorder, "No items match") and the empty state's "Clear filter" resets it too.
+- "New item" on a tap calls `focusKeyboardProxy()` (not while the draft is open) so iOS opens the keyboard for the draft title; see [items](items.md).
 - Streaming in a row shows only the services in Settings `owned_streaming_services` (`filterOwnedPlatforms`); empty = all.
 - Sort and filter accept only the built-in field keys of the list's type (plus `price` where the type allows it); a custom key in the URL is ignored (F-023).
 - Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming and stores fields are not filterable, and stores fields are not sortable.

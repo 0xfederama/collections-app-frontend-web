@@ -26,7 +26,7 @@ Quick add (F-002): one dialog to create an item from anywhere: a title, destinat
 - Enter in a text field or Ctrl/Cmd+Enter adds; Esc cancels.
 - Phones (< 768 px): the user stays on the current page after a create; the toast's "Open" action opens the item.
 - The item is created first. The description and the image are separate requests after it; if one fails, the item still opens and a toast names what failed.
-- Create errors: 422 maps to the title or website field; 409 means the list is gone or in Trash; network or 5xx says nothing was created.
+- Create errors: 422 maps to the title or website field; 409 `duplicate_title` shows inline under the title (text kept, dialog stays open; `describeCreateFailure(caught, listType)`); other 409 means the list is gone or in Trash; network or 5xx says nothing was created.
 - Client checks (image type and size, length limits) run before the request.
 - No type is chosen here: the item takes the list's type.
 - Title suggestions (`TitleLookupField`) come from TMDB for movie and TV only, when the server reports it available; selecting one creates the item with the suggested title and `tmdb_id` (see `items/lookup.ts`). Books have no picker: the title is a plain input and Enter posts `lookup: true` without `source_id`; while the create is pending a `role="status"` line ("Looking up details…") shows and Add stays pending, then the dialog closes and opens the item. Typing a title and pressing Enter or Ctrl/Cmd+Enter keeps the existing submit behavior.
