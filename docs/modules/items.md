@@ -40,7 +40,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - The item's streaming row shows only the services in Settings `owned_streaming_services` (`filterOwnedPlatforms`); the streaming editor still lists every service. Empty = all.
 - Pasting an image file while an item's detail page is open opens the image dialog and uploads through the normal path.
 - Back to the list: on phones it is the back control in the page header slot (`PageHeaderSlot`); 768 to 1279 px keeps the text "← Back to" link; the wide panel has none.
-- Phones: after a new item is committed, the draft returns to the list (no auto-open) and a toast's "Open" action opens the item (`NewItemDraft`).
+- Phones: after a new item is committed, the draft returns to the list (no auto-open) and a toast's "Open" action opens the item (`NewItemDraft`). "Added …" toasts use `ADDED_TOAST` (`items/addedToast.ts`): 3 s, and a new one replaces the shown one (`replaceKey`) instead of stacking. Every "New item" tap focuses synchronously (iOS keyboard): the open draft's title, else `focusKeyboardProxy()`; the draft also focuses its title on mount.
 - Image changes and field editors use the item's `If-Match` (version captured when opened); 412/404 keeps the draft and offers Copy draft and Reload latest.
 - Every populated editable field is shown by default; empty fields are available from "+ Add field".
 - 409 `duplicate_title` (F-026 W7) is shown inline: under the title in the new-item draft (the typed title is kept), on the title of the inline title edit, on the Quick add title, and as the Move message. On movie, TV and book lists the text says "movie", "show" or "book"; other lists say "An item with this title is already in this list."

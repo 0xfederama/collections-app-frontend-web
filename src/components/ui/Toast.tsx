@@ -16,6 +16,10 @@ export interface ToastOptions {
    * (the caller navigates), not a `<Link>`. Running it dismisses the toast.
    */
   action?: { label: string; onAction: () => void }
+  /** A new toast with the same key replaces the shown one instead of stacking (e.g. "Added …"). */
+  replaceKey?: string
+  /** Milliseconds before it hides; defaults to 8 s for errors and 5 s otherwise. */
+  duration?: number
 }
 
 interface ToastEntry extends ToastOptions {
@@ -37,7 +41,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastEntry[]>([])
 
   const toast = useCallback((options: ToastOptions) => {
-    setToasts((current) => [...current, { ...options, id: nextId++ }])
+    setToasts((current) => [
+      ...(options.replaceKey
+        ? current.filter((t) => t.replaceKey !== options.replaceKey)
+        : current),
+      { ...options, id: nextId++ },
+    ])
   }, [])
   const remove = (id: number) => setToasts((current) => current.filter((t) => t.id !== id))
   const value = useMemo(() => toast, [toast])
@@ -53,7 +62,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <RadixToast.Root
               key={t.id}
               type={kind === 'error' ? 'foreground' : 'background'}
-              duration={kind === 'error' ? 8000 : 5000}
+              duration={t.duration ?? (kind === 'error' ? 8000 : 5000)}
               onOpenChange={(open) => !open && remove(t.id)}
               className={cx(
                 'flex items-start gap-3 rounded-lg border p-3 shadow-md data-[state=closed]:animate-fade-out data-[state=open]:animate-slide-in-toast',

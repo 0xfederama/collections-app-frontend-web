@@ -19,6 +19,7 @@ import { LIMITS } from './form/draft'
 import { LookupStatus } from './LookupStatus'
 import { MessageBanner } from './inline/Banners'
 import { useEditGuard } from './inline/guard'
+import { ADDED_TOAST } from './addedToast'
 import { EditorButtons } from './inline/controls'
 import { useTypes, useSettings } from '../settings'
 import { ListIconMark } from '../lists'
@@ -60,7 +61,10 @@ export function NewItemDraft({
 
   // The title took focus on mount (autoFocus), so the iOS keyboard proxy opened by the tap that
   // created this draft is no longer needed (see `focusKeyboardProxy`).
+  // Focus explicitly too: autoFocus alone did not always move focus off the proxy on a repeated add.
   useEffect(() => {
+    const input = box.current?.querySelector('input')
+    if (input && document.activeElement !== input) input.focus({ preventScroll: true })
     releaseKeyboardProxy()
   }, [])
 
@@ -92,7 +96,7 @@ export function NewItemDraft({
       const itemPath = `/lists/${listId}/items/${created.id}`
       if (phone) {
         toast({
-          kind: 'success',
+          ...ADDED_TOAST,
           title: `Added “${created.title}”`,
           action: {
             label: 'Open',

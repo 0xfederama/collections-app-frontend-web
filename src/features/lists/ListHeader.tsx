@@ -11,7 +11,8 @@ import { ListIconMark } from './ListIconMark'
 import { ListTitle } from './ListTitle'
 import { SortMenu } from './SortMenu'
 import { ViewMenu } from './ViewMenu'
-import { toolbarControl, toolbarSearchControl } from './toolbarStyles'
+import { toolbarSearchControl } from './toolbarStyles'
+import { DefaultSortChip } from './DefaultSortChip'
 import {
   AvailabilityChip,
   FieldFilterChip,
@@ -37,6 +38,11 @@ export function sortOptionsFor(definition: TypeDefinition): SelectOption[] {
       .filter((field) => field.type !== 'stores')
       .map((field) => ({ value: field.key, label: field.label })),
   ]
+}
+
+/** The menu label of a sort, as the "make default" line names it. */
+function sortLabel(definition: TypeDefinition, sort: SortMode): string {
+  return sortOptionsFor(definition).find((option) => option.value === sort)?.label ?? sort
 }
 
 export interface ListHeaderProps {
@@ -179,16 +185,6 @@ export function ListHeader(props: ListHeaderProps) {
             value={props.sort}
             onValueChange={(value) => props.onSort(value as SortMode)}
           />
-          {props.canMakeDefault && (
-            <button
-              type="button"
-              onClick={props.onMakeDefault}
-              disabled={props.makeDefaultPending}
-              className={toolbarControl}
-            >
-              Make this the default sort
-            </button>
-          )}
           {props.showAddItem && (
             <Button
               size="sm"
@@ -201,8 +197,16 @@ export function ListHeader(props: ListHeaderProps) {
           )}
         </div>
         {(describeFieldFilter(props.definition.fields, props.fieldFilter) ||
-          props.availability) && (
+          props.availability ||
+          props.canMakeDefault) && (
           <div className="mt-2 flex flex-wrap gap-2">
+            {props.canMakeDefault && (
+              <DefaultSortChip
+                label={sortLabel(props.definition, props.sort)}
+                onClick={props.onMakeDefault}
+                pending={props.makeDefaultPending}
+              />
+            )}
             <FieldFilterChip
               fields={props.definition.fields}
               value={props.fieldFilter}
