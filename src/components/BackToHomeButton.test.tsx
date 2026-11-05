@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, Link, Outlet } from 'react-router'
+import { createMemoryRouter, Link, MemoryRouter, Outlet } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { describe, expect, it } from 'vitest'
 import { useTrackPreviousPath } from '../lib/previousPath'
@@ -69,5 +69,15 @@ describe('F-025 BackToHomeButton', () => {
     await user.click(screen.getByRole('button', { name: 'Back to Home' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/'))
     expect(router.state.historyAction).toBe('PUSH')
+  })
+
+  it('renders nothing from 768 px', () => {
+    mockViewport(768)
+    render(
+      <MemoryRouter initialEntries={['/lists/l1']}>
+        <BackToHomeButton />
+      </MemoryRouter>,
+    )
+    expect(screen.queryByRole('button', { name: 'Back to Home' })).toBeNull()
   })
 })

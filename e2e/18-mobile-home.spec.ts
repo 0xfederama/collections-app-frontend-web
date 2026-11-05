@@ -219,6 +219,25 @@ test.describe('F-025 list row polish', () => {
     await expect(main.getByRole('searchbox', { name: 'Search', exact: true })).toBeVisible()
   })
 
+  test('W5 a list opened from Home: Back to Home goes back in history, no new entry', async ({
+    page,
+    request,
+  }) => {
+    const name = uniqueName('History list')
+    await createList(request, name, 'movie')
+    await page.goto('/')
+    const main = page.getByRole('main')
+    await main
+      .getByRole('tree')
+      .getByRole('link', { name: new RegExp(name) })
+      .tap()
+    await expect(page).toHaveURL(/\/lists\/[^/]+$/)
+    const entries = await page.evaluate(() => history.length)
+    await main.getByRole('button', { name: 'Back to Home' }).tap()
+    await expect(page).toHaveURL(/\/$/)
+    expect(await page.evaluate(() => history.length)).toBe(entries)
+  })
+
   test('phone Home: Quick add is as wide as the search field', async ({ page, request }) => {
     await createList(request, uniqueName('Width list'), 'movie')
     await page.goto('/')

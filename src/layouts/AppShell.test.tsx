@@ -527,6 +527,42 @@ describe('F-025 W14 Home is the root page on phones', () => {
     expect(screen.queryByRole('link', { name: 'Back to Home' })).not.toBeInTheDocument()
   })
 
+  it('F-026 W5 the item page loading state has one back control, to its list (no Back to Home)', () => {
+    mockViewport(375)
+    renderAt(ITEM_PATH)
+    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to list' })).toHaveAttribute(
+      'href',
+      expect.stringContaining(`/lists/${WATCHLIST}`),
+    )
+    expect(screen.queryByRole('button', { name: 'Back to Home' })).not.toBeInTheDocument()
+  })
+
+  it('F-026 W5 the item back control keeps the list search and sort', async () => {
+    mockViewport(375)
+    renderAt(`${ITEM_PATH}?q=dune&sort=title`)
+    await screen.findByRole('heading', { level: 1 })
+    expect(screen.getByRole('link', { name: /^Back to / })).toHaveAttribute(
+      'href',
+      `/lists/${WATCHLIST}?q=dune&sort=title`,
+    )
+  })
+
+  it('F-026 W5 an item of a list that is not found keeps only its back control, the list has the Home button', async () => {
+    mockViewport(375)
+    renderAt(`/lists/no-such-list/items/${ITEM}`)
+    await screen.findByRole('heading', { level: 1, name: 'List not found' })
+    expect(screen.getByRole('link', { name: 'Back to list' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Back to Home' })).not.toBeInTheDocument()
+  })
+
+  it('F-026 W5 a list that is not found on a phone has the Back to Home button', async () => {
+    mockViewport(375)
+    renderAt('/lists/no-such-list')
+    await screen.findByRole('heading', { level: 1, name: 'List not found' })
+    expect(screen.getByRole('button', { name: 'Back to Home' })).toBeInTheDocument()
+  })
+
   it('Search and Trash have no "Back to Home"', async () => {
     mockViewport(375)
     renderAt('/search')
