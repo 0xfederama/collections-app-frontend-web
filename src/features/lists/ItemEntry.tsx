@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { cx } from '../../lib/cx'
 import type { DisplayMode, ItemSummary } from './api'
 import { ItemThumb } from './ItemThumb'
-import { pinnedPlacements, type PinnedKeys } from './pinned'
+import { compactPinned, pinnedPlacements, type PinnedKeys } from './pinned'
 import type { ItemType, TypeDefinition } from '../items'
 import { PinnedSlot } from './ItemPinned'
 import { entryMenu, type EntryReorder } from './ItemControls'
@@ -75,7 +75,10 @@ function EntryRow({
   const slots = { item, definition }
   // F009-W3 / F016-W3: one pin reads next to the title, two add one in the right corner, three put
   // the first two next to the title and the third in the corner.
-  const { first, second, third } = pinnedPlacements(pinned)
+  // F026 W3: a compact row reads only the length and the tiles, so its pins drop the director and author.
+  const { first, second, third } = pinnedPlacements(
+    mode === 'compact' ? compactPinned(pinned) : pinned,
+  )
   const beside = third.length ? [...first, ...second] : first
   const corner = third.length ? third : second
 
