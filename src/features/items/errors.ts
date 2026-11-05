@@ -1,6 +1,8 @@
-import { ApiError, failureKind } from '../../lib/api'
+import { ApiError, failureKind, isDuplicateTitle } from '../../lib/api'
+import type { ItemType } from './api'
+import { duplicateTitleMessage } from './duplicate'
 
-type ItemErrorKind = 'conflict' | 'unavailable' | 'not_found' | 'network' | 'other'
+type ItemErrorKind = 'conflict' | 'unavailable' | 'not_found' | 'duplicate' | 'network' | 'other'
 
 export interface ItemError {
   kind: ItemErrorKind
@@ -8,7 +10,7 @@ export interface ItemError {
 }
 
 /** Turns a failed move or delete into the message UI_SPEC §9 asks for. */
-export function classifyItemError(error: unknown): ItemError {
+export function classifyItemError(error: unknown, type?: ItemType): ItemError {
   const kind = failureKind(error)
   if (kind === 'precondition') {
     return {
@@ -24,6 +26,9 @@ export function classifyItemError(error: unknown): ItemError {
       message:
         'That list holds another type of item. Items can only move to lists of the same type.',
     }
+  }
+  if (isDuplicateTitle(error)) {
+    return { kind: 'duplicate', message: duplicateTitleMessage(type) }
   }
   switch (kind) {
     case 'conflict':

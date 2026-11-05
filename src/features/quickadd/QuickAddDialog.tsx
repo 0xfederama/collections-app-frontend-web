@@ -100,7 +100,7 @@ export function QuickAddDialog({
       })
     } catch (caught) {
       setBusy(false)
-      const failure = describeCreateFailure(caught)
+      const failure = describeCreateFailure(caught, listType)
       setLookupUnavailable(failure.lookupUnavailable)
       if (failure.errors) setErrors(failure.errors)
       if (failure.focus === 'title') titleRef.current?.focus()

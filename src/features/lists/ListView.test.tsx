@@ -1124,6 +1124,26 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     ).toBeInTheDocument()
   })
 
+  it('F-026 W7 duplicate_title shows inline under the title and keeps the draft', async () => {
+    mockViewport(1400)
+    useBackend({ list: { type: 'movie' } })
+    treeWithType('movie')
+    server.use(http.post(createUrl, () => problemResponse(409, 'duplicate_title')))
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
+    await user.type(title, 'Heat{Enter}')
+
+    expect(
+      await within(panel).findByText('This movie is already in this list.'),
+    ).toBeInTheDocument()
+    expect(title).toHaveValue('Heat')
+    expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/new`)
+  })
+
   it('selecting a TMDB suggestion immediately creates the selected title with its id', async () => {
     mockViewport(1400)
     useBackend({ list: { type: 'movie' } })
@@ -1487,5 +1507,58 @@ describe('F-025 W8 filter and sort controls', () => {
     await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 180))
     Object.defineProperty(window, 'scrollY', { value: 0, configurable: true })
     scrollTo.mockRestore()
+  })
+})
+
+describe('F-026 W4 availability filter', () => {
+  const choice = (name: string) => screen.findByRole('button', { name })
+
+  it('a movie list offers both choices, sends the param, shows a removable chip and combines with q', async () => {
+    treeWithType('movie')
+    const backend = useBackend({
+      list: { type: 'movie' },
+      items: [makeItem(1, { title: 'Blade Runner' })],
+    })
+    const user = userEvent.setup()
+    const router = renderList(at('?q=blade'))
+    await itemsList()
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    expect(await choice('Available')).toHaveAttribute('aria-pressed', 'false')
+    await user.click(await choice('Available, not paid'))
+    await waitFor(() => expect(router.state.location.search).toContain('availability=included'))
+    expect(router.state.location.search).toContain('q=blade')
+    await waitFor(() => {
+      const last = backend.itemRequests.at(-1)!.searchParams
+      expect(last.get('availability')).toBe('included')
+      expect(last.get('q')).toBe('blade')
+    })
+    await user.keyboard('{Escape}')
+    await user.click(
+      await screen.findByRole('button', { name: 'Remove filter Available, not paid' }),
+    )
+    await waitFor(() => expect(router.state.location.search).not.toContain('availability'))
+    await waitFor(() =>
+      expect(backend.itemRequests.at(-1)!.searchParams.has('availability')).toBe(false),
+    )
+  })
+
+  it('a book list has no availability choices and ignores ?availability=', async () => {
+    treeWithType('book')
+    const backend = useBackend({ list: { type: 'book' } })
+    const user = userEvent.setup()
+    renderList(at('?availability=available'))
+    await itemsList()
+    expect(backend.itemRequests.at(-1)!.searchParams.has('availability')).toBe(false)
+    expect(screen.queryByRole('button', { name: /Remove filter Available/ })).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    expect(screen.queryByRole('button', { name: 'Available' })).toBeNull()
+  })
+
+  it('an invalid ?availability= value is not sent', async () => {
+    treeWithType('movie')
+    const backend = useBackend({ list: { type: 'movie' } })
+    renderList(at('?availability=nope'))
+    await itemsList()
+    expect(backend.itemRequests.at(-1)!.searchParams.has('availability')).toBe(false)
   })
 })

@@ -13,11 +13,13 @@ import { SortMenu } from './SortMenu'
 import { ViewMenu } from './ViewMenu'
 import { toolbarControl, toolbarSearchControl } from './toolbarStyles'
 import {
+  AvailabilityChip,
   FieldFilterChip,
   FieldFilterMenu,
   describeFieldFilter,
   type FieldFilterValue,
 } from './FieldFilter'
+import { supportsAvailability, type Availability } from './availability'
 
 const baseSortOptions: SelectOption[] = [
   { value: 'manual', label: 'Manual' },
@@ -56,6 +58,9 @@ export interface ListHeaderProps {
   onFilter: (value: string) => void
   fieldFilter: FieldFilterValue | null
   onFieldFilter: (value: FieldFilterValue | null) => void
+  /** The applied availability choice; changing it is offered on movie and TV lists only (F-026 W4). */
+  availability: Availability | null
+  onAvailability: (value: Availability | null) => void
   onAddItem: () => void
 }
 
@@ -162,6 +167,11 @@ export function ListHeader(props: ListHeaderProps) {
             fields={props.definition.fields}
             value={props.fieldFilter}
             onChange={props.onFieldFilter}
+            availability={
+              supportsAvailability(props.definition)
+                ? { value: props.availability, onChange: props.onAvailability }
+                : undefined
+            }
           />
           {/* Like "+ Filter": an icon button, the active sort is checked inside its menu (F-025 W8). */}
           <SortMenu
@@ -190,13 +200,15 @@ export function ListHeader(props: ListHeaderProps) {
             </Button>
           )}
         </div>
-        {describeFieldFilter(props.definition.fields, props.fieldFilter) && (
+        {(describeFieldFilter(props.definition.fields, props.fieldFilter) ||
+          props.availability) && (
           <div className="mt-2 flex flex-wrap gap-2">
             <FieldFilterChip
               fields={props.definition.fields}
               value={props.fieldFilter}
               onChange={props.onFieldFilter}
             />
+            <AvailabilityChip value={props.availability} onChange={props.onAvailability} />
           </div>
         )}
       </div>

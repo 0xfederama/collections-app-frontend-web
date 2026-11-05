@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError, NetworkError } from './errors'
-import { errorMessage, failureKind } from './failure'
+import { errorMessage, failureKind, isDuplicateTitle } from './failure'
 
 const apiError = (status: number) =>
   new ApiError({ status, code: 'unknown', title: 'T', raw: undefined })
@@ -65,5 +65,20 @@ describe('errorMessage', () => {
 
   it('uses the given fallback for a non-ApiError', () => {
     expect(errorMessage(new NetworkError(), 'Nothing was saved.')).toBe('Nothing was saved.')
+  })
+})
+
+describe('F-026 W7 isDuplicateTitle', () => {
+  const problem = (status: number, code: string) =>
+    new ApiError({ status, code, title: 'T', raw: undefined })
+
+  it.each([
+    [problem(409, 'duplicate_title'), true],
+    [problem(409, 'type_mismatch'), false],
+    [problem(422, 'duplicate_title'), false],
+    [new NetworkError(), false],
+    [new Error('duplicate_title'), false],
+  ])('%#', (error, expected) => {
+    expect(isDuplicateTitle(error)).toBe(expected)
   })
 })

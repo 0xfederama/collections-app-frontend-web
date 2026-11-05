@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { Button, useToast } from '../../components/ui'
 import { useBreakpoint } from '../../lib/breakpoints'
 import { releaseKeyboardProxy } from '../../lib/keyboardProxy'
-import { ApiError, errorMessage, NetworkError } from '../../lib/api'
+import { ApiError, errorMessage, isDuplicateTitle, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemType } from './api'
 import { TitleLookupField } from './TitleLookupField'
 import {
@@ -14,6 +14,7 @@ import {
   type LookupSelection,
   type LookupTitleSelection,
 } from './lookup'
+import { duplicateTitleMessage } from './duplicate'
 import { LIMITS } from './form/draft'
 import { LookupStatus } from './LookupStatus'
 import { MessageBanner } from './inline/Banners'
@@ -109,7 +110,10 @@ export function NewItemDraft({
       } else {
         setLookupUnavailable(false)
       }
-      if (caught instanceof ApiError && caught.status === 422) {
+      if (isDuplicateTitle(caught)) {
+        // Inline under the title; the draft stays as typed.
+        setError(duplicateTitleMessage(type))
+      } else if (caught instanceof ApiError && caught.status === 422) {
         setError(caught.errors?.find((e) => e.field === 'title')?.message ?? caught.title)
       } else if (caught instanceof ApiError && caught.status === 409) {
         setFailure('This list no longer exists or is in Trash.')

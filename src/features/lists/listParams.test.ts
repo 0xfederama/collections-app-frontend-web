@@ -114,6 +114,7 @@ describe('listParams', () => {
     expect(buildItemsParams({ sortOverride: null, q: '', filter: value, definition })).toEqual({
       sort: null,
       q: '',
+      availability: null,
       ...expected,
     })
   })
@@ -128,8 +129,19 @@ describe('listParams', () => {
       filterValue: null,
       filterMin: null,
       filterMax: null,
+      availability: null,
     })
   })
+
+  it.each([['available'], ['included'], [null]] as const)(
+    'F-026 W4 buildItemsParams passes availability %j through',
+    (availability) => {
+      expect(
+        buildItemsParams({ sortOverride: null, q: 'x', filter: null, definition, availability })
+          .availability,
+      ).toBe(availability)
+    },
+  )
 })
 
 describe('?sort= with a key the type does not define', () => {

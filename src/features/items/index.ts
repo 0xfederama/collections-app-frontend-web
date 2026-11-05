@@ -3,6 +3,7 @@ export { useCreateItem, useDeleteItem, useMoveItem } from './api'
 export type { Item, ItemType } from './api'
 export { useItemActions } from './ItemActions'
 export { ItemSkeleton } from './ItemSkeleton'
+export { duplicateTitleMessage } from './duplicate'
 export { LookupStatus } from './LookupStatus'
 export { TitleLookupField } from './TitleLookupField'
 export {

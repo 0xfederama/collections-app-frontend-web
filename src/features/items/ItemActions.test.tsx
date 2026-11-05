@@ -282,6 +282,17 @@ describe('move item (UI_SPEC §9 errors)', () => {
     expect(router.state.location.pathname).toBe(PATH)
   })
 
+  it('F-026 W7 409 duplicate_title shows inline in the dialog and keeps it open', async () => {
+    server.use(http.post(moveUrl, () => problemResponse(409, 'duplicate_title')))
+    const { router, user, dialog } = await openMove()
+    await chooseMotorbikes(user, dialog)
+    await user.click(within(dialog).getByRole('button', { name: 'Move' }))
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('is already in this list.')
+    expect(screen.getByRole('dialog', { name: /Move/ })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe(PATH)
+  })
+
   it('412 shows the conflict, keeps the dialog open and refetches the item', async () => {
     const gets = countItemGets()
     server.use(http.post(moveUrl, () => problemResponse(412, 'version_conflict')))

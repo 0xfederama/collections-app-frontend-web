@@ -23,6 +23,7 @@ import { ListHeader } from './ListHeader'
 import { fixedPinned } from './pinned'
 import { useScrollRestore } from './scrollRestore'
 import { parseFieldFilter, type FieldFilterValue } from './FieldFilter'
+import { AVAILABILITY_PARAM, parseAvailability, type Availability } from './availability'
 import { activeFieldFilter, buildItemsParams, parseSort, resolveSortOverride } from './listParams'
 import { useDebouncedFilter } from './useDebouncedFilter'
 
@@ -41,6 +42,7 @@ export function ListView({ treeList }: { treeList: List }) {
   const q = (searchParams.get('q') ?? '').trim()
   const fieldFilter = parseFieldFilter(searchParams, definition?.fields ?? [])
   const activeFilter = activeFieldFilter(fieldFilter)
+  const availability = parseAvailability(searchParams.get(AVAILABILITY_PARAM), definition)
   // Links to items keep the list's `?q=` and `?sort=`.
   const search = searchParams.size > 0 ? `?${searchParams.toString()}` : ''
 
@@ -57,7 +59,13 @@ export function ListView({ treeList }: { treeList: List }) {
       void client.invalidateQueries({ queryKey: listKeys.detail(listId) })
     }
   }, [client, listId, treeVersion])
-  const params = buildItemsParams({ sortOverride, q, filter: fieldFilter, definition })
+  const params = buildItemsParams({
+    sortOverride,
+    q,
+    filter: fieldFilter,
+    definition,
+    availability,
+  })
   const itemsQuery = useListItems(listId, params)
   const { items, total } = flattenItems(itemsQuery.data)
   const updateList = useUpdateList(listId)
@@ -75,6 +83,17 @@ export function ListView({ treeList }: { treeList: List }) {
         // Choosing the saved sort needs no override.
         if (sort === list?.sort_mode) next.delete('sort')
         else next.set('sort', sort)
+        return next
+      },
+      { replace: true },
+    )
+
+  const setAvailability = (value: Availability | null) =>
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        if (value) next.set(AVAILABILITY_PARAM, value)
+        else next.delete(AVAILABILITY_PARAM)
         return next
       },
       { replace: true },
@@ -150,6 +169,7 @@ export function ListView({ treeList }: { treeList: List }) {
   const clearFilter = () => {
     setFilter('')
     setFieldFilter(null)
+    setAvailability(null)
   }
   // F008-W9: "New item" opens the draft item page; the draft row shows while that route is open.
   const navigate = useNavigate()
@@ -186,7 +206,7 @@ export function ListView({ treeList }: { treeList: List }) {
   }
 
   const mode = list?.display_mode ?? 'grid'
-  const filtered = q !== '' || activeFilter !== null
+  const filtered = q !== '' || activeFilter !== null || availability !== null
   const countLabel = !list
     ? ''
     : filtered && itemsQuery.isSuccess
@@ -226,6 +246,8 @@ export function ListView({ treeList }: { treeList: List }) {
         onFilter={setFilter}
         fieldFilter={fieldFilter}
         onFieldFilter={setFieldFilter}
+        availability={availability}
+        onAvailability={setAvailability}
         onAddItem={addItem}
       />
       {itemsQuery.isError ? (
