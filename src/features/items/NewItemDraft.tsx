@@ -179,9 +179,9 @@ export function NewItemDraft({
             autoFocus
             placeholder="Title of the new item"
             error={error}
-            // The field is as tall as the ✓ / ✕ buttons beside it (EditorButtons: size-10, size-11 on touch).
+            // The field is as tall as the ✓ / ✕ buttons beside it (IconButton: size-11).
             className="min-w-0 flex-1 basis-40"
-            inputClassName="h-10 w-full rounded-md border border-border bg-fill px-3 text-text outline-none placeholder:text-text-muted focus:border-accent pointer-coarse:h-11"
+            inputClassName="h-11 w-full rounded-md border border-border bg-fill px-3 text-text outline-none placeholder:text-text-muted focus:border-accent"
           />
           <EditorButtons
             label="title"

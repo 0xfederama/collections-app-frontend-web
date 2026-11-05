@@ -38,7 +38,7 @@ test.describe('F-026 availability filter and duplicate titles', () => {
       page.getByRole('button', { name: 'Remove filter Available, not paid' }),
     ).toBeVisible()
 
-    const wishes = await createList(request, uniqueName('Avail wishes'), 'wishlist')
+    const wishes = await createList(request, uniqueName('Avail cars'), 'vehicle')
     await createItem(request, wishes.id, uniqueName('Thing'))
     await page.goto(`/lists/${wishes.id}`)
     await page.getByRole('button', { name: 'Filter' }).click()
