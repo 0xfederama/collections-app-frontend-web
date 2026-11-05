@@ -12,7 +12,7 @@ import type { ItemSummary } from './api'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { createTestQueryClient, mockViewport } from '../../test-utils'
-import { toolbarIconControl } from './toolbarStyles'
+import { toolbarIconControl, toolbarSearchControl } from './toolbarStyles'
 
 type List = components['schemas']['List']
 
@@ -1068,9 +1068,36 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await waitFor(() => expect(title).toHaveFocus())
     expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/new`)
     const rows = within(screen.getByRole('list', { name: 'Items' })).getAllByRole('listitem')
-    expect(rows.at(-1)).toHaveAccessibleName('New item (draft)')
+    expect(rows.at(-1)).toHaveAccessibleName('New item')
+    // F-026 W8: the new-item view carries no "(draft)" label.
+    expect(within(panel).getByRole('article', { name: 'New item' })).not.toHaveTextContent(
+      '(draft)',
+    )
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(posts).toHaveLength(0)
+  })
+
+  it('F026-W2 the tap focuses a hidden keyboard proxy before the title, and leaves none behind', async () => {
+    mockViewport(1400)
+    useBackend()
+    useCreate()
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    const focused: Element[] = []
+    const record = (event: FocusEvent) => focused.push(event.target as Element)
+    document.addEventListener('focusin', record)
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
+    await waitFor(() => expect(title).toHaveFocus())
+    document.removeEventListener('focusin', record)
+
+    const proxy = focused.find((element) => element.getAttribute('aria-hidden') === 'true')
+    expect(proxy).toBeDefined()
+    expect(proxy).toHaveAttribute('tabindex', '-1')
+    expect(focused.indexOf(proxy!)).toBeLessThan(focused.indexOf(title))
+    expect(document.querySelector('body > input[aria-hidden="true"]')).toBeNull()
   })
 
   it('an empty title is not sent; Enter on a title creates the item and opens its page', async () => {
@@ -1095,6 +1122,26 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     expect(
       await within(panel).findByRole('heading', { level: 1, name: 'Field notebook' }),
     ).toBeInTheDocument()
+  })
+
+  it('F-026 W7 duplicate_title shows inline under the title and keeps the draft', async () => {
+    mockViewport(1400)
+    useBackend({ list: { type: 'movie' } })
+    treeWithType('movie')
+    server.use(http.post(createUrl, () => problemResponse(409, 'duplicate_title')))
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
+    await user.type(title, 'Heat{Enter}')
+
+    expect(
+      await within(panel).findByText('This movie is already in this list.'),
+    ).toBeInTheDocument()
+    expect(title).toHaveValue('Heat')
+    expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/new`)
   })
 
   it('selecting a TMDB suggestion immediately creates the selected title with its id', async () => {
@@ -1239,7 +1286,7 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
 
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(screen.queryByRole('listitem', { name: 'New item (draft)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('listitem', { name: 'New item' })).not.toBeInTheDocument()
     expect(screen.queryByRole('complementary', { name: 'Item details' })).not.toBeInTheDocument()
     expect(posts).toHaveLength(0)
   })
@@ -1329,6 +1376,28 @@ describe('F-025 W2 one-row toolbar on phones', () => {
     expect(screen.getByRole('button', { name: 'View options' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'New item' }).length).toBeGreaterThan(0)
   })
+})
+
+describe('F026-W1 toolbar search field', () => {
+  it.each([375, 1100])(
+    'is drawn with the toolbar icon buttons look, no white field or outline of its own, at %ipx',
+    async (width) => {
+      mockViewport(width)
+      useBackend()
+      renderList(at())
+      await itemsList()
+      const search = screen.getByRole('searchbox')
+      const frame = search.parentElement!
+      expect(frame.className).toBe(toolbarSearchControl)
+      // The fill, radius and hover are the icon buttons': the field's own surface is transparent.
+      expect(toolbarIconControl).toContain('bg-surface')
+      expect(frame.className).toContain('bg-surface')
+      expect(frame.className).toContain('hover:bg-fill-hover')
+      expect(frame.className).not.toContain('border-border-strong')
+      expect(search.className).toContain('bg-transparent')
+      expect(search.className).toContain('appearance-none')
+    },
+  )
 })
 
 describe('F-025 view options menu', () => {
@@ -1438,5 +1507,58 @@ describe('F-025 W8 filter and sort controls', () => {
     await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 180))
     Object.defineProperty(window, 'scrollY', { value: 0, configurable: true })
     scrollTo.mockRestore()
+  })
+})
+
+describe('F-026 W4 availability filter', () => {
+  const choice = (name: string) => screen.findByRole('button', { name })
+
+  it('a movie list offers both choices, sends the param, shows a removable chip and combines with q', async () => {
+    treeWithType('movie')
+    const backend = useBackend({
+      list: { type: 'movie' },
+      items: [makeItem(1, { title: 'Blade Runner' })],
+    })
+    const user = userEvent.setup()
+    const router = renderList(at('?q=blade'))
+    await itemsList()
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    expect(await choice('Available')).toHaveAttribute('aria-pressed', 'false')
+    await user.click(await choice('Available, not paid'))
+    await waitFor(() => expect(router.state.location.search).toContain('availability=included'))
+    expect(router.state.location.search).toContain('q=blade')
+    await waitFor(() => {
+      const last = backend.itemRequests.at(-1)!.searchParams
+      expect(last.get('availability')).toBe('included')
+      expect(last.get('q')).toBe('blade')
+    })
+    await user.keyboard('{Escape}')
+    await user.click(
+      await screen.findByRole('button', { name: 'Remove filter Available, not paid' }),
+    )
+    await waitFor(() => expect(router.state.location.search).not.toContain('availability'))
+    await waitFor(() =>
+      expect(backend.itemRequests.at(-1)!.searchParams.has('availability')).toBe(false),
+    )
+  })
+
+  it('a book list has no availability choices and ignores ?availability=', async () => {
+    treeWithType('book')
+    const backend = useBackend({ list: { type: 'book' } })
+    const user = userEvent.setup()
+    renderList(at('?availability=available'))
+    await itemsList()
+    expect(backend.itemRequests.at(-1)!.searchParams.has('availability')).toBe(false)
+    expect(screen.queryByRole('button', { name: /Remove filter Available/ })).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    expect(screen.queryByRole('button', { name: 'Available' })).toBeNull()
+  })
+
+  it('an invalid ?availability= value is not sent', async () => {
+    treeWithType('movie')
+    const backend = useBackend({ list: { type: 'movie' } })
+    renderList(at('?availability=nope'))
+    await itemsList()
+    expect(backend.itemRequests.at(-1)!.searchParams.has('availability')).toBe(false)
   })
 })

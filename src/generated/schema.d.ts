@@ -167,7 +167,7 @@ export interface paths {
         head?: never;
         /**
          * Update an item
-         * @description Requires `If-Match` (`"i-N"`). Any of `title, price, website, metadata`; send `null` to clear a nullable field. `metadata` is validated against the list's type and replaces the stored one. The type cannot be changed here.
+         * @description Requires `If-Match` (`"i-N"`). Any of `title, price, website, metadata`; send `null` to clear a nullable field. `metadata` is validated against the list's type and replaces the stored one. The type cannot be changed here. A new title already used by another item of the list is `409 duplicate_title`.
          */
         patch: operations["updateItem"];
         trace?: never;
@@ -311,7 +311,7 @@ export interface paths {
         put?: never;
         /**
          * Move an item to another list
-         * @description Requires `If-Match` (`"i-N"`). Appended to the end of the destination list. A missing or trashed list returns `409 destination_unavailable`. A destination list of another type returns `409 type_mismatch`.
+         * @description Requires `If-Match` (`"i-N"`). Appended to the end of the destination list. A missing or trashed list returns `409 destination_unavailable`. A destination list of another type returns `409 type_mismatch`. A destination list that already has the item's title returns `409 duplicate_title`.
          */
         post: operations["moveItem"];
         delete?: never;
@@ -397,13 +397,13 @@ export interface paths {
         };
         /**
          * List the items of a list
-         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title and, on movie lists, director. `price` sorts by `price.min` and is available only when the type allows price. Field filters combine with `q`.
+         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title and, on movie lists, director. `price` sorts by `price.min` and is available only when the type allows price. Field filters and `availability` combine with `q` and each other.
          */
         get: operations["listItems"];
         put?: never;
         /**
          * Create an item
-         * @description Appended to the end of the list. The item's `type` is the list's type (read-only, not accepted in the body). `metadata` is validated against the list's type. A `price` on a type without a price is `422 validation_failed`.
+         * @description Appended to the end of the list. The item's `type` is the list's type (read-only, not accepted in the body). `metadata` is validated against the list's type. A `price` on a type without a price is `422 validation_failed`. A title already used in the list (trimmed, ignoring case and accents) is `409 duplicate_title`.
          */
         post: operations["createItem"];
         delete?: never;
@@ -1039,6 +1039,7 @@ export interface components {
          *     - `parent_in_trash`: A restore without a destination whose parent is trashed (409). `blocking_parent` names it.
          *     - `destination_unavailable`: A move, restore or create targets a folder or list that is missing or trashed (409).
          *     - `type_mismatch`: An item would move to a list of another type (409).
+         *     - `duplicate_title`: An item create, rename or move would repeat a title of the target list, ignoring case, accents and outer spaces (409).
          *     - `order_stale`: A reorder names an id set that no longer matches the stored one (409).
          *     - `lookup_disabled`: A lookup was requested but its integration is not configured on this server (503).
          *     - `upstream_unavailable`: A lookup provider could not be reached or answered in time (503).
@@ -2107,6 +2108,15 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3313,6 +3323,8 @@ export interface operations {
                 filter_min?: string;
                 /** @description Inclusive upper bound for number or ISO date field filters. */
                 filter_max?: string;
+                /** @description Movie and TV lists only. available: at least one streaming platform on an owned service (any service when settings.owned_streaming_services is empty). included: the same, counting only platforms not paid per title (subscription, free or ads; no rent or buy). */
+                availability?: "available" | "included";
                 /** @description Page size. */
                 limit?: number;
                 /** @description Number of rows to skip. */
@@ -3410,6 +3422,15 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

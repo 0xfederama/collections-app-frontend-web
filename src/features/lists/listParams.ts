@@ -1,6 +1,7 @@
 import type { TypeDefinition } from '../settings'
 import type { ItemsParams, SortMode } from './api'
 import type { FieldFilterValue } from './FieldFilter'
+import type { Availability } from './availability'
 
 /** The `?sort=` URL value, trimmed; blank means no override. */
 export function parseSort(value: string | null): SortMode | null {
@@ -45,11 +46,13 @@ export function buildItemsParams({
   q,
   filter,
   definition,
+  availability = null,
 }: {
   sortOverride: SortMode | null
   q: string
   filter: FieldFilterValue | null
   definition: TypeDefinition | undefined | null
+  availability?: Availability | null
 }): ItemsParams {
   const active = activeFieldFilter(filter)
   const filterDefinitionField = definition?.fields.find((field) => field.key === active?.field)
@@ -66,5 +69,6 @@ export function buildItemsParams({
         : null,
     filterMin: active?.min || null,
     filterMax: active?.max || null,
+    availability,
   }
 }

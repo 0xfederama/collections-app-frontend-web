@@ -128,6 +128,22 @@ test.describe('F-025 mobile', () => {
     expect(overflow).toBeLessThanOrEqual(0)
   })
 
+  test('F-026 W7 a duplicate title in the new-item page shows inline', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Dup phone'), 'wishlist')
+    const title = uniqueName('Same thing')
+    await createItem(request, list.id, title)
+    await page.goto(`/lists/${list.id}`)
+    await page.getByRole('button', { name: 'New item' }).first().click()
+    const field = page.getByRole('textbox', { name: 'Title' })
+    await field.fill(title)
+    await field.press('Enter')
+    await expect(page.getByText('An item with this title is already in this list.')).toBeVisible()
+    await expect(field).toHaveValue(title)
+  })
+
   test.describe('dark', () => {
     test.use({ colorScheme: 'dark' })
 
@@ -183,6 +199,18 @@ test.describe('F-025 mobile', () => {
     const text = (await bookRow.textContent()) ?? ''
     expect(text.indexOf('321 p.')).toBeGreaterThanOrEqual(0)
     expect(text.indexOf('321 p.')).toBeLessThan(text.indexOf('Ada Writer'))
+  })
+
+  test('W5 the item back control goes to its list and keeps the list search and sort', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Back query'), 'movie')
+    const item = await createItem(request, list.id, uniqueName('Film'))
+    await page.goto(`${itemUrl(list.id, item.id)}?q=Film&sort=title`)
+    const back = page.getByRole('main').getByRole('link', { name: /^Back to / })
+    await back.tap()
+    await expect(page).toHaveURL(new RegExp(`/lists/${list.id}\\?q=Film&sort=title$`))
   })
 
   test('W10 the item page has a back link in the slot and no menu button (W14)', async ({

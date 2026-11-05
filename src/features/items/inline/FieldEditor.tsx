@@ -1,9 +1,10 @@
 import { useIsMutating, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { ApiError, NetworkError } from '../../../lib/api'
+import { ApiError, isDuplicateTitle, NetworkError } from '../../../lib/api'
 import { cx } from '../../../lib/cx'
 import { itemKeys } from '../../../data/keys'
 import { isOwnWriteChain, useUpdateItem, type Item } from '../api'
+import { duplicateTitleMessage } from '../duplicate'
 import { draftFromItem, type Draft } from '../form/draft'
 import { draftDump } from '../form/dump'
 import { buildPatch, isDirty } from '../form/patch'
@@ -141,6 +142,9 @@ export function FieldEditor({
   }
 
   const fail = (caught: unknown, source: Draft) => {
+    if (isDuplicateTitle(caught) && spec.errorKeys.includes('title')) {
+      return showErrors({ title: duplicateTitleMessage(item.type) })
+    }
     if (caught instanceof ApiError) {
       if (caught.status === 412) return setFailure({ kind: 'conflict' })
       if (caught.status === 404) return setFailure({ kind: 'gone' })

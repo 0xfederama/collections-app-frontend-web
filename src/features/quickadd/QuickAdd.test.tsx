@@ -246,4 +246,26 @@ describe('F-025 W13 quick add on phones', () => {
     )
     expect(screen.queryByRole('button', { name: 'Open' })).not.toBeInTheDocument()
   })
+
+  it('F-026 W7 duplicate_title shows inline under the title, keeps the draft and the dialog', async () => {
+    mockViewport(1100)
+    server.use(
+      http.post(`${origin}/api/v1/lists/${LIST}/items`, () =>
+        problemResponse(409, 'duplicate_title'),
+      ),
+    )
+    const user = userEvent.setup()
+    const router = createTestRouter([`/lists/${LIST}`])
+    renderWithProviders(<RouterProvider router={router} />)
+
+    await user.keyboard('n')
+    const dialog = await screen.findByRole('dialog', { name: 'Quick add' })
+    const title = within(dialog).getByLabelText(/^Title/)
+    await user.type(title, 'Field notebook{Enter}')
+
+    expect(await within(dialog).findByText(/is already in this list\./)).toBeInTheDocument()
+    expect(title).toHaveValue('Field notebook')
+    expect(title).toHaveFocus()
+    expect(router.state.location.pathname).toBe(`/lists/${LIST}`)
+  })
 })

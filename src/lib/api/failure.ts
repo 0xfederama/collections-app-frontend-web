@@ -35,3 +35,8 @@ export function failureKind(error: unknown): FailureKind {
 export function errorMessage(error: unknown, fallback = 'Something went wrong.'): string {
   return error instanceof ApiError ? (error.detail ?? error.title) : fallback
 }
+
+/** 409 `duplicate_title`: the title (or provider id) is already in the list. Features add the wording. */
+export function isDuplicateTitle(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 409 && error.code === 'duplicate_title'
+}

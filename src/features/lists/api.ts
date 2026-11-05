@@ -47,6 +47,7 @@ export function useListItems(listId: string, params: ItemsParams) {
               ...(params.filterValue !== null ? { filter_value: params.filterValue } : {}),
               ...(params.filterMin !== null ? { filter_min: params.filterMin } : {}),
               ...(params.filterMax !== null ? { filter_max: params.filterMax } : {}),
+              ...(params.availability ? { availability: params.availability } : {}),
               limit: ITEMS_PAGE_SIZE,
               offset: pageParam,
             },

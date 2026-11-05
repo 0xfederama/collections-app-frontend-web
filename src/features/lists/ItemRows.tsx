@@ -9,7 +9,7 @@ import { useSortableRow } from '../../components/ui/sortable'
 export function DraftRow({ mode }: { mode: DisplayMode }) {
   return (
     <li
-      aria-label="New item (draft)"
+      aria-label="New item"
       aria-current="true"
       className={cx(
         'flex items-center gap-3 rounded-lg border border-dashed border-accent bg-fill/40 p-3 text-text-muted',

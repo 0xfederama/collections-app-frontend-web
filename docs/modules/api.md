@@ -27,13 +27,14 @@ Pins the backend OpenAPI contract, generates TypeScript types/examples, and prov
 
 ## Gotchas
 
-- Current pinned contract: `api-v3.1.0` (web 2.25.0). Do not edit `api/openapi.yaml` or `src/generated/`; run `api:sync` and verify with `api:check`.
+- Current pinned contract: `api-v3.2.0` (web 2.29.0). Do not edit `api/openapi.yaml` or `src/generated/`; run `api:sync` and verify with `api:check`.
 - F014 (`api-v0.10.1`): type definitions are API data; `src/mocks/types.ts` serves them read-only to tests and the dev worker. F-023 (web W1, `api-v3.0.0`): custom fields are gone; the field routes and their ETags are removed from the contract and the web, and types carry no `version`.
 - F-016 (`api-v0.12.0`): Open Library book suggestions and lookup (`book_lookup_available`, `source_id`), the book type, `stores` fields and the store provider list. `api-v0.13.0`: setting `preferred_store` (one key, default `amazon`) replaces `preferred_stores`, Open Library is not a store, the book has no `first_publish_year`.
 - F-022 (`api-v2.0.0`): custom types and the list pins (`pinned_fields`, `default_pinned_fields`) left the contract. Pins are fixed per built-in type in the web (`lists/pinned.ts`). Settings gained `owned_streaming_services` (absent = unchanged, `[]` = every service).
 - `api-v3.1.0` (F-025 W11): list `lookup-refresh` (movie and TV, at most 50 items per call, `remaining` = more to run). Item `refresh` is movie and TV only (`422` otherwise).
 - F013 adds TMDB suggestions and item lookup, movie `director`, the movie-only `director` sort, settings `metadata_language`, and read-only `lookup_available`.
 - Setting retention to `null` disables it; changing the value does not purge immediately. The API accepts 1–365 days; the UI offers Off, 7, 30 and 90.
+- `api-v3.2.0` (F-026, web 2.29.0): `GET /lists/{id}/items?availability=available|included` (movie and TV) and 409 `duplicate_title` on create, rename, move and copy. `isDuplicateTitle(error)` (`lib/api/failure.ts`) detects it; the wording stays in `features/items/duplicate.ts`.
 - Mutations use ETags; 412 is not retried. Network and 5xx failures can retry once.
 - Features import keys from `data/keys` and never re-export them; invalidate by key, never by string literal.
 - See [API design docs](/Users/federico/Developer/collections-app/design-docs/API.md) for the contract.

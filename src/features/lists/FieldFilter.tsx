@@ -3,6 +3,7 @@ import { Button, Select, TextField, type SelectOption } from '../../components/u
 import { ListFilter, X } from '../../components/ui/icons'
 import type { TypeField } from '../items'
 import { toolbarIconControl } from './toolbarStyles'
+import { AVAILABILITY_OPTIONS, availabilityLabel, type Availability } from './availability'
 
 export interface FieldFilterValue {
   field: string
@@ -58,6 +59,33 @@ export interface FieldFilterProps {
   fields: readonly TypeField[]
   value: FieldFilterValue | null
   onChange: (value: FieldFilterValue | null) => void
+}
+
+export interface AvailabilityProps {
+  /** Movie and TV lists only (F-026 W4); omitted elsewhere, so the menu has no availability choices. */
+  availability?: {
+    value: Availability | null
+    onChange: (value: Availability | null) => void
+  }
+}
+
+/** The two availability choices, as toggle buttons (pressing the chosen one again clears it). */
+function AvailabilityChoices({ value, onChange }: NonNullable<AvailabilityProps['availability']>) {
+  return (
+    <fieldset className="flex flex-wrap items-center gap-2">
+      <legend className="sr-only">Filter by availability</legend>
+      {AVAILABILITY_OPTIONS.map((option) => (
+        <Button
+          key={option.value}
+          variant={value === option.value ? 'primary' : 'secondary'}
+          aria-pressed={value === option.value}
+          onClick={() => onChange(value === option.value ? null : option.value)}
+        >
+          {option.label}
+        </Button>
+      ))}
+    </fieldset>
+  )
 }
 
 /** A compact, keyboard reachable field filter that follows the field's declared type. */
@@ -170,8 +198,9 @@ export function describeFieldFilter(
 }
 
 /** "+ Filter" opens the field filter in a popover; an applied filter then shows as a chip (`FieldFilterChip`). */
-export function FieldFilterMenu(props: FieldFilterProps) {
-  if (!props.fields.some(filterable)) return null
+export function FieldFilterMenu({ availability, ...props }: FieldFilterProps & AvailabilityProps) {
+  const hasFields = props.fields.some(filterable)
+  if (!hasFields && !availability) return null
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
@@ -188,7 +217,10 @@ export function FieldFilterMenu(props: FieldFilterProps) {
           collisionPadding={8}
           className="bg-surface-raised z-50 max-w-[calc(100vw-1rem)] rounded-lg p-3 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
         >
-          <FieldFilter {...props} />
+          <div className="flex flex-col gap-3">
+            {availability && <AvailabilityChoices {...availability} />}
+            {hasFields && <FieldFilter {...props} />}
+          </div>
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
@@ -198,6 +230,31 @@ export function FieldFilterMenu(props: FieldFilterProps) {
 /** The applied field filter as a removable chip, or nothing while none is applied. */
 export function FieldFilterChip({ fields, value, onChange }: FieldFilterProps) {
   const text = describeFieldFilter(fields, value)
+  if (!text) return null
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-accent-tint bg-accent-tint py-0.5 pr-1 pl-3 text-ui text-accent-text">
+      {text}
+      <button
+        type="button"
+        aria-label={`Remove filter ${text}`}
+        onClick={() => onChange(null)}
+        className="grid size-6 place-items-center rounded-full hover:bg-accent/15 focus-visible:outline-2 focus-visible:outline-focus-ring pointer-coarse:size-8"
+      >
+        <X aria-hidden className="size-3.5" />
+      </button>
+    </span>
+  )
+}
+
+/** The applied availability choice as a removable chip, or nothing while none is applied. */
+export function AvailabilityChip({
+  value,
+  onChange,
+}: {
+  value: Availability | null
+  onChange: (value: null) => void
+}) {
+  const text = availabilityLabel(value)
   if (!text) return null
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-accent-tint bg-accent-tint py-0.5 pr-1 pl-3 text-ui text-accent-text">

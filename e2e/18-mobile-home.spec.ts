@@ -112,6 +112,18 @@ test.describe('F-025 mobile Home', () => {
     await expect(page).toHaveURL(new RegExp(`/lists/${list.id}/items/[^/]+$`))
   })
 
+  test('F-026 W2 tapping New item focuses the title field (the iOS keyboard opens with it)', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Focus phone'), 'wishlist')
+    await page.goto(`/lists/${list.id}`)
+    await page.getByRole('main').getByRole('button', { name: 'New item' }).tap()
+    await expect(page.getByRole('textbox', { name: 'Title' })).toBeFocused()
+    // The keyboard proxy used for the tap is removed once the title has focus.
+    await expect(page.locator('body > input[aria-hidden="true"]')).toHaveCount(0)
+  })
+
   test('W14 opening an item starts at the top, going back restores the list scroll', async ({
     page,
     request,
@@ -217,6 +229,25 @@ test.describe('F-025 list row polish', () => {
     await main.getByRole('button', { name: 'Back to Home' }).tap()
     await expect(page).toHaveURL(/\/$/)
     await expect(main.getByRole('searchbox', { name: 'Search', exact: true })).toBeVisible()
+  })
+
+  test('W5 a list opened from Home: Back to Home goes back in history, no new entry', async ({
+    page,
+    request,
+  }) => {
+    const name = uniqueName('History list')
+    await createList(request, name, 'movie')
+    await page.goto('/')
+    const main = page.getByRole('main')
+    await main
+      .getByRole('tree')
+      .getByRole('link', { name: new RegExp(name) })
+      .tap()
+    await expect(page).toHaveURL(/\/lists\/[^/]+$/)
+    const entries = await page.evaluate(() => history.length)
+    await main.getByRole('button', { name: 'Back to Home' }).tap()
+    await expect(page).toHaveURL(/\/$/)
+    expect(await page.evaluate(() => history.length)).toBe(entries)
   })
 
   test('phone Home: Quick add is as wide as the search field', async ({ page, request }) => {

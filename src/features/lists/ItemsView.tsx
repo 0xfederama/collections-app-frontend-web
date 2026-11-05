@@ -65,7 +65,7 @@ export function ItemsView(props: ItemsViewProps) {
   const [announcement, setAnnouncement] = useState('')
 
   if (items.length === 0 && !props.draft) {
-    return params.q || params.filterField ? (
+    return params.q || params.filterField || params.availability ? (
       <EmptyState
         icon={Search}
         title="No items match"
@@ -95,12 +95,13 @@ export function ItemsView(props: ItemsViewProps) {
     effectiveSort === 'manual' &&
     !params.q &&
     !params.filterField &&
+    !params.availability &&
     !hasNextPage &&
     items.length === total &&
     items.length > 1
   const hint = canReorder
     ? null
-    : params.q || params.filterField
+    : params.q || params.filterField || params.availability
       ? 'Clear the filter to reorder items.'
       : hasNextPage
         ? 'Load all items to reorder them.'

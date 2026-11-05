@@ -15,6 +15,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `types/index.ts`: helpers over the API type definitions (no static registry); `typeDefinition` returns built-in fields only.
 - `TitleLookupField.tsx`, `lookup.ts`, `LookupStatus.tsx`: TMDB suggestions (movie and TV) and the pending line for books.
 - `NewItemDraft.tsx`, `api.ts`: inline creation and item data. External links live in [links](links.md).
+- `duplicate.ts`: `duplicateTitleMessage(type)`, the inline wording for a 409 `duplicate_title` (F-026 W7).
 
 ## Interfaces
 
@@ -25,6 +26,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `typeDefinition(definitions, key)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
 - `createLookupSelection(type, settings, selection)`, `hasSuggestions(type)`, `isBookLookup(type, settings)`, `lookupSource(type)`.
 - `DescriptionField({ itemId, listId })`, `InlineField`, `FieldBlock`.
+- `duplicateTitleMessage(type)` (`duplicate.ts`); `isDuplicateTitle(error)` (`lib/api`) is the shared 409 check.
 
 ## Gotchas
 
@@ -41,4 +43,6 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - Phones: after a new item is committed, the draft returns to the list (no auto-open) and a toast's "Open" action opens the item (`NewItemDraft`).
 - Image changes and field editors use the item's `If-Match` (version captured when opened); 412/404 keeps the draft and offers Copy draft and Reload latest.
 - Every populated editable field is shown by default; empty fields are available from "+ Add field".
+- 409 `duplicate_title` (F-026 W7) is shown inline: under the title in the new-item draft (the typed title is kept), on the title of the inline title edit, on the Quick add title, and as the Move message. On movie, TV and book lists the text says "movie", "show" or "book"; other lists say "An item with this title is already in this list."
+- The new-item title is 44 px tall (as tall as the ✓ / ✕ buttons). On mount it releases the iOS keyboard proxy (`releaseKeyboardProxy`) that the "New item" tap opened (see [lists](lists.md)).
 - If lookup is unavailable while the inline draft is created, the draft keeps its typed title and offers retry or creating without metadata.

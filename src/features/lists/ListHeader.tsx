@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Button, Skeleton, TextField, type SelectOption } from '../../components/ui'
+import { useId, useState } from 'react'
+import { Button, Skeleton, type SelectOption } from '../../components/ui'
 import { Pencil, Plus, Search } from '../../components/ui/icons'
 import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { useBreakpoint } from '../../lib/breakpoints'
@@ -11,13 +11,15 @@ import { ListIconMark } from './ListIconMark'
 import { ListTitle } from './ListTitle'
 import { SortMenu } from './SortMenu'
 import { ViewMenu } from './ViewMenu'
-import { toolbarControl } from './toolbarStyles'
+import { toolbarControl, toolbarSearchControl } from './toolbarStyles'
 import {
+  AvailabilityChip,
   FieldFilterChip,
   FieldFilterMenu,
   describeFieldFilter,
   type FieldFilterValue,
 } from './FieldFilter'
+import { supportsAvailability, type Availability } from './availability'
 
 const baseSortOptions: SelectOption[] = [
   { value: 'manual', label: 'Manual' },
@@ -56,6 +58,9 @@ export interface ListHeaderProps {
   onFilter: (value: string) => void
   fieldFilter: FieldFilterValue | null
   onFieldFilter: (value: FieldFilterValue | null) => void
+  /** The applied availability choice; changing it is offered on movie and TV lists only (F-026 W4). */
+  availability: Availability | null
+  onAvailability: (value: Availability | null) => void
   onAddItem: () => void
 }
 
@@ -107,27 +112,32 @@ export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   // Phones: short placeholder (F-025 W8); the field is always visible at every width.
   const phone = useBreakpoint() === 'mobile'
+  const searchId = useId()
+  // F026 W1: the field is drawn like the icon buttons beside it (no white field, no outline), not as a TextField.
+  const searchLabel =
+    props.treeList.type === 'movie' ? 'Search items by title or director' : 'Search items by title'
   const searchField = (
-    <div className="min-w-0 flex-1 md:min-w-40 [&_label]:sr-only">
-      <TextField
-        label={
-          props.treeList.type === 'movie'
-            ? 'Search items by title or director'
-            : 'Search items by title'
-        }
-        type="search"
-        placeholder={
-          phone
-            ? 'Search'
-            : props.treeList.type === 'movie'
-              ? 'Search by title or director'
-              : 'Search by title'
-        }
-        value={props.filter}
-        onChange={(event) => props.onFilter(event.target.value)}
-        prefix={<Search aria-hidden className="size-4" />}
-        className="h-9! hover:border-text-muted! focus-within:border-accent!"
-      />
+    <div className="min-w-0 flex-1 md:min-w-40">
+      <label htmlFor={searchId} className="sr-only">
+        {searchLabel}
+      </label>
+      <div className={toolbarSearchControl}>
+        <Search aria-hidden className="size-4 shrink-0 text-text-muted" />
+        <input
+          id={searchId}
+          type="search"
+          placeholder={
+            phone
+              ? 'Search'
+              : props.treeList.type === 'movie'
+                ? 'Search by title or director'
+                : 'Search by title'
+          }
+          value={props.filter}
+          onChange={(event) => props.onFilter(event.target.value)}
+          className="min-w-0 flex-1 appearance-none bg-transparent outline-none placeholder:text-text-muted"
+        />
+      </div>
     </div>
   )
   return (
@@ -157,6 +167,11 @@ export function ListHeader(props: ListHeaderProps) {
             fields={props.definition.fields}
             value={props.fieldFilter}
             onChange={props.onFieldFilter}
+            availability={
+              supportsAvailability(props.definition)
+                ? { value: props.availability, onChange: props.onAvailability }
+                : undefined
+            }
           />
           {/* Like "+ Filter": an icon button, the active sort is checked inside its menu (F-025 W8). */}
           <SortMenu
@@ -185,13 +200,15 @@ export function ListHeader(props: ListHeaderProps) {
             </Button>
           )}
         </div>
-        {describeFieldFilter(props.definition.fields, props.fieldFilter) && (
+        {(describeFieldFilter(props.definition.fields, props.fieldFilter) ||
+          props.availability) && (
           <div className="mt-2 flex flex-wrap gap-2">
             <FieldFilterChip
               fields={props.definition.fields}
               value={props.fieldFilter}
               onChange={props.onFieldFilter}
             />
+            <AvailabilityChip value={props.availability} onChange={props.onAvailability} />
           </div>
         )}
       </div>

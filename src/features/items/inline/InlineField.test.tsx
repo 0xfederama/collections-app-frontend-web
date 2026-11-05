@@ -117,6 +117,17 @@ describe('F002-W3 in-place fields: one PATCH per field', () => {
     expect(calls).toHaveLength(0)
   })
 
+  it('F-026 W7 title: duplicate_title shows inline, keeps the draft and the editor open', async () => {
+    const calls = mockPatch(() => problemResponse(409, 'duplicate_title'))
+    const { user } = await openItem()
+    await user.click(pen('title'))
+    await retype(user, screen.getByRole('textbox', { name: /Title/ }), 'Heat{Enter}')
+
+    expect(await screen.findByText('This movie is already in this list.')).toBeVisible()
+    expect(screen.getByRole('textbox', { name: /Title/ })).toHaveValue('Heat')
+    expect(calls).toHaveLength(1)
+  })
+
   it('an empty title is refused on the input, with no request', async () => {
     const calls = mockPatch()
     const { user } = await openItem()

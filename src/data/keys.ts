@@ -14,6 +14,8 @@ export interface ItemsKeyParams {
   filterValue: string | null
   filterMin: string | null
   filterMax: string | null
+  /** Movie and TV lists only (F-026 W4); `null` = no availability filter. */
+  availability: 'available' | 'included' | null
 }
 
 /** Exported so other features (W-05, W-06, W-07) invalidate by key, not by string literal. */
@@ -32,6 +34,7 @@ export const listKeys = {
       params.filterValue,
       params.filterMin,
       params.filterMax,
+      params.availability,
     ] as const,
 }
 

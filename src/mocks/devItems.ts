@@ -72,6 +72,17 @@ const TITLES: Record<string, string[]> = {
   wishlist: ['Fujifilm X100VI', 'Ricoh GR III', 'Leica Q3', 'Sony A7C II'],
   none: ['Standing desk', 'Noise-cancelling headphones', 'Espresso machine', 'Trail shoes'],
 }
+/**
+ * Approximation of the server's `availability` rule (F-026 W4): any streaming platform; `included` leaves out the
+ * paid-per-title ones. Owned services are not modelled in the dev fake.
+ */
+function isAvailable(item: ItemSummary, includedOnly: boolean): boolean {
+  const streaming = (item.metadata as Record<string, unknown> | undefined)?.streaming as
+    { platforms?: string[]; paid_platforms?: string[] } | undefined
+  const paid = new Set(includedOnly ? (streaming?.paid_platforms ?? []) : [])
+  return (streaming?.platforms ?? []).some((platform) => !paid.has(platform))
+}
+
 /** Type fields for the pinned layout. The contract's summaries carry none yet, so the dev fake adds them. */
 function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
   switch (type) {
@@ -209,8 +220,13 @@ function createItemsBackend(tree: Tree, findList: (id: string) => List | undefin
       const limit = Math.min(Number(query.get('limit') ?? 50), 200)
       const offset = Number(query.get('offset') ?? 0)
       // The type of an item is its list's (a type change in the tree fake shows up here).
+      const availability = query.get('availability')
+      if (availability && !['available', 'included'].includes(availability)) {
+        return problemResponse(400, 'invalid_parameter')
+      }
       const matching = all
         .filter((item) => item.title.toLowerCase().includes(q))
+        .filter((item) => !availability || isAvailable(item, availability === 'included'))
         .map((item) => ({ ...item, type: list.type }))
         .sort(bySort(sort))
       return HttpResponse.json({

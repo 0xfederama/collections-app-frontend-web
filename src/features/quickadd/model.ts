@@ -1,5 +1,12 @@
-import { ApiError, errorMessage, NetworkError } from '../../lib/api'
-import { checkImageFile, isLookupUnavailable, isTooLarge, LIMITS } from '../items'
+import { ApiError, errorMessage, isDuplicateTitle, NetworkError } from '../../lib/api'
+import {
+  checkImageFile,
+  duplicateTitleMessage,
+  isLookupUnavailable,
+  isTooLarge,
+  LIMITS,
+  type ItemType,
+} from '../items'
 import type { List } from '../tree'
 
 /** The fields of the quick add form that can carry an error. */
@@ -76,8 +83,18 @@ export type CreateFailure = {
 }
 
 /** What the quick add form shows after the create request failed. Pure: the caller applies it. */
-export function describeCreateFailure(caught: unknown): CreateFailure {
+export function describeCreateFailure(caught: unknown, type?: ItemType): CreateFailure {
   const lookupUnavailable = isLookupUnavailable(caught)
+  if (isDuplicateTitle(caught)) {
+    // Inline under the title, which keeps its text (F-026 W7).
+    return {
+      errors: { title: duplicateTitleMessage(type) },
+      focus: 'title',
+      formError: undefined,
+      keepFormError: true,
+      lookupUnavailable: false,
+    }
+  }
   if (caught instanceof ApiError && caught.status === 422) {
     const mapped: Partial<Record<Field, string>> = {}
     const rest: string[] = []

@@ -223,6 +223,28 @@ describe('F020 quickadd model', () => {
     })
   })
 
+  describe('F-026 W7 describeCreateFailure duplicate_title', () => {
+    it.each([
+      ['movie', 'This movie is already in this list.'],
+      ['book', 'This book is already in this list.'],
+      [null, 'An item with this title is already in this list.'],
+    ] as const)('%j: inline on the title, no banner', (type, message) => {
+      const caught = new ApiError({
+        status: 409,
+        code: 'duplicate_title',
+        title: 'Duplicate',
+        raw: undefined,
+      })
+      expect(describeCreateFailure(caught, type)).toEqual({
+        errors: { title: message },
+        focus: 'title',
+        formError: undefined,
+        keepFormError: true,
+        lookupUnavailable: false,
+      })
+    })
+  })
+
   describe('describeCreateFailure', () => {
     const unprocessable = (errors: { field: string; message: string }[]) =>
       new ApiError({ status: 422, code: 'validation', title: 'Invalid', errors, raw: null })

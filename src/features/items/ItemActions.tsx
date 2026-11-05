@@ -95,7 +95,7 @@ function useFailure(item: ItemRef, onClose: () => void) {
   const [error, setError] = useState<ItemError | null>(null)
 
   const fail = (caught: unknown) => {
-    const classified = classifyItemError(caught)
+    const classified = classifyItemError(caught, item.type)
     if (classified.kind === 'conflict') {
       void client.invalidateQueries({ queryKey: itemKeys.detail(item.id) })
     }

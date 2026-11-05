@@ -135,7 +135,7 @@ describe('F009-W3 the first pinned field reads next to the title, the second in 
 })
 
 describe('F016-W3 three pins: two beside the title, the third in the corner', () => {
-  it.each(['compact', 'thumbnail', 'grid'] as const)(
+  it.each(['thumbnail', 'grid'] as const)(
     '%s: title, pages and author, then the stores as tiles',
     async (mode) => {
       const row = entry(['pages', 'author', 'stores'], mode, {
@@ -153,6 +153,16 @@ describe('F016-W3 three pins: two beside the title, the third in the corner', ()
       expect(within(row).getByRole('img', { name: 'Kobo' })).toBeInTheDocument()
     },
   )
+
+  it('F026-W3 compact: title and pages, no author, the stores stay as tiles', async () => {
+    const row = entry(['pages', 'author', 'stores'], 'compact', {
+      type: 'book',
+      title: 'Dune',
+      metadata: { author: 'Frank Herbert', pages: 412, stores: ['kobo'] },
+    })
+    expect(readOrder(row)).toEqual(['Dune', '412 p.'])
+    expect(await within(row).findByRole('img', { name: 'Kobo' })).toBeInTheDocument()
+  })
 
   it('a book with no stores selected shows no tiles', () => {
     const row = entry(['pages', 'author', 'stores'], 'compact', {
@@ -305,7 +315,7 @@ describe('F-025 W5 long press opens the entry actions', () => {
 })
 
 describe('F-025 W9 row metadata: runtime with director, pages with author, metadata truncates first', () => {
-  it.each(['compact', 'thumbnail', 'grid'] as const)(
+  it.each(['thumbnail', 'grid'] as const)(
     '%s: a movie reads runtime then director, and streaming stays in the corner',
     (mode) => {
       const row = entry(['runtime_minutes', 'director', 'streaming'], mode, {
@@ -323,7 +333,7 @@ describe('F-025 W9 row metadata: runtime with director, pages with author, metad
     },
   )
 
-  it.each(['compact', 'thumbnail', 'grid'] as const)(
+  it.each(['thumbnail', 'grid'] as const)(
     '%s: the director truncates, the runtime and the streaming icons never do',
     (mode) => {
       const row = entry(['runtime_minutes', 'director', 'streaming'], mode, {
@@ -338,12 +348,25 @@ describe('F-025 W9 row metadata: runtime with director, pages with author, metad
     },
   )
 
+  it('F026-W3 compact: a movie reads its runtime and streaming, never the director', () => {
+    const row = entry(['runtime_minutes', 'director', 'streaming'], 'compact', {
+      metadata: {
+        runtime_minutes: 117,
+        director: 'Ridley Scott',
+        streaming: { platforms: ['Netflix'] },
+      },
+    })
+    expect(readOrder(row)).toEqual(['Alien', '117 min'])
+    expect(within(row).queryByText('Ridley Scott')).not.toBeInTheDocument()
+    expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+  })
+
   it('a movie with no director shows its runtime alone', () => {
     const row = entry(['runtime_minutes', 'director', 'streaming'], 'thumbnail')
     expect(readOrder(row)).toEqual(['Alien', '117 min'])
   })
 
-  it.each(['compact', 'thumbnail', 'grid'] as const)(
+  it.each(['thumbnail', 'grid'] as const)(
     '%s: a book reads its pages then its author, and the author never truncates',
     (mode) => {
       const row = entry(['pages', 'author', 'stores'], mode, {
