@@ -5,6 +5,7 @@ import { Dialog, useToast } from '../../components/ui'
 import { useBreakpoint } from '../../lib/breakpoints'
 import {
   useCreateItem,
+  ADDED_TOAST,
   TitleLookupField,
   createLookupSelection,
   isBookLookup,
@@ -150,7 +151,7 @@ export function QuickAddDialog({
         ...opened,
       })
     } else {
-      toast({ kind: 'success', title: `Added “${created.title}”`, ...opened })
+      toast({ ...ADDED_TOAST, title: `Added “${created.title}”`, ...opened })
     }
     onClose()
     if (!phone) void navigate(itemPath)

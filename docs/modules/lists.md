@@ -59,3 +59,5 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - The list header's "…" menu hosts "Refresh details" (see [tree](tree.md)).
 - The reorder hint explains only a filter or unloaded items; there is no "switch to Manual sort" hint.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.
+
+- Default sort (2.29.1): a sort other than the list's `sort_mode` shows `DefaultSortChip` ("Make “<label>” the default sort for this list") on the chip line under the toolbar, never in the toolbar row; it PATCHes `sort_mode`, then the line goes and "Default sort saved" toasts.

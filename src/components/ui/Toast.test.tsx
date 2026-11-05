@@ -61,6 +61,31 @@ describe('Toast', () => {
     await vi.waitFor(() => expect(screen.queryByText('Restored')).not.toBeInTheDocument())
   })
 
+  it('2.29.1 a toast with the same replaceKey replaces the shown one instead of stacking', async () => {
+    const user = userEvent.setup()
+    function Two() {
+      const toast = useToast()
+      return (
+        <>
+          <button onClick={() => toast({ title: 'Added A', replaceKey: 'added' })}>A</button>
+          <button onClick={() => toast({ title: 'Added B', replaceKey: 'added' })}>B</button>
+          <button onClick={() => toast({ title: 'Other' })}>C</button>
+        </>
+      )
+    }
+    render(
+      <ToastProvider>
+        <Two />
+      </ToastProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: 'A' }))
+    await user.click(screen.getByRole('button', { name: 'C' }))
+    await user.click(screen.getByRole('button', { name: 'B' }))
+    expect(await screen.findByText('Added B')).toBeInTheDocument()
+    expect(screen.queryByText('Added A')).toBeNull()
+    expect(screen.getByText('Other')).toBeInTheDocument()
+  })
+
   it('useToast outside a ToastProvider throws', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     expect(() => render(<Trigger options={{ title: 'x' }} />)).toThrow(

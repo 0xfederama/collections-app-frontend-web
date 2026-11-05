@@ -174,10 +174,15 @@ export function ListView({ treeList }: { treeList: List }) {
   // F008-W9: "New item" opens the draft item page; the draft row shows while that route is open.
   const navigate = useNavigate()
   const draft = useParams().itemId === NEW_ITEM_ID
-  // The keyboard proxy opens the iOS keyboard for the title that mounts after this tap (W2). An open
-  // draft keeps its field mounted, so there is nothing to focus then.
+  // iOS opens the keyboard only for a focus() inside the tap itself, so every add focuses here,
+  // synchronously: the open draft's title when there is one, else the keyboard proxy that hands
+  // focus to the title that mounts after this tap (W2, fix 2.29.1: repeated adds).
   const addItem = () => {
-    if (!draft) focusKeyboardProxy()
+    const open = root.current?.ownerDocument.querySelector<HTMLInputElement>(
+      'article[aria-label="New item"] input',
+    )
+    if (draft && open) open.focus({ preventScroll: true })
+    else focusKeyboardProxy()
     void navigate({ pathname: `/lists/${listId}/items/${NEW_ITEM_ID}`, search }, { replace: draft })
   }
 

@@ -193,6 +193,8 @@ const radioName = { compact: 'Compact rows', thumbnail: 'Thumbnail rows', grid: 
 // 200-250 rows plus user-event's per-click style checks: ~1.5 s alone, 10x that on a loaded machine.
 const HEAVY_TEST_TIMEOUT = 30_000
 
+const MAKE_TITLE_DEFAULT = 'Make “Title” the default sort for this list'
+
 describe('W-06 display modes', () => {
   const rich = [
     makeItem(1, {
@@ -505,25 +507,27 @@ describe('W-06 URL state: sort and filter', () => {
     const user = userEvent.setup()
     const router = renderList(at())
     await itemsList()
-    expect(screen.queryByRole('button', { name: 'Make this the default sort' })).toBeNull()
+    expect(screen.queryByRole('button', { name: MAKE_TITLE_DEFAULT })).toBeNull()
     await user.click(sortSelect())
     await user.click(await screen.findByRole('menuitemradio', { name: 'Title' }))
     expect(router.state.location.search).toBe('?sort=title')
     await waitFor(() => expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('title'))
-    expect(screen.getByRole('button', { name: 'Make this the default sort' })).toBeInTheDocument()
+    const chip = screen.getByRole('button', { name: MAKE_TITLE_DEFAULT })
+    // Its own line under the toolbar (2.29.1): never in the row with Sort and + New item.
+    expect(chip.parentElement).not.toContainElement(sortSelect())
   })
 
-  it('"Make this the default sort" PATCHes sort_mode with If-Match', async () => {
+  it('"Make … the default sort" PATCHes sort_mode with If-Match', async () => {
     const backend = useBackend({ list: { version: 7 } })
     const user = userEvent.setup()
     renderList(at('?sort=title'))
     await itemsList()
-    await user.click(screen.getByRole('button', { name: 'Make this the default sort' }))
+    await user.click(screen.getByRole('button', { name: MAKE_TITLE_DEFAULT }))
     await waitFor(() => expect(backend.patches).toHaveLength(1))
     expect(backend.patches[0]).toEqual({ ifMatch: '"l-7"', body: { sort_mode: 'title' } })
     expect(await screen.findByText('Default sort saved')).toBeInTheDocument()
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Make this the default sort' })).toBeNull(),
+      expect(screen.queryByRole('button', { name: MAKE_TITLE_DEFAULT })).toBeNull(),
     )
   })
 
@@ -1223,6 +1227,41 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
     )
+  })
+
+  it('2.29.1 on a phone two adds in a row each focus the title and show one "Added" toast', async () => {
+    mockViewport(375)
+    useBackend({ list: { type: 'book' } })
+    treeWithType('book')
+    let n = 0
+    server.use(
+      http.post(createUrl, async ({ request }) => {
+        const body = (await request.json()) as { title: string }
+        n += 1
+        const created = {
+          ...(exampleResponses.getItem.body as object),
+          id: `${NEW_ID.slice(0, -1)}${n}`,
+          list_id: LIST,
+          title: body.title,
+          metadata: {},
+          version: 1,
+        }
+        return HttpResponse.json(created, { status: 201 })
+      }),
+    )
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    for (const name of ['Dune', 'Emma']) {
+      await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+      const title = await screen.findByRole('textbox', { name: 'Title' })
+      await waitFor(() => expect(title).toHaveFocus())
+      await user.type(title, `${name}{Enter}`)
+      await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
+      expect(await screen.findByText(`Added “${name}”`)).toBeInTheDocument()
+    }
+    expect(screen.queryByText('Added “Dune”')).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Open' })).toHaveLength(1)
   })
 
   it('keeps the typed title and can add without TMDB after lookup is unavailable', async () => {
