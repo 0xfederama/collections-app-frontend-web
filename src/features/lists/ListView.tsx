@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { Button, EmptyState, Skeleton, useToast } from '../../components/ui'
 import { List as ListIcon } from '../../components/ui/icons'
 import { ApiError } from '../../lib/api'
+import { focusKeyboardProxy } from '../../lib/keyboardProxy'
 import {
   flattenItems,
   useList,
@@ -153,8 +154,12 @@ export function ListView({ treeList }: { treeList: List }) {
   // F008-W9: "New item" opens the draft item page; the draft row shows while that route is open.
   const navigate = useNavigate()
   const draft = useParams().itemId === NEW_ITEM_ID
-  const addItem = () =>
+  // The keyboard proxy opens the iOS keyboard for the title that mounts after this tap (W2). An open
+  // draft keeps its field mounted, so there is nothing to focus then.
+  const addItem = () => {
+    if (!draft) focusKeyboardProxy()
     void navigate({ pathname: `/lists/${listId}/items/${NEW_ITEM_ID}`, search }, { replace: draft })
+  }
 
   if (listQuery.isError) {
     if (listQuery.error instanceof ApiError && listQuery.error.status === 404) {

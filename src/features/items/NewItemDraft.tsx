@@ -1,7 +1,8 @@
-import { useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button, useToast } from '../../components/ui'
 import { useBreakpoint } from '../../lib/breakpoints'
+import { releaseKeyboardProxy } from '../../lib/keyboardProxy'
 import { ApiError, errorMessage, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemType } from './api'
 import { TitleLookupField } from './TitleLookupField'
@@ -55,6 +56,12 @@ export function NewItemDraft({
   const [chosen, setChosen] = useState<LookupSelection>({})
   const sourceName = lookupSourceName(type)
   const box = useRef<HTMLDivElement>(null)
+
+  // The title took focus on mount (autoFocus), so the iOS keyboard proxy opened by the tap that
+  // created this draft is no longer needed (see `focusKeyboardProxy`).
+  useEffect(() => {
+    releaseKeyboardProxy()
+  }, [])
 
   const changeTitle = (value: string) => {
     setTitle(value)
@@ -149,7 +156,7 @@ export function NewItemDraft({
             className="size-5 bg-transparent"
             iconClassName="size-3.5"
           />
-          {typeName(definition, type)} · New item (draft)
+          {typeName(definition, type)} · New item
         </p>
         {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Enter and Escape from the title field bubble here to the draft handlers; the title input is the focusable control */}
         <div
@@ -168,8 +175,9 @@ export function NewItemDraft({
             autoFocus
             placeholder="Title of the new item"
             error={error}
-            className="min-w-0 flex-1 basis-40 rounded-md border border-border bg-fill px-3 py-2 focus-within:border-accent"
-            inputClassName="w-full bg-transparent text-text outline-none placeholder:text-text-muted"
+            // The field is as tall as the ✓ / ✕ buttons beside it (EditorButtons: size-10, size-11 on touch).
+            className="min-w-0 flex-1 basis-40"
+            inputClassName="h-10 w-full rounded-md border border-border bg-fill px-3 text-text outline-none placeholder:text-text-muted focus:border-accent pointer-coarse:h-11"
           />
           <EditorButtons
             label="title"

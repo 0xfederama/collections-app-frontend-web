@@ -112,6 +112,18 @@ test.describe('F-025 mobile Home', () => {
     await expect(page).toHaveURL(new RegExp(`/lists/${list.id}/items/[^/]+$`))
   })
 
+  test('F-026 W2 tapping New item focuses the title field (the iOS keyboard opens with it)', async ({
+    page,
+    request,
+  }) => {
+    const list = await createList(request, uniqueName('Focus phone'), 'wishlist')
+    await page.goto(`/lists/${list.id}`)
+    await page.getByRole('main').getByRole('button', { name: 'New item' }).tap()
+    await expect(page.getByRole('textbox', { name: 'Title' })).toBeFocused()
+    // The keyboard proxy used for the tap is removed once the title has focus.
+    await expect(page.locator('body > input[aria-hidden="true"]')).toHaveCount(0)
+  })
+
   test('W14 opening an item starts at the top, going back restores the list scroll', async ({
     page,
     request,

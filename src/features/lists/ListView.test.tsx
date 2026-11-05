@@ -1068,9 +1068,36 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     await waitFor(() => expect(title).toHaveFocus())
     expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/new`)
     const rows = within(screen.getByRole('list', { name: 'Items' })).getAllByRole('listitem')
-    expect(rows.at(-1)).toHaveAccessibleName('New item (draft)')
+    expect(rows.at(-1)).toHaveAccessibleName('New item')
+    // F-026 W8: the new-item view carries no "(draft)" label.
+    expect(within(panel).getByRole('article', { name: 'New item' })).not.toHaveTextContent(
+      '(draft)',
+    )
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(posts).toHaveLength(0)
+  })
+
+  it('F026-W2 the tap focuses a hidden keyboard proxy before the title, and leaves none behind', async () => {
+    mockViewport(1400)
+    useBackend()
+    useCreate()
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    const focused: Element[] = []
+    const record = (event: FocusEvent) => focused.push(event.target as Element)
+    document.addEventListener('focusin', record)
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
+    await waitFor(() => expect(title).toHaveFocus())
+    document.removeEventListener('focusin', record)
+
+    const proxy = focused.find((element) => element.getAttribute('aria-hidden') === 'true')
+    expect(proxy).toBeDefined()
+    expect(proxy).toHaveAttribute('tabindex', '-1')
+    expect(focused.indexOf(proxy!)).toBeLessThan(focused.indexOf(title))
+    expect(document.querySelector('body > input[aria-hidden="true"]')).toBeNull()
   })
 
   it('an empty title is not sent; Enter on a title creates the item and opens its page', async () => {
@@ -1239,7 +1266,7 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
 
     await waitFor(() => expect(router.state.location.pathname).toBe(`/lists/${LIST}`))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(screen.queryByRole('listitem', { name: 'New item (draft)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('listitem', { name: 'New item' })).not.toBeInTheDocument()
     expect(screen.queryByRole('complementary', { name: 'Item details' })).not.toBeInTheDocument()
     expect(posts).toHaveLength(0)
   })
