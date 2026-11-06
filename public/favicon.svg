@@ -1,13 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- The app mark "C.": Space Grotesk Bold C as an outline, blue, with an ink full stop. -->
-  <style>
-    .c { fill: #2d5bff; }
-    .dot { fill: #141416; }
-    @media (prefers-color-scheme: dark) {
-      .c { fill: #4a72ff; }
-      .dot { fill: #fafafa; }
-    }
-  </style>
-  <path class="c" transform="translate(-0.8 29.5) scale(.036 -.036)" d="M332 -14Q202 -14 126.0 58.5Q50 131 50 266V434Q50 569 126.0 641.5Q202 714 332 714Q461 714 531.5 643.5Q602 573 602 450V444H472V454Q472 516 437.5 556.0Q403 596 332 596Q262 596 222.0 553.0Q182 510 182 436V264Q182 191 222.0 147.5Q262 104 332 104Q403 104 437.5 144.5Q472 185 472 246V264H602V250Q602 127 531.5 56.5Q461 -14 332 -14Z"/>
-  <circle class="dot" cx="26.6" cy="26.6" r="2.9"/>
+  <!-- The app mark "C." on a white tile (same in both themes): Space Grotesk Bold C as an outline, blue, with an ink full stop. -->
+  <rect x="0.5" y="0.5" width="31" height="31" rx="7" fill="#ffffff" stroke="#e4e4e7" />
+  <path fill="#2d5bff" transform="translate(7.83 23.8) scale(.0235 -.0235)" d="M332 -14Q202 -14 126.0 58.5Q50 131 50 266V434Q50 569 126.0 641.5Q202 714 332 714Q461 714 531.5 643.5Q602 573 602 450V444H472V454Q472 516 437.5 556.0Q403 596 332 596Q262 596 222.0 553.0Q182 510 182 436V264Q182 191 222.0 147.5Q262 104 332 104Q403 104 437.5 144.5Q472 185 472 246V264H602V250Q602 127 531.5 56.5Q461 -14 332 -14Z" />
+  <circle fill="#141416" cx="24.2" cy="22.3" r="2.1" />
 </svg>

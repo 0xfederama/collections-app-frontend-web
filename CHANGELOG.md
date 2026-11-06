@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.31.0 — 2026-11-06
+
+### Changed
+
+- The favicon is the "C." on a white rounded tile (blue C, ink dot, hairline edge), the same in light and dark mode, so the ink dot stays visible on dark tab bars. The SVG and the PNG fallbacks (`/icons/favicon-32.png`, `/icons/favicon-16.png`) match.
+
 ## 2.30.2 — 2026-11-06
 
 ### Fixed
