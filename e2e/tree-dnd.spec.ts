@@ -19,20 +19,26 @@ test.describe('F008-W4 drag into a folder', () => {
     page,
     request,
   }) => {
+    const parentName = uniqueName('Drop parent')
     const folderName = uniqueName('Drop folder')
     const listName = uniqueName('Drop list')
-    const folder = await createFolder(request, folderName)
-    const list = await createList(request, listName)
-    // A tall viewport keeps both rows on screen in a long shared tree (the drag helper cannot scroll mid-drag).
+    // Both rows live in their own parent folder, so they sit next to each other however long the
+    // shared dev tree has grown (top-level lists come after every top-level folder, which put the
+    // list thousands of pixels below the folder; the drag helper cannot scroll mid-drag).
+    const parent = await createFolder(request, parentName)
+    const folder = await createFolder(request, folderName, parent.id)
+    const list = await createList(request, listName, 'movie', parent.id)
     await page.setViewportSize({ width: 1440, height: 4000 })
     await page.goto('/')
-    await expect(row(page, listName)).toHaveAttribute('aria-level', '1')
+    await row(page, parentName).scrollIntoViewIfNeeded()
+    await row(page, parentName).click()
+    await expect(row(page, listName)).toHaveAttribute('aria-level', '2')
 
     await drag(page, row(page, listName), row(page, folderName))
 
     await expect.poll(() => folderOf(request, list.id)).toBe(folder.id)
     // The folder opens to show what it received.
-    await expect(row(page, listName)).toHaveAttribute('aria-level', '2')
+    await expect(row(page, listName)).toHaveAttribute('aria-level', '3')
     await page.reload()
     await expect.poll(() => folderOf(request, list.id)).toBe(folder.id)
   })
@@ -45,6 +51,7 @@ test.describe('F008-W4 drag into a folder', () => {
     // A tall viewport keeps both rows on screen in a long shared tree (the drag helper cannot scroll mid-drag).
     await page.setViewportSize({ width: 1440, height: 4000 })
     await page.goto('/')
+    await row(page, parentName).scrollIntoViewIfNeeded()
     await row(page, parentName).click()
     await expect(row(page, childName)).toHaveAttribute('aria-level', '2')
 
