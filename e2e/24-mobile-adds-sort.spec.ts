@@ -72,3 +72,32 @@ test.describe('2.29.1 phone adds and default sort', () => {
     }
   })
 })
+
+test.describe('2.30.1 phone title focus on every add path', () => {
+  test('Quick add from Home, twice, then New item after switching lists', async ({
+    page,
+    request,
+  }) => {
+    const one = await createList(request, uniqueName('Phone one'), 'wishlist')
+    const two = await createList(request, uniqueName('Phone two'), 'wishlist')
+    await createItem(request, one.id, uniqueName('Seed'))
+    await createItem(request, two.id, uniqueName('Seed'))
+    await page.goto('/')
+    for (const name of [uniqueName('Home Q1'), uniqueName('Home Q2')]) {
+      await page.getByRole('button', { name: 'Quick add' }).click()
+      const dialog = page.getByRole('dialog', { name: 'Quick add' })
+      const title = dialog.getByRole('textbox', { name: 'Title' })
+      await expect(title).toBeFocused()
+      await expect(page.locator('[data-keyboard-proxy]')).toHaveCount(0)
+      await title.fill(name)
+      await title.press('Enter')
+      await expect(page.getByText(`Added “${name}”`, { exact: true })).toBeVisible()
+    }
+    for (const list of [one, two]) {
+      await page.goto(`/lists/${list.id}`)
+      await page.getByRole('button', { name: 'New item' }).first().click()
+      await expect(page.getByRole('textbox', { name: 'Title' })).toBeFocused()
+      await expect(page.locator('[data-keyboard-proxy]')).toHaveCount(0)
+    }
+  })
+})

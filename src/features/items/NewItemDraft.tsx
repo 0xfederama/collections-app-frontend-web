@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
+import { useLayoutEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button, useToast } from '../../components/ui'
 import { useBreakpoint } from '../../lib/breakpoints'
-import { releaseKeyboardProxy } from '../../lib/keyboardProxy'
+import { handOffKeyboardFocus } from '../../lib/keyboardProxy'
 import { ApiError, errorMessage, isDuplicateTitle, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemType } from './api'
 import { TitleLookupField } from './TitleLookupField'
@@ -59,13 +59,12 @@ export function NewItemDraft({
   const sourceName = lookupSourceName(type)
   const box = useRef<HTMLDivElement>(null)
 
-  // The title took focus on mount (autoFocus), so the iOS keyboard proxy opened by the tap that
-  // created this draft is no longer needed (see `focusKeyboardProxy`).
-  // Focus explicitly too: autoFocus alone did not always move focus off the proxy on a repeated add.
-  useEffect(() => {
-    const input = box.current?.querySelector('input')
-    if (input && document.activeElement !== input) input.focus({ preventScroll: true })
-    releaseKeyboardProxy()
+  // The tap that opened this draft focused the title of an open draft or the iOS keyboard proxy
+  // (see `focusKeyboardProxy`); the title takes focus over from it as soon as it is in the DOM,
+  // before paint, and only then is the proxy removed, so the keyboard stays open. Desktop has no
+  // proxy and just gets the focus.
+  useLayoutEffect(() => {
+    handOffKeyboardFocus(box.current?.querySelector('input'))
   }, [])
 
   const changeTitle = (value: string) => {

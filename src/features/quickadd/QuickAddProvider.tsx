@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useMatch } from 'react-router'
+import { focusKeyboardProxy } from '../../lib/keyboardProxy'
 import { QuickAddContext } from './QuickAddContext'
 import { QuickAddDialog } from './QuickAddDialog'
 
@@ -18,9 +19,16 @@ export function QuickAddProvider({ children }: { children: ReactNode }) {
   const listMatch = useMatch('/lists/:listId/*')
   const currentListId = listMatch?.params.listId
 
+  // Called synchronously from the tap (sidebar, mobile home, list): the dialog's title mounts only
+  // after this render, too late for iOS to open the keyboard, so the keyboard proxy takes focus
+  // now and the dialog hands it to the title (`Dialog` initialFocus).
+  const isOpen = openFor !== null
   const open = useCallback(
-    (listId?: string) => setOpenFor((now) => now ?? { listId: listId ?? currentListId }),
-    [currentListId],
+    (listId?: string) => {
+      if (!isOpen) focusKeyboardProxy()
+      setOpenFor((now) => now ?? { listId: listId ?? currentListId })
+    },
+    [currentListId, isOpen],
   )
 
   useEffect(() => {
