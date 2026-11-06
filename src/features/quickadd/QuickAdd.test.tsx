@@ -88,12 +88,12 @@ describe('F002-W4 quick add', () => {
     expect(screen.queryByRole('dialog', { name: 'Quick add' })).not.toBeInTheDocument()
   })
 
-  it('pointer selection immediately creates the localized TMDB title and keeps optional fields', async () => {
+  it('pointer selection immediately creates the localized TMDB title and sends only the title and lookup', async () => {
     mockViewport(1100)
     const posts: unknown[] = []
     server.use(
       http.post(`${origin}/api/v1/lists/${LIST}/items`, async ({ request }) => {
-        const body = (await request.json()) as { title: string; tmdb_id: number; website?: string }
+        const body = (await request.json()) as { title: string; tmdb_id: number }
         posts.push(body)
         const created = { ...matrix, id: NEW_ID, title: body.title, metadata: {}, version: 1 }
         server.use(http.get(`${origin}/api/v1/items/${NEW_ID}`, () => HttpResponse.json(created)))
@@ -107,17 +107,16 @@ describe('F002-W4 quick add', () => {
     await user.keyboard('n')
     const dialog = await screen.findByRole('dialog', { name: 'Quick add' })
     const title = within(dialog).getByLabelText(/^Title/)
-    await user.click(within(dialog).getByRole('button', { name: 'Website' }))
-    await user.type(within(dialog).getByLabelText('Website'), 'https://example.com')
+    for (const name of ['Website', 'Description', 'Image']) {
+      expect(within(dialog).queryByRole('button', { name })).not.toBeInTheDocument()
+    }
     await user.type(title, 'The Mat')
     await user.click(await within(dialog).findByRole('option', { name: 'The Matrix (1999)' }))
 
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/${NEW_ID}`),
     )
-    expect(posts).toEqual([
-      { title: 'The Matrix', lookup: true, tmdb_id: 603, website: 'https://example.com' },
-    ])
+    expect(posts).toEqual([{ title: 'The Matrix', lookup: true, tmdb_id: 603 }])
   })
 })
 

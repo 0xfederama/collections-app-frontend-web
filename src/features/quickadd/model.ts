@@ -1,29 +1,15 @@
 import { ApiError, errorMessage, isDuplicateTitle, NetworkError } from '../../lib/api'
-import {
-  checkImageFile,
-  duplicateTitleMessage,
-  isLookupUnavailable,
-  isTooLarge,
-  LIMITS,
-  type ItemType,
-} from '../items'
+import { duplicateTitleMessage, isLookupUnavailable, LIMITS, type ItemType } from '../items'
 import type { List } from '../tree'
 
 /** The fields of the quick add form that can carry an error. */
-export type Field = 'title' | 'website' | 'description' | 'image' | 'list'
+export type Field = 'title' | 'list'
 
 export type QuickAddInput = {
   /** Raw text; trimmed here, as the create request sends it. */
   title: string
-  /** Raw text; trimmed here, as the create request sends it. */
-  website: string
-  description: string
-  image: File | undefined
   listId: string | undefined
 }
-
-/** Errors are shown in this order; the first one with an error takes the focus. */
-const FOCUS_ORDER = ['title', 'website', 'description', 'image'] as const satisfies readonly Field[]
 
 /** The lists of the tree, most recently updated first, then by name. Returns a new array. */
 export function sortListChoices<T extends Pick<List, 'name' | 'updated_at'>>(
@@ -34,25 +20,17 @@ export function sortListChoices<T extends Pick<List, 'name' | 'updated_at'>>(
   )
 }
 
-/** Client-side checks before the create request. `focus` is the first field with an error. */
+/** Client-side checks before the create request. `focus` is the title when it has an error. */
 export function validateQuickAdd(input: QuickAddInput): {
   errors: Partial<Record<Field, string>>
-  focus: Field | null
+  focus: 'title' | null
 } {
   const errors: Partial<Record<Field, string>> = {}
   const trimmed = input.title.trim()
-  const site = input.website.trim()
   if (!trimmed) errors.title = 'Enter a title.'
   else if (trimmed.length > LIMITS.title) errors.title = `Use at most ${LIMITS.title} characters.`
-  if (site.length > LIMITS.url) errors.website = `Use at most ${LIMITS.url} characters.`
-  if (isTooLarge(input.description)) errors.description = 'The description is over 1 MiB.'
-  if (input.image) {
-    const problem = checkImageFile(input.image)
-    if (problem) errors.image = problem
-  }
   if (!input.listId) errors.list = 'Create a list first.'
-  const focus = FOCUS_ORDER.find((field) => errors[field]) ?? null
-  return { errors, focus }
+  return { errors, focus: errors.title ? 'title' : null }
 }
 
 /** The picked list, else the initial one when it exists, else the first list. */
@@ -71,12 +49,12 @@ export function resolveListId(
 /**
  * How a failed create is shown. `errors: null` leaves the field errors untouched (only a 422 sets
  * them). `keepFormError` leaves the banner untouched: it is true only for a 422 whose messages all
- * sit under a title or website field, so the banner has nothing to show. The other branches set
+ * sit under the title, so the banner has nothing to show. The other branches set
  * `formError` (undefined clears it).
  */
 export type CreateFailure = {
   errors: Partial<Record<Field, string>> | null
-  focus: 'title' | 'website' | null
+  focus: 'title' | null
   formError: string | undefined
   keepFormError: boolean
   lookupUnavailable: boolean
@@ -99,13 +77,11 @@ export function describeCreateFailure(caught: unknown, type?: ItemType): CreateF
     const mapped: Partial<Record<Field, string>> = {}
     const rest: string[] = []
     for (const e of caught.errors ?? []) {
-      if (e.field === 'title' || e.field === 'website') mapped[e.field] ??= e.message
+      if (e.field === 'title') mapped.title ??= e.message
       else rest.push(e.message)
     }
-    let focus: CreateFailure['focus'] = null
-    if (mapped.title) focus = 'title'
-    else if (mapped.website) focus = 'website'
-    const keepFormError = !rest.length && (!!mapped.title || !!mapped.website)
+    const focus: CreateFailure['focus'] = mapped.title ? 'title' : null
+    const keepFormError = !rest.length && !!mapped.title
     const formError = keepFormError ? undefined : rest.join(' ') || caught.title
     return { errors: mapped, focus, formError, keepFormError, lookupUnavailable }
   }
