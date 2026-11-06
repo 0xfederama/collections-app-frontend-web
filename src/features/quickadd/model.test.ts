@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError, NetworkError } from '../../lib/api'
-import { LIMITS, MAX_CONTENT_BYTES } from '../items'
+import { LIMITS } from '../items'
 import {
   describeCreateFailure,
   resolveListId,
@@ -44,20 +44,14 @@ describe('F020 quickadd model', () => {
   describe('validateQuickAdd', () => {
     const valid: QuickAddInput = {
       title: 'Dune',
-      website: '',
-      description: '',
-      image: undefined,
       listId: 'list-1',
     }
-    const jpeg = new File(['x'], 'cover.jpg', { type: 'image/jpeg' })
-    const text = new File(['x'], 'notes.txt', { type: 'text/plain' })
-    const svg = new File(['x'], 'logo.svg', { type: 'image/svg+xml' })
 
     it.each<{
       name: string
       input: Partial<QuickAddInput>
       errors: Partial<Record<Field, string>>
-      focus: Field | null
+      focus: 'title' | null
     }>([
       { name: 'valid input has no errors', input: {}, errors: {}, focus: null },
       {
@@ -79,80 +73,10 @@ describe('F020 quickadd model', () => {
         focus: 'title',
       },
       {
-        name: 'blank website is fine',
-        input: { website: '   ' },
-        errors: {},
-        focus: null,
-      },
-      {
-        name: 'website over the limit',
-        input: { website: 'h'.repeat(LIMITS.url + 1) },
-        errors: { website: `Use at most ${LIMITS.url} characters.` },
-        focus: 'website',
-      },
-      {
-        name: 'description at the limit is fine',
-        input: { description: 'a'.repeat(MAX_CONTENT_BYTES) },
-        errors: {},
-        focus: null,
-      },
-      {
-        name: 'description over 1 MiB',
-        input: { description: 'a'.repeat(MAX_CONTENT_BYTES + 1) },
-        errors: { description: 'The description is over 1 MiB.' },
-        focus: 'description',
-      },
-      { name: 'jpeg image is fine', input: { image: jpeg }, errors: {}, focus: null },
-      {
-        name: 'image of the wrong type',
-        input: { image: text },
-        errors: { image: '“notes.txt” is not a JPEG, PNG or WebP image.' },
-        focus: 'image',
-      },
-      {
-        name: 'SVG image',
-        input: { image: svg },
-        errors: { image: '“logo.svg” is an SVG. Use a JPEG, PNG or WebP image.' },
-        focus: 'image',
-      },
-      {
         name: 'no list',
         input: { listId: undefined },
         errors: { list: 'Create a list first.' },
         focus: null,
-      },
-      {
-        name: 'several errors: the title takes the focus',
-        input: { title: '', website: 'h'.repeat(LIMITS.url + 1), listId: undefined },
-        errors: {
-          title: 'Enter a title.',
-          website: `Use at most ${LIMITS.url} characters.`,
-          list: 'Create a list first.',
-        },
-        focus: 'title',
-      },
-      {
-        name: 'focus order: website before description and image',
-        input: {
-          website: 'h'.repeat(LIMITS.url + 1),
-          description: 'a'.repeat(MAX_CONTENT_BYTES + 1),
-          image: text,
-        },
-        errors: {
-          website: `Use at most ${LIMITS.url} characters.`,
-          description: 'The description is over 1 MiB.',
-          image: '“notes.txt” is not a JPEG, PNG or WebP image.',
-        },
-        focus: 'website',
-      },
-      {
-        name: 'focus order: description before image',
-        input: { description: 'a'.repeat(MAX_CONTENT_BYTES + 1), image: text },
-        errors: {
-          description: 'The description is over 1 MiB.',
-          image: '“notes.txt” is not a JPEG, PNG or WebP image.',
-        },
-        focus: 'description',
       },
       {
         name: 'a title error takes the focus over the list error',
@@ -255,29 +179,14 @@ describe('F020 quickadd model', () => {
       expected: ReturnType<typeof describeCreateFailure>
     }>([
       {
-        name: '422 with title, website and other field errors: other messages in the banner',
+        name: '422 with title and other field errors: other messages in the banner',
         caught: unprocessable([
           { field: 'title', message: 'Title is taken.' },
-          { field: 'website', message: 'Not a URL.' },
           { field: 'type', message: 'Unknown type.' },
         ]),
         expected: {
-          errors: { title: 'Title is taken.', website: 'Not a URL.' },
+          errors: { title: 'Title is taken.' },
           focus: 'title',
-          formError: 'Unknown type.',
-          keepFormError: false,
-          lookupUnavailable: false,
-        },
-      },
-      {
-        name: '422 with a website error and other field errors: the website takes the focus',
-        caught: unprocessable([
-          { field: 'website', message: 'Not a URL.' },
-          { field: 'type', message: 'Unknown type.' },
-        ]),
-        expected: {
-          errors: { website: 'Not a URL.' },
-          focus: 'website',
           formError: 'Unknown type.',
           keepFormError: false,
           lookupUnavailable: false,
