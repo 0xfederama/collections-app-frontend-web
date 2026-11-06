@@ -33,7 +33,7 @@ interface Patch {
 /** Wraps a PATCH recorder in front of the stateful backend. */
 function mountBackend(start?: Partial<Settings>) {
   const backend = createSettingsBackend({
-    workspace_name: 'Our Collection',
+    workspace_name: 'Collections',
     streaming_country_code: 'IT',
     metadata_language: 'en-US',
     lookup_available: false,
@@ -76,7 +76,7 @@ describe('W-13 settings: saving', () => {
     expect(dialog.querySelector('#settings-movies-tv')?.parentElement).toHaveAttribute('hidden')
     expect(screen.getByLabelText(/Workspace name/)).toBeInTheDocument()
     expect(screen.getByLabelText(/Description history limit/)).toBeInTheDocument()
-    expect(field('Workspace name')).toHaveValue('Our Collection')
+    expect(field('Workspace name')).toHaveValue('Collections')
     expect(field('Description history limit')).toHaveValue('20')
     expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toHaveTextContent(
       'Off',
@@ -140,7 +140,7 @@ describe('W-13 settings: saving', () => {
 
   it('shows an externally configured retention value instead of displaying Off', async () => {
     mountBackend({
-      workspace_name: 'Our Collection',
+      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: 365,
@@ -219,7 +219,7 @@ describe('W-13 settings: saving', () => {
 
   it('saves changed settings on close with the snapshot If-Match', async () => {
     const { patches, backend } = mountBackend({
-      workspace_name: 'Our Collection',
+      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: null,
@@ -263,7 +263,7 @@ describe('W-13 settings: saving', () => {
 
   it('saves the metadata language through the settings snapshot', async () => {
     const { patches } = mountBackend({
-      workspace_name: 'Our Collection',
+      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       metadata_language: 'en-US',
       lookup_available: true,
@@ -293,7 +293,7 @@ describe('W-13 settings: saving', () => {
 
   it('F-022-W3 saves only the owned streaming services, ticked in the Media pane', async () => {
     const { patches } = mountBackend({
-      workspace_name: 'Our Collection',
+      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: null,
@@ -320,7 +320,7 @@ describe('W-13 settings: saving', () => {
 
   it('F-022-W3 unticking every service sends an empty list, which shows all', async () => {
     const { patches } = mountBackend({
-      workspace_name: 'Our Collection',
+      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: null,
@@ -339,7 +339,7 @@ describe('W-13 settings: saving', () => {
 
   it('F-022-W3 leaves owned services out of the patch when they are not touched', async () => {
     const { patches } = mountBackend({
-      workspace_name: 'Our Collection',
+      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: null,
@@ -413,7 +413,7 @@ describe('W-13 settings: saving', () => {
     const { patches } = mountBackend()
     const user = await openSettings()
     await retype(user, 'Workspace name', 'X')
-    await retype(user, 'Workspace name', 'Our Collection')
+    await retype(user, 'Workspace name', 'Collections')
     await user.click(closeSettings())
     await screen.findByRole('heading', { level: 1, name: 'Home' })
     expect(patches).toEqual([])

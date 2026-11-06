@@ -17,7 +17,7 @@ import {
 } from './form'
 
 const base: Settings = {
-  workspace_name: 'Our Collection',
+  workspace_name: 'Collections',
   streaming_country_code: 'IT',
   metadata_language: 'en-US',
   lookup_available: true,
@@ -36,7 +36,7 @@ const draftWith = (over: Partial<SettingsDraft> = {}): SettingsDraft => ({
 describe('AT-14 settings form model', () => {
   it('draftFromSettings uses strings', () => {
     expect(draftFromSettings(base)).toEqual({
-      workspace_name: 'Our Collection',
+      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       metadata_language: 'en-US',
       markdown_history_limit: '20',
@@ -77,7 +77,7 @@ describe('AT-14 settings form model', () => {
   })
 
   it('whitespace around the name is not a change', () => {
-    expect(isDirty(base, draftWith({ workspace_name: ' Our Collection ' }))).toBe(false)
+    expect(isDirty(base, draftWith({ workspace_name: ' Collections ' }))).toBe(false)
   })
 
   describe('workspace name', () => {
