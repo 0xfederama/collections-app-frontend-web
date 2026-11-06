@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.30.1 — 2026-11-06
+
+### Fixed
+
+- Adding an item always focuses the title, so the keyboard opens on iPhone Safari and in the home-screen web app: "New item" (first and repeated adds, with a draft already open, after the "Added" toast, after switching lists) and Quick add (sidebar, phone Home, `N`). Root cause: Quick add focused nothing inside the tap (its title mounts later, in a dialog), and the new-item draft removed the iOS keyboard proxy even when the title had not taken focus yet, so focus could fall to the page and the keyboard closed. Every add now focuses the keyboard proxy synchronously in the tap and the title takes focus over from it as soon as it mounts (before paint), and only then is the proxy removed. The proxy uses 16px text, so iOS never zooms for it. Desktop focuses the title the same way. A dialog opened through the proxy returns focus to the button that opened it.
+
 ## 2.30.0 — 2026-11-06
 
 ### Added

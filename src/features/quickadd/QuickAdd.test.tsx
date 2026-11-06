@@ -15,6 +15,25 @@ const origin = location.origin
 const matrix = exampleResponses.getItem.body as Item
 
 describe('F002-W4 quick add', () => {
+  it('the Quick add button hands focus from the iOS keyboard proxy to the title, every time', async () => {
+    mockViewport(1100)
+    const user = userEvent.setup()
+    const router = createTestRouter([`/lists/${LIST}`])
+    renderWithProviders(<RouterProvider router={router} />)
+
+    for (let round = 0; round < 2; round += 1) {
+      await user.click(await screen.findByRole('button', { name: 'Quick add' }))
+      const dialog = await screen.findByRole('dialog', { name: 'Quick add' })
+      const title = within(dialog).getByLabelText(/^Title/)
+      await waitFor(() => expect(title).toHaveFocus())
+      expect(document.querySelector('[data-keyboard-proxy]')).toBeNull()
+      await user.keyboard('{Escape}')
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'Quick add' })).not.toBeInTheDocument(),
+      )
+    }
+  })
+
   it('keeps the typed title and can add without TMDB after lookup is unavailable', async () => {
     mockViewport(1100)
     const posts: unknown[] = []

@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { isKeyboardProxy, keyboardProxyOpener } from '../../lib/keyboardProxy'
 
 /**
  * Radix returns focus on close only to its own Trigger. Dialogs opened in controlled mode
@@ -30,7 +31,11 @@ export function useReturnFocus() {
   const target = useRef<HTMLElement | null>(null)
   return {
     capture() {
-      const active = document.activeElement
+      // A tap that opened the dialog may have parked focus on the iOS keyboard proxy: return to
+      // the button that was tapped instead.
+      const active = isKeyboardProxy(document.activeElement)
+        ? keyboardProxyOpener()
+        : document.activeElement
       target.current = isUsable(active) ? active : menuTrigger
     },
     restore(event: Event) {

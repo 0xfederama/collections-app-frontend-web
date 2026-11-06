@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { KEYBOARD_PROXY_MS, focusKeyboardProxy, releaseKeyboardProxy } from './keyboardProxy'
+import {
+  KEYBOARD_PROXY_MS,
+  focusKeyboardProxy,
+  handOffKeyboardFocus,
+  keyboardProxyOpener,
+  releaseKeyboardProxy,
+} from './keyboardProxy'
 
 const proxies = () =>
   document.querySelectorAll<HTMLInputElement>('body > input[aria-hidden="true"]')
@@ -50,5 +56,38 @@ describe('focusKeyboardProxy (W2 iOS keyboard)', () => {
     expect(proxies()).toHaveLength(1)
     vi.advanceTimersByTime(1)
     expect(proxies()).toHaveLength(0)
+  })
+
+  it('hands focus to the real field, then removes the proxy (focus never on <body>)', () => {
+    focusKeyboardProxy()
+    const field = document.createElement('input')
+    document.body.append(field)
+    handOffKeyboardFocus(field)
+    expect(field).toHaveFocus()
+    expect(proxies()).toHaveLength(0)
+    field.remove()
+  })
+
+  it('keeps the proxy focused while the real field is not mounted yet', () => {
+    focusKeyboardProxy()
+    handOffKeyboardFocus(null)
+    expect(proxies()).toHaveLength(1)
+    expect(proxies()[0]).toHaveFocus()
+  })
+
+  it('a repeated tap keeps a proxy focused at every step and remembers the opener', () => {
+    const button = document.createElement('button')
+    document.body.append(button)
+    button.focus()
+    focusKeyboardProxy()
+    focusKeyboardProxy()
+    expect(proxies()[0]).toHaveFocus()
+    expect(keyboardProxyOpener()).toBe(button)
+    button.remove()
+  })
+
+  it('uses 16px text so iOS does not zoom when the proxy takes focus', () => {
+    focusKeyboardProxy()
+    expect(proxies()[0]).toHaveClass('text-base')
   })
 })
