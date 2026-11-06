@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.30.2 — 2026-11-06
+
+### Fixed
+
+- Browser tabs show the "C." favicon instead of the full app icon with the cards. Safari does not use the SVG favicon and fell back to the apple-touch-icon; `index.html` now links PNG favicons (`/icons/favicon-32.png`, `/icons/favicon-16.png`) before the SVG. The PNGs use the light colours (blue C, ink dot), since a PNG cannot follow the dark theme.
+
 ## 2.30.1 — 2026-11-06
 
 ### Fixed
