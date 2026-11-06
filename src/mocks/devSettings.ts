@@ -22,7 +22,7 @@ const isStoreKey = (value: string): value is StoreKey => STORE_KEYS.some((key) =
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 
 const initial = (): Settings => ({
-  workspace_name: 'Our Collection',
+  workspace_name: 'Collections',
   streaming_country_code: 'IT',
   metadata_language: 'en-US',
   lookup_available: false,

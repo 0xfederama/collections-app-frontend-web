@@ -106,7 +106,7 @@ function ShellFrame() {
             collapse; the bottom safe-area padding only lets the last row scroll above the bar. */}
         {/* Nothing floats over the content: pages have no leading control on phones (the user
             swipes back); only the item page has its back control, F-025 W14. */}
-        <main className="relative flex-1 p-4 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <main className="relative flex-1 p-4 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
           {content}
         </main>
       </div>
@@ -117,7 +117,7 @@ function ShellFrame() {
   const resizable = !rail && (breakpoint === 'desktop' || breakpoint === 'wide')
 
   return (
-    <div className="flex h-dvh pl-[env(safe-area-inset-left)] text-text">
+    <div className="flex h-dvh pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] text-text">
       <div className="flex min-h-0 flex-1">
         <div
           id={SIDEBAR_ID}

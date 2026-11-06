@@ -153,7 +153,7 @@ describe('AT-14 sidebar content order', () => {
     mockViewport(1100)
     renderAt('/')
     const tree = await within(nav()!).findByRole('tree')
-    const name = await within(nav()!).findByRole('link', { name: 'Our Collection' })
+    const name = await within(nav()!).findByRole('link', { name: 'Collections' })
     const search = within(nav()!).getByRole('combobox', { name: 'Search' })
     const add = within(nav()!).getByRole('button', { name: 'Quick add' })
     const before = (a: Element, b: Element) =>
@@ -167,7 +167,7 @@ describe('AT-14 sidebar content order', () => {
   it('the workspace name is larger than 15px type', async () => {
     mockViewport(1100)
     renderAt('/')
-    expect(await within(nav()!).findByRole('link', { name: 'Our Collection' })).toHaveClass(
+    expect(await within(nav()!).findByRole('link', { name: 'Collections' })).toHaveClass(
       'font-display',
       'font-bold',
       'truncate',
@@ -380,24 +380,23 @@ describe('W-04 workspace name', () => {
   it('shows the workspace name from /api/v1/settings in the sidebar', async () => {
     mockViewport(1100)
     renderAt('/')
-    expect(await within(nav()!).findByRole('link', { name: 'Our Collection' })).toHaveAttribute(
+    expect(await within(nav()!).findByRole('link', { name: 'Collections' })).toHaveAttribute(
       'href',
       '/',
     )
   })
 
-  it('falls back to "Collection" while loading and when settings fail', async () => {
+  it('falls back to "Collections" while loading and when settings fail', async () => {
     mockViewport(1100)
     server.use(http.get(settingsUrl, () => problemResponse(500, 'internal_error')))
     renderAt('/')
-    expect(within(nav()!).getByRole('link', { name: 'Collection' })).toBeInTheDocument()
+    expect(within(nav()!).getByRole('link', { name: 'Collections' })).toBeInTheDocument()
     await waitFor(() =>
-      expect(within(nav()!).getByRole('link', { name: 'Collection' })).toBeVisible(),
+      expect(within(nav()!).getByRole('link', { name: 'Collections' })).toBeVisible(),
     )
-    expect(screen.queryByText('Our Collection')).not.toBeInTheDocument()
   })
 
-  it('falls back to "Collection" for a blank workspace name', async () => {
+  it('falls back to "Collections" for a blank workspace name', async () => {
     mockViewport(1100)
     server.use(
       http.get(settingsUrl, () =>
@@ -411,7 +410,7 @@ describe('W-04 workspace name', () => {
       ),
     )
     renderAt('/')
-    expect(within(nav()!).getByRole('link', { name: 'Collection' })).toBeInTheDocument()
+    expect(within(nav()!).getByRole('link', { name: 'Collections' })).toBeInTheDocument()
   })
 })
 
@@ -446,7 +445,7 @@ describe('F-025 W14 Home is the root page on phones', () => {
     mockViewport(375)
     renderAt('/')
     const main = screen.getByRole('main')
-    const title = await within(main).findByRole('heading', { level: 1, name: 'Our Collection' })
+    const title = await within(main).findByRole('heading', { level: 1, name: 'Collections' })
     expect(title).toHaveClass('break-words')
     expect(title.className).not.toMatch(/truncate|line-clamp/)
     const quickAdd = within(main).getByRole('button', { name: 'Quick add' })

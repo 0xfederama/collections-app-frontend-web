@@ -38,7 +38,7 @@ export function useSettings() {
 
 /** The workspace name for the sidebar, with a neutral fallback while loading or on failure. */
 export function useWorkspaceName(): string {
-  return useSettings().data?.workspace_name || 'Collection'
+  return useSettings().data?.workspace_name || 'Collections'
 }
 
 /**

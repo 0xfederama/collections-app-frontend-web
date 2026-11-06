@@ -20,6 +20,7 @@ Production web image (Q-03w, D-069): a Node 24 build stage, then a Caddy 2.11.7 
 - `/api/*`, `/readyz`: reverse-proxied to `$API_UPSTREAM` (env var, default `api:8080`).
 - `/assets/*`: hashed files, `immutable` for 1 year; a missing asset is a 404.
 - Other paths: real files served as-is; paths without a file extension fall back to `index.html`; a missing file with an extension is a 404.
+- `/manifest.webmanifest`: `application/manifest+json`, `no-cache` (so installed home-screen apps pick up a new name or icon); the icons under `/icons/` and `/apple-touch-icon.png` get the one-day cache of other real files.
 - Runs as UID/GID `10001`; intended for `read_only` with a `/tmp` tmpfs, `cap_drop: ALL`, `no-new-privileges`.
 - `npm run docker:build [tag]`: builds `collections-web:check` by default.
 

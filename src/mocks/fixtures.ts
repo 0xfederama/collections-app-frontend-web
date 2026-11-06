@@ -39,7 +39,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     status: 200,
     contentType: 'application/json',
     body: {
-      workspace_name: 'Our Collection',
+      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       metadata_language: 'it-IT',
       lookup_available: true,
@@ -57,7 +57,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     status: 200,
     contentType: 'application/json',
     body: {
-      workspace_name: 'Our Collection',
+      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       metadata_language: 'it-IT',
       lookup_available: true,
