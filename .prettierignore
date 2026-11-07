@@ -8,3 +8,4 @@ api/openapi.yaml
 public/mockServiceWorker.js
 test-results
 playwright-report
+.claude/worktrees
