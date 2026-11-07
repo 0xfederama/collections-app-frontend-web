@@ -227,17 +227,19 @@ export function ListIconPicker({
             setEmojiDraft('')
           }}
         >
-          <TextField
-            label="Use an emoji"
-            hint="Paste or type one emoji."
-            value={emojiDraft}
-            onChange={(event) => {
-              setEmojiDraft(event.target.value)
-              setEmojiError(undefined)
-            }}
-            error={emojiError}
-            className="max-w-48"
-          />
+          {/* min-w-0 wrapper: TextField's own width is its input's, which overflowed at 375 px. */}
+          <div className="min-w-0 flex-1">
+            <TextField
+              label="Use an emoji"
+              hint="Paste or type one emoji."
+              value={emojiDraft}
+              onChange={(event) => {
+                setEmojiDraft(event.target.value)
+                setEmojiError(undefined)
+              }}
+              error={emojiError}
+            />
+          </div>
           <Button type="submit" variant="secondary">
             Use emoji
           </Button>
