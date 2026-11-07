@@ -119,6 +119,7 @@ function EntryRow({
         </div>
         <PinnedSlot
           keys={corner}
+          showSite
           {...slots}
           iconSize={22}
           nowrap
@@ -157,6 +158,7 @@ function EntryRow({
         </div>
         <PinnedSlot
           keys={corner}
+          showSite
           {...slots}
           iconSize={22}
           nowrap
@@ -186,6 +188,7 @@ function EntryRow({
         {/* The corner placement ends the card's text block. */}
         <PinnedSlot
           keys={corner}
+          showSite
           {...slots}
           iconSize={20}
           className="max-w-full min-w-0 self-end text-ui"
