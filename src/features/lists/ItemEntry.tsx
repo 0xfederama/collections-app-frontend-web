@@ -108,13 +108,15 @@ function EntryRow({
       >
         <ItemThumb item={item} decorative className="size-9 shrink-0 rounded-sm" />
         <div className="flex min-w-0 flex-1 items-baseline gap-3">
-          <span className="max-w-[60%] min-w-20 truncate">{title}</span>
+          {/* No fixed cap: the title takes the room it needs; when the row is full, the pinned
+              text beside it gives way three times faster (roadmap 28). */}
+          <span className="min-w-20 shrink truncate">{title}</span>
           <PinnedSlot
             keys={beside}
             {...slots}
             iconSize={20}
             nowrap
-            className="flex min-w-0 flex-1 overflow-hidden text-ui text-text-muted"
+            className="flex min-w-0 shrink-[3] overflow-hidden text-ui text-text-muted"
           />
         </div>
         <PinnedSlot
