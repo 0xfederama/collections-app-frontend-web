@@ -383,3 +383,54 @@ describe('F-025 W9 row metadata: runtime with director, pages with author, metad
     },
   )
 })
+
+describe('roadmap 28 the website is a tile on the right of the row', () => {
+  const site = 'https://www.ducati.com/'
+  const siteLink = (row: HTMLElement) =>
+    within(row).queryByRole('link', { name: 'Open website www.ducati.com' })
+
+  it.each(['compact', 'thumbnail', 'grid'] as const)(
+    '%s: one link to the website, in a new tab, named by its host',
+    (mode) => {
+      const row = entry(['runtime_minutes', 'release_year'], mode, { website: site })
+      const link = siteLink(row)!
+      expect(link).toHaveAttribute('href', site)
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+      // The website adds no text of its own: the row still reads its title and runtime.
+      expect(readOrder(row)).toEqual(['Alien', '117 min'])
+    },
+  )
+
+  it('with no streaming or store pin it is a tile of its own', () => {
+    const row = entry(['runtime_minutes', 'release_year'], 'thumbnail', { website: site })
+    expect(siteLink(row)).toHaveAttribute('href', site)
+  })
+
+  it('shares the streaming strip and counts toward its budget: fits with two services', () => {
+    const row = entry(['runtime_minutes', 'streaming'], 'thumbnail', {
+      website: site,
+      metadata: { runtime_minutes: 117, streaming: { platforms: ['Netflix', 'Hulu'] } },
+    })
+    expect(within(row).getByRole('img', { name: 'Netflix' })).toBeInTheDocument()
+    expect(siteLink(row)).toBeInTheDocument()
+  })
+
+  it('shares the streaming strip and counts toward its budget: hidden in "+N" past four tiles', () => {
+    const row = entry(['runtime_minutes', 'streaming'], 'thumbnail', {
+      website: site,
+      metadata: {
+        runtime_minutes: 117,
+        streaming: { platforms: ['Netflix', 'Hulu', 'Max', 'Apple TV'] },
+      },
+    })
+    // Unmeasured (jsdom): three tiles and a "+N" tile for the rest, website last so it is the one hidden.
+    expect(within(row).getByRole('img', { name: '2 more services' })).toBeInTheDocument()
+    expect(siteLink(row)).not.toBeInTheDocument()
+  })
+
+  it('no website, no tile', () => {
+    const row = entry(['runtime_minutes', 'release_year'], 'compact')
+    expect(siteLink(row)).not.toBeInTheDocument()
+  })
+})
