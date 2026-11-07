@@ -61,7 +61,6 @@ import {
   Tag,
   Volleyball,
 } from '../../components/ui/icons'
-import { EMOJI_KEYWORDS } from './emojiKeywords'
 
 export const LIST_ICON_COLORS = [
   'red',
@@ -153,7 +152,7 @@ export type IconChoice = { icon: string | null; icon_color: ListIconColor | null
 
 export function searchListIcons(query: string) {
   const normalized = query.trim().toLocaleLowerCase()
-  if (!normalized) return { builtins: BUILTIN_LIST_ICONS, emoji: EMOJI_KEYWORDS }
+  if (!normalized) return { builtins: BUILTIN_LIST_ICONS }
   const words = normalized.split(/\s+/)
   return {
     builtins: BUILTIN_LIST_ICONS.filter((entry) =>
@@ -161,9 +160,6 @@ export function searchListIcons(query: string) {
         (word) =>
           entry.name.includes(word) || entry.keywords.some((keyword) => keyword.includes(word)),
       ),
-    ),
-    emoji: EMOJI_KEYWORDS.filter(([, keywords]) =>
-      words.every((word) => keywords.split(/\s+/).some((keyword) => keyword.includes(word))),
     ),
   }
 }
