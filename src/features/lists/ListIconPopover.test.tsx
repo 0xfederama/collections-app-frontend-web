@@ -37,10 +37,9 @@ function Harness({
 const search = () => screen.getByRole('textbox', { name: 'Search icons and emoji' })
 
 describe('F012-W1 list icon popover', () => {
-  it('searches built-in names and curated emoji keywords case-insensitively by partial word', () => {
+  it('searches built-in names case-insensitively by partial word', () => {
     const result = searchListIcons('CAMER')
     expect(result.builtins.some((icon) => icon.key === 'camera')).toBe(true)
-    expect(result.emoji.some(([emoji]) => emoji === '📷')).toBe(true)
     expect(searchListIcons('').builtins.length).toBeGreaterThan(50)
   })
 
@@ -57,15 +56,31 @@ describe('F012-W1 list icon popover', () => {
     await waitFor(() => expect(screen.queryByRole('textbox')).not.toBeInTheDocument())
   })
 
-  it('has no free-text emoji field, and the Emoji tab shows the curated grid', async () => {
+  it('has no free-text emoji field, and the Emoji tab loads the full set in groups', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
     renderWithProviders(<Harness onChange={onChange} />)
     expect(screen.queryByRole('textbox', { name: 'Use an emoji' })).not.toBeInTheDocument()
     await user.click(screen.getByRole('tab', { name: 'Emoji' }))
     expect(screen.getByRole('tab', { name: 'Emoji' })).toHaveAttribute('aria-selected', 'true')
-    await user.click(screen.getByRole('button', { name: '📷 camera' }))
+    expect(await screen.findByRole('group', { name: 'Smileys & emotion' })).toBeInTheDocument()
+    await user.type(search(), 'camer')
+    await user.click(await screen.findByRole('button', { name: '📷 camera' }))
     expect(onChange).toHaveBeenLastCalledWith({ icon: '📷', icon_color: null })
+  })
+
+  it('finds emoji by tag, and lists every group once they have all rendered', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Harness onChange={vi.fn()} />)
+    await user.click(screen.getByRole('tab', { name: 'Emoji' }))
+    await screen.findByRole('group', { name: 'Smileys & emotion' })
+    expect(await screen.findByRole('group', { name: 'Flags' })).toBeInTheDocument()
+    await user.type(search(), 'puppies')
+    expect(await screen.findByRole('button', { name: '🐶 dog face' })).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Flags' })).not.toBeInTheDocument()
+    await user.clear(search())
+    await user.type(search(), 'zzzzqq')
+    expect(await screen.findByText('No matching emoji.')).toBeInTheDocument()
   })
 
   it('keeps the colour behind a swatch: disabled for emoji, a nested panel for built-ins that stays open on a colour', async () => {
