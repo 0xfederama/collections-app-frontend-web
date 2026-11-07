@@ -53,7 +53,10 @@ test.describe('F012-W1 list icons (popover)', () => {
       await page.getByRole('button', { name: 'Icon color', exact: true }).click()
       await page.getByRole('button', { name: 'Indigo', exact: true }).click()
       await expect(page.getByRole('textbox', { name: SEARCH })).toBeVisible()
+      // Let the colour panel finish closing: Escape goes to the top layer, which is it until then.
+      await expect(page.getByRole('group', { name: 'Icon color' })).toBeHidden()
       await page.keyboard.press('Escape')
+      await expect(page.getByRole('textbox', { name: SEARCH })).toBeHidden()
       await create.getByRole('button', { name: 'Create' }).click()
 
       await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()

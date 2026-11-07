@@ -54,12 +54,14 @@ export function ListIconPopover({
   pending = false,
 }: ListIconPopoverProps) {
   const openedAt = useRef(0)
+  const content = useRef<HTMLDivElement>(null)
   return (
     <Popover.Root open={open} onOpenChange={onOpenChange}>
       {children && <Popover.Trigger asChild>{children}</Popover.Trigger>}
       {!children && anchorEl && <Popover.Anchor virtualRef={{ current: anchorEl }} />}
       <Popover.Portal>
         <Popover.Content
+          ref={content}
           aria-label="Choose list icon"
           align="start"
           sideOffset={8}
@@ -68,7 +70,13 @@ export function ListIconPopover({
           onFocusOutside={(event) => {
             // A menu item opened us; the menu then gives focus back to its trigger as it closes.
             // That is not the user leaving, so ignore focus moves in the first moments.
-            if (Date.now() - openedAt.current < 400) event.preventDefault()
+            if (Date.now() - openedAt.current < 400) {
+              event.preventDefault()
+              // The menu took the focus back after we focused the search: put it there again.
+              if (!isTouchDevice()) {
+                content.current?.querySelector<HTMLInputElement>('input[type="text"]')?.focus()
+              }
+            }
           }}
           onOpenAutoFocus={(event) => {
             openedAt.current = Date.now()
