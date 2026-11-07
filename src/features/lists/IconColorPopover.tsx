@@ -56,6 +56,12 @@ export function IconColorPopover({
           type="button"
           aria-label={color ? `Icon color: ${COLOR_LABELS[color]}` : 'Icon color'}
           disabled={!enabled || disabled}
+          onClick={(event) => {
+            // Open only, never toggle: a touch browser can deliver a second, delayed click for one
+            // tap (the old 300 ms click), and Radix's toggle would close the panel again at once.
+            event.preventDefault()
+            setOpen(true)
+          }}
           title={enabled ? undefined : 'Colors apply to built-in icons'}
           className={cx(
             'grid size-10 shrink-0 place-items-center rounded-md border border-border-strong bg-surface hover:bg-fill-hover disabled:opacity-50',
@@ -76,6 +82,9 @@ export function IconColorPopover({
           align="end"
           sideOffset={6}
           collisionPadding={16}
+          // Focus moving (the outer panel taking it back on touch, a menu returning it) must not
+          // dismiss a panel the user just opened; Esc and a press elsewhere still do.
+          onFocusOutside={(event) => event.preventDefault()}
           className="bg-surface-raised z-50 w-[min(15rem,calc(100vw-2rem))] rounded-lg p-2 text-text shadow-float data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in"
         >
           <div role="group" aria-label="Icon color" className="grid grid-cols-5 gap-1">

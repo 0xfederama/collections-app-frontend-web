@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { renderWithProviders } from '../../test-utils'
@@ -131,5 +131,36 @@ describe('F012-W1 list icon popover', () => {
     expect(camera).toHaveClass('size-10', 'focus-visible:outline-focus-ring')
     expect(camera).not.toHaveAttribute('style')
     expect(search().closest('[data-radix-popper-content-wrapper]')).not.toBeNull()
+  })
+})
+
+describe('colour panel on touch devices', () => {
+  it('stays open on a tap, even when the browser delivers a second click, with a coarse pointer', async () => {
+    const original = window.matchMedia
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('coarse'),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      onchange: null,
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia
+    try {
+      const user = userEvent.setup()
+      renderWithProviders(
+        <Harness onChange={vi.fn()} initial={{ icon: 'i:camera', icon_color: null }} />,
+      )
+      const swatch = screen.getByRole('button', { name: 'Icon color' })
+      await user.click(swatch)
+      await screen.findByRole('button', { name: 'Indigo' })
+      fireEvent.click(swatch)
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      expect(screen.getByRole('button', { name: 'Indigo' })).toBeInTheDocument()
+      expect(swatch).toHaveAttribute('aria-expanded', 'true')
+    } finally {
+      window.matchMedia = original
+    }
   })
 })
