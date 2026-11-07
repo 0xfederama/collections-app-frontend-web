@@ -176,6 +176,7 @@ test.describe('F012-W1 list icons', () => {
           .getByRole('button', { name: 'Change icon', exact: true })
           .click()
         const picker = await openIconPicker(page)
+        await picker.getByRole('button', { name: 'Show all icons' }).click()
         const iconGrid = picker.locator('section[aria-label="Built-in icons"] > div')
         const columnCount = await iconGrid.evaluate(
           (element) => getComputedStyle(element).gridTemplateColumns.split(' ').length,
