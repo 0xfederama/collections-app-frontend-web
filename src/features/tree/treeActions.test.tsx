@@ -102,14 +102,13 @@ describe('AT-03 tree CRUD (web): create', () => {
     const create = await dialog()
     await user.type(within(create).getByRole('textbox', { name: 'Name' }), 'Camera shelf')
     await user.click(within(create).getByRole('button', { name: 'Choose icon' }))
-    const picker = await screen.findByRole('dialog', { name: 'Choose list icon' })
-    await user.type(
-      within(picker).getByRole('textbox', { name: 'Search icons and emoji' }),
-      'camer',
-    )
-    await user.click(within(picker).getByRole('button', { name: 'camera' }))
-    await user.click(within(picker).getByRole('button', { name: 'Teal' }))
-    await user.click(within(picker).getByRole('button', { name: 'Done' }))
+    await user.type(await screen.findByRole('textbox', { name: 'Search icons and emoji' }), 'camer')
+    await user.click(screen.getByRole('button', { name: 'camera' }))
+    // Picking an icon closes the popover; the colour is a second visit through the swatch.
+    await user.click(within(create).getByRole('button', { name: 'Choose icon' }))
+    await user.click(await screen.findByRole('button', { name: 'Icon color' }))
+    await user.click(await screen.findByRole('button', { name: 'Teal' }))
+    await user.keyboard('{Escape}')
     await user.click(within(create).getByRole('button', { name: 'Create' }))
 
     await waitFor(() => expect(backend.writes('POST', '/api/v1/lists')).toHaveLength(1))

@@ -8,7 +8,7 @@ import { useTreeIndex, type TreeData } from './api'
 import { DeleteDialog } from './DeleteDialog'
 import { findNode, isOpenWithin, nameOf } from './treeLookup'
 import { Vanished } from './Vanished'
-import { ListIconDialog } from './ListIconDialog'
+import { ListIconEdit } from './ListIconEdit'
 import { readLastListFolder, rememberListFolder } from './listFolderMemory'
 import { createTreeMoves } from './treeMoves'
 import {
@@ -38,7 +38,7 @@ export interface TreeActions {
   rename: (id: string) => void
   move: (id: string) => void
   remove: (id: string) => void
-  /** Opens the list icon dialog (lists only; a folder has no icon). */
+  /** Opens the list icon popover (lists only; a folder has no icon). */
   changeIcon: (id: string) => void
   /** Moves a node one place among its siblings of the same kind (-1 up, +1 down). */
   nudge: (id: string, delta: -1 | 1) => void
@@ -242,9 +242,28 @@ export function useTreeDialogs({
             />
           )
         } else if (dialog.type === 'icon') {
-          // A folder has no icon: the dialog simply does not open for it.
-          if (node.kind === 'list')
-            content = <ListIconDialog key={`icon-${node.id}`} list={node.list} onClose={close} />
+          // A folder has no icon: the popover simply does not open for it. It opens beside the
+          // row (no dialog), and focus goes back to that row when it closes.
+          if (node.kind === 'list') {
+            const row = document.querySelector<HTMLElement>(
+              `[data-tree-id="${CSS.escape(node.id)}"]`,
+            )
+            content = (
+              <ListIconEdit
+                key={`icon-${node.id}`}
+                list={node.list}
+                open
+                onOpenChange={(open) => !open && close()}
+                anchorEl={row ?? document.body}
+                onCloseAutoFocus={(event) => {
+                  if (row?.isConnected) {
+                    event.preventDefault()
+                    row.focus()
+                  }
+                }}
+              />
+            )
+          }
         } else if (dialog.type === 'delete') {
           content = (
             <DeleteDialog
