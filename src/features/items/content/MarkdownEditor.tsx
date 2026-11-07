@@ -2,11 +2,17 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { EditorState } from '@codemirror/state'
-import { EditorView, drawSelection, keymap, placeholder } from '@codemirror/view'
+import { EditorView, keymap, placeholder } from '@codemirror/view'
 import { tags } from '@lezer/highlight'
 import { useEffect, useRef } from 'react'
 
-/** Colors come from our CSS variables, so the editor follows the light/dark theme with no JS. */
+/**
+ * Colors come from our CSS variables, so the editor follows the light/dark theme with no JS.
+ *
+ * Selection is the browser's own: the text stays selectable and the iOS copy/paste/select callout
+ * is the default one (no `user-select: none`, no `-webkit-touch-callout: none`, no touch or mouse
+ * handler on the wrappers). `drawSelection()` is not used because it hides the native selection.
+ */
 const theme = EditorView.theme({
   '&': {
     backgroundColor: 'var(--surface)',
@@ -14,17 +20,24 @@ const theme = EditorView.theme({
     border: '1px solid var(--border-strong)',
     borderRadius: 'var(--radius-sm)',
     fontSize: '0.875rem',
+    userSelect: 'text',
+    WebkitUserSelect: 'text',
+    WebkitTouchCallout: 'default',
   },
   '&.cm-focused': { outline: '2px solid var(--focus-ring)', outlineOffset: '2px' },
   '.cm-scroller': {
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
     minHeight: '14rem',
   },
-  '.cm-content': { padding: '0.75rem', caretColor: 'var(--text)' },
+  '.cm-content': {
+    padding: '0.75rem',
+    caretColor: 'var(--text)',
+    userSelect: 'text',
+    WebkitUserSelect: 'text',
+    WebkitTouchCallout: 'default',
+  },
   '.cm-cursor': { borderLeftColor: 'var(--text)' },
   '.cm-placeholder': { color: 'var(--text-muted)' },
-  '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground':
-    { backgroundColor: 'color-mix(in srgb, var(--accent) 30%, transparent)' },
 })
 
 const highlight = HighlightStyle.define([
@@ -80,7 +93,6 @@ export default function MarkdownEditor({
         doc: value,
         extensions: [
           history(),
-          drawSelection(),
           markdown(),
           keymap.of([...defaultKeymap, ...historyKeymap]),
           EditorView.lineWrapping,

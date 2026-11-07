@@ -38,4 +38,16 @@ describe('AT-08 web: MarkdownEditor (CodeMirror)', () => {
     screen.getByRole('button', { name: 'swap' }).click()
     await waitFor(() => expect(box).toHaveTextContent('two'))
   })
+
+  it('keeps the text selectable (no user-select: none on the editor or its content)', async () => {
+    render(<MarkdownEditor value="select me" onChange={() => {}} label="Body" />)
+    const box = await screen.findByRole('textbox', { name: 'Body' })
+    const content = box.closest('.cm-editor')?.querySelector('.cm-content')
+    expect(content).toBeTruthy()
+    for (const element of [box.closest('.cm-editor'), content]) {
+      const style = getComputedStyle(element as Element)
+      expect(style.userSelect).toBe('text')
+      expect(style.getPropertyValue('-webkit-user-select')).toBe('text')
+    }
+  })
 })
