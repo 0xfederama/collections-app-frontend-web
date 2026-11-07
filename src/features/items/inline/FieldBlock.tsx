@@ -12,6 +12,7 @@ import type { Draft } from '../form/draft'
 import { storeLink } from '../../links'
 import type { Item } from '../api'
 import { InlineField } from './InlineField'
+import { SiteLink } from './SiteLink'
 import { typeSpecs, newPrice, priceSpec, websiteSpec, type FieldSpec } from './fields'
 
 type Streaming = { country: string; platforms?: string[]; paid_platforms?: string[] }
@@ -116,18 +117,9 @@ function StoresValue({ item, fieldKey }: { item: Item; fieldKey: string }) {
 function Value({ item, spec }: { item: Item; spec: FieldSpec }) {
   if (spec.field?.type === 'stores') return <StoresValue item={item} fieldKey={spec.field.key} />
   const value = spec.text?.(item)
-  if (spec.field?.type === 'link' && value && isWebUrl(value))
-    return (
-      <a
-        href={value}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="break-all text-accent-text underline underline-offset-2"
-      >
-        {value}
-        <span className="sr-only"> (opens in a new tab)</span>
-      </a>
-    )
+  // The website and the URL fields of a type are links (roadmap 28): the site's icon, truncated.
+  if ((spec.field?.type === 'link' || spec.id === websiteSpec.id) && value && isWebUrl(value))
+    return <SiteLink url={value} />
   return <span className="break-words tabular-nums">{value}</span>
 }
 
