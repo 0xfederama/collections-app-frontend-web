@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError, NetworkError } from './errors'
-import { errorMessage, failureKind, isDuplicateTitle } from './failure'
+import {
+  errorMessage,
+  failureKind,
+  fieldErrorText,
+  isDuplicateTitle,
+  validationMessage,
+} from './failure'
 
 const apiError = (status: number) =>
   new ApiError({ status, code: 'unknown', title: 'T', raw: undefined })
@@ -80,5 +86,66 @@ describe('F-026 W7 isDuplicateTitle', () => {
     [new Error('duplicate_title'), false],
   ])('%#', (error, expected) => {
     expect(isDuplicateTitle(error)).toBe(expected)
+  })
+})
+
+describe('validationMessage', () => {
+  const problem = (init: { detail?: string; errors?: { field: string; message: string }[] }) =>
+    new ApiError({
+      status: 422,
+      code: 'validation_failed',
+      title: 'Validation failed',
+      raw: undefined,
+      ...init,
+    })
+
+  it.each([
+    [
+      'one field error',
+      { errors: [{ field: 'body.metadata.director', message: 'is too long' }] },
+      'Director: is too long',
+    ],
+    [
+      'snake_case and index',
+      { errors: [{ field: 'metadata.power_hp[0]', message: 'must be a number' }] },
+      'Power hp: must be a number',
+    ],
+    ['no field name', { errors: [{ field: '', message: 'Bad request.' }] }, 'Bad request.'],
+    [
+      'several errors',
+      {
+        errors: [
+          { field: 'title', message: 'is required' },
+          { field: 'metadata.pages', message: 'must be positive' },
+        ],
+      },
+      'Title: is required Pages: must be positive',
+    ],
+    ['detail only', { detail: 'director is too long' }, 'director is too long'],
+    [
+      'errors beat detail',
+      { detail: 'x', errors: [{ field: 'title', message: 'is required' }] },
+      'Title: is required',
+    ],
+    ['nothing else', {}, 'Validation failed'],
+  ])('%s', (_name, init, expected) => {
+    expect(validationMessage(problem(init))).toBe(expected)
+  })
+
+  it('errorMessage uses it for a 422 only', () => {
+    expect(errorMessage(problem({ errors: [{ field: 'title', message: 'is required' }] }))).toBe(
+      'Title: is required',
+    )
+    expect(
+      errorMessage(
+        new ApiError({ status: 400, code: 'x', title: 'Bad', detail: 'd', raw: undefined }),
+      ),
+    ).toBe('d')
+  })
+
+  it('fieldErrorText', () => {
+    expect(fieldErrorText({ field: 'metadata.director', message: 'is too long' })).toBe(
+      'Director: is too long',
+    )
   })
 })

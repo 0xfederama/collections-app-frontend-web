@@ -20,9 +20,18 @@ describe('roadmap 28 siteHost', () => {
 })
 
 describe('roadmap 28 faviconUrl', () => {
-  // TODO(roadmap 28): the endpoint is not ready, so every site gets no favicon yet.
-  it.each(['https://www.ducati.com/', 'http://example.org/', 'https://www.instagram.com/x/'])(
-    'roadmap 28 returns null for %s until the backend endpoint exists',
+  const base = `${location.origin}/api/v1/favicon?url=`
+
+  it.each([
+    ['https://www.ducati.com/', 'https://www.ducati.com'],
+    ['http://example.org/path?q=1#x', 'http://example.org'],
+    ['https://example.com:8443/x', 'https://example.com:8443'],
+  ])('roadmap 28 %s asks the server for the origin %s', (url, origin) => {
+    expect(faviconUrl(url)).toBe(`${base}${encodeURIComponent(origin)}`)
+  })
+
+  it.each(['javascript:alert(1)', 'ftp://example.com/', 'not a url', ''])(
+    'roadmap 28 returns null for %j',
     (url) => {
       expect(faviconUrl(url)).toBeNull()
     },

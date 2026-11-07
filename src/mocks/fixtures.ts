@@ -27,6 +27,19 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     contentType: 'text/plain',
     body: 'ready',
   },
+  // No site has an icon by default (404 `favicon_not_found`), so tests and the dev fake show the globe.
+  getFavicon: {
+    method: 'get',
+    path: '/api/v1/favicon',
+    status: 404,
+    contentType: 'application/json',
+    body: {
+      type: 'https://collection-app.invalid/problems/favicon-not-found',
+      title: 'favicon_not_found',
+      status: 404,
+      code: 'favicon_not_found',
+    },
+  },
   listTypes: {
     method: 'get',
     path: '/api/v1/types',

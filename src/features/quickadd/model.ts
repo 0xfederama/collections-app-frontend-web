@@ -1,4 +1,10 @@
-import { ApiError, errorMessage, isDuplicateTitle, NetworkError } from '../../lib/api'
+import {
+  ApiError,
+  errorMessage,
+  fieldErrorText,
+  isDuplicateTitle,
+  NetworkError,
+} from '../../lib/api'
 import { duplicateTitleMessage, isLookupUnavailable, LIMITS, type ItemType } from '../items'
 import type { List } from '../tree'
 
@@ -78,11 +84,11 @@ export function describeCreateFailure(caught: unknown, type?: ItemType): CreateF
     const rest: string[] = []
     for (const e of caught.errors ?? []) {
       if (e.field === 'title') mapped.title ??= e.message
-      else rest.push(e.message)
+      else rest.push(fieldErrorText(e))
     }
     const focus: CreateFailure['focus'] = mapped.title ? 'title' : null
     const keepFormError = !rest.length && !!mapped.title
-    const formError = keepFormError ? undefined : rest.join(' ') || caught.title
+    const formError = keepFormError ? undefined : rest.join(' ') || errorMessage(caught)
     return { errors: mapped, focus, formError, keepFormError, lookupUnavailable }
   }
   const none = { errors: null, focus: null, keepFormError: false, lookupUnavailable }

@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
@@ -28,7 +28,15 @@ describe('roadmap 28 website on the item page', () => {
     expect(link).toHaveAttribute('href', 'https://www.ducati.com/')
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
-    // No favicon endpoint yet (roadmap 28): the globe stands in front of the address.
+    // The favicon comes from our own endpoint; when it answers 404 the globe stands in.
+    const img = link.querySelector('img')
+    expect(img).toHaveAttribute(
+      'src',
+      `${location.origin}/api/v1/favicon?url=${encodeURIComponent('https://www.ducati.com')}`,
+    )
+    expect(img).toHaveAttribute('referrerpolicy', 'no-referrer')
+    fireEvent.error(img as HTMLImageElement)
+    expect(link.querySelector('img')).toBeNull()
     expect(link.querySelector('svg')).not.toBeNull()
   })
 
