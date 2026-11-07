@@ -4,6 +4,8 @@ export const STORAGE_KEYS = {
   sidebar: 'collection:sidebar',
   /** Folder the last created list went into, preselected in the "New list" dialog. Session only. */
   listFolder: 'collection:list-folder',
+  /** Focus/keyboard diagnostics overlay on (Settings > About, or `?focusdebug=1`). */
+  focusDebug: 'collection:focus-debug',
 } as const
 
 /**
