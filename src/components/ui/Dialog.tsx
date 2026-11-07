@@ -1,7 +1,7 @@
 import * as RadixDialog from '@radix-ui/react-dialog'
 import type { ReactNode, RefObject } from 'react'
 import { cx } from '../../lib/cx'
-import { handOffKeyboardFocus } from '../../lib/keyboardProxy'
+import { handOffKeyboardFocus, keyboardProxyWaiting } from '../../lib/keyboardProxy'
 import { IconButton } from './IconButton'
 import { X } from './icons'
 import { useReturnFocus } from './returnFocus'
@@ -50,7 +50,12 @@ export function Dialog({
         <RadixDialog.Content
           onOpenAutoFocus={(event) => {
             returnFocus.capture()
-            if (!initialFocus?.current) return
+            if (!initialFocus?.current) {
+              // The field is not there yet: keep focus (and the iOS keyboard) on the proxy; the
+              // field's ref hands it over when it mounts (`handOffWhenMounted`).
+              if (keyboardProxyWaiting()) event.preventDefault()
+              return
+            }
             event.preventDefault()
             // Takes focus over from the iOS keyboard proxy, if the opening tap left one.
             handOffKeyboardFocus(initialFocus.current)
