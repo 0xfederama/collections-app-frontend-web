@@ -1,5 +1,8 @@
-/** How long a proxy waits for the real field to take focus before it is removed anyway. */
-export const KEYBOARD_PROXY_MS = 3000
+/**
+ * How long a proxy waits for the real field to take focus before it is removed anyway. Long enough
+ * for a first visit that still has to load the page's code over a slow network (roadmap 28).
+ */
+export const KEYBOARD_PROXY_MS = 10000
 
 let proxy: HTMLInputElement | null = null
 let opener: HTMLElement | null = null
@@ -55,6 +58,20 @@ export function handOffKeyboardFocus(field: HTMLElement | null | undefined): voi
 /** The element that had focus before the proxy took it (a dialog returns focus there). */
 export function keyboardProxyOpener(): HTMLElement | null {
   return proxy && document.activeElement === proxy ? opener : null
+}
+
+/** True while a proxy holds the keyboard open, waiting for its field. */
+export function keyboardProxyWaiting(): boolean {
+  return proxy !== null && document.activeElement === proxy
+}
+
+/**
+ * Ref callback for a field that must take the keyboard over whenever it mounts, however late (a
+ * lazy route, a dialog body that renders after data loads). One-shot effects miss a field that
+ * appears after them; a ref callback runs exactly when the element is attached.
+ */
+export function handOffWhenMounted(field: HTMLElement | null): void {
+  if (field && keyboardProxyWaiting()) handOffKeyboardFocus(field)
 }
 
 /** True for the proxy input itself. */

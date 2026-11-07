@@ -5,6 +5,8 @@ import { Search } from '../../components/ui/icons'
 import { cx } from '../../lib/cx'
 import { IconGrid, type IconGridCell, type IconGridHandle } from './IconGrid'
 import { IconColorPopover } from './IconColorPopover'
+import { searchEmoji } from './emojiData'
+import { useEmoji } from './useEmoji'
 import { searchListIcons, type IconChoice, type ListIconColor } from './iconModel'
 
 type Tab = 'icons' | 'emoji'
@@ -129,6 +131,13 @@ function PopoverBody({
   }
 
   const matches = useMemo(() => searchListIcons(query), [query])
+
+  // The emoji data is a separate download: fetched the first time the Emoji tab opens.
+  const { groups: emojiData, failed: emojiFailed, retry: retryEmoji } = useEmoji(tab === 'emoji')
+  const emojiMatches = useMemo(
+    () => (emojiData ? searchEmoji(emojiData, query) : []),
+    [emojiData, query],
+  )
   const selected = value.icon?.startsWith('i:') ? value.icon.slice(2) : null
   const cells: IconGridCell[] =
     tab === 'icons'
@@ -138,13 +147,16 @@ function PopoverBody({
           pressed: selected === key,
           content: <Icon aria-hidden className="size-5" />,
         }))
-      : matches.emoji.map(([emoji, keywords]) => ({
-          key: emoji,
-          label: `${emoji} ${keywords.split(' ')[0]}`,
-          pressed: value.icon === emoji,
-          content: emoji,
-          text: true,
-        }))
+      : emojiMatches.flatMap((group) =>
+          group.emoji.map(({ emoji, name }) => ({
+            key: emoji,
+            label: `${emoji} ${name}`,
+            group: group.label,
+            pressed: value.icon === emoji,
+            content: emoji,
+            text: true,
+          })),
+        )
 
   /** One write at a time: a second tap while one is in flight is ignored. */
   const apply = async (choice: IconChoice, closeAfter: boolean) => {
@@ -170,6 +182,7 @@ function PopoverBody({
     tabButtons.current[next.id]?.focus()
   }
 
+  const loading = tab === 'emoji' && !emojiData
   const empty = tab === 'icons' ? 'No matching icons.' : 'No matching emoji.'
 
   return (
@@ -249,7 +262,24 @@ function PopoverBody({
         aria-labelledby={`icon-tab-${tab}`}
         className="max-h-[min(15rem,45dvh)] overflow-y-auto overscroll-contain"
       >
-        {cells.length > 0 ? (
+        {loading ? (
+          emojiFailed ? (
+            <p role="alert" className="flex items-center gap-2 px-2 py-4 text-ui text-text-muted">
+              Could not load emoji.
+              <button
+                type="button"
+                onClick={retryEmoji}
+                className="rounded-md px-2 py-1 text-accent-text hover:bg-fill-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
+              >
+                Retry
+              </button>
+            </p>
+          ) : (
+            <p role="status" className="px-2 py-4 text-ui text-text-muted">
+              Loading emoji…
+            </p>
+          )
+        ) : cells.length > 0 ? (
           <IconGrid
             key={`${tab}:${query}`}
             ref={grid}

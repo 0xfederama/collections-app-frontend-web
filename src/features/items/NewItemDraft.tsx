@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState, type FocusEvent, type KeyboardEvent 
 import { useLocation, useNavigate } from 'react-router'
 import { Button, useToast } from '../../components/ui'
 import { useBreakpoint } from '../../lib/breakpoints'
-import { handOffKeyboardFocus } from '../../lib/keyboardProxy'
+import { handOffKeyboardFocus, handOffWhenMounted } from '../../lib/keyboardProxy'
 import { ApiError, errorMessage, isDuplicateTitle, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemType } from './api'
 import { TitleLookupField } from './TitleLookupField'
@@ -180,6 +180,7 @@ export function NewItemDraft({
             onSuggestionSelect={(selection) => void commit(undefined, selection)}
             // eslint-disable-next-line jsx-a11y/no-autofocus -- the new-item draft exists to type a title, so the title takes focus when it opens
             autoFocus
+            inputRef={handOffWhenMounted}
             placeholder="Title of the new item"
             error={error}
             // The field is as tall as the ✓ / ✕ buttons beside it (IconButton: size-11).

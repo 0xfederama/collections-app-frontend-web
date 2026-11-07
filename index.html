@@ -18,9 +18,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Collections" />
-    <!-- black-translucent: the page draws under the status bar in both themes (its text follows the
-         page), so the shell pads the top with env(safe-area-inset-top). No service worker (plain HTTP). -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- default (not black-translucent): since iOS 26.1 black-translucent gets a system blur over the
+         top of a home-screen app that page CSS cannot remove (WebKit 317153, D-139). default paints an
+         opaque bar in the theme-color and starts the page below it. No service worker (plain HTTP). -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)" />
     <!-- No-flash theme bootstrap. Keep the storage key in sync with THEME_STORAGE_KEY in src/lib/theme.ts. -->

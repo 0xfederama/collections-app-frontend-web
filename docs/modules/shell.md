@@ -43,7 +43,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
 - Route screens are code-split: `ListRoute`, `SearchRoute`, `SettingsRoute`, `TrashRoute` via `lazyRoute`; `ItemRoute` has its own `Suspense`.
 - Below 1280 px the item route replaces `main`'s `Outlet`, so `ListRoute` unmounts while an item is open. At ≥ 1280 the list stays mounted; the sheet's close button goes to `/lists/:listId` and keeps `?q=` and `?sort=`.
 - On phones `/` (the search shortcut) navigates to `/search` instead of focusing a sidebar field.
-- Home-screen app (roadmap 28, `black-translucent` status bar): on phones `AppShell` draws a fixed opaque `bg` strip over `env(safe-area-inset-top)`, so content scrolling under the status bar is not seen through it. The strip has no height in Safari.
+- Home-screen app (D-139): status bar style `default`; `black-translucent` gets a system blur on iOS 26.1+ that no page element can cover, so there is no top strip. `lib/theme.ts` `syncThemeChrome()` (called in `main.tsx`) makes the `theme-color` metas follow a forced theme.
 - `index.html` viewport has `maximum-scale=1` (no iOS focus zoom; pinch stays) and `viewport-fit=cover`; `html` takes the theme background, and the shell and toast viewport pad with `env(safe-area-inset-*)` (`src/viewport.test.ts`).
 - E2E phone specs `e2e/16-mobile.spec.ts` and `e2e/18-mobile-home.spec.ts` run only in the `mobile-webkit` Playwright project (iPhone 15, WebKit); chromium ignores them.
 - Sidebar state persists as `collection:sidebar` (`{ collapsed, width }`); `collapsed` applies at every breakpoint from 768 px.

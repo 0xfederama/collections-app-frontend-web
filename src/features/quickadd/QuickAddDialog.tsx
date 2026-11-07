@@ -3,6 +3,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { Dialog, useToast } from '../../components/ui'
 import { useBreakpoint } from '../../lib/breakpoints'
+import { handOffWhenMounted } from '../../lib/keyboardProxy'
 import {
   useCreateItem,
   ADDED_TOAST,
@@ -132,7 +133,10 @@ export function QuickAddDialog({
             }}
             onSelectionChange={setChosen}
             onSuggestionSelect={(selection) => void submit(undefined, undefined, selection)}
-            inputRef={titleRef}
+            inputRef={(el) => {
+              titleRef.current = el
+              handOffWhenMounted(el)
+            }}
             error={errors.title}
             placeholder="Title"
             className="w-full"

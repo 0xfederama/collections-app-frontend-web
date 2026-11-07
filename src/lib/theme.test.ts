@@ -155,3 +155,36 @@ describe('useThemePreference', () => {
     expect(media.listenerCount()).toBe(0)
   })
 })
+
+describe('D-139 theme-color follows a forced theme', () => {
+  const metas = () => [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')]
+  beforeEach(() => {
+    document.head.querySelectorAll('meta[name="theme-color"]').forEach((meta) => meta.remove())
+    document.head.insertAdjacentHTML(
+      'beforeend',
+      '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">' +
+        '<meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)">',
+    )
+  })
+  afterEach(() => setThemePreference('system'))
+
+  it.each([
+    ['dark', '#0b0b0c'],
+    ['light', '#ffffff'],
+  ] as const)('forced %s paints both metas %s without media', (pref, color) => {
+    setThemePreference(pref)
+    expect(metas().map((meta) => [meta.content, meta.getAttribute('media')])).toEqual([
+      [color, null],
+      [color, null],
+    ])
+  })
+
+  it('system restores the per-scheme metas', () => {
+    setThemePreference('dark')
+    setThemePreference('system')
+    expect(metas().map((meta) => [meta.content, meta.getAttribute('media')])).toEqual([
+      ['#ffffff', '(prefers-color-scheme: light)'],
+      ['#0b0b0c', '(prefers-color-scheme: dark)'],
+    ])
+  })
+})
