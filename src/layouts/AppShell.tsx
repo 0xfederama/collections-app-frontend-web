@@ -109,6 +109,14 @@ function ShellFrame() {
         <main className="relative flex-1 p-4 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
           {content}
         </main>
+        {/* Safari 26+ tabs paint the status-bar area solid only from a fixed element touching the
+            top edge (wider than ~90% and thicker than 10 px, plain background); otherwise they blur
+            the page under it (WebKit 301756, D-140). It sits over main's top padding only. Not
+            pointer-events-none: reports disagree on whether Safari samples such elements. */}
+        <div
+          aria-hidden="true"
+          className="fixed inset-x-0 top-0 z-40 h-[max(0.75rem,env(safe-area-inset-top))] bg-bg"
+        />
       </div>
     )
   }
