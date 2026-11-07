@@ -32,7 +32,36 @@ function resolveTheme(pref: ThemePreference = getThemePreference()): ResolvedThe
 function applyTheme(pref: ThemePreference = getThemePreference()): ResolvedTheme {
   const resolved = resolveTheme(pref)
   document.documentElement.dataset.theme = resolved
+  syncThemeColor(pref, resolved)
   return resolved
+}
+
+// Status bar / browser chrome colour per theme; keep in sync with the theme-color metas in index.html.
+const THEME_COLORS: Record<ResolvedTheme, string> = { light: '#ffffff', dark: '#0b0b0c' }
+
+/**
+ * The theme-color metas follow the OS scheme through their media queries. A theme forced in
+ * Settings must win there too, or the home-screen status bar (D-139) shows the other theme's colour.
+ */
+function syncThemeColor(pref: ThemePreference, resolved: ResolvedTheme): void {
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+    const media = meta.dataset.media ?? meta.getAttribute('media') ?? ''
+    meta.dataset.media = media
+    const own: ResolvedTheme = media.includes('dark') ? 'dark' : 'light'
+    if (pref === 'system') {
+      meta.setAttribute('media', media)
+      meta.content = THEME_COLORS[own]
+    } else {
+      meta.removeAttribute('media')
+      meta.content = THEME_COLORS[resolved]
+    }
+  })
+}
+
+/** Applies the stored preference to the theme-color metas (the inline script only sets data-theme). */
+export function syncThemeChrome(): void {
+  const pref = getThemePreference()
+  syncThemeColor(pref, resolveTheme(pref))
 }
 
 export function setThemePreference(pref: ThemePreference): void {
