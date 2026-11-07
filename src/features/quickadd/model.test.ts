@@ -187,7 +187,7 @@ describe('F020 quickadd model', () => {
         expected: {
           errors: { title: 'Title is taken.' },
           focus: 'title',
-          formError: 'Unknown type.',
+          formError: 'Type: Unknown type.',
           keepFormError: false,
           lookupUnavailable: false,
         },
@@ -201,7 +201,7 @@ describe('F020 quickadd model', () => {
         expected: {
           errors: {},
           focus: null,
-          formError: 'Unknown type. Too big.',
+          formError: 'Type: Unknown type. Image: Too big.',
           keepFormError: false,
           lookupUnavailable: false,
         },
@@ -213,6 +213,23 @@ describe('F020 quickadd model', () => {
           errors: {},
           focus: null,
           formError: 'Invalid',
+          keepFormError: false,
+          lookupUnavailable: false,
+        },
+      },
+      {
+        name: '422 with no field errors but a detail: the detail is the banner',
+        caught: new ApiError({
+          status: 422,
+          code: 'validation_failed',
+          title: 'Validation failed',
+          detail: 'director is too long',
+          raw: null,
+        }),
+        expected: {
+          errors: {},
+          focus: null,
+          formError: 'director is too long',
           keepFormError: false,
           lookupUnavailable: false,
         },

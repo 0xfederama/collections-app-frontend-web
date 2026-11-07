@@ -1,4 +1,4 @@
-import { ApiError, NetworkError } from './errors'
+import { ApiError, NetworkError, type FieldError } from './errors'
 
 /**
  * What went wrong with a failed API call, independent of the wording. Features switch on this and
@@ -33,7 +33,36 @@ export function failureKind(error: unknown): FailureKind {
  * otherwise `fallback`. Only for failures whose copy is not written per status.
  */
 export function errorMessage(error: unknown, fallback = 'Something went wrong.'): string {
+  if (error instanceof ApiError && error.status === 422) return validationMessage(error)
   return error instanceof ApiError ? (error.detail ?? error.title) : fallback
+}
+
+/** `body.metadata.power_hp` -> `Power hp`: the last path segment, readable. Empty when there is none. */
+function fieldName(path: string): string {
+  const last =
+    path
+      .replace(/\[\d+\]/g, '')
+      .split('.')
+      .pop() ?? ''
+  const words = last.replaceAll('_', ' ').trim()
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : ''
+}
+
+/**
+ * The text for a 422 that has no input to sit on: the field errors (`Director: too long`), else the
+ * server's `detail` (it names up to 3 fields), else the title. Never just "Validation failed" when the
+ * server said more.
+ */
+export function validationMessage(error: ApiError): string {
+  const lines = (error.errors ?? []).filter((e) => e.message).map(fieldErrorText)
+  if (lines.length) return lines.join(' ')
+  return error.detail ?? error.title
+}
+
+/** One field error as a sentence: `Director: must be at most 100 characters`. */
+export function fieldErrorText(error: FieldError): string {
+  const name = fieldName(error.field)
+  return name ? `${name}: ${error.message}` : error.message
 }
 
 /** 409 `duplicate_title`: the title (or provider id) is already in the list. Features add the wording. */

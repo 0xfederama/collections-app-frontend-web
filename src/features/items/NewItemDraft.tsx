@@ -117,7 +117,7 @@ export function NewItemDraft({
         // Inline under the title; the draft stays as typed.
         setError(duplicateTitleMessage(type))
       } else if (caught instanceof ApiError && caught.status === 422) {
-        setError(caught.errors?.find((e) => e.field === 'title')?.message ?? caught.title)
+        setError(caught.errors?.find((e) => e.field === 'title')?.message ?? errorMessage(caught))
       } else if (caught instanceof ApiError && caught.status === 409) {
         setFailure('This list no longer exists or is in Trash.')
       } else if (isLookupUnavailable(caught)) {
