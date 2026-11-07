@@ -9,6 +9,7 @@ import boundaries from './eslint.boundaries.js'
 export default defineConfig(
   {
     ignores: [
+      '.claude/worktrees/**',
       'dist',
       'coverage',
       'playwright-report',

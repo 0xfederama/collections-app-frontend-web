@@ -11,22 +11,24 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `FieldFilter.tsx`: per-field filter control, `parseFieldFilter` for URL params, `FieldFilterMenu` (the "+ Filter" popover, with the availability choices on movie and TV) and `FieldFilterChip` / `AvailabilityChip` (the applied filters, removable, under the bar).
 - `availability.ts`: the two availability values, their labels and `parseAvailability` (`?availability=`, movie and TV only).
 - `src/lib/keyboardProxy.ts`: iOS keyboard proxy used by "New item" (`focusKeyboardProxy`, `releaseKeyboardProxy`).
-- `ListIconPicker.tsx`, `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices and parsing.
+- `ListIconPopover.tsx`: the Notion-style icon popover (search, Icons / Emoji tabs, Remove, colour swatch).
+- `IconGrid.tsx`: the arrow-key grid of icon or emoji cells; `IconColorPopover.tsx`: the colour swatch and its nested panel.
+- `iconModel.ts`, `emojiKeywords.ts`: searchable icon/emoji choices, colours and parsing.
 - `ListIconMark.tsx`: shared list mark renderer.
 - `index.ts`: public face; `screens.ts` holds `ListView` for the route only.
 - `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`, `ItemRows.tsx` (`DraftRow`, `SortableEntry`), `ItemControls.tsx` (row menu), `ItemPinned.tsx`, `ItemsSkeleton.tsx`: header, rows and their parts.
 - `src/lib/useLongPress.ts`: touch and pen long press on a row (opens its menu).
 - `listParams.ts`: URL parsing (`parseSort`, `buildItemsParams`); `useDebouncedFilter.ts`: debounced `?q=`.
-- `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
+- `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description, always shown in full.
 - `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation.
 - `ViewMenu.tsx`: the "View options" icon button (display mode radio menu). `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "View options", "+ Filter" and "Sort" buttons (one 36 px square, 44 px on touch). The toolbar is one row at every width: View options, search field (always visible), Filter, Sort, New item (`ListHeader.tsx`).
-- `TileStrip.tsx`, `tileFit.ts`: a row's service or store tiles that fit the row, then a "+N" tile; at most `MAX_TILES` (4) slots.
+- `TileStrip.tsx`, `tileFit.ts`: a row's service, store and website tiles that fit the row, then a "+N" tile; at most `MAX_TILES` (4) slots.
 - `scrollRestore.ts`: `useScrollRestore`, the list's scroll per history entry (`main`, or the window on phones).
 - `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
 ## Interfaces
 
-- `ListIconPicker({ value, onChange, onClose, type? })`: built-in icons, emoji, mark color and default.
+- `ListIconPopover({ value, open, onOpenChange, onChange, children?, anchorEl?, onCloseAutoFocus?, notice?, pending? })`: icon and emoji choice popover; `onChange` may resolve `false` to keep it open.
 - `ListIconMark({ icon, iconColor, type, className, iconClassName })`: list mark.
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
 - `entryMenu(title, state, reorder?)` (`ItemControls.tsx`), `useLongPress({ onLongPress })`: row menu and long press.
@@ -50,14 +52,17 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - Sort and filter accept only the built-in field keys of the list's type (plus `price` where the type allows it); a custom key in the URL is ignored (F-023).
 - Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming and stores fields are not filterable, and stores fields are not sortable.
 - A sort the type does not define falls back to the list's `sort_mode`, so stale `?sort=` values are ignored.
-- Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally.
-- The header icon is a button that opens `ListIconDialog` (pen on hover, focus or touch). List icon writes are owned by the tree feature and use the list version with `If-Match`.
+- Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally. There is no free-text emoji field.
+- The popover puts the search field first and lists the Icons or Emoji grid below it, filtered by the search. The search takes focus on a pointer device, not on touch. Picking an icon, an emoji or "Remove" applies it at once and closes the popover.
+- Colour is behind the swatch and applies to built-in icons only (the swatch is disabled for emoji). Choosing a colour applies it and closes only the colour panel; the icon popover stays open.
+- The list header icon is a button that opens `ListIconEdit` (tree feature; pen on hover, focus or touch). Each choice is its own write with the list version as `If-Match`; a refused write keeps the popover open.
 - A list with no type shows the Lucide `List` glyph (`typeIconFor(null)`).
+- The list description is always shown in full (no collapse). A click on its text, or "Add a description", edits it; ✓ / ✕ sit below the editor box.
 - Long press (touch or pen, 500 ms, finger within 8 px) on a row opens its menu (Move up/down when reorderable, Move, Delete) and cancels the drag the hold started. A mouse uses the "…" button.
 - Every display mode draws its rows in the same bordered frame (`surface` in `ItemEntry.tsx`); there are no hairline dividers.
+- The item's website is a tile after the row's last streaming or store strip (`PinnedSlot` `showSite`) and counts in its budget; with no such strip it is a strip of its own.
 - Row tiles: `TileStrip` shows the tiles that fit, then "+N"; more than 4 tiles draw 3 and "+N" (`cappedCount`). In compact rows the strip takes the free space and ends at the row's right edge. Streaming tiles follow the Settings service order with paid platforms last (`orderPlatforms`).
 - The list header's "…" menu hosts "Refresh details" (see [tree](tree.md)).
 - The reorder hint explains only a filter or unloaded items; there is no "switch to Manual sort" hint.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for the full interaction spec.
-
 - Default sort (2.29.1): a sort other than the list's `sort_mode` shows `DefaultSortChip` ("Make “<label>” the default sort for this list") on the chip line under the toolbar, never in the toolbar row; it PATCHes `sort_mode`, then the line goes and "Default sort saved" toasts.

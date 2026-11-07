@@ -47,6 +47,7 @@ To fix a violation, export the symbol from the feature's `index.ts` and import i
 - `exactOptionalPropertyTypes` is not enabled in `tsconfig.json`. It is off on purpose: it gives 76 errors against the generated API types, whose optional fields are declared without `| undefined`.
 - ESLint in `src/**`: `no-explicit-any` and `no-non-null-assertion` are errors (both off in tests and test kits); `ban-ts-comment` requires a description on `@ts-expect-error`.
 - `jsx-a11y` recommended is on. Every `eslint-disable` needs a `-- reason` on the same line.
+- ESLint and Prettier ignore `.claude/worktrees/` (agent worktrees), so their copies are not linted or formatted.
 - `knip` runs in `npm run check` and fails on unused files, exports or dependencies. `src/features/links/index.ts` is exempt from export checks in `knip.json`.
 
 ## Build and dev code

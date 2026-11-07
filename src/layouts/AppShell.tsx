@@ -109,6 +109,13 @@ function ShellFrame() {
         <main className="relative flex-1 p-4 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
           {content}
         </main>
+        {/* Home-screen app (black-translucent): the document scrolls under the status bar and iOS
+            shows it there blurred. This opaque strip covers exactly the top safe area; in Safari the
+            inset is 0, so it has no height there. Roadmap 28. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-x-0 top-0 z-40 h-[env(safe-area-inset-top)] bg-bg"
+        />
       </div>
     )
   }

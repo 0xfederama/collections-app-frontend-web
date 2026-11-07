@@ -286,40 +286,23 @@ describe('W-06 fallback tile', () => {
 })
 
 describe('F007-W10 list description', () => {
-  const toggleName = /(Collapse|Expand) description/
-
-  it('renders the Markdown description, expanded, with a Collapse toggle', async () => {
+  it('renders the Markdown description in full, with no collapse toggle', async () => {
     useBackend({ list: { description: 'Some **bold** words' } })
     renderList(at())
     await itemsList()
     const section = await screen.findByRole('region', { name: 'List description' })
     expect(within(section).getByText('bold')).toBeInTheDocument()
-    expect(within(section).getByRole('button', { name: toggleName })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
+    expect(
+      within(section).queryByRole('button', { name: /(Collapse|Expand) description/ }),
+    ).toBeNull()
   })
 
-  it('collapsing is remembered per list in localStorage', async () => {
-    useBackend({ list: { description: 'Some **bold** words' } })
-    const user = userEvent.setup()
-    renderList(at())
-    await user.click(await screen.findByRole('button', { name: 'Collapse description' }))
-    expect(screen.queryByText('bold')).not.toBeInTheDocument()
-    expect(JSON.parse(localStorage.getItem('collection:list-description-collapsed')!)).toEqual([
-      LIST,
-    ])
-  })
-
-  it('starts collapsed when this list was collapsed before, and survives blocked storage', async () => {
+  it('ignores a collapse flag left in storage by an older version: the text still shows', async () => {
     localStorage.setItem('collection:list-description-collapsed', JSON.stringify([LIST]))
     useBackend({ list: { description: 'Some **bold** words' } })
     renderList(at())
-    expect(await screen.findByRole('button', { name: 'Expand description' })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    )
-    expect(screen.queryByText('bold')).not.toBeInTheDocument()
+    await itemsList()
+    expect(await screen.findByText('bold')).toBeInTheDocument()
   })
 
   it('without a description the section shows the "Add a description" placeholder', async () => {

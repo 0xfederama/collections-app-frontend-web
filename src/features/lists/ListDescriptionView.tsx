@@ -1,19 +1,16 @@
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useRef, type MouseEvent } from 'react'
 import { MarkdownView } from '../../components/markdown'
 import { focusRing } from '../../components/ui'
-import { parseStringArray, readStored, STORAGE_KEYS, writeStored } from '../../lib/storage'
 
 /**
- * Shown expanded unless this list was collapsed on this device. There is no pen: a click on the text
- * (or the placeholder) edits. Keyboard users reach "Edit description", a button that shows on focus.
+ * Always shown in full. There is no pen: a click on the text (or the placeholder) edits. Keyboard
+ * users reach "Edit description", a button that shows on focus.
  */
 export function DescriptionView({
-  listId,
   text,
   restoreFocus,
   onEdit,
 }: {
-  listId: string
   text: string | null
   restoreFocus: boolean
   onEdit: () => void
@@ -22,18 +19,6 @@ export function DescriptionView({
   useEffect(() => {
     if (restoreFocus) entryRef.current?.focus()
   }, [restoreFocus])
-  const [collapsed, setCollapsed] = useState(() =>
-    readStored(STORAGE_KEYS.listDescriptionCollapsed, parseStringArray, []).includes(listId),
-  )
-  const toggle = () => {
-    const next = !collapsed
-    setCollapsed(next)
-    const others = readStored(STORAGE_KEYS.listDescriptionCollapsed, parseStringArray, []).filter(
-      (id) => id !== listId,
-    )
-    writeStored(STORAGE_KEYS.listDescriptionCollapsed, next ? [...others, listId] : others)
-  }
-  const regionId = `list-description-${listId}`
 
   if (!text) {
     return (
@@ -58,34 +43,21 @@ export function DescriptionView({
   }
   return (
     <section aria-label="List description" className="max-w-prose text-body text-text-muted">
-      <div className="flex items-center gap-3 text-ui">
-        <button
-          type="button"
-          aria-expanded={!collapsed}
-          aria-controls={regionId}
-          onClick={toggle}
-          className={`rounded-sm text-accent-text underline underline-offset-2 ${focusRing}`}
-        >
-          {collapsed ? 'Expand description' : 'Collapse description'}
-        </button>
-        {/* The click on the text is a mouse shortcut: this is the keyboard path, visible on focus. */}
-        <button
-          ref={entryRef}
-          type="button"
-          onClick={onEdit}
-          className={`rounded-sm text-text-muted underline underline-offset-2 sr-only focus-visible:not-sr-only ${focusRing}`}
-        >
-          Edit description
-        </button>
-      </div>
+      {/* The click on the text is a mouse shortcut: this is the keyboard path, visible on focus. */}
+      <button
+        ref={entryRef}
+        type="button"
+        onClick={onEdit}
+        className={`rounded-sm text-ui text-text-muted underline underline-offset-2 sr-only focus-visible:not-sr-only ${focusRing}`}
+      >
+        Edit description
+      </button>
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- the Edit description button above is the keyboard path; a click on the text is a pointer shortcut */}
       <div
-        id={regionId}
-        hidden={collapsed}
         onClick={onTextClick}
-        className="mt-2 cursor-text rounded-md transition-colors hover:bg-fill/60"
+        className="cursor-text rounded-md transition-colors hover:bg-fill/60"
       >
-        {!collapsed && <MarkdownView source={text} />}
+        <MarkdownView source={text} />
       </div>
     </section>
   )
