@@ -1,4 +1,11 @@
-import { useLayoutEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FocusEvent,
+  type KeyboardEvent,
+} from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button, useToast } from '../../components/ui'
 import { useBreakpoint } from '../../lib/breakpoints'
@@ -144,12 +151,27 @@ export function NewItemDraft({
     }
   }
 
+  // A press on a toast (dismissing the "Added …" of the previous item) must not discard this draft
+  // (roadmap 28). On iOS a tapped button takes no focus, so the blur has no target: remember where
+  // the last press started instead.
+  const pressedToast = useRef(false)
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      pressedToast.current =
+        event.target instanceof Element && event.target.closest('[data-toast-viewport]') !== null
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [])
+
   // Focus leaving the editor with nothing typed removes the draft. A window switch (no target, the
-  // document lost focus) does not.
+  // document lost focus) and a press on a toast do not.
   const onBlur = (event: FocusEvent) => {
     const next = event.relatedTarget as Node | null
     if (next && box.current?.contains(next)) return
     if (!next && !document.hasFocus()) return
+    if (pressedToast.current) return
+    if (next instanceof Element && next.closest('[data-toast-viewport]')) return
     if (title.trim() === '' && !create.isPending) cancel()
   }
 

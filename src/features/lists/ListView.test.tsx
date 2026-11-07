@@ -1330,6 +1330,29 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     expect(posts).toHaveLength(0)
   })
 
+  it('roadmap 28: dismissing a toast does not discard the empty draft (iOS blur with no target)', async () => {
+    mockViewport(1400)
+    useBackend()
+    const posts = useCreate()
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+    const panel = await screen.findByRole('complementary', { name: 'Item details' })
+    const title = within(panel).getByRole('combobox', { name: 'Title' })
+    const viewport = document.querySelector('[data-toast-viewport]')
+    expect(viewport).not.toBeNull()
+    const press = document.createElement('button')
+    viewport?.append(press)
+    fireEvent.pointerDown(press)
+    fireEvent.blur(title, { relatedTarget: null })
+
+    expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/new`)
+    expect(within(panel).getByRole('combobox', { name: 'Title' })).toBeInTheDocument()
+    expect(posts).toHaveLength(0)
+    press.remove()
+  })
+
   it('below 1280 px the draft is the full item page with a back link', async () => {
     mockViewport(1000)
     useBackend()
