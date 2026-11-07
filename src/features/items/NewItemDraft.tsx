@@ -10,7 +10,11 @@ import {
 import { useLocation, useNavigate } from 'react-router'
 import { Button, useToast } from '../../components/ui'
 import { useBreakpoint } from '../../lib/breakpoints'
-import { handOffKeyboardFocus, handOffWhenMounted } from '../../lib/keyboardProxy'
+import {
+  handOffKeyboardFocus,
+  handOffWhenMounted,
+  keyboardProxyWaiting,
+} from '../../lib/keyboardProxy'
 import { ApiError, errorMessage, isDuplicateTitle, NetworkError } from '../../lib/api'
 import { useCreateItem, type ItemType } from './api'
 import { TitleLookupField } from './TitleLookupField'
@@ -206,8 +210,10 @@ export function NewItemDraft({
             onTitleChange={changeTitle}
             onSelectionChange={setChosen}
             onSuggestionSelect={(selection) => void commit(undefined, selection)}
+            // Not while the iOS keyboard proxy holds the focus: the hand-off then waits for the
+            // keyboard to rise, and an early autoFocus would cancel it (roadmap 28).
             // eslint-disable-next-line jsx-a11y/no-autofocus -- the new-item draft exists to type a title, so the title takes focus when it opens
-            autoFocus
+            autoFocus={!keyboardProxyWaiting()}
             inputRef={handOffWhenMounted}
             placeholder="Title of the new item"
             error={error}
