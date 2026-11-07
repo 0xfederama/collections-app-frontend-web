@@ -76,6 +76,18 @@ describe('F002-W2 list description, edited in place', () => {
   const placeholder = () => within(main()).findByRole('button', { name: 'Add a description' })
   const editor = () => within(main()).findByRole('textbox', { name: 'Description' })
 
+  it('the Save and Cancel buttons sit below the text box, right-aligned', async () => {
+    const { user } = await openList(ID.wishlist)
+    await user.click(await placeholder())
+    const field = await editor()
+    const save = within(main()).getByRole('button', { name: 'Save description' })
+    expect(field.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(save.parentElement).toBe(
+      within(main()).getByRole('button', { name: 'Cancel editing description' }).parentElement,
+    )
+    expect(save.parentElement).toHaveClass('justify-end')
+  })
+
   it('click the placeholder, write, ✓ saves a trimmed text with If-Match', async () => {
     const { user, backend } = await openList(ID.wishlist)
     await user.click(await placeholder())

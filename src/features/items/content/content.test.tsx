@@ -163,6 +163,15 @@ describe('F002-W3 description in place', () => {
     await waitFor(() => expect(backend.puts).toHaveLength(1))
   })
 
+  it('the Save and Cancel buttons sit below the text box, right-aligned', async () => {
+    createContentBackend().use()
+    await openForm()
+    const save = saveDescription()
+    expect(editor().compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(save.parentElement).toBe(cancelDescription().parentElement)
+    expect(save.parentElement?.parentElement).toHaveClass('justify-end')
+  })
+
   it('over 1 MiB: no request, a message, ✓ disabled; shortening re-enables it', async () => {
     const backend = createContentBackend()
     backend.use()
