@@ -22,7 +22,12 @@ export function focusKeyboardProxy(): void {
   const active = document.activeElement
   const previous = proxy
   if (active instanceof HTMLElement && active !== document.body && active !== previous) {
-    opener = active
+    // A tap target's hidden field (`KeyboardTapTarget`) stands for the visible button beside it:
+    // focus must come back to that button, never to the field (it would raise the keyboard).
+    opener =
+      active.dataset.keyboardTap === undefined
+        ? active
+        : (active.parentElement?.querySelector<HTMLElement>('button, a') ?? null)
   } else if (!previous) {
     opener = null
   }
@@ -32,10 +37,12 @@ export function focusKeyboardProxy(): void {
   input.dataset.keyboardProxy = ''
   input.setAttribute('aria-hidden', 'true')
   input.setAttribute('autocomplete', 'off')
-  // Offscreen and invisible, but rendered: iOS will not open a keyboard for a display:none input.
-  // 16px text: iOS zooms the page when it focuses an input with smaller text.
+  // Draws nothing, yet is not "invisible" to WebKit: iOS takes the focus of a transparent
+  // (opacity 0), clipped or display:none input but does not raise the keyboard for it (seen on an
+  // iPhone with the focus diagnostics, roadmap 28). So: opacity 1 with transparent text, caret,
+  // background and border, at a real 16px size. 16px text: iOS zooms the page for smaller text.
   input.className =
-    'pointer-events-none fixed top-0 left-0 size-px overflow-hidden text-base opacity-0'
+    'pointer-events-none fixed top-0 left-0 z-[100] m-0 size-4 appearance-none border-0 bg-transparent p-0 text-base text-transparent caret-transparent opacity-100 outline-none'
   document.body.append(input)
   // Focus the new proxy before removing the old one, so focus never falls to <body> in between
   // (that would close the keyboard). No scroll: the page must not jump to the top.

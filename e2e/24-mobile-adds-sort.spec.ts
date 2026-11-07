@@ -1,3 +1,5 @@
+// KeyboardTapTarget (roadmap 28): on touch projects a hidden text field lies over "New item" /
+// "Quick add"; force taps at the button's spot, so the tap reaches it as a finger would.
 import { expect, test } from '@playwright/test'
 import { createItem, createList, uniqueName } from './helpers'
 
@@ -14,7 +16,7 @@ test.describe('2.29.1 phone adds and default sort', () => {
     const first = uniqueName('First')
     const second = uniqueName('Second')
     for (const name of [first, second]) {
-      await page.getByRole('button', { name: 'New item' }).first().click()
+      await page.getByRole('button', { name: 'New item' }).first().click({ force: true })
       const title = page.getByRole('textbox', { name: 'Title' })
       await expect(title).toBeFocused()
       await title.fill(name)
@@ -84,7 +86,7 @@ test.describe('2.30.1 phone title focus on every add path', () => {
     await createItem(request, two.id, uniqueName('Seed'))
     await page.goto('/')
     for (const name of [uniqueName('Home Q1'), uniqueName('Home Q2')]) {
-      await page.getByRole('button', { name: 'Quick add' }).click()
+      await page.getByRole('button', { name: 'Quick add' }).click({ force: true })
       const dialog = page.getByRole('dialog', { name: 'Quick add' })
       const title = dialog.getByRole('textbox', { name: 'Title' })
       await expect(title).toBeFocused()
@@ -95,7 +97,7 @@ test.describe('2.30.1 phone title focus on every add path', () => {
     }
     for (const list of [one, two]) {
       await page.goto(`/lists/${list.id}`)
-      await page.getByRole('button', { name: 'New item' }).first().click()
+      await page.getByRole('button', { name: 'New item' }).first().click({ force: true })
       await expect(page.getByRole('textbox', { name: 'Title' })).toBeFocused()
       await expect(page.locator('[data-keyboard-proxy]')).toHaveCount(0)
     }

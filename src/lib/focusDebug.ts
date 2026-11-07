@@ -53,7 +53,11 @@ function viewport(): string {
 
 const onFocusIn = (event: FocusEvent) => focusNote(`in  ${describe(event.target)}`)
 const onFocusOut = (event: FocusEvent) =>
-  focusNote(`out ${describe(event.target)} -> ${describe(event.relatedTarget)}`)
+  focusNote(
+    `out ${describe(event.target)} -> ${describe(event.relatedTarget)}${
+      event.target instanceof Node && !event.target.isConnected ? ' (removed)' : ''
+    }`,
+  )
 const onResize = () => focusNote(viewport())
 
 /** Reads the URL switch, then mounts the overlay if diagnostics are on. Call once at startup. */

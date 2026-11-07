@@ -1,3 +1,5 @@
+// KeyboardTapTarget (roadmap 28): on touch projects a hidden text field lies over "New item" /
+// "Quick add"; force taps at the button's spot, so the tap reaches it as a finger would.
 import { expect, test } from '@playwright/test'
 import { createItem, createList, itemUrl, uniqueName } from './helpers'
 
@@ -97,7 +99,7 @@ test.describe('F-025 mobile Home', () => {
     const title = uniqueName('Fresh')
     await page.goto(`/lists/${list.id}`)
     const main = page.getByRole('main')
-    await main.getByRole('button', { name: 'New item' }).tap()
+    await main.getByRole('button', { name: 'New item' }).tap({ force: true })
     const field = page.getByRole('textbox', { name: 'Title' })
     await field.fill(title)
     await field.press('Enter')
@@ -118,7 +120,7 @@ test.describe('F-025 mobile Home', () => {
   }) => {
     const list = await createList(request, uniqueName('Focus phone'), 'wishlist')
     await page.goto(`/lists/${list.id}`)
-    await page.getByRole('main').getByRole('button', { name: 'New item' }).tap()
+    await page.getByRole('main').getByRole('button', { name: 'New item' }).tap({ force: true })
     await expect(page.getByRole('textbox', { name: 'Title' })).toBeFocused()
     // The keyboard proxy used for the tap is removed once the title has focus.
     await expect(page.locator('body > input[aria-hidden="true"]')).toHaveCount(0)

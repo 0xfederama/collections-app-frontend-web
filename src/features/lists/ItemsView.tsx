@@ -1,3 +1,4 @@
+import { KeyboardTapTarget } from '../../components/KeyboardTapTarget'
 import { useState } from 'react'
 import { Button, EmptyState, useToast } from '../../components/ui'
 import { List as ListIcon, Search } from '../../components/ui/icons'
@@ -85,7 +86,11 @@ export function ItemsView(props: ItemsViewProps) {
         icon={ListIcon}
         title="No items yet"
         description="Add the first item to this list."
-        action={<Button onClick={props.onAddItem}>New item</Button>}
+        action={
+          <KeyboardTapTarget onTap={props.onAddItem}>
+            <Button onClick={props.onAddItem}>New item</Button>
+          </KeyboardTapTarget>
+        }
       />
     )
   }

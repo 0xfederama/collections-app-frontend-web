@@ -1353,6 +1353,31 @@ describe('F008-W9 New item opens a draft, nothing is sent until the title is com
     press.remove()
   })
 
+  it('roadmap 28: on a touch screen an empty draft survives losing focus (keyboard lowered)', async () => {
+    mockViewport(1400)
+    const media = window.matchMedia
+    window.matchMedia = ((query: string) => {
+      const result = media(query)
+      return query === '(pointer: coarse)' ? { ...result, matches: true } : result
+    }) as typeof window.matchMedia
+    try {
+      useBackend()
+      const posts = useCreate()
+      const user = userEvent.setup()
+      const router = renderList(at())
+      await itemsList()
+      await user.click(screen.getAllByRole('button', { name: 'New item' })[0]!)
+      const panel = await screen.findByRole('complementary', { name: 'Item details' })
+      const title = within(panel).getByRole('combobox', { name: 'Title' })
+      fireEvent.blur(title, { relatedTarget: null })
+
+      expect(router.state.location.pathname).toBe(`/lists/${LIST}/items/new`)
+      expect(posts).toHaveLength(0)
+    } finally {
+      window.matchMedia = media
+    }
+  })
+
   it('below 1280 px the draft is the full item page with a back link', async () => {
     mockViewport(1000)
     useBackend()

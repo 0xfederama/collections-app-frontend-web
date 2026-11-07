@@ -1,3 +1,5 @@
+// KeyboardTapTarget (roadmap 28): on touch projects a hidden text field lies over "New item" /
+// "Quick add"; force taps at the button's spot, so the tap reaches it as a finger would.
 import { expect, test, type Page } from '@playwright/test'
 import { createList, itemPanel, uniqueName } from './helpers'
 
@@ -10,7 +12,7 @@ test.describe('F-026 new item draft', () => {
   }) => {
     const list = await createList(request, uniqueName('Focus list'), 'wishlist')
     await page.goto(`/lists/${list.id}`)
-    await page.getByRole('button', { name: 'New item' }).click()
+    await page.getByRole('button', { name: 'New item' }).click({ force: true })
 
     const panel = itemPanel(page)
     const title = panel.getByRole('textbox', { name: 'Title' })
@@ -49,7 +51,7 @@ test.describe('2.30.1 title focus on every add path (desktop)', () => {
     const title = panel.getByRole('textbox', { name: 'Title' })
 
     for (const name of [uniqueName('A'), uniqueName('B')]) {
-      await page.getByRole('button', { name: 'New item' }).first().click()
+      await page.getByRole('button', { name: 'New item' }).first().click({ force: true })
       await expect(title).toBeFocused()
       await titleIsActive(page)
       await title.fill(name)
@@ -57,14 +59,14 @@ test.describe('2.30.1 title focus on every add path (desktop)', () => {
       await expect(panel.getByRole('heading', { name })).toBeVisible()
     }
     // New item again while the draft is already open.
-    await page.getByRole('button', { name: 'New item' }).first().click()
+    await page.getByRole('button', { name: 'New item' }).first().click({ force: true })
     await expect(title).toBeFocused()
-    await page.getByRole('button', { name: 'New item' }).first().click()
+    await page.getByRole('button', { name: 'New item' }).first().click({ force: true })
     await expect(title).toBeFocused()
     await titleIsActive(page)
 
     await page.goto(`/lists/${two.id}`)
-    await page.getByRole('button', { name: 'New item' }).first().click()
+    await page.getByRole('button', { name: 'New item' }).first().click({ force: true })
     await expect(title).toBeFocused()
     await titleIsActive(page)
   })
@@ -76,7 +78,7 @@ test.describe('2.30.1 title focus on every add path (desktop)', () => {
     const list = await createList(request, uniqueName('Quick focus'), 'wishlist')
     await page.goto(`/lists/${list.id}`)
     for (const name of [uniqueName('Q1'), uniqueName('Q2')]) {
-      await page.getByRole('button', { name: 'Quick add' }).first().click()
+      await page.getByRole('button', { name: 'Quick add' }).first().click({ force: true })
       const dialog = page.getByRole('dialog', { name: 'Quick add' })
       const title = dialog.getByRole('textbox', { name: 'Title' })
       await expect(title).toBeFocused()

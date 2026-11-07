@@ -1,3 +1,4 @@
+import { KeyboardTapTarget } from '../../components/KeyboardTapTarget'
 import { useId, useState } from 'react'
 import { Button, Skeleton, type SelectOption } from '../../components/ui'
 import { Pencil, Plus, Search } from '../../components/ui/icons'
@@ -184,14 +185,16 @@ export function ListHeader(props: ListHeaderProps) {
             onValueChange={(value) => props.onSort(value as SortMode)}
           />
           {props.showAddItem && (
-            <Button
-              size="sm"
-              aria-label="New item"
-              onClick={props.onAddItem}
-              className="size-9! shrink-0 px-0! pointer-coarse:size-11!"
-            >
-              <Plus aria-hidden className="size-4" />
-            </Button>
+            <KeyboardTapTarget onTap={props.onAddItem}>
+              <Button
+                size="sm"
+                aria-label="New item"
+                onClick={props.onAddItem}
+                className="size-9! shrink-0 px-0! pointer-coarse:size-11!"
+              >
+                <Plus aria-hidden className="size-4" />
+              </Button>
+            </KeyboardTapTarget>
           )}
         </div>
         {(describeFieldFilter(props.definition.fields, props.fieldFilter) ||
