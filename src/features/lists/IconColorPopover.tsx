@@ -79,6 +79,7 @@ export function IconColorPopover({
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
+          aria-label="Icon colors"
           align="end"
           sideOffset={6}
           collisionPadding={16}

@@ -60,6 +60,7 @@ export function ListIconPopover({
       {!children && anchorEl && <Popover.Anchor virtualRef={{ current: anchorEl }} />}
       <Popover.Portal>
         <Popover.Content
+          aria-label="Choose list icon"
           align="start"
           sideOffset={8}
           collisionPadding={16}
