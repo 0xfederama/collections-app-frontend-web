@@ -34,6 +34,7 @@ export function SiteIcon({ src, size = 16, tile = false }: SiteIconProps) {
           src={url}
           alt=""
           draggable={false}
+          loading="lazy"
           referrerPolicy="no-referrer"
           onError={() => setFailed(url)}
           className="size-full object-contain"
