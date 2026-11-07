@@ -1,5 +1,7 @@
 import tmdbLogo from '../../assets/tmdb-logo.svg'
+import { useState } from 'react'
 import openLibraryLogo from '../../assets/services/open-library.svg'
+import { focusDebugEnabled, setFocusDebug } from '../../lib/focusDebug'
 
 const externalLink =
   'text-accent underline decoration-border-strong underline-offset-4 hover:text-accent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring'
@@ -7,6 +9,7 @@ const externalLink =
 const logoTile = 'size-12 shrink-0 overflow-hidden rounded-sm bg-fill p-1.5'
 
 export function AboutSection() {
+  const [focusDebug, setFocusDebugState] = useState(focusDebugEnabled)
   return (
     <div className="flex flex-col gap-5 text-ui leading-6">
       <div className="flex items-start gap-3">
@@ -79,6 +82,19 @@ export function AboutSection() {
           Author profile
         </a>
       </div>
+      {/* Roadmap 28: on-screen focus log to find where the iOS keyboard closes on a real phone. */}
+      <label className="flex items-center gap-2 text-secondary text-text-muted">
+        <input
+          type="checkbox"
+          checked={focusDebug}
+          onChange={(event) => {
+            setFocusDebug(event.target.checked)
+            setFocusDebugState(event.target.checked)
+          }}
+          className="size-4 accent-accent"
+        />
+        Show keyboard and focus diagnostics
+      </label>
     </div>
   )
 }

@@ -4,10 +4,12 @@ import { App } from './app/App'
 import './styles/global.css'
 import { trackInputModality } from './lib/inputModality'
 import { syncThemeChrome } from './lib/theme'
+import { startFocusDebug } from './lib/focusDebug'
 
 trackInputModality()
 // A theme forced in Settings also sets the status bar colour (theme-color), D-139.
 syncThemeChrome()
+startFocusDebug()
 
 const root = document.getElementById('root')
 if (!root) throw new Error('missing #root element')

@@ -1,3 +1,5 @@
+import { focusNote } from './focusDebug'
+
 /**
  * How long a proxy waits for the real field to take focus before it is removed anyway. Long enough
  * for a first visit that still has to load the page's code over a slow network (roadmap 28).
@@ -38,6 +40,7 @@ export function focusKeyboardProxy(): void {
   // Focus the new proxy before removing the old one, so focus never falls to <body> in between
   // (that would close the keyboard). No scroll: the page must not jump to the top.
   input.focus({ preventScroll: true })
+  focusNote(`proxy focus: ${document.activeElement === input ? 'ok' : 'REFUSED'}`)
   window.clearTimeout(timer)
   previous?.remove()
   proxy = input
@@ -52,6 +55,9 @@ export function focusKeyboardProxy(): void {
 export function handOffKeyboardFocus(field: HTMLElement | null | undefined): void {
   if (!field) return
   if (document.activeElement !== field) field.focus({ preventScroll: true })
+  focusNote(
+    `hand-off: ${document.activeElement === field ? 'ok' : 'FAILED'} (proxy ${proxy ? 'waiting' : 'none'})`,
+  )
   if (document.activeElement === field) releaseKeyboardProxy()
 }
 
@@ -81,6 +87,7 @@ export function isKeyboardProxy(element: Element | null): boolean {
 
 /** Removes the proxy, if one is waiting. Safe to call at any time. */
 export function releaseKeyboardProxy(): void {
+  if (proxy) focusNote(timer === undefined ? 'proxy released' : 'proxy released (or timed out)')
   window.clearTimeout(timer)
   timer = undefined
   proxy?.remove()
