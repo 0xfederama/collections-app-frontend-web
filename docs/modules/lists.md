@@ -17,16 +17,16 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `ListHeader.tsx`, `ItemsView.tsx`, `ItemEntry.tsx`, `ItemRows.tsx` (`DraftRow`, `SortableEntry`), `ItemControls.tsx` (row menu), `ItemPinned.tsx`, `ItemsSkeleton.tsx`: header, rows and their parts.
 - `src/lib/useLongPress.ts`: touch and pen long press on a row (opens its menu).
 - `listParams.ts`: URL parsing (`parseSort`, `buildItemsParams`); `useDebouncedFilter.ts`: debounced `?q=`.
-- `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description.
+- `ListDescription.tsx`, `ListDescriptionView.tsx`, `ListDescriptionEditor.tsx`: the list's Markdown description, always shown in full.
 - `pinned.ts`: fixed pins per built-in type (`FIXED_PINS`), text pieces and truncation.
 - `ViewMenu.tsx`: the "View options" icon button (display mode radio menu). `SortMenu.tsx`, `toolbarStyles.ts`: the icon-only "View options", "+ Filter" and "Sort" buttons (one 36 px square, 44 px on touch). The toolbar is one row at every width: View options, search field (always visible), Filter, Sort, New item (`ListHeader.tsx`).
-- `TileStrip.tsx`, `tileFit.ts`: a row's service or store tiles that fit the row, then a "+N" tile; at most `MAX_TILES` (4) slots.
+- `TileStrip.tsx`, `tileFit.ts`: a row's service, store and website tiles that fit the row, then a "+N" tile; at most `MAX_TILES` (4) slots.
 - `scrollRestore.ts`: `useScrollRestore`, the list's scroll per history entry (`main`, or the window on phones).
 - `api.ts`: list and item queries/mutations; `listKeys` is in `src/data/keys.ts`.
 
 ## Interfaces
 
-- `ListIconPicker({ value, onChange, onClose, type? })`: built-in icons, emoji, mark color and default.
+- `ListIconPicker({ value, onChange, onClose, title?, type?, showColorControls? })`: search, built-in icons, emoji, mark color and default.
 - `ListIconMark({ icon, iconColor, type, className, iconClassName })`: list mark.
 - `ListView({ treeList })`, `ListHeader`, `ItemsView`, `ItemEntry`: list components.
 - `entryMenu(title, state, reorder?)` (`ItemControls.tsx`), `useLongPress({ onLongPress })`: row menu and long press.
@@ -51,10 +51,13 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming and stores fields are not filterable, and stores fields are not sortable.
 - A sort the type does not define falls back to the list's `sort_mode`, so stale `?sort=` values are ignored.
 - Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally.
+- The icon picker opens collapsed: the search field is first, and the icon and emoji grids show once you type or press "Show all icons". The colour swatches sit beside the current icon.
+- The list description is always shown in full (no collapse). A click on its text, or "Add a description", edits it; ✓ / ✕ sit below the editor box.
 - The header icon is a button that opens `ListIconDialog` (pen on hover, focus or touch). List icon writes are owned by the tree feature and use the list version with `If-Match`.
 - A list with no type shows the Lucide `List` glyph (`typeIconFor(null)`).
 - Long press (touch or pen, 500 ms, finger within 8 px) on a row opens its menu (Move up/down when reorderable, Move, Delete) and cancels the drag the hold started. A mouse uses the "…" button.
 - Every display mode draws its rows in the same bordered frame (`surface` in `ItemEntry.tsx`); there are no hairline dividers.
+- The item's website is a tile after the row's last streaming or store strip (`PinnedSlot` `showSite`) and counts in its budget; with no such strip it is a strip of its own.
 - Row tiles: `TileStrip` shows the tiles that fit, then "+N"; more than 4 tiles draw 3 and "+N" (`cappedCount`). In compact rows the strip takes the free space and ends at the row's right edge. Streaming tiles follow the Settings service order with paid platforms last (`orderPlatforms`).
 - The list header's "…" menu hosts "Refresh details" (see [tree](tree.md)).
 - The reorder hint explains only a filter or unloaded items; there is no "switch to Manual sort" hint.

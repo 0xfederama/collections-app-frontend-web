@@ -10,6 +10,7 @@ Pure URL builders for outside links: an item's external links (Google, IMDb, Goo
 - `src/features/links/model/external.ts`: `buildExternalLinks`, `safeWebsiteUrl`, `safeImdbUrl`, `IMDB_URL`.
 - `src/features/links/model/stores.ts`: `storeLink`, `amazonDomain`, Amazon domain table per country.
 - `src/features/links/model/streaming.ts`: `streamingSearchLink`, `normalizePlatform`, service table.
+- `src/features/links/model/favicon.ts`: `faviconUrl` (site icon URL, a stub for now) and `siteHost` (display host).
 - `src/features/links/model/*.test.ts`: table-driven tests of each builder.
 
 ## Interfaces
@@ -20,6 +21,8 @@ Pure URL builders for outside links: an item's external links (Google, IMDb, Goo
 - `amazonDomain(country)`: Amazon domain for a country code, `amazon.com` by default.
 - `streamingSearchLink(platform, title)`: search page of a known service for the title, or `null`.
 - `normalizePlatform(name)`: canonical key for a platform name.
+- `faviconUrl(siteUrl)`: the site's icon URL, or `null`. Always `null` until the backend favicon endpoint ships (roadmap 28 TODO).
+- `siteHost(siteUrl)`: the host for display (`www.ducati.com`), or `null` when the URL is not http(s).
 
 ## Gotchas
 
@@ -28,3 +31,4 @@ Pure URL builders for outside links: an item's external links (Google, IMDb, Goo
 - Website is never replaced by a search; IMDb falls back to a title search when the stored `imdb_url` is invalid.
 - Goodreads and Open Library links search by title, never by ISBN.
 - URLs are built with `URLSearchParams` / `encodeURIComponent`, so titles cannot change the URL structure.
+- No site has an icon yet, so `SiteIcon` draws the globe. When the endpoint lands, change only `faviconUrl`.

@@ -9,8 +9,8 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `src/features/items/index.ts`: public face; other features import only from here.
 - `ItemPage.tsx`, `ItemView.tsx`, `ItemHero.tsx`, `ItemActions.tsx`: detail screen, hero, Move and Delete.
 - `form/`: `draft.ts` (Draft model), `validate.ts`, `patch.ts` (`toFields`, `buildPatch`), `price.ts`, `serverErrors.ts` (422 mapping), `dump.ts` (copy draft).
-- `inline/`: `InlineField`, `FieldBlock` ("+ Add field"), `FieldEditor` (✓ / ✕ shell), `editors.tsx`, `controls.tsx`, `PriceInputs.tsx`, `StreamingInputs.tsx`, `StreamingPlatforms.tsx`, `fields.ts`, `guard.tsx`.
-- `content/`: `DescriptionView`, `DescriptionEditor` (lazy CodeMirror), `DescriptionField`, `HistoryDrawer`, `api.ts`.
+- `inline/`: `InlineField`, `FieldBlock` ("+ Add field"), `FieldEditor` (✓ / ✕ shell), `SiteLink.tsx` (website and URL fields as links), `editors.tsx`, `controls.tsx`, `PriceInputs.tsx`, `StreamingInputs.tsx`, `StreamingPlatforms.tsx`, `fields.ts`, `guard.tsx`.
+- `content/`: `DescriptionView`, `DescriptionEditor` (lazy `MarkdownEditor`, CodeMirror), `DescriptionField`, `HistoryDrawer`, `api.ts`.
 - `image/`: `ImageDialog`, `ImageSection`, `ImageStatus` (busy and status types), `api.ts`, `upload.ts`.
 - `types/index.ts`: helpers over the API type definitions (no static registry); `typeDefinition` returns built-in fields only.
 - `TitleLookupField.tsx`, `lookup.ts`, `LookupStatus.tsx`: TMDB suggestions (movie and TV) and the pending line for books.
@@ -26,6 +26,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `typeDefinition(definitions, key)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
 - `createLookupSelection(type, settings, selection)`, `hasSuggestions(type)`, `isBookLookup(type, settings)`, `lookupSource(type)`.
 - `DescriptionField({ itemId, listId })`, `InlineField`, `FieldBlock`.
+- `SiteLink({ url })`: the address as a new-tab link with `SiteIcon` in front, truncated (`inline/SiteLink.tsx`).
 - `duplicateTitleMessage(type)` (`duplicate.ts`); `isDuplicateTitle(error)` (`lib/api`) is the shared 409 check.
 
 ## Gotchas
@@ -43,6 +44,8 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - Phones: after a new item is committed, the draft returns to the list (no auto-open) and a toast's "Open" action opens the item (`NewItemDraft`). "Added …" toasts use `ADDED_TOAST` (`items/addedToast.ts`): 3 s, and a new one replaces the shown one (`replaceKey`) instead of stacking. Every "New item" tap focuses synchronously (iOS keyboard): the open draft's title, else `focusKeyboardProxy()`; the draft also focuses its title on mount.
 - Image changes and field editors use the item's `If-Match` (version captured when opened); 412/404 keeps the draft and offers Copy draft and Reload latest.
 - Every populated editable field is shown by default; empty fields are available from "+ Add field".
+- The website and every `link` type field are `SiteLink`s (roadmap 28): icon, then the address truncated with an ellipsis. A click on the link follows it; `InlineField` leaves clicks on `a` and `button` alone.
+- Markdown editors (item description here, list description in [lists](lists.md)) put ✓ / ✕ on a row below the box. `MarkdownEditor` has no `drawSelection()`, so iOS shows its native selection and callout.
 - 409 `duplicate_title` (F-026 W7) is shown inline: under the title in the new-item draft (the typed title is kept), on the title of the inline title edit, on the Quick add title, and as the Move message. On movie, TV and book lists the text says "movie", "show" or "book"; other lists say "An item with this title is already in this list."
 - The new-item title is 44 px tall (as tall as the ✓ / ✕ buttons). On mount it releases the iOS keyboard proxy (`releaseKeyboardProxy`) that the "New item" tap opened (see [lists](lists.md)).
 - If lookup is unavailable while the inline draft is created, the draft keeps its typed title and offers retry or creating without metadata.
