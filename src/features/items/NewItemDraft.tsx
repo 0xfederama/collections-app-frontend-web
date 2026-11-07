@@ -1,3 +1,4 @@
+import { isTouchDevice } from '../../lib/pointer'
 import {
   useEffect,
   useLayoutEffect,
@@ -172,6 +173,11 @@ export function NewItemDraft({
     if (!next && !document.hasFocus()) return
     if (pressedToast.current) return
     if (next instanceof Element && next.closest('[data-toast-viewport]')) return
+    // Touch screens keep the draft (roadmap 28): there the title loses focus far too easily
+    // (lowering the keyboard, a scroll, a tap beside the field, iOS itself), and discarding the
+    // draft then took the user back to the list and closed the keyboard. ✕, Esc and Back still
+    // discard it. A title that was removed from the page (a re-render) is not a user leaving either.
+    if (isTouchDevice() || !(event.target as Node).isConnected) return
     if (title.trim() === '' && !create.isPending) cancel()
   }
 

@@ -1,3 +1,4 @@
+import { isTouchDevice } from '../../lib/pointer'
 import * as Popover from '@radix-ui/react-popover'
 import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { controlBase, controlBorder } from '../../components/ui/fieldStyles'
@@ -14,10 +15,6 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'icons', label: 'Icons' },
   { id: 'emoji', label: 'Emoji' },
 ]
-
-/** Phones and tablets: do not pull the keyboard up until the user taps the search field. */
-const isTouchDevice = () =>
-  typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches
 
 export interface ListIconPopoverProps {
   value: IconChoice

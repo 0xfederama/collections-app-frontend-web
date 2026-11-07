@@ -1,3 +1,4 @@
+import { KeyboardTapTarget } from '../../components/KeyboardTapTarget'
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { Button, focusRing } from '../../components/ui'
@@ -60,17 +61,19 @@ export function MobileHome({ empty }: { empty: ReactNode }) {
             />
           </div>
         </form>
-        <div className="flex">
-          <Button
-            variant="ink"
-            size="sm"
-            aria-label="Quick add"
-            onClick={() => quickAdd.open()}
-            className="w-full pointer-coarse:min-h-11"
-          >
-            <Plus aria-hidden className="size-4 shrink-0" />
-            Quick add
-          </Button>
+        <div className="flex [&>span]:w-full">
+          <KeyboardTapTarget onTap={() => quickAdd.open()}>
+            <Button
+              variant="ink"
+              size="sm"
+              aria-label="Quick add"
+              onClick={() => quickAdd.open()}
+              className="w-full pointer-coarse:min-h-11"
+            >
+              <Plus aria-hidden className="size-4 shrink-0" />
+              Quick add
+            </Button>
+          </KeyboardTapTarget>
         </div>
       </div>
       <section aria-labelledby="home-library" className="flex flex-col gap-3">

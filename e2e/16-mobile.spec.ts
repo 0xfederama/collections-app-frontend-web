@@ -1,3 +1,5 @@
+// KeyboardTapTarget (roadmap 28): on touch projects a hidden text field lies over "New item" /
+// "Quick add"; force taps at the button's spot, so the tap reaches it as a finger would.
 import { expect, test } from '@playwright/test'
 import { createItem, createList, itemUrl, uniqueName } from './helpers'
 
@@ -136,7 +138,7 @@ test.describe('F-025 mobile', () => {
     const title = uniqueName('Same thing')
     await createItem(request, list.id, title)
     await page.goto(`/lists/${list.id}`)
-    await page.getByRole('button', { name: 'New item' }).first().click()
+    await page.getByRole('button', { name: 'New item' }).first().click({ force: true })
     const field = page.getByRole('textbox', { name: 'Title' })
     await field.fill(title)
     await field.press('Enter')
