@@ -59,6 +59,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/favicon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the favicon of a website
+         * @description The server fetches the icon of the origin of `url` (http or https, at most 2048 characters): the `<link rel=icon>` of its home page, else `/favicon.ico`. It never connects to loopback, private, link-local or other non-public addresses (422 on `url`). Icons are cached on disk for 30 days, "no icon" answers for 1 day. PNG, ICO, GIF, JPEG and WebP up to 256 KiB; SVG is refused. 404 `favicon_not_found` means the web shows its fallback.
+         */
+        get: operations["getFavicon"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/folders": {
         parameters: {
             query?: never;
@@ -1032,6 +1052,7 @@ export interface components {
          *     - `payload_too_large`: The body is over the limit of the operation (413).
          *     - `unsupported_media_type`: An upload is not JPEG, PNG or WebP (415).
          *     - `not_found`: The resource is missing or trashed, or the endpoint does not exist (404).
+         *     - `favicon_not_found`: The site of a favicon request has no usable icon (404). The web shows its fallback.
          *     - `method_not_allowed`: The path exists but does not accept this method (405).
          *     - `version_conflict`: The `If-Match` version is stale (412). `current_version` is the stored one.
          *     - `validation_failed`: One or more fields break a rule (422). `errors` lists them.
@@ -1446,6 +1467,60 @@ export interface operations {
             };
             /** @description Service Unavailable */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getFavicon: {
+        parameters: {
+            query: {
+                /** @description An absolute http or https URL; only its origin is used. */
+                url: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The icon bytes. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/gif": string;
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                    "image/x-icon": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
