@@ -13,7 +13,7 @@ import { cx } from '../../lib/cx'
 import { destinationId, destinationKey } from './MoveDialog'
 import { FormError } from './FormError'
 import { useAction } from './useAction'
-import { ListIconPicker, ListIconMark, type IconChoice } from '../lists'
+import { ListIconPopover, ListIconMark, type IconChoice } from '../lists'
 import { useTypes } from '../settings'
 import { typeDefinition, typeOptions as buildTypeOptions, typeToValue, valueToType } from '../items'
 export interface NameDialogProps {
@@ -155,21 +155,27 @@ export function NameDialog({
               <label htmlFor={iconControlId} className="text-ui font-medium text-text">
                 Icon
               </label>
-              <IconButton
-                id={iconControlId}
-                aria-label="Choose icon"
-                variant="secondary"
-                className="size-10 pointer-coarse:size-11"
-                onClick={() => setIconPickerOpen(true)}
+              <ListIconPopover
+                value={iconChoice}
+                open={iconPickerOpen}
+                onOpenChange={setIconPickerOpen}
+                onChange={setIconChoice}
               >
-                <ListIconMark
-                  icon={iconChoice.icon ?? selectedType?.default_icon}
-                  iconColor={iconChoice.icon_color}
-                  type={chosenType}
-                  className="size-8"
-                  iconClassName="size-4"
-                />
-              </IconButton>
+                <IconButton
+                  id={iconControlId}
+                  aria-label="Choose icon"
+                  variant="secondary"
+                  className="size-10 pointer-coarse:size-11"
+                >
+                  <ListIconMark
+                    icon={iconChoice.icon ?? selectedType?.default_icon}
+                    iconColor={iconChoice.icon_color}
+                    type={chosenType}
+                    className="size-8"
+                    iconClassName="size-4"
+                  />
+                </IconButton>
+              </ListIconPopover>
             </div>
           )}
         </div>
@@ -204,14 +210,6 @@ export function NameDialog({
           />
         )}
       </form>
-      {iconPickerOpen && (
-        <ListIconPicker
-          value={iconChoice}
-          type={chosenType}
-          onChange={setIconChoice}
-          onClose={() => setIconPickerOpen(false)}
-        />
-      )}
     </Dialog>
   )
 }

@@ -192,31 +192,70 @@ describe('F002-W2 sidebar "New" button', () => {
 })
 
 describe('F018-W1 list icon from the header and the sidebar', () => {
-  const iconDialog = (name: string) => screen.findByRole('dialog', { name: `List icon · ${name}` })
+  const iconSearch = () => screen.findByRole('textbox', { name: 'Search icons and emoji' })
 
-  it('the header icon is a keyboard-reachable button named "Change icon" that opens the icon dialog', async () => {
+  it('the header icon is a keyboard-reachable button named "Change icon" that opens the icon popover', async () => {
     const { user, backend } = await openList(ID.watchlist)
     const button = within(main()).getByRole('button', { name: 'Change icon' })
     // The heading keeps the list name only; the button is not part of it.
     expect(within(main()).getByRole('heading', { level: 1, name: 'Watchlist' })).toBeInTheDocument()
     act(() => button.focus())
     await user.keyboard('{Enter}')
-    const dialog = await iconDialog('Watchlist')
-    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(await iconSearch()).toHaveFocus()
+    await user.keyboard('{Escape}')
+    expect(
+      screen.queryByRole('textbox', { name: 'Search icons and emoji' }),
+    ).not.toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(button).toHaveFocus()
     expect(backend.writes()).toHaveLength(0)
   })
 
-  it('saving the header icon dialog sends If-Match from the version the list had when it opened', async () => {
+  it('picking an icon in the header popover PATCHes at once with If-Match from the version it had when it opened, then closes', async () => {
     const { user, backend } = await openList(ID.watchlist)
     await user.click(within(main()).getByRole('button', { name: 'Change icon' }))
-    const dialog = await iconDialog('Watchlist')
-    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+    await user.type(await iconSearch(), 'camer')
+    await user.click(screen.getByRole('button', { name: 'camera' }))
     await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(1))
     const [patch] = backend.writes('PATCH')
     expect(patch?.path).toBe(`/api/v1/lists/${ID.watchlist}`)
     expect(patch?.ifMatch).toBe('"l-2"')
     expect(Object.keys(patch?.body as object).sort()).toEqual(['icon', 'icon_color'])
+    expect(patch?.body).toMatchObject({ icon: 'i:camera' })
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('textbox', { name: 'Search icons and emoji' }),
+      ).not.toBeInTheDocument(),
+    )
+  })
+
+  it('a second choice in the same popover uses the version our own first write returned', async () => {
+    const { user, backend } = await openList(ID.watchlist)
+    await user.click(within(main()).getByRole('button', { name: 'Change icon' }))
+    await user.type(await iconSearch(), 'camer')
+    await user.click(screen.getByRole('button', { name: 'camera' }))
+    await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(1))
+    await user.click(within(main()).getByRole('button', { name: 'Change icon' }))
+    await user.click(await screen.findByRole('button', { name: 'Icon color' }))
+    await user.click(await screen.findByRole('button', { name: 'Teal' }))
+    await waitFor(() => expect(backend.writes('PATCH')).toHaveLength(2))
+    expect(backend.writes('PATCH')[1]?.ifMatch).toBe('"l-3"')
+    expect(backend.writes('PATCH')[1]?.body).toMatchObject({ icon: 'i:camera', icon_color: 'teal' })
+  })
+
+  it('a 412 keeps the popover open with the conflict message and Reload latest, and sends nothing more', async () => {
+    const { user, backend } = await openList(ID.watchlist)
+    await user.click(within(main()).getByRole('button', { name: 'Change icon' }))
+    await user.type(await iconSearch(), 'camer')
+    const list = backend.state.lists.find((l) => l.id === ID.watchlist)!
+    list.version = 9
+    await user.click(screen.getByRole('button', { name: 'camera' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Someone else changed this list')
+    expect(await iconSearch()).toBeInTheDocument()
+    await user.click(within(alert).getByRole('button', { name: 'Reload latest' }))
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+    expect(backend.writes('PATCH')).toHaveLength(1)
   })
 
   it('the header "…" menu no longer offers "Change icon" but keeps the Type entry', async () => {
@@ -226,11 +265,11 @@ describe('F018-W1 list icon from the header and the sidebar', () => {
     expect(screen.queryByRole('menuitem', { name: 'Change icon' })).not.toBeInTheDocument()
   })
 
-  it('a sidebar list row menu offers "Change icon", which opens the same dialog', async () => {
+  it('a sidebar list row menu offers "Change icon", which opens the same popover', async () => {
     const { user, backend } = await openList(ID.watchlist)
     await pickRowAction(user, 'Watchlist', 'Change icon')
-    const dialog = await iconDialog('Watchlist')
-    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(await iconSearch()).toBeInTheDocument()
+    await user.keyboard('{Escape}')
     expect(backend.writes()).toHaveLength(0)
   })
 

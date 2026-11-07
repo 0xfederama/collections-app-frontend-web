@@ -3,7 +3,7 @@ import { Button, Skeleton, type SelectOption } from '../../components/ui'
 import { Pencil, Plus, Search } from '../../components/ui/icons'
 import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { useBreakpoint } from '../../lib/breakpoints'
-import { type List as TreeList, ListActionsMenu, ListIconDialog } from '../tree'
+import { type List as TreeList, ListActionsMenu, ListIconEdit } from '../tree'
 import { hasPrice, typeName, type TypeDefinition } from '../items'
 import type { DisplayMode, List, SortMode } from './api'
 import { ListDescription } from './ListDescription'
@@ -71,18 +71,17 @@ export interface ListHeaderProps {
 }
 
 /**
- * The list icon as a button (F018-W1): it opens the icon dialog from the header. The pen shows on
- * hover and keyboard focus, and always on touch, where there is no hover. The dialog takes the list
+ * The list icon as a button (F018-W1): it opens the icon popover from the header. The pen shows on
+ * hover and keyboard focus, and always on touch, where there is no hover. The popover takes the list
  * as it is when it opens, so its If-Match is the version the user saw.
  */
 function ListIconButton({ list, defaultIcon }: { list: TreeList; defaultIcon?: string | null }) {
   const [open, setOpen] = useState(false)
   return (
-    <>
+    <ListIconEdit list={list} open={open} onOpenChange={setOpen}>
       <button
         type="button"
         aria-label="Change icon"
-        onClick={() => setOpen(true)}
         className="group/icon relative grid size-11 shrink-0 place-items-center rounded-md focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
       >
         <ListIconMark
@@ -99,8 +98,7 @@ function ListIconButton({ list, defaultIcon }: { list: TreeList; defaultIcon?: s
           <Pencil className="size-3" />
         </span>
       </button>
-      {open && <ListIconDialog list={list} onClose={() => setOpen(false)} />}
-    </>
+    </ListIconEdit>
   )
 }
 

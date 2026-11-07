@@ -140,7 +140,7 @@ const iconRows: [string, LucideIcon, ...string[]][] = [
   ['volleyball', Volleyball, 'sport', 'ball'],
   ['tag', Tag, 'label', 'generic'],
 ]
-export const BUILTIN_LIST_ICONS: BuiltinIcon[] = iconRows.map(([name, Icon, ...keywords]) => ({
+const BUILTIN_LIST_ICONS: BuiltinIcon[] = iconRows.map(([name, Icon, ...keywords]) => ({
   key: name,
   name: name.replaceAll('-', ' '),
   keywords,

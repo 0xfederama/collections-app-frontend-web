@@ -10,14 +10,17 @@ import {
   TextField,
   Tooltip,
 } from '../../components/ui'
-import { Ellipsis, Plus, Trash2 } from '../../components/ui/icons'
+import { Ellipsis, Plus, Smile, Trash2 } from '../../components/ui/icons'
+import { ListIconPopover, type IconChoice } from '../../features/lists'
 import { Row, Section } from './shared'
 
 export function OverlaysSection() {
   const [dialog, setDialog] = useState(false)
   const [alert, setAlert] = useState(false)
+  const [iconOpen, setIconOpen] = useState(false)
+  const [icon, setIcon] = useState<IconChoice>({ icon: 'i:camera', icon_color: 'indigo' })
   return (
-    <Section id="overlays" title="Menu, Dialog, AlertDialog, Drawer, Tooltip">
+    <Section id="overlays" title="Menu, Popover, Dialog, AlertDialog, Drawer, Tooltip">
       <Row label="Menu">
         <Menu
           trigger={
@@ -33,6 +36,13 @@ export function OverlaysSection() {
             { label: 'Delete', onSelect: () => {}, destructive: true, icon: <Trash2 /> },
           ]}
         />
+      </Row>
+      <Row label="List icon popover">
+        <ListIconPopover value={icon} open={iconOpen} onOpenChange={setIconOpen} onChange={setIcon}>
+          <IconButton aria-label="Choose icon" variant="secondary">
+            <Smile aria-hidden />
+          </IconButton>
+        </ListIconPopover>
       </Row>
       <Row label="Dialog / AlertDialog / Drawer">
         <Dialog
