@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   KEYBOARD_PROXY_MS,
+  KEYBOARD_RAISE_MS,
   focusKeyboardProxy,
   handOffKeyboardFocus,
   keyboardProxyOpener,
@@ -89,5 +90,56 @@ describe('focusKeyboardProxy (W2 iOS keyboard)', () => {
   it('uses 16px text so iOS does not zoom when the proxy takes focus', () => {
     focusKeyboardProxy()
     expect(proxies()[0]).toHaveClass('text-base')
+  })
+})
+
+describe('roadmap 28 hand-off waits for the iOS keyboard to rise', () => {
+  let viewport: EventTarget & { height: number }
+  beforeEach(() => {
+    viewport = Object.assign(new EventTarget(), { height: window.innerHeight })
+    Object.defineProperty(window, 'visualViewport', { value: viewport, configurable: true })
+  })
+  afterEach(() => {
+    releaseKeyboardProxy()
+    Object.defineProperty(window, 'visualViewport', { value: undefined, configurable: true })
+    vi.useRealTimers()
+  })
+
+  const field = () => {
+    const input = document.createElement('input')
+    document.body.append(input)
+    return input
+  }
+
+  it('keeps the focus on the proxy until the keyboard is up, then hands it over', () => {
+    focusKeyboardProxy()
+    const title = field()
+    handOffKeyboardFocus(title)
+    expect(title).not.toHaveFocus()
+    viewport.height = window.innerHeight - 300
+    viewport.dispatchEvent(new Event('resize'))
+    expect(title).toHaveFocus()
+    title.remove()
+  })
+
+  it('hands over after KEYBOARD_RAISE_MS when no keyboard rises', () => {
+    vi.useFakeTimers()
+    focusKeyboardProxy()
+    const title = field()
+    handOffKeyboardFocus(title)
+    vi.advanceTimersByTime(KEYBOARD_RAISE_MS - 1)
+    expect(title).not.toHaveFocus()
+    vi.advanceTimersByTime(1)
+    expect(title).toHaveFocus()
+    title.remove()
+  })
+
+  it('moves at once when the keyboard is already up', () => {
+    viewport.height = window.innerHeight - 300
+    focusKeyboardProxy()
+    const title = field()
+    handOffKeyboardFocus(title)
+    expect(title).toHaveFocus()
+    title.remove()
   })
 })

@@ -54,18 +54,70 @@ export function focusKeyboardProxy(): void {
   timer = window.setTimeout(releaseKeyboardProxy, KEYBOARD_PROXY_MS)
 }
 
-/**
- * Moves focus to the real field that just mounted and removes the proxy, in that order. Without a
- * field, the proxy is kept (and still times out). Safe to call with no proxy waiting: it then only
- * focuses the field, which is what desktop needs.
- */
-export function handOffKeyboardFocus(field: HTMLElement | null | undefined): void {
-  if (!field) return
+/** Longest wait for iOS to raise the keyboard before the focus moves on anyway. */
+export const KEYBOARD_RAISE_MS = 700
+
+let pending: HTMLElement | null = null
+let pendingTimer: number | undefined
+let pendingListener: (() => void) | null = null
+
+/** True once the on-screen keyboard covers part of the layout viewport (iOS shrinks the visual one). */
+function keyboardOpen(): boolean {
+  const vv = window.visualViewport
+  return vv !== null && vv !== undefined && window.innerHeight - vv.height > 120
+}
+
+function stopWaiting(): void {
+  window.clearTimeout(pendingTimer)
+  pendingTimer = undefined
+  if (pendingListener) window.visualViewport?.removeEventListener('resize', pendingListener)
+  pendingListener = null
+  pending = null
+}
+
+function moveFocus(field: HTMLElement): void {
   if (document.activeElement !== field) field.focus({ preventScroll: true })
   focusNote(
     `hand-off: ${document.activeElement === field ? 'ok' : 'FAILED'} (proxy ${proxy ? 'waiting' : 'none'})`,
   )
   if (document.activeElement === field) releaseKeyboardProxy()
+}
+
+/**
+ * Moves focus to the real field that just mounted and removes the proxy, in that order. Without a
+ * field, the proxy is kept (and still times out). Safe to call with no proxy waiting: it then only
+ * focuses the field, which is what desktop needs.
+ *
+ * Timing matters (roadmap 28, on-phone diagnostics): iOS cancels a keyboard that has not started
+ * to rise when the focus moves on again. The first add worked because the draft's code was still
+ * loading (the hand-off came 300 ms later); every later add handed off within 20 ms and got no
+ * keyboard. So while the proxy holds the focus and the keyboard is not up yet, the hand-off waits
+ * for the visual viewport to shrink (keyboard up), at most `KEYBOARD_RAISE_MS`. Without a visual
+ * viewport (jsdom) there is nothing to wait for.
+ */
+export function handOffKeyboardFocus(field: HTMLElement | null | undefined): void {
+  if (!field) return
+  const vv = window.visualViewport
+  if (!keyboardProxyWaiting() || !vv || keyboardOpen()) {
+    stopWaiting()
+    moveFocus(field)
+    return
+  }
+  if (pending === field) return
+  stopWaiting()
+  pending = field
+  focusNote('hand-off: waiting for the keyboard')
+  const finish = () => {
+    const target = pending
+    stopWaiting()
+    // The user may have tapped elsewhere meanwhile: only move a focus the proxy still holds.
+    if (target?.isConnected && keyboardProxyWaiting()) moveFocus(target)
+  }
+  pendingListener = () => {
+    if (keyboardOpen()) finish()
+  }
+  vv.addEventListener('resize', pendingListener)
+  pendingTimer = window.setTimeout(finish, KEYBOARD_RAISE_MS)
 }
 
 /** The element that had focus before the proxy took it (a dialog returns focus there). */
@@ -94,6 +146,7 @@ export function isKeyboardProxy(element: Element | null): boolean {
 
 /** Removes the proxy, if one is waiting. Safe to call at any time. */
 export function releaseKeyboardProxy(): void {
+  stopWaiting()
   if (proxy) focusNote(timer === undefined ? 'proxy released' : 'proxy released (or timed out)')
   window.clearTimeout(timer)
   timer = undefined
