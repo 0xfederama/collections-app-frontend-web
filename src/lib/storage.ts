@@ -2,8 +2,6 @@
 export const STORAGE_KEYS = {
   treeExpanded: 'collection:tree-expanded',
   sidebar: 'collection:sidebar',
-  /** Ids of the lists whose description section is collapsed (default: expanded). */
-  listDescriptionCollapsed: 'collection:list-description-collapsed',
   /** Folder the last created list went into, preselected in the "New list" dialog. Session only. */
   listFolder: 'collection:list-folder',
 } as const

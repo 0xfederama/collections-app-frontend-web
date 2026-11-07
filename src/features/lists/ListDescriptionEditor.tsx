@@ -85,18 +85,16 @@ export function DescriptionEditor({ initial, onDone }: { initial: TreeList; onDo
 
   return (
     <section aria-label="List description" className="flex max-w-prose flex-col gap-2 text-ui">
-      <div onKeyDownCapture={onKeyDown} className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <Suspense fallback={<Skeleton className="h-24 w-full" />}>
-            <MarkdownEditor
-              value={draft}
-              onChange={setDraft}
-              label="Description"
-              placeholderText="Write in Markdown…"
-            />
-          </Suspense>
-        </div>
-        <div className="flex gap-1">
+      <div onKeyDownCapture={onKeyDown} className="flex flex-col gap-2">
+        <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+          <MarkdownEditor
+            value={draft}
+            onChange={setDraft}
+            label="Description"
+            placeholderText="Write in Markdown…"
+          />
+        </Suspense>
+        <div className="flex justify-end gap-1">
           <IconButton
             aria-label="Save description"
             title="Save (Ctrl/Cmd+Enter)"

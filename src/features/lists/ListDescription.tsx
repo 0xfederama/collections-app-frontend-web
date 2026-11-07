@@ -33,11 +33,6 @@ export function ListDescription({
     )
   }
   return (
-    <DescriptionView
-      listId={treeList.id}
-      text={text}
-      restoreFocus={restoreFocus}
-      onEdit={() => setEditing(treeList)}
-    />
+    <DescriptionView text={text} restoreFocus={restoreFocus} onEdit={() => setEditing(treeList)} />
   )
 }

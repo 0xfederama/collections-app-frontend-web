@@ -105,27 +105,27 @@ export function DescriptionEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      <div onKeyDownCapture={onKeyDown} className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <Suspense fallback={<Skeleton className="h-40 w-full" />}>
-            <MarkdownEditor
-              value={draft}
-              onChange={setDraft}
-              label="Description (Markdown)"
-              placeholderText="Write in Markdown…"
-              // eslint-disable-next-line jsx-a11y/no-autofocus -- the user asked to edit, so the editor takes focus when it opens
-              autoFocus
-            />
-          </Suspense>
+      <div onKeyDownCapture={onKeyDown} className="flex flex-col gap-2">
+        <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+          <MarkdownEditor
+            value={draft}
+            onChange={setDraft}
+            label="Description (Markdown)"
+            placeholderText="Write in Markdown…"
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- the user asked to edit, so the editor takes focus when it opens
+            autoFocus
+          />
+        </Suspense>
+        <div className="flex justify-end">
+          <EditorButtons
+            label="description"
+            saveHint="Save (Ctrl/Cmd+Enter)"
+            onSave={() => void doSave()}
+            onCancel={onDone}
+            pending={save.isPending}
+            disabled={tooLarge || failure === 'conflict' || failure === 'gone'}
+          />
         </div>
-        <EditorButtons
-          label="description"
-          saveHint="Save (Ctrl/Cmd+Enter)"
-          onSave={() => void doSave()}
-          onCancel={onDone}
-          pending={save.isPending}
-          disabled={tooLarge || failure === 'conflict' || failure === 'gone'}
-        />
       </div>
       <p
         role={tooLarge ? 'alert' : undefined}
