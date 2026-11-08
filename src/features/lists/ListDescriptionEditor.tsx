@@ -84,7 +84,7 @@ export function DescriptionEditor({ initial, onDone }: { initial: TreeList; onDo
   }
 
   return (
-    <section aria-label="List description" className="flex max-w-prose flex-col gap-2 text-ui">
+    <section aria-label="List description" className="flex w-full flex-col gap-2 text-ui">
       <div onKeyDownCapture={onKeyDown} className="flex flex-col gap-2">
         <Suspense fallback={<Skeleton className="h-24 w-full" />}>
           <MarkdownEditor

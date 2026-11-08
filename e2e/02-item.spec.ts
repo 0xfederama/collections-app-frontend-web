@@ -42,7 +42,10 @@ test.describe('F003-W1 item: type field, website, sort by field key', () => {
 
     // Sort by the field key (release year, ascending): 2001 before 2020.
     await page.goto(`/lists/${list.id}`)
-    const links = page.getByRole('list', { name: 'Items' }).getByRole('link')
+    // Title links only: the row's website tile ("Open website <host>", 2.32.0) is a link too.
+    const links = page
+      .getByRole('list', { name: 'Items' })
+      .getByRole('link', { name: /^(?!Open website )/ })
     // A movie list sorts by its type's default field (release year) until another is chosen.
     await expect(links).toHaveText([title, older])
     await page.getByRole('button', { name: 'Sort', exact: true }).click()

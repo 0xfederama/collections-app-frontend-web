@@ -112,7 +112,7 @@ function TypeChip({ type, definition }: { type: TreeList['type']; definition: Ty
   )
 }
 
-/** Title, type chip, description, then the sticky toolbar: display mode, search, filter, sort, then the + New item button (UI_SPEC §3). */
+/** Title, type chip, description, then the toolbar (scrolls with the list, D-145): display mode, search, filter, sort, then the + New item button (UI_SPEC §3). */
 export function ListHeader(props: ListHeaderProps) {
   const { list } = props
   // Phones: short placeholder (F-025 W8); the field is always visible at every width.
@@ -163,8 +163,8 @@ export function ListHeader(props: ListHeaderProps) {
           <Skeleton className="h-4 w-1/2" />
         )}
       </header>
-      {/* Sticky inside the scrolling `main`; the solid background keeps passing items readable. The wrapper is the container the narrow variants measure. An applied field filter is a chip under the bar. */}
-      <div className="@container z-10 -mt-2 bg-bg sm:sticky sm:top-0">
+      {/* Not sticky (D-145): it stays at the top of the list and scrolls away with it. The wrapper is the container the narrow variants measure. An applied field filter is a chip under the bar. */}
+      <div className="@container -mt-2">
         <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
           <ViewMenu value={props.displayMode} onValueChange={props.onDisplayMode} />
           {searchField}
