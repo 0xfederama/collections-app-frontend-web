@@ -29,7 +29,8 @@ Production web image (Q-03w, D-069): a Node 24 build stage, then a Caddy 2.11.7 
 - The CSP script hash is computed during the Docker build, so editing the inline theme script in `index.html` needs no Caddyfile change.
 - Adding a second inline `<script>` makes the build fail: `csp-hash.mjs` expects exactly one.
 - Headers use the `?` prefix, so API headers on proxied responses win. `style-src-elem` allows `'unsafe-inline'` (Radix, dnd-kit); inline style attributes stay blocked.
-- No HSTS and no auto HTTPS: the image serves plain HTTP on a LAN or Tailscale.
+- No HSTS and no auto HTTPS: the image serves plain HTTP on a LAN or Tailscale; remote access goes through a Cloudflare Tunnel with Cloudflare Access in front (roadmap 30, D-144).
+- Behind Cloudflare Access every request must carry the `CF_Authorization` cookie: the manifest `<link>` has `crossorigin="use-credentials"` (manifests are fetched without credentials by default), all API and image URLs are same-origin paths (`location.origin`, relative `/api/v1/attachments/...`), and nothing sets `credentials: 'omit'`. Vite's bare `crossorigin` on module scripts is fine (same-origin requests keep cookies). `src/remoteAccess.test.ts` guards `index.html`.
 - The upstream default is `api:8080`; set `API_UPSTREAM` when the backend has another name.
 - Example run against the dev backend: `docker run --rm --network backend_default -p 127.0.0.1:8081:8080 collections-web:check` (the backend compose network is `<folder>_default`).
 - Image is about 58 MB.
