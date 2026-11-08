@@ -14,6 +14,6 @@ export const toolbarIconControl = `${controlBase} size-9 shrink-0 pointer-coarse
 /**
  * The toolbar search field (F026 W1): the same fill, radius, height and hover as the icon buttons, so it
  * reads as one of them. No outline or white field of its own; the focus ring shows only when the input
- * has keyboard focus (inset, so the sticky toolbar does not clip it).
+ * has keyboard focus (inset, so the toolbar row does not clip it).
  */
 export const toolbarSearchControl = `${controlBase} flex h-9 w-full min-w-0 items-center gap-2 px-3 pointer-coarse:h-11 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:-outline-offset-2 has-[input:focus-visible]:outline-focus-ring`

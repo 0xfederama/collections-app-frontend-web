@@ -88,6 +88,26 @@ describe('F002-W2 list description, edited in place', () => {
     expect(save.parentElement).toHaveClass('justify-end')
   })
 
+  // D-145: the editor uses the full width of the list column, not the 65ch reading measure.
+  it('the editor spans the full width', async () => {
+    const { user } = await openList(ID.wishlist)
+    await user.click(await placeholder())
+    await editor()
+    const section = within(main()).getByRole('region', { name: 'List description' })
+    expect(section).toHaveClass('w-full')
+    expect(section).not.toHaveClass('max-w-prose')
+  })
+
+  // D-145: the toolbar scrolls away with the list; a sticky bar left a gap where rows showed through.
+  it('the list toolbar is not sticky', async () => {
+    await openList(ID.wishlist)
+    const toolbar = within(main())
+      .getByRole('button', { name: 'View options' })
+      .closest('.\\@container')
+    expect(toolbar).not.toBeNull()
+    expect(toolbar?.className).not.toMatch(/sticky/)
+  })
+
   it('click the placeholder, write, ✓ saves a trimmed text with If-Match', async () => {
     const { user, backend } = await openList(ID.wishlist)
     await user.click(await placeholder())
