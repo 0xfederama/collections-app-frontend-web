@@ -3,6 +3,7 @@ import { ApiError, NetworkError } from './errors'
 import {
   errorMessage,
   failureKind,
+  isUnauthenticated,
   fieldErrorText,
   isDuplicateTitle,
   validationMessage,
@@ -147,5 +148,17 @@ describe('validationMessage', () => {
     expect(fieldErrorText({ field: 'metadata.director', message: 'is too long' })).toBe(
       'Director: is too long',
     )
+  })
+})
+
+describe('F-027 W1 unauthenticated', () => {
+  it('isUnauthenticated is true for a 401 only', () => {
+    expect(isUnauthenticated(apiError(401))).toBe(true)
+    expect(isUnauthenticated(apiError(403))).toBe(false)
+    expect(isUnauthenticated(new NetworkError())).toBe(false)
+  })
+
+  it('errorMessage tells the user to reload and sign in on a 401', () => {
+    expect(errorMessage(apiError(401))).toBe('You’re signed out. Reload the page to sign in.')
   })
 })

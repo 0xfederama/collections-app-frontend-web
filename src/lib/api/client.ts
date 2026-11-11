@@ -1,5 +1,6 @@
 import createClient, { type Middleware } from 'openapi-fetch'
 import type { paths } from '../../generated/schema'
+import { reloadForLogin } from './authReload'
 import { NetworkError, toApiError } from './errors'
 
 /**
@@ -7,8 +8,12 @@ import { NetworkError, toApiError } from './errors'
  * callers (TanStack Query) see failures as rejections instead of `{ error }` results.
  */
 const errorMiddleware: Middleware = {
-  async onResponse({ response }) {
+  async onResponse({ request, response }) {
     if (response.ok) return undefined
+    // Only the API: /readyz is public and has no login to reload for.
+    if (response.status === 401 && new URL(request.url).pathname.startsWith('/api/v1/')) {
+      reloadForLogin()
+    }
     const text = await response.clone().text()
     let body: unknown = text
     try {

@@ -9,7 +9,7 @@ Pins the backend OpenAPI contract, generates TypeScript types/examples, and prov
 - `api/openapi.yaml`, `api/openapi.lock.json`: vendored contract and pin.
 - `scripts/api-sync.mjs`, `api-check.mjs`: sync and offline drift check.
 - `src/generated/schema.d.ts`, `examples.ts`: generated API types and examples.
-- `src/lib/api/`: openapi-fetch client, errors and ETag helpers.
+- `src/lib/api/`: openapi-fetch client, errors and ETag helpers. `authReload.ts`: a 401 under `/api/v1` (client middleware and the image upload XHR) calls `reloadForLogin()`, which reloads the page so Cloudflare Access shows its login; at most once per 30 s (`collection:auth-reload` in sessionStorage), then the failure surfaces as `isUnauthenticated(error)` ("You're signed out. Reload the page to sign in." through `errorMessage`). `/readyz` is unaffected.
 - `src/data/keys.ts`: query keys of every resource (`treeKeys`, `listKeys`, `itemKeys`, ..., `healthKeys`).
 - `src/data/invalidate.ts`: `invalidateContent` (creates, trash, move) and `invalidateItemWrite` (item PATCH).
 - `src/app/queryClient.ts`: `createQueryClient`, `shouldRetry`.

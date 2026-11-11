@@ -6,6 +6,8 @@ export const STORAGE_KEYS = {
   listFolder: 'collection:list-folder',
   /** Focus/keyboard diagnostics overlay on (Settings > About, or `?focusdebug=1`). */
   focusDebug: 'collection:focus-debug',
+  /** When the page last reloaded for a 401, to stop a reload loop (F-027). Session only. */
+  authReload: 'collection:auth-reload',
 } as const
 
 /**
