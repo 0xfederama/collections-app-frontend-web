@@ -81,6 +81,9 @@ export function AboutSection() {
         >
           Author profile
         </a>
+        <a className={externalLink} href="/privacy" target="_blank" rel="noopener noreferrer">
+          Privacy policy
+        </a>
       </div>
       {/* Roadmap 28: on-screen focus log to find where the iOS keyboard closes on a real phone. */}
       <label className="flex items-center gap-2 text-secondary text-text-muted">
