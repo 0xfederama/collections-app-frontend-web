@@ -70,7 +70,7 @@ describe('W-13 settings: saving', () => {
     const user = await openSettings()
     const dialog = screen.getByRole('dialog', { name: 'Settings' })
     expect(Array.from(dialog.querySelectorAll('h2')).map((heading) => heading.textContent)).toEqual(
-      ['Settings', 'General', 'Country & language', 'Books', 'Connection', 'About'],
+      ['Settings', 'Account', 'General', 'Country & language', 'Books', 'Connection', 'About'],
     )
     expect(dialog.querySelector('#settings-movies-tv')?.parentElement).toHaveAttribute('hidden')
     // F-027 W2: the app is always called "Collections", there is no name to edit.
@@ -416,6 +416,8 @@ describe('W-13 settings: saving', () => {
   it('offers keyboard reachable panes and no Types & fields pane (F-023)', async () => {
     mountBackend()
     const user = await openSettings()
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Account' })).toHaveFocus()
     await user.tab()
     expect(screen.getByRole('button', { name: 'General' })).toHaveFocus()
     expect(screen.queryByRole('button', { name: 'Types & fields' })).not.toBeInTheDocument()

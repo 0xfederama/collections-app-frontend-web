@@ -10,6 +10,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `src/components/ui/icons.ts`: the only Lucide import site; named glyphs, `typeIcons`, `typeLabels` (five built-in types, plural names; no type = `List`).
 - `src/components/ui/sortable.tsx`: the only `@dnd-kit` importer (pinned 0.5.0, D-061).
 - `src/components/ui/fieldStyles.ts`, `returnFocus.ts`: shared input chrome; focus return.
+- `src/components/UserAvatar.tsx`: `UserAvatar({ name?, email?, avatarUrl?, size? })`, https-only image (`alt=""`, no referrer) with a letter-tile fallback (also on load error); `rounded-full`.
 - `src/components/ServiceIcon.tsx`: `ServiceIcon` (streaming) and `LinkIcon` (Google, Letterboxd, IMDb, Reddit) tiles, `TILE_SIZE`.
 - `src/components/SiteIcon.tsx`: `SiteIcon` (favicon or globe) for website links; the favicon URL comes from [links](links.md).
 - `src/lib/text.ts`: `firstLetter`, shared by the letter tile and the item-cover placeholder.

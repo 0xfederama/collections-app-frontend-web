@@ -1,4 +1,5 @@
 import { etag, NetworkError } from '../../../lib/api'
+import { reloadForLogin } from '../../../lib/api/authReload'
 import { toApiError } from '../../../lib/api/errors'
 import type { Item } from '../api'
 
@@ -40,6 +41,7 @@ export function putImageFile({ itemId, version, file, onProgress, signal }: Uplo
         // not JSON: keep the text
       }
       if (xhr.status >= 200 && xhr.status < 300) return resolve(body as Item)
+      if (xhr.status === 401) reloadForLogin()
       const headers: Record<string, string> = {}
       const requestId = xhr.getResponseHeader('X-Request-Id')
       if (requestId) headers['X-Request-Id'] = requestId

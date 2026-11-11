@@ -4,6 +4,7 @@ import { Button, Dialog, focusRing, Skeleton } from '../components/ui'
 import { useSettings, type SettingsCloseRequestRef } from '../features/settings'
 import {
   AboutSection,
+  AccountSection,
   AppearanceSection,
   ConnectionSection,
   SettingsForm,
@@ -20,7 +21,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
   )
 }
 
-const PANES = ['General', 'Media', 'About']
+const PANES = ['Account', 'General', 'Media', 'About']
 
 function WorkspaceSkeleton() {
   return (
@@ -77,6 +78,11 @@ export function SettingsRoute() {
         ))}
       </nav>
       <div className="-mx-2 min-h-0 flex-1 overflow-y-auto px-2 py-1">
+        <div hidden={pane !== 'Account'}>
+          <Section id="settings-account" title="Account">
+            <AccountSection />
+          </Section>
+        </div>
         {settings.isPending ? (
           <div hidden={pane !== 'General'}>
             <Section id="settings-general" title="General">

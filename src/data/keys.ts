@@ -74,3 +74,6 @@ export const typeKeys = { types: ['types'] as const }
 export const storeKeys = { providers: ['store-providers'] as const }
 
 export const healthKeys = { ready: ['health', 'readyz'] as const }
+
+/** The signed-in user and the people of the workspace (F-027). */
+export const accountKeys = { me: ['me'] as const, users: ['users'] as const }

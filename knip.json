@@ -7,6 +7,8 @@
     "src/components/ui/Chip.tsx": ["types"],
     "src/components/ui/Select.tsx": ["types"],
     "src/components/ui/Toast.tsx": ["types"],
-    "src/features/links/index.ts": ["exports", "types"]
+    "src/features/links/index.ts": ["exports", "types"],
+    "src/features/account/index.ts": ["exports", "types"],
+    "src/features/account/api.ts": ["exports", "types"]
   }
 }
