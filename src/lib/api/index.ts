@@ -4,8 +4,11 @@ export {
   errorMessage,
   failureKind,
   fieldErrorText,
+  isDestinationUnavailable,
   isDuplicateTitle,
   isFolderNotTopLevel,
+  isFolderShared,
   isForbidden,
+  isOrderStale,
 } from './failure'
 export { etag, ifMatch } from './etag'

@@ -4,6 +4,8 @@ import type { TreeIndex, TreeNode } from './api'
 import { DestinationPicker } from './DestinationPicker'
 import { FormError } from './FormError'
 import { flattenFolders, parentIdOf } from './order'
+import { leavesSharedBox } from './sharing/leavesBox'
+import { MoveOutConfirm } from './sharing/MoveOutConfirm'
 import { useAction } from './useAction'
 
 interface Destination {
@@ -81,14 +83,18 @@ export function MoveDialog({ node, index, onSubmit, onClose, onReload }: MoveDia
   const noun = node.kind
   const name = node.kind === 'folder' ? node.folder.name : node.list.name
   const [chosen, setChosen] = useState<string | null | undefined>(undefined)
-  const { error, pending, run, clearError } = useAction(noun)
+  const { error, pending, run, clearError } = useAction(noun, name)
   const destinations = destinationsFor(node, index)
 
   // The choice may have become invalid after a refresh (e.g. its folder was trashed elsewhere).
   const choice = destinations.find((d) => d.id === chosen && !d.reason)
 
+  const [confirming, setConfirming] = useState(false)
+  const box = choice ? leavesSharedBox(index, node.id, choice.id) : null
+
   const submit = async () => {
     if (!choice) return
+    setConfirming(false)
     if (await run(() => onSubmit(choice.id))) onClose()
   }
 
@@ -103,7 +109,11 @@ export function MoveDialog({ node, index, onSubmit, onClose, onReload }: MoveDia
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => void submit()} pending={pending} disabled={!choice}>
+          <Button
+            onClick={() => (box ? setConfirming(true) : void submit())}
+            pending={pending}
+            disabled={!choice}
+          >
             Move
           </Button>
         </>
@@ -120,6 +130,14 @@ export function MoveDialog({ node, index, onSubmit, onClose, onReload }: MoveDia
           pending={pending}
           onReload={() => void onReload().then(clearError)}
           onRetry={() => void submit()}
+        />
+      )}
+      {confirming && box && (
+        <MoveOutConfirm
+          name={name}
+          box={box}
+          onConfirm={() => void submit()}
+          onCancel={() => setConfirming(false)}
         />
       )}
     </Dialog>

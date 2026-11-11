@@ -304,11 +304,33 @@ describe('AT-11 restore to… destination picker', () => {
     await user.click(restoreButton(dialog))
 
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
-      'That destination no longer exists or is in Trash',
+      'That place is no longer available. Pick another one.',
     )
     expect(within(dialog).getByRole('radio', { name: 'Gear' })).not.toBeChecked()
     expect(restoreButton(dialog)).toBeDisabled()
     expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('F-027 W5 403 forbidden says only the owner can do that', async () => {
+    const { dialog, user } = await openPicker([orphanList], 'Orphan')
+    server.use(http.post(restoreUrl(), () => problemResponse(403, 'forbidden')))
+    await user.click(within(dialog).getByRole('radio', { name: 'Gear' }))
+    await user.click(restoreButton(dialog))
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'Only the owner of ‘Orphan’ can do that.',
+    )
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('F-027 W5 409 folder_shared says a shared folder cannot go inside another', async () => {
+    const { dialog, user } = await openPicker([orphanList], 'Orphan')
+    server.use(http.post(restoreUrl(), () => problemResponse(409, 'folder_shared')))
+    await user.click(within(dialog).getByRole('radio', { name: 'Gear' }))
+    await user.click(restoreButton(dialog))
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'A shared folder can’t go inside another folder.',
+    )
+    expect(restoreButton(dialog)).toBeDisabled()
   })
 
   it('404 closes the dialog with an "Already gone" toast and refetches', async () => {

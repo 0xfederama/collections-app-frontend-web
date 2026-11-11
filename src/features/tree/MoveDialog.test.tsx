@@ -235,7 +235,7 @@ describe('AT-04 server-side rejections of a move', () => {
     await user.click(moveButton(dlg))
 
     expect(await within(dlg).findByRole('alert')).toHaveTextContent(
-      'That destination no longer exists or is in Trash.',
+      'That place is no longer available. Pick another one.',
     )
     await waitFor(() =>
       expect(within(dlg).queryByRole('radio', { name: /^Gear/ })).not.toBeInTheDocument(),

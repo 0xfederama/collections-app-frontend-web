@@ -5,7 +5,7 @@ import { useToast } from '../../components/ui'
 import type { SortableMove } from '../../components/ui/sortable'
 import { treeKeys } from '../../data/keys'
 import { useMe } from '../account'
-import { useTreeIndex, type TreeData } from './api'
+import { useTreeIndex, type Folder, type TreeData } from './api'
 import { DeleteDialog } from './DeleteDialog'
 import { findNode, isOpenWithin, nameOf } from './treeLookup'
 import { Vanished } from './Vanished'
@@ -27,6 +27,7 @@ import { MoveDialog, listPathOptions } from './MoveDialog'
 import { NameDialog } from './NameDialog'
 import { countsText } from '../trash'
 import { buildSortable, subtreeCounts } from './order'
+import { MoveOutConfirm } from './sharing/MoveOutConfirm'
 import { SharingDialogs } from './sharing/SharingDialogs'
 
 type DialogState =
@@ -95,6 +96,11 @@ export function useTreeDialogs({
   const reorder = useReorderSiblings()
 
   const sortable = useMemo(() => (index ? buildSortable(index.nodes) : undefined), [index])
+  const [moveOut, setMoveOut] = useState<{
+    name: string
+    box: Folder
+    proceed: () => void
+  } | null>(null)
   const close = () => setDialog(null)
   const created = useRef<string | null>(null)
 
@@ -113,6 +119,7 @@ export function useTreeDialogs({
     moveList,
     reorder,
     meId,
+    askMoveOut: setMoveOut,
   })
 
   const actions: TreeActions = {
@@ -296,6 +303,7 @@ export function useTreeDialogs({
               noun={node.kind}
               name={name}
               contents={countsText(subtreeCounts(node))}
+              shared={node.kind === 'folder' && node.folder.shared}
               onClose={close}
               onReload={reload}
               onConfirm={async () => {
@@ -312,5 +320,21 @@ export function useTreeDialogs({
     }
   }
 
-  return { actions, dialogs: content }
+  const confirm = moveOut && (
+    <MoveOutConfirm
+      name={moveOut.name}
+      box={moveOut.box}
+      onConfirm={moveOut.proceed}
+      onCancel={() => setMoveOut(null)}
+    />
+  )
+  return {
+    actions,
+    dialogs: (
+      <>
+        {content}
+        {confirm}
+      </>
+    ),
+  }
 }

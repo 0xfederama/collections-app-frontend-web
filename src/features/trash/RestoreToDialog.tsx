@@ -87,12 +87,12 @@ export function RestoreToDialog({ entry, onClose, onRestored, onGone }: RestoreT
       const result = await restore.mutateAsync({ batchId: entry.id, destination })
       onRestored(result, destination)
     } catch (caught) {
-      const classified = classifyTrashError(caught)
+      const classified = classifyTrashError(caught, entry.root_name)
       if (classified.kind === 'gone') return onGone()
-      if (classified.kind === 'cycle') {
+      if (classified.kind === 'cycle' || classified.kind === 'shared') {
         setRejected(new Map(rejected).set(choice.key, classified.message))
       }
-      if (classified.kind === 'cycle' || classified.kind === 'unavailable') setChosen(undefined)
+      if (['cycle', 'shared', 'unavailable'].includes(classified.kind)) setChosen(undefined)
       setError(classified)
     }
   }

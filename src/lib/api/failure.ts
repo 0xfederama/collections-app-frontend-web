@@ -84,6 +84,23 @@ export function isFolderNotTopLevel(error: unknown): boolean {
   return error instanceof ApiError && error.status === 409 && error.code === 'folder_not_top_level'
 }
 
+/** 409 `folder_shared`: a folder with members can't go inside another folder. */
+export function isFolderShared(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 409 && error.code === 'folder_shared'
+}
+
+/** 409 `destination_unavailable`: the destination is gone, in Trash or not visible to the caller. */
+export function isDestinationUnavailable(error: unknown): boolean {
+  return (
+    error instanceof ApiError && error.status === 409 && error.code === 'destination_unavailable'
+  )
+}
+
+/** 409 `order_stale`: the siblings changed elsewhere since the order was read. */
+export function isOrderStale(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 409 && error.code === 'order_stale'
+}
+
 /** 401: the Cloudflare Access session ended. The client reloads for the login; if it could not, say so. */
 export function isUnauthenticated(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401

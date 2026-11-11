@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast, type ItemType } from '../../components/ui'
-import { api, ApiError, ifMatch, unwrap } from '../../lib/api'
+import { api, ifMatch, isOrderStale, unwrap } from '../../lib/api'
 import { invalidateContent } from '../../data/invalidate'
 import type { IconChoice } from '../lists'
 import { treeKeys } from '../../data/keys'
 import type { Folder, List, TreeData } from './api'
-import { shouldRefreshTree } from './errors'
+import { ORDER_STALE_MESSAGE, shouldRefreshTree } from './errors'
 import { applyOrder, type SiblingKind } from './order'
 
 /**
@@ -170,8 +170,8 @@ export function useReorderSiblings() {
     },
     onError: (error, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(treeKeys.tree, context.previous)
-      if (error instanceof ApiError && error.code === 'order_stale') {
-        toast({ kind: 'info', title: 'List changed, order refreshed.' })
+      if (isOrderStale(error)) {
+        toast({ kind: 'info', title: ORDER_STALE_MESSAGE })
       } else {
         toast({
           kind: 'error',

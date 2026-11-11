@@ -12,6 +12,8 @@ export {
 } from './mutations'
 export { flattenFolders } from './order'
 export { isInSharedFolder } from './treeLookup'
+export { leavesSharedBox } from './sharing/leavesBox'
+export { MoveOutConfirm } from './sharing/MoveOutConfirm'
 export { DestinationPicker } from './DestinationPicker'
 export type { DestinationOption } from './DestinationPicker'
 export { ListActionsMenu } from './ListActionsMenu'

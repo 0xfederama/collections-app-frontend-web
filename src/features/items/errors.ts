@@ -1,4 +1,4 @@
-import { ApiError, failureKind, isDuplicateTitle } from '../../lib/api'
+import { ApiError, failureKind, isDestinationUnavailable, isDuplicateTitle } from '../../lib/api'
 import type { ItemType } from './api'
 import { duplicateTitleMessage } from './duplicate'
 
@@ -25,6 +25,12 @@ export function classifyItemError(error: unknown, type?: ItemType): ItemError {
       kind: 'unavailable',
       message:
         'That list holds another type of item. Items can only move to lists of the same type.',
+    }
+  }
+  if (isDestinationUnavailable(error)) {
+    return {
+      kind: 'unavailable',
+      message: 'That place is no longer available. Pick another one.',
     }
   }
   if (isDuplicateTitle(error)) {
