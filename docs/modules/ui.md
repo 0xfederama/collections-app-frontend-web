@@ -9,6 +9,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `src/components/ui/index.ts`: barrel; import primitives from `components/ui`.
 - `src/components/ui/icons.ts`: the only Lucide import site; named glyphs, `typeIcons`, `typeLabels` (five built-in types, plural names; no type = `List`).
 - `src/components/ui/sortable.tsx`: the only `@dnd-kit` importer (pinned 0.5.0, D-061).
+- `src/components/ui/SharedBadge.tsx`: two-person mark on the bottom right of a shared folder's icon (F-027).
 - `src/components/ui/fieldStyles.ts`, `returnFocus.ts`: shared input chrome; focus return.
 - `src/components/ServiceIcon.tsx`: `ServiceIcon` (streaming) and `LinkIcon` (Google, Letterboxd, IMDb, Reddit) tiles, `TILE_SIZE`.
 - `src/components/SiteIcon.tsx`: `SiteIcon` (favicon or globe) for website links; the favicon URL comes from [links](links.md).
@@ -28,10 +29,12 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `SortableProvider({ onMove })`, `useSortableRow(id, slot)` (returns `cancelDrag()`), `arrayMove`.
 - `ServiceIcon({ name, paid?, size? })`, `LinkIcon({ name, size? })`; both default to `TILE_SIZE` (32, was 44 before F-025).
 - `SiteIcon({ src, size?, tile? })`: `src` `null` shows the globe; `tile` draws it in the row tile frame.
+- `SharedBadge({ shared, children, className? })`: overlays the `Users` mark on `children`; renders `children` unchanged when `shared` is false.
 
 ## Gotchas
 
 - Import Lucide icons only from `./icons`; import dnd-kit only through `sortable.tsx`.
+- `SharedBadge` is decorative (`aria-hidden`): the row or link name must also say "shared" (sr-only), as the tree and rail do.
 - Drag reorder is the whole row: press and drag, or Space then arrows on the keyboard. There is no grip or `Reorder <name>` button.
 - "Drop into" is pointer-only: a `into:<id>` droppable on a row is live while the pointer is over its middle, and only with `acceptsDrop`. Keyboard drags never drop into.
 - `Tree` is controlled and has no expand chevron: selecting a row (click, Enter, Space) is what toggles a folder.

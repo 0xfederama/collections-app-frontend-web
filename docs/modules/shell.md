@@ -14,7 +14,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
 - `src/components/PageHeaderSlot.tsx`: `PageHeaderSlot({ back })`, the phone back button that leads the item page's header row (and the sub-page's `ListGate` slot).
 - `src/layouts/AppShell.tsx`: layout per breakpoint, detail sheet, `/` shortcut, `QuickAddProvider`.
 - `src/layouts/Sidebar.tsx`, `SidebarResizer.tsx`, `useSidebarState.ts`: sidebar, splitter, persisted width.
-- `src/features/tree/RailTree.tsx`: top-level entries of the collapsed sidebar.
+- `src/features/tree/RailTree.tsx`: top-level entries of the collapsed sidebar (shared folders carry the badge, see [tree](tree.md)).
 - `src/features/search/`, `src/features/quickadd/`: sidebar search and Quick add (see [search](search.md), [quickadd](quickadd.md)).
 - `src/routes/*Route.tsx`: route components; `ItemRoute` is a lazy wrapper of `features/items`.
 
