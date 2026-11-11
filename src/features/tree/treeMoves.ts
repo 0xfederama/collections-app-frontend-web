@@ -3,7 +3,7 @@ import { arrayMove, type SortableMove } from '../../components/ui/sortable'
 import type { Folder, TreeIndex } from './api'
 import { classifyError } from './errors'
 import type { useMoveFolder, useMoveList, useReorderSiblings } from './mutations'
-import { buildSortable, canDropInto } from './order'
+import { buildSortable, canDropInto, canDropToTop } from './order'
 import { leavesSharedBox } from './sharing/leavesBox'
 
 /**
@@ -36,11 +36,14 @@ export function createTreeMoves({
 }) {
   const applyMove = ({ id, group, from, to, into }: SortableMove) => {
     if (into !== undefined) {
-      // Dropped onto a folder: a real move, appended last by the server (D-060). The body always names the parent.
+      // Dropped onto a folder (or the top-level zone, `into: null`): a real move, appended last by
+      // the server (D-060). The body always names the parent.
       const folder = index?.folders.get(id)
       const list = index?.lists.get(id)
-      const target = index?.folders.get(into)
-      if (!index || !target || !canDropInto(index, id, into, meId)) return
+      const target = into === null ? null : index?.folders.get(into)
+      if (!index || target === undefined) return
+      if (into === null ? !canDropToTop(index, id, meId) : !canDropInto(index, id, into, meId))
+        return
       const name = (folder ?? list)?.name ?? ''
       const onError = (error: unknown) => {
         const failure = classifyError(error, folder ? 'folder' : 'list', name)
@@ -57,11 +60,11 @@ export function createTreeMoves({
         })
       }
       const done = () => {
-        onCreatedFolder?.(into)
+        if (into !== null) onCreatedFolder?.(into)
         toast({
           kind: 'success',
           title: `“${(folder ?? list)?.name}” moved`,
-          description: `Now inside “${target.name}”.`,
+          description: target ? `Now inside “${target.name}”.` : 'Now at the top level.',
         })
       }
       const send = () => {
@@ -103,5 +106,7 @@ export function createTreeMoves({
   const dropInto = (sourceId: string, folderId: string) =>
     !!index && canDropInto(index, sourceId, folderId, meId)
 
-  return { position, applyMove, canDropInto: dropInto, nudge }
+  const dropToTop = (sourceId: string) => !!index && canDropToTop(index, sourceId, meId)
+
+  return { position, applyMove, canDropInto: dropInto, canDropToTop: dropToTop, nudge }
 }

@@ -63,6 +63,17 @@ export function canDropInto(
   return !index.ancestorsOf(folderId).some((a) => a.id === sourceId)
 }
 
+/**
+ * Whether `sourceId` (a folder or a list) can be dragged out to the top level: it is nested now, and
+ * a folder must be one `meId` may move (nested folders always are: F-027 rights live on the box).
+ */
+export function canDropToTop(index: TreeIndex, sourceId: string, meId?: string): boolean {
+  const folder = index.folders.get(sourceId)
+  if (folder) return folder.parent_folder_id !== null && folderRights(folder, meId).canMove
+  const list = index.lists.get(sourceId)
+  return !!list && list.folder_id !== null
+}
+
 /** The tree with `ids` (all siblings of one kind under one parent) renumbered `0..n-1` in that order. */
 export function applyOrder(data: TreeData, kind: SiblingKind, ids: readonly string[]): TreeData {
   const position = new Map(ids.map((id, i) => [id, i]))

@@ -113,3 +113,55 @@ export async function drag(page: Page, handle: Locator, target: Locator) {
   await page.mouse.move(to.x, to.y, { steps: 20 })
   await page.mouse.up()
 }
+
+/**
+ * Like `drag`, but drops at a point of the target row: `above` / `below` reorder (top or bottom
+ * fifth of the row), `into` is the middle (a folder's "drop into" zone).
+ */
+export async function dragTo(
+  page: Page,
+  handle: Locator,
+  target: Locator,
+  where: 'above' | 'below' | 'into',
+) {
+  const from = await center(handle)
+  await target.scrollIntoViewIfNeeded()
+  const box = await target.boundingBox()
+  if (!box) throw new Error('target has no box')
+  const y = box.y + box.height * (where === 'above' ? 0.1 : where === 'below' ? 0.9 : 0.5)
+  const x = box.x + box.width / 2
+  await page.mouse.move(from.x, from.y)
+  await page.mouse.down()
+  await page.mouse.move(from.x, from.y + (y < from.y ? -8 : 8), { steps: 4 })
+  await page.mouse.move(x, y, { steps: 20 })
+  await page.mouse.up()
+}
+
+/**
+ * Presses on `handle`, moves until `zone` shows up, and drops in its middle. On a long tree the zone
+ * starts below the fold: holding the pointer at the bottom edge auto-scrolls to it, as a user would.
+ */
+export async function dragToZone(page: Page, handle: Locator, zone: Locator) {
+  const from = await center(handle)
+  await page.mouse.move(from.x, from.y)
+  await page.mouse.down()
+  await page.mouse.move(from.x, from.y + 8, { steps: 4 })
+  await expect(zone).toBeVisible()
+  // The zone's scroll container (the sidebar's tree area): its bottom edge is where auto-scroll starts.
+  const bottom = await zone.evaluate((el) => {
+    let node = el.parentElement
+    while (node && getComputedStyle(node).overflowY !== 'auto') node = node.parentElement
+    return (node ?? document.documentElement).getBoundingClientRect().bottom
+  })
+  for (let i = 0; i < 60 && !(await isInView(zone, bottom)); i++)
+    await page.mouse.move(from.x, bottom - 6 - (i % 2), { steps: 2 })
+  const box = await zone.boundingBox()
+  if (!box) throw new Error('zone has no box')
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 10 })
+  await page.mouse.up()
+}
+
+async function isInView(locator: Locator, bottom: number) {
+  const box = await locator.boundingBox()
+  return !!box && box.y >= 0 && box.y + box.height <= bottom
+}

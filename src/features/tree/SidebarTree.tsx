@@ -93,6 +93,7 @@ export function SidebarTree() {
               sortable={(node) => sortable?.slots.get(node.id)}
               onReorder={actions.applyMove}
               acceptsDrop={(target, sourceId) => actions.canDropInto(sourceId, target.id)}
+              topLevelDrop={{ label: 'the top level', accepts: actions.canDropToTop }}
               renderRow={(node, state) => <Row node={node} state={state} />}
             />
           )}

@@ -55,6 +55,8 @@ export interface TreeActions {
   applyMove: (move: SortableMove) => void
   /** Whether dropping the node `sourceId` onto folder `folderId` is a valid move. */
   canDropInto: (sourceId: string, folderId: string) => boolean
+  /** Whether a drag may take this nested folder or list out to the top level. */
+  canDropToTop: (sourceId: string) => boolean
 }
 
 /**
@@ -110,7 +112,7 @@ export function useTreeDialogs({
     return queryClient.getQueryData<TreeData>(treeKeys.tree)
   }
 
-  const { position, applyMove, canDropInto, nudge } = createTreeMoves({
+  const { position, applyMove, canDropInto, canDropToTop, nudge } = createTreeMoves({
     index,
     sortable,
     toast,
@@ -134,6 +136,7 @@ export function useTreeDialogs({
     position,
     applyMove,
     canDropInto,
+    canDropToTop,
     nudge,
   }
 
