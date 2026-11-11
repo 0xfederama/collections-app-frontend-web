@@ -14,4 +14,8 @@ if (info.error || info.status !== 0) {
 }
 
 const build = spawnSync('docker', ['build', '-t', tag, '.'], { stdio: 'inherit' })
-process.exit(build.status ?? 1)
+if (build.status !== 0) process.exit(build.status ?? 1)
+
+// D-150: the built image must proxy the LAN host and pass the Cloudflare headers through unchanged.
+const check = spawnSync('node', ['scripts/proxy-headers-check.mjs', tag], { stdio: 'inherit' })
+process.exit(check.status ?? 1)
