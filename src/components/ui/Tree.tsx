@@ -3,6 +3,7 @@ import { cx } from '../../lib/cx'
 import {
   SortableProvider,
   useSortableRow,
+  useTopLevelDropZone,
   type SortableDropInto,
   type SortableMove,
   type SortableSlot,
@@ -43,6 +44,11 @@ export interface TreeProps<T extends TreeNodeBase> {
    * node `sourceId`. Rows that refuse show nothing; accepting rows highlight only while hovered.
    */
   acceptsDrop?: (target: T, sourceId: string) => boolean
+  /**
+   * Opt-in "move to the top level": while a pointer drag of a row it accepts runs, a zone under the
+   * tree takes the drop and `onReorder` gets `into: null`.
+   */
+  topLevelDrop?: { label: string; accepts: (sourceId: string) => boolean }
   className?: string
 }
 
@@ -70,6 +76,7 @@ export function Tree<T extends TreeNodeBase>({
   sortable,
   onReorder,
   acceptsDrop,
+  topLevelDrop,
   className,
   ...rest
 }: TreeProps<T>) {
@@ -182,7 +189,25 @@ export function Tree<T extends TreeNodeBase>({
           />
         ))}
       </ul>
+      {topLevelDrop && <TopLevelZone {...topLevelDrop} />}
     </SortableProvider>
+  )
+}
+
+function TopLevelZone({ label, accepts }: NonNullable<TreeProps<TreeNodeBase>['topLevelDrop']>) {
+  const { ref, visible, isDropTarget } = useTopLevelDropZone('tree-top-level', accepts, label)
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      hidden={!visible}
+      className={cx(
+        'mt-1 grid min-h-11 place-items-center rounded-md border border-dashed border-border px-2 text-secondary text-text-muted',
+        isDropTarget && 'border-accent bg-accent-tint text-accent-text',
+      )}
+    >
+      {`Move to ${label}`}
+    </div>
   )
 }
 
@@ -200,6 +225,9 @@ interface TreeRowProps<T extends TreeNodeBase> {
   onSelect: (id: string) => void
   renderRow: TreeProps<T>['renderRow']
 }
+
+/** Indent per nesting level, px (web 3.1.0: 16 read as too shallow; D-entry in DECISIONS.md). */
+const INDENT = 24
 
 const INNER_CONTROLS = 'button, a[href], input, select, textarea, [tabindex]'
 
@@ -261,7 +289,7 @@ function TreeRow<T extends TreeNodeBase>({
         onFocusRow(node.id)
         onSelect(node.id)
       }}
-      style={{ paddingInlineStart: `${(level - 1) * 16 + 8}px` }}
+      style={{ paddingInlineStart: `${(level - 1) * INDENT + 8}px` }}
       className={cx(
         'group/row flex min-h-9 cursor-pointer select-none items-center [-webkit-touch-callout:none] gap-1 rounded-md pr-2 text-ui text-text hover:bg-fill-hover focus-visible:bg-fill-hover focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus-ring aria-selected:bg-accent-tint aria-selected:focus-visible:bg-accent-tint aria-selected:font-medium aria-selected:text-accent-text pointer-coarse:min-h-11',
         isDragging && 'bg-surface-raised opacity-80 shadow-md',

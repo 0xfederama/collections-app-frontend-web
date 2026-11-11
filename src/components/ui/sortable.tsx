@@ -34,8 +34,11 @@ export interface SortableMove {
   group: string
   from: number
   to: number
-  /** Set when the row was dropped onto a container row (a folder) instead of between rows: that row's id. */
-  into?: string
+  /**
+   * Set when the row was dropped onto a container row (a folder) instead of between rows: that row's
+   * id, or `null` for the top-level drop zone (`useTopLevelDropZone`).
+   */
+  into?: string | null
 }
 
 /** Makes a row a drop target for "move into": whether it accepts the dragged row, and its name for announcements. */
@@ -54,6 +57,7 @@ export const arrayMove = <T,>(items: readonly T[], from: number, to: number): T[
 interface RowData {
   label: string
   size: number
+  index: number
 }
 
 const INSTRUCTIONS =
@@ -182,11 +186,44 @@ const intoZone: Detector = ({ dragOperation, droppable }) => {
   return { id: droppable.id, value: 1, type: POINTER_INTERSECTION, priority: INTO_PRIORITY }
 }
 
+// During a pointer drag, a container row (a folder) swaps places with the dragged row only once the
+// pointer is past its far quarter (its bottom quarter when coming from above, its top quarter when
+// coming from below). dnd-kit's default swaps as soon as the rows touch, so dragging a folder onto
+// the sibling right next to it swapped them before the pointer reached the sibling's middle, and the
+// "drop into" zone could never be reached (web 3.1.0).
+const SORT_PRIORITY = 2
+const farEdge: Detector = ({ dragOperation, droppable }) => {
+  const pointer = dragOperation.position.current
+  const shape = droppable.shape
+  if (!pointer || !shape) return null
+  const { top, left, width, height } = shape.boundingRectangle
+  if (pointer.x < left || pointer.x > left + width || pointer.y < top || pointer.y > top + height)
+    return null
+  // Positions at drag start (RowData), stable while dnd-kit reorders the rows under the pointer.
+  const from = (dragOperation.source?.data as RowData | undefined)?.index
+  const at = (droppable.data as RowData | undefined)?.index
+  if (from === undefined || at === undefined) return null
+  const hit = { id: droppable.id, value: 1, type: POINTER_INTERSECTION, priority: SORT_PRIORITY }
+  // Over its own slot the row stays the target, as with dnd-kit's default.
+  if (from === at) return hit
+  const offset = (pointer.y - top) / height
+  return (from < at ? offset > 0.75 : offset < 0.25) ? hit : null
+}
+
 // Only a pointer drag may drop "into" a row: whatever the collision detector said, a keyboard drag reorders.
-const dropIntoOf = (target: unknown, activatorEvent?: Event | null): string | undefined => {
+const dropIntoOf = (target: unknown, activatorEvent?: Event | null): string | null | undefined => {
   if (!activatorEvent?.type.startsWith('pointer')) return undefined
   const into = (target as { data?: { dropInto?: unknown } } | null | undefined)?.data?.dropInto
-  return typeof into === 'string' ? into : undefined
+  return typeof into === 'string' || into === null ? into : undefined
+}
+
+// The top-level zone counts anywhere inside it (it is not a row, so there is nothing to reorder around).
+const insideZone: Detector = ({ dragOperation, droppable }) => {
+  const pointer = dragOperation.position.current
+  const shape = droppable.shape
+  if (!pointer || !shape || !dragOperation.activatorEvent?.type.startsWith('pointer')) return null
+  if (!shape.containsPoint(pointer)) return null
+  return { id: droppable.id, value: 1, type: POINTER_INTERSECTION, priority: INTO_PRIORITY }
 }
 
 const withoutAccessibility = (defaults: readonly unknown[]) =>
@@ -197,8 +234,9 @@ const withoutAccessibility = (defaults: readonly unknown[]) =>
 // that holds links), and axe rejects those (aria-allowed-attr, aria-allowed-role, nested-interactive).
 // The instructions and the live announcements below are the same, without touching the row's role.
 const SortableA11yContext = createContext<string | undefined>(undefined)
-// True while a pointer drag runs: the "drop into" zones exist only then, so a keyboard drag only reorders.
-const PointerDragContext = createContext(false)
+// The id of the row a pointer drag is moving, or null: the "drop into" zones exist only then, so a
+// keyboard drag only reorders.
+const PointerDragContext = createContext<string | null>(null)
 
 export function SortableProvider({
   onMove,
@@ -209,7 +247,7 @@ export function SortableProvider({
 }) {
   const instructionsId = useId()
   const [announcement, setAnnouncement] = useState('')
-  const [pointerDrag, setPointerDrag] = useState(false)
+  const [pointerDrag, setPointerDrag] = useState<string | null>(null)
   // dragover also fires once right after the pick-up; only a changed position is news.
   const lastIndex = useRef<number>(-1)
   // dnd-kit can fire its events while React is committing (an insertion effect), where a state
@@ -225,7 +263,12 @@ export function SortableProvider({
           onDragStart={(event) => {
             lastIndex.current = indexOf(event.operation.source)
             announce(announcements.dragstart(event))
-            setPointerDrag(!!event.operation.activatorEvent?.type.startsWith('pointer'))
+            const source = event.operation.source
+            setPointerDrag(
+              source && event.operation.activatorEvent?.type.startsWith('pointer')
+                ? String(source.id)
+                : null,
+            )
             // Only a pointer drag is followed by a click; a keyboard drag never is.
             if (event.operation.activatorEvent?.type.startsWith('pointer')) startSwallowingClick()
           }}
@@ -243,7 +286,7 @@ export function SortableProvider({
           }}
           onDragEnd={(event) => {
             stopSwallowingClick()
-            setPointerDrag(false)
+            setPointerDrag(null)
             announce(announcements.dragend(event))
             const source = event.operation.source
             if (event.canceled || !source || !isSortable(source)) return
@@ -290,21 +333,26 @@ export function useSortableRow(
   slot: SortableSlot | undefined,
   dropInto?: SortableDropInto,
 ) {
+  const pointerDrag = useContext(PointerDragContext)
   const { ref, isDragging } = useSortable({
     id,
+    collisionDetector: dropInto && pointerDrag !== null ? farEdge : undefined,
     index: slot?.index ?? 0,
     group: slot?.group,
     type: slot?.group,
     accept: slot?.group,
     disabled: !slot,
-    data: { label: slot?.label ?? '', size: slot?.size ?? 0 } satisfies RowData,
+    data: {
+      label: slot?.label ?? '',
+      size: slot?.size ?? 0,
+      index: slot?.index ?? 0,
+    } satisfies RowData,
   })
   // A second droppable on the same row: "drop into". It is separate from the sortable one because the
   // sortable only accepts its own group, so a list could never reach a folder (the F008-W4 bug).
-  const pointerDrag = useContext(PointerDragContext)
   const into = useDroppable({
     id: `into:${id}`,
-    disabled: !dropInto || !pointerDrag,
+    disabled: !dropInto || pointerDrag === null,
     accept: (source) => !!dropInto && dropInto.accepts(String(source.id)),
     collisionDetector: intoZone,
     collisionPriority: INTO_PRIORITY,
@@ -330,4 +378,26 @@ export function useSortableRow(
     /** Props for the row element: the keyboard instructions, read as its description. */
     a11y: slot ? { 'aria-describedby': instructionsId } : {},
   }
+}
+
+/**
+ * A drop zone that moves the dragged row to the top level (`into: null`). It exists only while a
+ * pointer drag of a row it `accepts` runs, so `visible` tells the caller when to draw it.
+ */
+export function useTopLevelDropZone(
+  id: string,
+  accepts: (sourceId: string) => boolean,
+  label: string,
+) {
+  const sourceId = useContext(PointerDragContext)
+  const visible = sourceId !== null && accepts(sourceId)
+  const zone = useDroppable({
+    id,
+    disabled: !visible,
+    accept: (source) => accepts(String(source.id)),
+    collisionDetector: insideZone,
+    collisionPriority: INTO_PRIORITY,
+    data: { dropInto: null, label },
+  })
+  return { ref: zone.ref, visible, isDropTarget: visible && zone.isDropTarget }
 }

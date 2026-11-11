@@ -6,6 +6,7 @@ import {
   applyOrder,
   buildSortable,
   canDropInto,
+  canDropToTop,
   flattenFolders,
   groupKey,
   parentIdOf,
@@ -218,5 +219,17 @@ describe('F-027 W3 canDropInto rights', () => {
 
   it('keeps lists draggable', () => {
     expect(canDropInto(sharedIndex, id(18), id(1), OWNER)).toBe(true)
+  })
+})
+
+describe('web 3.1.0 canDropToTop', () => {
+  it.each([
+    ['a list inside a folder', id(11), true],
+    ['a list already at the top level', id(18), false],
+    ['a top-level folder', id(5), false],
+    ['a nested folder', id(2), true],
+    ['an unknown id', 'missing', false],
+  ])('%s', (_label, source, expected) => {
+    expect(canDropToTop(index, source)).toBe(expected)
   })
 })

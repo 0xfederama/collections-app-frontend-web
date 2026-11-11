@@ -27,7 +27,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `Dialog`, `AlertDialog`, `Drawer`: `open` / `onOpenChange`, `initialFocus`; solid surface. `Drawer` also takes `className` (panel padding).
 - `ToastProvider` / `useToast()`: `(options: { kind?, title, description?, action? })`.
 - `Tree<T>`: `nodes`, `expanded`, `selected`, `renderRow`, `sortable(node)`, `onReorder(move)`, `acceptsDrop(target, sourceId)`.
-- `SortableProvider({ onMove })`, `useSortableRow(id, slot)` (returns `cancelDrag()`), `arrayMove`.
+- `SortableProvider({ onMove })`, `useSortableRow(id, slot)` (returns `cancelDrag()`), `useTopLevelDropZone(id, accepts, label)`, `arrayMove`.
 - `ServiceIcon({ name, paid?, size? })`, `LinkIcon({ name, size? })`; both default to `TILE_SIZE` (32, was 44 before F-025).
 - `SiteIcon({ src, size?, tile? })`: `src` `null` shows the globe; `tile` draws it in the row tile frame.
 - `SharedBadge({ shared, children, className? })`: overlays the `Users` mark on `children`; renders `children` unchanged when `shared` is false.
@@ -38,6 +38,8 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 - `SharedBadge` is decorative (`aria-hidden`): the row or link name must also say "shared" (sr-only), as the tree and rail do.
 - Drag reorder is the whole row: press and drag, or Space then arrows on the keyboard. There is no grip or `Reorder <name>` button.
 - "Drop into" is pointer-only: a `into:<id>` droppable on a row is live while the pointer is over its middle, and only with `acceptsDrop`. Keyboard drags never drop into.
+- During a pointer drag a container row swaps with the dragged row only past its far quarter (`farEdge`), so a folder can be dropped into the sibling right next to it (web 3.1.0).
+- `Tree` `topLevelDrop` shows a "Move to the top level" zone under the tree while a pointer drag of an accepted row runs; the move arrives as `into: null`. Rows indent 24 px per level.
 - `Tree` is controlled and has no expand chevron: selecting a row (click, Enter, Space) is what toggles a folder.
 - Focus anywhere in a row makes it the roving stop; keys pressed inside a row's own buttons are ignored by the tree.
 - Every link and streaming icon is the same tile (`TILE_SIZE`, `rounded-sm`). Each `inset` mark sits in an 18% inset on the white `tile: 'light'` surface (theme-independent); `fit: 'bleed'` icons keep their own background. `chili.svg` wraps an unmodified raster logo. An unknown service is a letter tile, never a text `Chip`; the `$` badge marks paid platforms and the tile's own text label names it.
