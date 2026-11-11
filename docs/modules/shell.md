@@ -32,7 +32,7 @@ Top-level providers, router, and the responsive frame every route renders into: 
 - `PageHeaderSlot({ back: { to, label } })`: `to` is a router `To` (the item page passes its list path plus the current `?q=` / `?sort=` / filter search); back link on phones, rendered by the item page, its skeleton and its error state; renders nothing from 768 px. Top pages have no slot.
 - `useBreakpoint()`: `'mobile' | 'tablet' | 'desktop' | 'wide'`, from `BREAKPOINTS` (768, 1024, 1280).
 - `useSidebarState()`: `{ collapsed, width, setCollapsed, setWidth }`; width 220–400, default 268.
-- `Sidebar({ rail, showHeader, onToggleRail, searchRef, onSearch, onQuickAdd })`: `nav[aria-label="Library"]`; workspace name and collapse toggle, search, Quick add, tree, then Trash and Settings.
+- `Sidebar({ rail, showHeader, onToggleRail, searchRef, onSearch, onQuickAdd })`: `nav[aria-label="Library"]`; "Collections" (`APP_NAME`, `lib/appName.ts`) and collapse toggle, search, Quick add, tree, then Trash and Settings.
 
 ## Gotchas
 

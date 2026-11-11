@@ -26,7 +26,7 @@
 ## Gotchas
 
 - Collection and Media validate and save from a snapshot (`If-Match: "s-N"`, changed fields only) when the dialog closes; there is no Save button. Errors, 412 conflicts and network failures keep the dialog open with the draft.
-- Collection holds workspace name, trash retention and description history; Media holds streaming country, owned streaming services, metadata language and a single-choice Default store (`preferred_store`, one provider from the API, saved with the workspace settings). Server 422 errors map to fields.
+- Collection holds trash retention and description history; Media holds streaming country, owned streaming services, metadata language and a single-choice Default store (`preferred_store`, one provider from the API, saved with the workspace settings). Server 422 errors map to fields.
 - Trash retention is a separate immediate update: Off sends `null`; presets are 7, 30 and 90 days. It does not purge existing trash.
 - `useTypes()` hides provider bookkeeping (`tmdb_id`, `lookup_disabled`, `openlibrary_id`), so they are never editable, pinnable, sortable or filterable.
 - Custom fields are gone (api-v3.0.0, F-023): `typeDefinition()` in `items/types` returns the API definition as it is. Custom types and the defaults editor were removed earlier (F-022).
