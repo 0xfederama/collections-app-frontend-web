@@ -74,6 +74,16 @@ export function isDuplicateTitle(error: unknown): boolean {
   return error instanceof ApiError && error.status === 409 && error.code === 'duplicate_title'
 }
 
+/** 403 `forbidden`: the signed-in user is not allowed (e.g. not the owner of the folder). */
+export function isForbidden(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 403 && error.code === 'forbidden'
+}
+
+/** 409 `folder_not_top_level`: only top-level folders can be shared. */
+export function isFolderNotTopLevel(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 409 && error.code === 'folder_not_top_level'
+}
+
 /** 401: the Cloudflare Access session ended. The client reloads for the login; if it could not, say so. */
 export function isUnauthenticated(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401

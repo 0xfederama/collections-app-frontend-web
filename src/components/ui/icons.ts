@@ -56,6 +56,7 @@ export {
   List,
   ListFilter,
   ListPlus,
+  LogOut,
   LoaderCircle,
   Map,
   MessagesSquare,

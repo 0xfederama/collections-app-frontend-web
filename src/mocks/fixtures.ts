@@ -1,7 +1,7 @@
 // Hand-owned MSW fixtures: the first 2xx response of every operation (api-v1.0.0 carries no examples, so these
 // were kept from api-v0.17.0). Add or adjust a body here when the contract changes.
 import type { operations } from '../generated/schema'
-import { OWNER_ME, OWNER_USER, OWNER_USER_ID } from './users'
+import { KNOWN_USERS, MEMBER_USER_ID, OWNER_ME, OWNER_USER_ID } from './users'
 
 /** The first 2xx response of an operation and its fixture body (used by the MSW mocks). */
 export interface ExampleResponse {
@@ -171,7 +171,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     path: '/api/v1/users',
     status: 200,
     contentType: 'application/json',
-    body: { data: [OWNER_USER] },
+    body: { data: [...KNOWN_USERS] },
   },
   addFolderMember: {
     method: 'post',
@@ -188,7 +188,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       updated_at: '2026-10-14T09:00:00Z',
       owner_user_id: OWNER_USER_ID,
       shared: true,
-      member_user_ids: ['00000000-0000-4000-8000-000000000002'],
+      member_user_ids: [MEMBER_USER_ID],
       created_by_user_id: OWNER_USER_ID,
       updated_by_user_id: OWNER_USER_ID,
     },

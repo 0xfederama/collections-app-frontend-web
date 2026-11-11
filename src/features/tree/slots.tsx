@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Button, Menu } from '../../components/ui'
 import { FolderPlus, ListPlus, Plus } from '../../components/ui/icons'
+import { useMe } from '../account'
 import type { TreeNode } from './api'
 import { NodeMenu } from './NodeMenu'
 import { useTreeActions } from './TreeActionsContext'
@@ -38,6 +39,7 @@ export function TreeNewButton(): ReactNode {
  */
 export function TreeRowActions({ node }: { node: TreeNode }): ReactNode {
   const actions = useTreeActions()
+  const meId = useMe().data?.id
   const name = node.kind === 'folder' ? node.folder.name : node.list.name
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stops a click on the row's menu from selecting the row; the menu button inside is the keyboard path
@@ -50,6 +52,7 @@ export function TreeRowActions({ node }: { node: TreeNode }): ReactNode {
         actions={actions}
         name={name}
         changeIcon
+        meId={meId}
         // No hover fill of its own: inside a hovered row it drew a second box as big as the row, so
         // the button just darkens its glyph (F011-W4).
         className="size-8 pointer-coarse:size-11 hover:bg-transparent hover:text-text"

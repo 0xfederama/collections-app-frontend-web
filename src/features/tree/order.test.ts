@@ -198,3 +198,25 @@ describe('F008-W4 canDropInto', () => {
     expect(canDropInto(index, 'nope', id(2))).toBe(false)
   })
 })
+
+describe('F-027 W3 canDropInto rights', () => {
+  const OWNER = '00000000-0000-4000-8000-000000000001'
+  const OTHER = '00000000-0000-4000-8000-000000000009'
+  const shared = structuredClone(devTree)
+  shared.folders.find((f) => f.id === id(6))!.member_user_ids = [OTHER]
+  shared.folders.find((f) => f.id === id(6))!.shared = true
+  shared.folders.find((f) => f.id === id(7))!.owner_user_id = OTHER
+  const sharedIndex = createTreeIndex(shared)
+
+  it.each([
+    ['my private folder', id(5), true],
+    ['my folder with members', id(6), false],
+    ['someone else’s top-level folder', id(7), false],
+  ])('%s', (_name, source, expected) => {
+    expect(canDropInto(sharedIndex, source, id(1), OWNER)).toBe(expected)
+  })
+
+  it('keeps lists draggable', () => {
+    expect(canDropInto(sharedIndex, id(18), id(1), OWNER)).toBe(true)
+  })
+})

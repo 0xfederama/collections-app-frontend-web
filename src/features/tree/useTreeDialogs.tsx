@@ -4,6 +4,7 @@ import { useMatch, useNavigate } from 'react-router'
 import { useToast } from '../../components/ui'
 import type { SortableMove } from '../../components/ui/sortable'
 import { treeKeys } from '../../data/keys'
+import { useMe } from '../account'
 import { useTreeIndex, type TreeData } from './api'
 import { DeleteDialog } from './DeleteDialog'
 import { findNode, isOpenWithin, nameOf } from './treeLookup'
@@ -26,10 +27,11 @@ import { MoveDialog, listPathOptions } from './MoveDialog'
 import { NameDialog } from './NameDialog'
 import { countsText } from '../trash'
 import { buildSortable, subtreeCounts } from './order'
+import { SharingDialogs } from './sharing/SharingDialogs'
 
 type DialogState =
   | { type: 'create'; kind: 'folder' | 'list'; parentId: string | null }
-  | { type: 'rename' | 'move' | 'delete' | 'icon'; id: string }
+  | { type: 'rename' | 'move' | 'delete' | 'icon' | 'share' | 'leave'; id: string }
 
 /** What the menus can ask for. Every method takes ids, so a menu never holds a stale object. */
 export interface TreeActions {
@@ -40,6 +42,10 @@ export interface TreeActions {
   remove: (id: string) => void
   /** Opens the list icon popover (lists only; a folder has no icon). */
   changeIcon: (id: string) => void
+  /** Opens the Share dialog (owner) or the read-only People list (member) of a top-level folder. */
+  share: (id: string) => void
+  /** Asks to leave a top-level folder shared with the user. */
+  leave: (id: string) => void
   /** Moves a node one place among its siblings of the same kind (-1 up, +1 down). */
   nudge: (id: string, delta: -1 | 1) => void
   /** Position among same-kind siblings, or `undefined` while the tree is loading. */
@@ -75,6 +81,7 @@ export function useTreeDialogs({
   const queryClient = useQueryClient()
   const toast = useToast()
   const navigate = useNavigate()
+  const meId = useMe().data?.id
   const activeListId = useMatch({ path: '/lists/:listId', end: false })?.params.listId ?? null
 
   const createFolder = useCreateFolder()
@@ -105,6 +112,7 @@ export function useTreeDialogs({
     moveFolder,
     moveList,
     reorder,
+    meId,
   })
 
   const actions: TreeActions = {
@@ -114,6 +122,8 @@ export function useTreeDialogs({
     move: (id) => setDialog({ type: 'move', id }),
     remove: (id) => setDialog({ type: 'delete', id }),
     changeIcon: (id) => setDialog({ type: 'icon', id }),
+    share: (id) => setDialog({ type: 'share', id }),
+    leave: (id) => setDialog({ type: 'leave', id }),
     position,
     applyMove,
     canDropInto,
@@ -176,7 +186,10 @@ export function useTreeDialogs({
       )
     } else {
       const node = findNode(index.nodes, dialog.id)
-      if (!node) {
+      if (!node && dialog.type === 'leave') {
+        // Leaving removes the folder from this user's tree: the dialog finishes its own toast.
+        content = <Vanished onGone={close} />
+      } else if (!node) {
         // Removed elsewhere while the dialog was open: close it and say why.
         content = (
           <Vanished
@@ -264,6 +277,18 @@ export function useTreeDialogs({
               />
             )
           }
+        } else if (dialog.type === 'share' || dialog.type === 'leave') {
+          if (node.kind === 'folder')
+            content = (
+              <SharingDialogs
+                key={`${dialog.type}-${node.id}`}
+                type={dialog.type}
+                folder={node.folder}
+                index={index}
+                activeListId={activeListId}
+                onClose={close}
+              />
+            )
         } else if (dialog.type === 'delete') {
           content = (
             <DeleteDialog

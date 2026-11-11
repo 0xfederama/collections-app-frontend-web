@@ -1,5 +1,6 @@
 import type { SortableSlot } from '../../components/ui/sortable'
 import type { Folder, List, TreeData, TreeIndex, TreeNode } from './api'
+import { folderRights } from './sharing/rights'
 
 export type SiblingKind = 'folder' | 'list'
 
@@ -44,11 +45,18 @@ export function buildSortable(nodes: readonly TreeNode[]) {
 
 /**
  * Whether dropping `sourceId` (a folder or a list) onto folder `folderId` is a real move: not onto
- * itself, not into its own descendants (the server refuses a cycle), not where it already is.
+ * itself, not into its own descendants (the server refuses a cycle), not where it already is, and
+ * not a folder `meId` may not move (someone else's, or one with members: F-027).
  */
-export function canDropInto(index: TreeIndex, sourceId: string, folderId: string): boolean {
+export function canDropInto(
+  index: TreeIndex,
+  sourceId: string,
+  folderId: string,
+  meId?: string,
+): boolean {
   if (sourceId === folderId) return false
   const folder = index.folders.get(sourceId)
+  if (folder && !folderRights(folder, meId).canMove) return false
   const list = index.lists.get(sourceId)
   if (!folder && !list) return false
   if ((folder ? folder.parent_folder_id : list?.folder_id) === folderId) return false
