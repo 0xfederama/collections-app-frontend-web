@@ -31,7 +31,7 @@ export function AccountSection() {
       </div>
     )
   }
-  const { name, email, avatar_url, dev_identities } = me.data
+  const { name, email, avatar_url, dev_identities, identity_source } = me.data
   return (
     <div className="flex flex-col gap-4 text-ui">
       <div className="flex items-center gap-3">
@@ -41,8 +41,9 @@ export function AccountSection() {
           {name?.trim() ? <span className="truncate text-text-muted">{email}</span> : null}
         </div>
       </div>
-      {/* Dev and test servers have no Access, so there is nothing to log out of. */}
-      {dev_identities === null ? (
+      {/* Only an Access session can be logged out of: the home network is always the owner (D-150) and dev/test
+          servers use fake identities, so neither gets a Log out. */}
+      {identity_source === 'access' ? (
         <a className={`${externalLink} self-start`} href="/cdn-cgi/access/logout">
           Log out
         </a>

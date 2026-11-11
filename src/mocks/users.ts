@@ -21,7 +21,7 @@ const MEMBER_USER = {
 /** Everyone who has "signed in once": what `GET /users` lists and a share-by-email can find. */
 export const KNOWN_USERS = [OWNER_USER, MEMBER_USER]
 
-export const OWNER_ME = { ...OWNER_USER, dev_identities: null } as const
+export const OWNER_ME = { ...OWNER_USER, identity_source: 'access', dev_identities: null } as const
 
 /** Owner of a new folder or list: the fixture owner at the top level, null when nested. */
 export const ownerFor = (parentId: string | null): string | null =>
