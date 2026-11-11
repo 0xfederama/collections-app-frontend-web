@@ -29,6 +29,8 @@ The folder/list tree, its query and index, and folder and list writes including 
 - `ListActionsMenu({ list })`, `SidebarTree()`, `ListGate({ listId, children, slot? })`.
 - `useRefreshDetails(listId)` → `{ run, pending }`; `canRefreshDetails(list)`, `refreshSummary(counts)`.
 
+- `sharing/`: `folderRights`, `ShareDialog`, `LeaveDialog`, `SharingDialogs`, `useShareFolder`, `useRemoveFolderMember` (F-027 W3: share, remove, stop sharing, leave; top-level folders only, sidebar menu only).
+
 ## Gotchas
 
 - Create and icon update send `icon` and `icon_color`; icon update uses the list snapshot's version in `If-Match`.
