@@ -7,6 +7,15 @@ import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from '../../../app/router'
 import { ToastProvider } from '../../../components/ui'
 import { exampleResponses } from '../../../mocks/fixtures'
+import { OWNER_ME, OWNER_USER_ID } from '../../../mocks/users'
+
+/** The fixture owner as `GET /users` lists it (no `dev_identities`). */
+const OWNER_USER = {
+  id: OWNER_ME.id,
+  email: OWNER_ME.email,
+  name: OWNER_ME.name,
+  avatar_url: OWNER_ME.avatar_url,
+}
 import { problemResponse } from '../../../mocks/problems'
 import { server } from '../../../mocks/server'
 import { createTestQueryClient, mockViewport } from '../../../test-utils'
@@ -519,5 +528,68 @@ describe('AT-08 web: description history (editor open)', () => {
     expect(
       await within(drawer).findByText('The server could not be reached. Nothing was restored.'),
     ).toBeVisible()
+  })
+})
+
+describe('F-027 W6 description history authors', () => {
+  const versionsUrl = `${contentUrl}/versions`
+  const usersUrl = `${location.origin}/api/v1/users`
+
+  async function openHistory() {
+    const { user } = await openForm()
+    await user.click(historyButton())
+    return screen.findByRole('dialog', { name: 'History' })
+  }
+
+  it('F-027 W6 shows each version author with an avatar and label', async () => {
+    const drawer = await openHistory()
+    const [first, second] = (await within(drawer).findAllByRole('listitem')) as [
+      HTMLElement,
+      HTMLElement,
+    ]
+    expect(first).toHaveTextContent('Version 2 (current)')
+    expect(await within(first).findByText('Owner')).toBeInTheDocument()
+    expect(within(first).getByText('by')).toBeInTheDocument()
+    expect(await within(second).findByText('Owner')).toBeInTheDocument()
+  })
+
+  it('F-027 W6 shows no author line for a version with a null author_user_id', async () => {
+    server.use(
+      http.get(versionsUrl, () =>
+        HttpResponse.json({
+          data: [
+            {
+              version: 2,
+              size_bytes: 36,
+              author_user_id: null,
+              created_at: '2026-10-14T10:00:00Z',
+            },
+            {
+              version: 1,
+              size_bytes: 8,
+              author_user_id: OWNER_USER_ID,
+              created_at: '2026-10-14T09:45:00Z',
+            },
+          ],
+        }),
+      ),
+    )
+    const drawer = await openHistory()
+    const [first, second] = (await within(drawer).findAllByRole('listitem')) as [
+      HTMLElement,
+      HTMLElement,
+    ]
+    expect(within(first).queryByText('by')).not.toBeInTheDocument()
+    expect(await within(second).findByText('Owner')).toBeInTheDocument()
+  })
+
+  it('F-027 W6 shows the e-mail for an author with no name', async () => {
+    server.use(
+      http.get(usersUrl, () => HttpResponse.json({ data: [{ ...OWNER_USER, name: null }] })),
+    )
+    const drawer = await openHistory()
+    const [first] = (await within(drawer).findAllByRole('listitem')) as [HTMLElement]
+    expect(await within(first).findByText(OWNER_USER.email)).toBeInTheDocument()
+    expect(within(first).getByText('by')).toBeInTheDocument()
   })
 })

@@ -4,6 +4,7 @@ import { MarkdownView } from '../../../components/markdown'
 import { AlertDialog, Button, Drawer, Skeleton, useToast } from '../../../components/ui'
 import { ApiError, errorMessage, NetworkError } from '../../../lib/api'
 import { contentKeys, itemKeys } from '../../../data/keys'
+import { findUser, UserMark, useUsers } from '../../account'
 import type { ItemContent } from '../api'
 import { useContentVersion, useContentVersions, useRestoreContent } from './api'
 import { formatBytes, relativeTime } from './limits'
@@ -35,6 +36,7 @@ export function HistoryDrawer({
   const [problem, setProblem] = useState<string | null>(null)
   const preview = useContentVersion(itemId, selected)
   const restore = useRestoreContent()
+  const users = useUsers()
 
   const pruned = preview.error instanceof ApiError && preview.error.status === 404
 
@@ -115,27 +117,35 @@ export function HistoryDrawer({
           <p className="text-ui text-text-muted">No saved versions yet.</p>
         ) : (
           <ul aria-label="Versions" className="flex flex-col gap-1">
-            {versions.data.map((entry) => (
-              <li key={entry.version}>
-                <button
-                  type="button"
-                  aria-pressed={selected === entry.version}
-                  onClick={() => select(entry.version)}
-                  className="flex w-full items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-left text-ui hover:bg-border aria-pressed:border-accent aria-pressed:bg-border pointer-coarse:min-h-11"
-                >
-                  <span>
-                    Version {entry.version}
-                    {entry.version === currentVersion && ' (current)'}
-                    <span className="block font-mono text-secondary text-text-muted">
-                      <time dateTime={entry.created_at}>{relativeTime(entry.created_at)}</time>
+            {versions.data.map((entry) => {
+              const author = findUser(users.data, entry.author_user_id)
+              return (
+                <li key={entry.version}>
+                  <button
+                    type="button"
+                    aria-pressed={selected === entry.version}
+                    onClick={() => select(entry.version)}
+                    className="flex w-full items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-left text-ui hover:bg-border aria-pressed:border-accent aria-pressed:bg-border pointer-coarse:min-h-11"
+                  >
+                    <span>
+                      Version {entry.version}
+                      {entry.version === currentVersion && ' (current)'}
+                      <span className="block font-mono text-secondary text-text-muted">
+                        <time dateTime={entry.created_at}>{relativeTime(entry.created_at)}</time>
+                      </span>
+                      {author && (
+                        <span className="block text-secondary text-text-muted">
+                          by <UserMark user={author} size={16} />
+                        </span>
+                      )}
                     </span>
-                  </span>
-                  <span className="font-mono text-secondary text-text-muted">
-                    {formatBytes(entry.size_bytes)}
-                  </span>
-                </button>
-              </li>
-            ))}
+                    <span className="font-mono text-secondary text-text-muted">
+                      {formatBytes(entry.size_bytes)}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
           </ul>
         ))}
 

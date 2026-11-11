@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw/http'
 import { devItemStore } from './devItems'
 import { problemResponse } from './problems'
+import { OWNER_USER_ID } from './users'
 
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 
@@ -84,6 +85,7 @@ export const devContentHandlers = [
     const data = [...versionsOf(id)].reverse().map((v) => ({
       version: v.version,
       size_bytes: new TextEncoder().encode(v.body).length,
+      author_user_id: OWNER_USER_ID,
       created_at: v.created_at,
     }))
     return HttpResponse.json({ data })

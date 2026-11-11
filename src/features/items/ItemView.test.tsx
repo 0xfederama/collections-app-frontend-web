@@ -9,6 +9,15 @@ import { mockViewport, renderAt } from '../../test-utils'
 import type { Item } from './api'
 import { createContentBackend } from './content/contentTestBackend'
 import { mockTypes } from '../../mocks/types'
+import { OWNER_ME } from '../../mocks/users'
+
+/** The fixture owner as `GET /users` lists it (no `dev_identities`). */
+const OWNER_USER = {
+  id: OWNER_ME.id,
+  email: OWNER_ME.email,
+  name: OWNER_ME.name,
+  avatar_url: OWNER_ME.avatar_url,
+}
 
 const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
 const ITEM = '7c1e5a10-0000-4000-8000-000000000101'
@@ -693,5 +702,59 @@ describe('F016-W1 book item detail', () => {
     await user.click(screen.getByRole('button', { name: 'Add field' }))
     expect(await screen.findByRole('menuitem', { name: 'ISBN' })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Open Library id' })).not.toBeInTheDocument()
+  })
+})
+
+describe('F-027 W6 item footer: Updated by', () => {
+  const usersUrl = `${location.origin}/api/v1/users`
+
+  it('F-027 W6 shows "Updated by" the fixture owner with an avatar and the date', async () => {
+    await renderItem()
+    const footer = within(screen.getByRole('contentinfo'))
+    expect(await footer.findByText(/^Updated by/)).toBeInTheDocument()
+    expect(footer.getByText('Owner')).toBeInTheDocument()
+    expect(footer.getByTestId('user-avatar-fallback')).toHaveTextContent('O')
+    expect(footer.getByText(/^Updated by/).querySelector('time')).toBeInTheDocument()
+  })
+
+  it('F-027 W6 shows nothing about a person when updated_by_user_id is null', async () => {
+    overrideItem({ updated_by_user_id: null })
+    let served = false
+    server.use(
+      http.get(usersUrl, () => {
+        served = true
+        return HttpResponse.json({ data: [OWNER_USER] })
+      }),
+    )
+    await renderItem()
+    await waitFor(() => expect(served).toBe(true))
+    const footer = within(screen.getByRole('contentinfo'))
+    expect(footer.queryByText(/by/)).not.toBeInTheDocument()
+    expect(footer.getByText(/^Updated/)).toBeInTheDocument()
+  })
+
+  it('F-027 W6 shows nothing when the user is not in the known users', async () => {
+    let served = false
+    server.use(
+      http.get(usersUrl, () => {
+        served = true
+        return HttpResponse.json({ data: [] })
+      }),
+    )
+    await renderItem()
+    await waitFor(() => expect(served).toBe(true))
+    const footer = within(screen.getByRole('contentinfo'))
+    expect(footer.queryByText(/^Updated by/)).not.toBeInTheDocument()
+    expect(footer.getByText(/^Updated/)).toBeInTheDocument()
+  })
+
+  it('F-027 W6 falls back to the e-mail when the user has no name', async () => {
+    server.use(
+      http.get(usersUrl, () => HttpResponse.json({ data: [{ ...OWNER_USER, name: null }] })),
+    )
+    await renderItem()
+    const footer = within(screen.getByRole('contentinfo'))
+    expect(await footer.findByText(OWNER_USER.email)).toBeInTheDocument()
+    expect(footer.queryByText('Owner')).not.toBeInTheDocument()
   })
 })

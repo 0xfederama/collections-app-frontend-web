@@ -3,6 +3,7 @@ import { useLocation } from 'react-router'
 import { PageHeaderSlot } from '../../components/PageHeaderSlot'
 import { Button } from '../../components/ui'
 import { cx } from '../../lib/cx'
+import { findUser, UserMark, useUsers } from '../account'
 import { useTypes } from '../settings'
 import { ListIconMark } from '../lists'
 import { useItemActions, ItemActions } from './ItemActions'
@@ -31,6 +32,8 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
   const definitions = useTypes()
   const definition = typeDefinition(definitions.data, item.type)
   const actions = useItemActions(item)
+  const users = useUsers()
+  const updatedBy = findUser(users.data, item.updated_by_user_id)
   const { search } = useLocation()
   // "Add website" in the links row asks the details block to open the website editor.
   const [websiteRequest, setWebsiteRequest] = useState(0)
@@ -92,6 +95,11 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
         <ItemActions actions={actions} />
         <p className="text-secondary text-text-muted">
           Updated{' '}
+          {updatedBy && (
+            <>
+              by <UserMark user={updatedBy} /> ·{' '}
+            </>
+          )}
           <time dateTime={item.updated_at} className="font-mono">
             {formatDate(item.updated_at)}
           </time>

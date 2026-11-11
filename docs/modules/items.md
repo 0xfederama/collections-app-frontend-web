@@ -11,6 +11,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `form/`: `draft.ts` (Draft model), `validate.ts`, `patch.ts` (`toFields`, `buildPatch`), `price.ts`, `serverErrors.ts` (422 mapping), `dump.ts` (copy draft).
 - `inline/`: `InlineField`, `FieldBlock` ("+ Add field"), `FieldEditor` (✓ / ✕ shell), `SiteLink.tsx` (website and URL fields as links), `editors.tsx`, `controls.tsx`, `PriceInputs.tsx`, `StreamingInputs.tsx`, `StreamingPlatforms.tsx`, `fields.ts`, `guard.tsx`.
 - `content/`: `DescriptionView`, `DescriptionEditor` (lazy `MarkdownEditor`, CodeMirror), `DescriptionField`, `HistoryDrawer`, `api.ts`.
+- Who changed (F-027 W6): the item footer reads "Updated by <avatar> name · date" when `updated_by_user_id` resolves through `useUsers()` (else the plain "Updated <date>"); history rows show "by <avatar> name" from `author_user_id`. Both use `UserMark` from `features/account`.
 - `image/`: `ImageDialog`, `ImageSection`, `ImageStatus` (busy and status types), `api.ts`, `upload.ts`.
 - `types/index.ts`: helpers over the API type definitions (no static registry); `typeDefinition` returns built-in fields only.
 - `TitleLookupField.tsx`, `lookup.ts`, `LookupStatus.tsx`: TMDB suggestions (movie and TV) and the pending line for books.
