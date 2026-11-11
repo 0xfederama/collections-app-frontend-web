@@ -7,7 +7,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 ## Key files
 
 - `index.ts`: public face; `treeKeys` is in `src/data/keys.ts`.
-- `api.ts`: tree query, types and index; `treeLookup.ts`: `findNode`, `nameOf`, `isOpenWithin`.
+- `api.ts`: tree query, types and index; `treeLookup.ts`: `findNode`, `nameOf`, `isOpenWithin`, `isInSharedFolder`.
 - `SidebarTree.tsx`, `RailTree.tsx`: sidebar and collapsed rail.
 - `mutations.ts`: folder/list writes, reorder and icon updates; success calls `invalidateContent`.
 - `treeMoves.ts`: move actions behind the menus and dialogs.
@@ -22,6 +22,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 ## Interfaces
 
 - `useTree()`, `useTreeIndex()`, `createTreeIndex(data)`: tree data and index.
+- `isInSharedFolder(index, id)`: `true` when `id` is a shared top-level folder or sits inside one.
 - `useCreateList()`, `useUpdateListIcon()`, `useMoveList()`, `useDeleteList()`, `useReorderSiblings()`: mutations.
 - `useTreeDialogs()`: tree actions and dialogs.
 - `ListIconEdit({ list, open, onOpenChange, children?, anchorEl?, onCloseAutoFocus? })`: list icon popover (wraps a trigger child, or opens beside `anchorEl`).
@@ -38,4 +39,5 @@ The folder/list tree, its query and index, and folder and list writes including 
 - "Refresh details" is in the list header "…" menu only, shown for movie and TV lists with items. It posts `lookup-refresh` (no `If-Match`), shows a "Refreshing details…" toast, then invalidates content. "Run again" (action on the result toast) appears while `remaining` > 0. Covered by `e2e/17-refresh-details.spec.ts`.
 - Folder and list names share one text column. The "New" row uses the same 8 px inset, 22 px icon box and gap as a top-level list row; `px-2!` overrides the Button size padding. `e2e/19-tree-new-row.spec.ts` (chromium) checks the alignment.
 - Create/move bodies include `folder_id` (`null` = top level); reorder is within same-kind siblings under one parent.
+- Shared folders (F-027) get the two-person `SharedBadge` on their icon in the sidebar and the rail, and ", shared" in the accessible name. Only folders are badged here; a list inside a shared folder is shared through it (the badge shows on [home](home.md) quick links), a top-level list never is.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for full interaction details.
