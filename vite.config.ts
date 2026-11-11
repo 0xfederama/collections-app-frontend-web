@@ -14,6 +14,19 @@ const dropMockWorker = (): Plugin => ({
   },
 })
 
+// Same as the Caddyfile route (D-155): exactly /privacy serves the static public/privacy.html, not the SPA.
+const privacyPage = (): Plugin => {
+  const rewrite = (req: { url?: string }, _res: unknown, next: () => void) => {
+    if (req.url?.split('?')[0] === '/privacy') req.url = '/privacy.html'
+    next()
+  }
+  return {
+    name: 'privacy-page',
+    configureServer: (server) => void server.middlewares.use(rewrite),
+    configurePreviewServer: (server) => void server.middlewares.use(rewrite),
+  }
+}
+
 // Build-time constants for Settings > Connection: the API contract tag the client was generated from, and the app version.
 const readJson = (file: string) =>
   JSON.parse(readFileSync(join(process.cwd(), file), 'utf8')) as Record<string, string>
@@ -29,7 +42,7 @@ export default defineConfig(({ mode }) => {
       __API_CONTRACT_TAG__: JSON.stringify(readJson('api/openapi.lock.json').tag),
       __APP_VERSION__: JSON.stringify(readJson('package.json').version),
     },
-    plugins: [react(), tailwindcss(), dropMockWorker()],
+    plugins: [react(), tailwindcss(), dropMockWorker(), privacyPage()],
     server: {
       port: 5173,
       strictPort: true,

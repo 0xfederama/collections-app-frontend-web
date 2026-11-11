@@ -51,6 +51,14 @@
 		reverse_proxy {$API_UPSTREAM:api:8080}
 	}
 
+	# Public privacy policy (roadmap 34, D-155): a static, self-contained page outside the SPA. On the public host it is
+	# reachable without login through its own Access Bypass app, so it must load no /assets/*. Exactly /privacy.
+	handle /privacy {
+		rewrite * /privacy.html
+		header Cache-Control no-cache
+		file_server
+	}
+
 	# Hashed build output. No SPA fallback here, so a missing asset is a real 404.
 	handle /assets/* {
 		@hit file

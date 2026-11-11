@@ -85,8 +85,23 @@ const page = await get('/lists/x', { host: 'raspberrypi.local' })
 if (page.status !== 200)
   fail(`/lists/x with Host raspberrypi.local answered ${page.status}, expected 200`)
 
+// D-155: the public privacy page is the static file, not the SPA, and is revalidated.
+const privacy = await new Promise((ok, ko) => {
+  const req = request({ host: '127.0.0.1', port, path: '/privacy' }, (res) => {
+    let body = ''
+    res.on('data', (chunk) => (body += chunk))
+    res.on('end', () => ok({ status: res.statusCode, headers: res.headers, body }))
+  })
+  req.on('error', ko)
+  req.end()
+})
+if (privacy.status !== 200) fail(`/privacy answered ${privacy.status}, expected 200`)
+if (!privacy.body.includes('<h1>Privacy policy</h1>')) fail('/privacy did not serve privacy.html')
+if (privacy.headers['cache-control'] !== 'no-cache')
+  fail(`/privacy Cache-Control is ${privacy.headers['cache-control']}, expected no-cache`)
+
 console.log(
-  'proxy-headers-check: LAN host served, Cf-Ray / Cf-Connecting-Ip / Cf-Access-Jwt-Assertion passed through unchanged',
+  'proxy-headers-check: /privacy served; LAN host served, Cf-Ray / Cf-Connecting-Ip / Cf-Access-Jwt-Assertion passed through unchanged',
 )
 stop()
 upstream.close()

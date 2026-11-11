@@ -8,6 +8,7 @@ Production web image (Q-03w, D-069): a Node 24 build stage, then a Caddy 2.11.7 
 
 - `Dockerfile`: build stage (`npm ci`, `npm run build`, renders the CSP hash into the Caddyfile), Caddy binary without file capabilities, final Alpine image.
 - `Caddyfile`: listener, security headers, CSP template (`__CSP_SCRIPT_HASH__`), cache rules, SPA fallback, proxy.
+- `/privacy` (D-155): `public/privacy.html` served by an explicit `handle /privacy` (no-cache) before the SPA fallback. Public through a Cloudflare Access Bypass app, so it is self-contained: inline `<style>`, system fonts, no scripts, no assets, no external requests.
 - `scripts/csp-hash.mjs`: prints the `'sha256-…'` of the single inline script in a built `index.html`.
 - `scripts/docker-build.mjs`: `npm run docker:build`; fails early with a clear message when Docker is not running.
 - `.dockerignore`: keeps `node_modules`, `dist`, `.env*` (except `.env.example`) and `.git` out of the build context.

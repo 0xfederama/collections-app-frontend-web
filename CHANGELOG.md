@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.2.0 — 2026-11-11
+
+### Added
+
+- Public privacy policy at `/privacy` (roadmap 34, D-155): a static, self-contained page (`public/privacy.html`: inline style, system fonts, no scripts, no external requests, light and dark) served by Caddy with `Cache-Control: no-cache` before the SPA fallback. On collections.federama.dev it is reachable without login through its own Cloudflare Access Bypass app; it also works on the LAN and the test stack. The text is the policy previously published on federama.dev, now covering Collections only.
+- Settings > About links to the privacy policy.
+
 ## 2.31.0 — 2026-11-06
 
 ### Changed

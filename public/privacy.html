@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Privacy policy · Collections</title>
+    <!-- Roadmap 34 (D-155): public page, outside Access. Self-contained: inline style only, no scripts,
+         no fonts, no images, no external requests (every other path on the public host needs a login). -->
+    <style>
+      :root {
+        --bg: #ffffff;
+        --surface: #f6f6f7;
+        --border: #e6e6e9;
+        --text: #0b0b0c;
+        --muted: #55555c;
+        --accent: #2d5bff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b0b0c;
+          --surface: #18181b;
+          --border: #26262b;
+          --text: #f4f4f5;
+          --muted: #a8a8b0;
+          --accent: #4a72ff;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.6 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          'Helvetica Neue',
+          Arial,
+          sans-serif;
+      }
+      main {
+        max-width: 42rem;
+        margin: 0 auto;
+        padding: max(2rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+          max(3rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+      }
+      .app {
+        margin: 0 0 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--muted);
+      }
+      .app span {
+        color: var(--accent);
+      }
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: 2rem;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+      h2 {
+        margin: 2rem 0 0.5rem;
+        font-size: 1.25rem;
+        line-height: 1.3;
+      }
+      .updated {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+        font-size: 0.875rem;
+      }
+      p {
+        margin: 0 0 1rem;
+      }
+      a {
+        color: var(--accent);
+        text-underline-offset: 3px;
+        overflow-wrap: anywhere;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+        padding: 0.1em 0.35em;
+        border-radius: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+      .note {
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+      footer {
+        margin-top: 2.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="app">Collections<span>.</span></p>
+      <h1>Privacy policy</h1>
+      <p class="updated">Last updated: 2026-11-11</p>
+
+      <p>
+        This policy covers <strong>Collections</strong>, a personal, non-commercial, self-hosted
+        project run by me, Federico Ramacciotti, as an individual.
+      </p>
+      <p>
+        Collections is a private app for organizing lists of items (books, films, etc.). It runs on
+        my own Raspberry Pi at home and is reachable at collections.federama.dev only by people I
+        have invited. It uses two Google OAuth apps.
+      </p>
+
+      <h2>“Collections”: Sign in with Google</h2>
+      <p>
+        Signing in to collections.federama.dev goes through Cloudflare Access with “Sign in with
+        Google”, using the scopes <code>openid</code>, <code>email</code> and <code>profile</code>.
+        Cloudflare Access only checks whether your email address is on my allow list.
+      </p>
+      <p>
+        The app receives your email address, plus your name and profile picture if Google provides
+        them, and stores them on my server to identify you and to show who owns or shares a list. No
+        passwords are stored. Cloudflare processes the login as part of Cloudflare Access; see
+        <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener noreferrer"
+          >Cloudflare’s privacy policy</a
+        >.
+      </p>
+
+      <h2>“Collections Backup”: Google Drive</h2>
+      <p>
+        This app is used only by the server’s backup job (rclone) with my own Google account, with
+        the <code>drive.file</code> scope, which means it can only see files it created itself.
+        Every night it uploads an encrypted backup of the app’s data (the database plus uploaded
+        images, encrypted before leaving the server) to my own Google Drive. It never reads, lists
+        or changes any other Drive files.
+      </p>
+
+      <h2>How Google user data is used</h2>
+      <p>
+        Google user data is used only to provide the features described above. It is not sold, not
+        shared with third parties (except Cloudflare and Google as part of the login and storage
+        described above), not used for advertising, and not used to train AI or machine-learning
+        models.
+      </p>
+      <p>
+        The use of information received from Google APIs adheres to the
+        <a
+          href="https://developers.google.com/terms/api-services-user-data-policy"
+          rel="noopener noreferrer"
+          >Google API Services User Data Policy</a
+        >, including the Limited Use requirements.
+      </p>
+
+      <h2>Retention and deletion</h2>
+      <p>
+        Account data is kept while you have access to Collections. You can ask me to delete your
+        account and data at any time by writing to
+        <a href="mailto:vgfede@gmail.com">vgfede@gmail.com</a>. Backups rotate and expire: local
+        copies within about a month, Google Drive copies once they are older than the last 30
+        backups.
+      </p>
+      <p>
+        You can also revoke the app’s access to your Google account at any time at
+        <a href="https://myaccount.google.com/permissions" rel="noopener noreferrer"
+          >myaccount.google.com/permissions</a
+        >.
+      </p>
+
+      <h2>Cookies and analytics</h2>
+      <p class="note">
+        This page sets no cookies, has no analytics and loads nothing from other sites. The
+        Cloudflare Access login sets its own session cookie for the app.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions about this policy:
+        <a href="mailto:vgfede@gmail.com">vgfede@gmail.com</a>.
+      </p>
+
+      <footer>© 2026 Federico Ramacciotti</footer>
+    </main>
+  </body>
+</html>
