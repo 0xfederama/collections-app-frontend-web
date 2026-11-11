@@ -1,5 +1,5 @@
 import { Link, useMatch } from 'react-router'
-import { Tooltip } from '../../components/ui'
+import { SharedBadge, Tooltip } from '../../components/ui'
 import { Folder } from '../../components/ui/icons'
 import { ListIconMark } from '../lists'
 import { cx } from '../../lib/cx'
@@ -39,12 +39,14 @@ export function RailTree({ onOpenFolder }: { onOpenFolder: () => void }) {
               <Tooltip content={node.folder.name} side="right">
                 <button
                   type="button"
-                  aria-label={node.folder.name}
+                  aria-label={node.folder.shared ? `${node.folder.name}, shared` : node.folder.name}
                   aria-current={current ? 'true' : undefined}
                   onClick={() => openFolder(node.id)}
                   className={cx(itemClass, 'select-none')}
                 >
-                  <Folder aria-hidden className="size-5" />
+                  <SharedBadge shared={node.folder.shared}>
+                    <Folder aria-hidden className="size-5" />
+                  </SharedBadge>
                 </button>
               </Tooltip>
             </li>

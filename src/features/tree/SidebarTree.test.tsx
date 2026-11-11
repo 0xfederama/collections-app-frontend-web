@@ -3,7 +3,7 @@ import { ToastProvider } from '../../components/ui'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from '../../app/router'
 import { exampleResponses } from '../../mocks/fixtures'
@@ -19,6 +19,13 @@ const VEHICLES = '7c1e5a10-0000-4000-8000-000000000003'
 const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
 const MOTORBIKES = '7c1e5a10-0000-4000-8000-000000000012'
 const KEY = 'collection:tree-expanded'
+
+/** The fixture tree with the top-level Media folder shared (F-027). The fixture itself is unshared. */
+function sharedMediaTree(): TreeData {
+  const tree = structuredClone(exampleResponses.getTree.body) as TreeData
+  tree.folders.find((f) => f.name === 'Media')!.shared = true
+  return tree
+}
 
 /** Like `renderAt`, but hands back the router so tests can navigate and spy. */
 function renderRouter(path: string) {
@@ -312,5 +319,34 @@ describe('F006-W2 sidebar tree keyboard reach', () => {
     expect(second).not.toBe(first)
     expect(second).toHaveAttribute('tabindex', '0')
     expect(first).toHaveAttribute('tabindex', '-1')
+  })
+})
+
+describe('F-027 shared folder badge in the sidebar', () => {
+  beforeEach(() => {
+    server.use(http.get(treeUrl, () => HttpResponse.json(sharedMediaTree())))
+  })
+
+  it('marks a shared top-level folder with the two-person badge and says "shared" in its name', async () => {
+    renderAt('/')
+    const media = await within(sidebar()).findByRole('treeitem', { name: 'Media, shared' })
+    expect(within(media).getByTestId('shared-badge')).toBeInTheDocument()
+  })
+
+  it('gives an unshared folder neither the badge nor the word in its name', async () => {
+    renderAt('/')
+    const vehicles = await within(sidebar()).findByRole('treeitem', { name: 'Vehicles' })
+    expect(within(vehicles).queryByTestId('shared-badge')).not.toBeInTheDocument()
+  })
+
+  it('gives a folder and a list inside a shared folder no badge of their own', async () => {
+    const user = userEvent.setup()
+    renderAt('/')
+    await user.click(await within(sidebar()).findByRole('treeitem', { name: /Media/ }))
+    const movies = await within(sidebar()).findByRole('treeitem', { name: /Movies/ })
+    expect(within(movies).queryByTestId('shared-badge')).not.toBeInTheDocument()
+    await user.click(movies)
+    const watchlist = within(sidebar()).getByRole('treeitem', { name: /Watchlist/ })
+    expect(within(watchlist).queryByTestId('shared-badge')).not.toBeInTheDocument()
   })
 })
