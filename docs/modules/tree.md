@@ -31,6 +31,8 @@ The folder/list tree, its query and index, and folder and list writes including 
 
 - `sharing/`: `folderRights`, `ShareDialog`, `LeaveDialog`, `SharingDialogs`, `useShareFolder`, `useRemoveFolderMember` (F-027 W3: share, remove, stop sharing, leave; top-level folders only, sidebar menu only).
 
+- `sharing/leavesBox.ts` (`leavesSharedBox`) + `sharing/MoveOutConfirm.tsx`: confirm before a move out of a shared folder (F-027 W5), used by MoveDialog, drag into a folder and the item Move.
+
 ## Gotchas
 
 - Create and icon update send `icon` and `icon_color`; icon update uses the list snapshot's version in `If-Match`.
