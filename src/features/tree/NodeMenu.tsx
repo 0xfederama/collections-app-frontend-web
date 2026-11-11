@@ -5,11 +5,14 @@ import {
   FolderInput,
   FolderPlus,
   ListPlus,
+  LogOut,
+  Users,
   Pencil,
   Smile,
   Trash2,
 } from '../../components/ui/icons'
 import type { TreeNode } from './api'
+import { folderRights } from './sharing/rights'
 import type { TreeActions } from './useTreeDialogs'
 
 const icon = (node: ReactNode) => node
@@ -21,10 +24,12 @@ const icon = (node: ReactNode) => node
 function nodeMenuItems(
   node: TreeNode,
   actions: TreeActions,
-  { changeIcon = false }: { changeIcon?: boolean } = {},
+  { changeIcon = false, meId }: { changeIcon?: boolean; meId?: string } = {},
 ): MenuItem[] {
   const id = node.id
   const items: MenuItem[] = []
+  // Sharing rules apply to folders only; lists (and the list header menu, which passes no `meId`) keep every entry.
+  const rights = node.kind === 'folder' ? folderRights(node.folder, meId) : undefined
   if (node.kind === 'folder') {
     items.push(
       {
@@ -47,16 +52,32 @@ function nodeMenuItems(
       icon: icon(<Smile />),
       onSelect: () => actions.changeIcon(id),
     })
-  items.push({ label: 'Move…', icon: icon(<FolderInput />), onSelect: () => actions.move(id) })
-  items.push(
-    { type: 'separator' },
-    {
-      label: 'Delete',
-      icon: icon(<Trash2 />),
-      destructive: true,
-      onSelect: () => actions.remove(id),
-    },
-  )
+  if (rights?.canShare)
+    items.push({ label: 'Share…', icon: icon(<Users />), onSelect: () => actions.share(id) })
+  if (rights?.canLeave)
+    items.push({ label: 'People…', icon: icon(<Users />), onSelect: () => actions.share(id) })
+  if (rights?.canMove ?? true)
+    items.push({ label: 'Move…', icon: icon(<FolderInput />), onSelect: () => actions.move(id) })
+  if (rights?.canLeave)
+    items.push(
+      { type: 'separator' },
+      {
+        label: 'Leave folder',
+        icon: icon(<LogOut />),
+        destructive: true,
+        onSelect: () => actions.leave(id),
+      },
+    )
+  if (rights?.canDelete ?? true)
+    items.push(
+      { type: 'separator' },
+      {
+        label: 'Delete',
+        icon: icon(<Trash2 />),
+        destructive: true,
+        onSelect: () => actions.remove(id),
+      },
+    )
   return items
 }
 
@@ -68,6 +89,7 @@ export function NodeMenu({
   className,
   leading,
   changeIcon,
+  meId,
 }: {
   node: TreeNode
   actions: TreeActions
@@ -77,6 +99,8 @@ export function NodeMenu({
   leading?: MenuItem[]
   /** Offer "Change icon" for a list (sidebar row only). */
   changeIcon?: boolean
+  /** The signed-in user: hides what they may not do to a top-level folder (sidebar row only). */
+  meId?: string
 }) {
   return (
     <Menu
@@ -85,7 +109,7 @@ export function NodeMenu({
           <Ellipsis aria-hidden />
         </IconButton>
       }
-      items={[...(leading ?? []), ...nodeMenuItems(node, actions, { changeIcon })]}
+      items={[...(leading ?? []), ...nodeMenuItems(node, actions, { changeIcon, meId })]}
     />
   )
 }

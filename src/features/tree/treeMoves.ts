@@ -17,6 +17,7 @@ export function createTreeMoves({
   moveFolder,
   moveList,
   reorder,
+  meId,
 }: {
   index: TreeIndex | undefined
   sortable: ReturnType<typeof buildSortable> | undefined
@@ -25,6 +26,8 @@ export function createTreeMoves({
   moveFolder: ReturnType<typeof useMoveFolder>
   moveList: ReturnType<typeof useMoveList>
   reorder: ReturnType<typeof useReorderSiblings>
+  /** The signed-in user, for the folders they may not move. */
+  meId?: string
 }) {
   const applyMove = ({ id, group, from, to, into }: SortableMove) => {
     if (into !== undefined) {
@@ -32,7 +35,7 @@ export function createTreeMoves({
       const folder = index?.folders.get(id)
       const list = index?.lists.get(id)
       const target = index?.folders.get(into)
-      if (!index || !target || !canDropInto(index, id, into)) return
+      if (!index || !target || !canDropInto(index, id, into, meId)) return
       const onError = () =>
         toast({
           kind: 'error',
@@ -79,7 +82,7 @@ export function createTreeMoves({
   }
 
   const dropInto = (sourceId: string, folderId: string) =>
-    !!index && canDropInto(index, sourceId, folderId)
+    !!index && canDropInto(index, sourceId, folderId, meId)
 
   return { position, applyMove, canDropInto: dropInto, nudge }
 }
