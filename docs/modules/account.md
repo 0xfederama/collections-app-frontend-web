@@ -11,6 +11,8 @@ Who is signed in and who else is in the workspace (F-027). Identity comes from C
 - `src/components/UserAvatar.tsx`: the picture or letter tile.
 - Account pane: `src/features/settings/AccountSection.tsx` (see [settings](settings.md)).
 
+- `UserMark({ user, size })`: small avatar + `userLabel`, for "by" lines (item footer, description history).
+
 ## Gotchas
 
 - `me.dev_identities` is non-null only on dev/test servers (no Access): no "Log out" there.
