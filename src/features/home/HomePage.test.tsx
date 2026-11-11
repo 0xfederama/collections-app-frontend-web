@@ -6,6 +6,7 @@ import { exampleResponses } from '../../mocks/fixtures'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
 import { mockViewport, renderAt } from '../../test-utils'
+import type { TreeData } from '../tree'
 
 const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
 const MOTORBIKES = '7c1e5a10-0000-4000-8000-000000000012'
@@ -22,6 +23,13 @@ async function openHome() {
   renderAt('/')
   await screen.findByRole('heading', { level: 1, name: 'Home' }, { timeout: 5000 })
   return user
+}
+
+/** The fixture tree with the top-level Media folder shared (F-027). The fixture itself is unshared. */
+function sharedMediaTree(): TreeData {
+  const tree = structuredClone(exampleResponses.getTree.body) as TreeData
+  tree.folders.find((f) => f.name === 'Media')!.shared = true
+  return tree
 }
 
 const quickLinks = () => screen.findByRole('list', { name: 'Your lists' })
@@ -178,5 +186,20 @@ describe('W-13 home: recently updated', () => {
     fail = false
     await user.click(screen.getByRole('button', { name: 'Retry' }))
     expect(await screen.findByRole('list', { name: 'Recently updated items' })).toBeInTheDocument()
+  })
+})
+
+describe('F-027 shared badge on home', () => {
+  it('badges a list inside a shared folder, not a list in an unshared folder', async () => {
+    server.use(http.get(treeUrl, () => HttpResponse.json(sharedMediaTree())))
+    await openHome()
+    const links = within(await quickLinks()).getAllByRole('link')
+    const [motorbikes, watchlist] = [links[0]!, links[1]!]
+    expect(motorbikes).toHaveAttribute('href', `/lists/${MOTORBIKES}`)
+    expect(watchlist).toHaveAttribute('href', `/lists/${WATCHLIST}`)
+    expect(within(watchlist).getByTestId('shared-badge')).toBeInTheDocument()
+    expect(watchlist).toHaveAccessibleName(/Watchlist, shared/)
+    expect(within(motorbikes).queryByTestId('shared-badge')).not.toBeInTheDocument()
+    expect(motorbikes).not.toHaveAccessibleName(/shared/)
   })
 })

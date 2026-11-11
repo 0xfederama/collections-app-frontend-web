@@ -21,3 +21,12 @@ export function isOpenWithin(index: TreeIndex, activeListId: string | null, id: 
     (activeListId === id || index.ancestorsOf(activeListId).some((a) => a.id === id))
   )
 }
+
+/**
+ * Whether `id` is a shared top-level folder or sits inside one (F-027, the two-person badge). A
+ * nested folder or list is shared through its top-level folder; a top-level list never is.
+ */
+export function isInSharedFolder(index: TreeIndex, id: string): boolean {
+  const root = index.ancestorsOf(id)[0] ?? index.folders.get(id)
+  return root?.shared === true
+}

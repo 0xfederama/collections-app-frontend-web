@@ -91,6 +91,7 @@ export {
   TriangleAlert,
   Trophy,
   Tv,
+  Users,
   Utensils,
   Volleyball,
   Wallet,

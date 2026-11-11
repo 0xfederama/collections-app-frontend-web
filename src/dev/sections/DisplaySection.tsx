@@ -3,11 +3,12 @@ import {
   Button,
   Card,
   EmptyState,
+  SharedBadge,
   typeIcons,
   typeLabels,
   type ItemType,
 } from '../../components/ui'
-import { Inbox } from '../../components/ui/icons'
+import { Folder, Inbox } from '../../components/ui/icons'
 import { Row, Section } from './shared'
 
 export function DisplaySection() {
@@ -26,6 +27,19 @@ export function DisplaySection() {
           </a>
           <p className="tabular text-ui text-text-muted">€1,200–1,500</p>
         </Card>
+      </Row>
+      <Row label="Shared badge (F-027: a shared folder, a list inside one)">
+        <SharedBadge shared={false}>
+          <Folder className="size-6 text-text-muted" />
+        </SharedBadge>
+        <SharedBadge shared>
+          <Folder className="size-6 text-text-muted" />
+        </SharedBadge>
+        <SharedBadge shared>
+          <span className="grid size-8 place-items-center rounded-sm border border-border bg-fill text-text-muted">
+            <Folder className="size-4" />
+          </span>
+        </SharedBadge>
       </Row>
       <Card>
         <EmptyState

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { devTree } from '../../mocks/devData'
 import { createTreeIndex, type TreeNode } from './api'
-import { findNode, isOpenWithin, nameOf } from './treeLookup'
+import { findNode, isInSharedFolder, isOpenWithin, nameOf } from './treeLookup'
 
 const id = (n: number) => `7c1e5a10-0000-4000-8000-${String(n).padStart(12, '0')}`
 const index = createTreeIndex(devTree)
@@ -68,5 +68,27 @@ describe('tree lookup: isOpenWithin', () => {
     ['no list is open', null, id(1), false],
   ])('%s', (_label, activeListId, folderId, expected) => {
     expect(isOpenWithin(index, activeListId, folderId)).toBe(expected)
+  })
+})
+
+describe('F-027 tree lookup: isInSharedFolder', () => {
+  // devTree with the top-level Media folder shared, the other folders not.
+  const sharedTree = structuredClone(devTree)
+  sharedTree.folders.forEach((f) => {
+    f.shared = f.id === id(1)
+  })
+  const sharedIndex = createTreeIndex(sharedTree)
+
+  it.each([
+    ['a shared top-level folder', 1, true],
+    ['a folder nested in a shared folder', 2, true],
+    ['a list nested in a shared folder', 11, true],
+    ['a list nested three levels down in a shared folder', 13, true],
+    ['a top-level folder that is not shared', 5, false],
+    ['a list nested in an unshared folder', 15, false],
+    ['a top-level list', 18, false],
+    ['an id that is not in the tree', 999, false],
+  ])('%s is shared: %s', (_label, n, expected) => {
+    expect(isInSharedFolder(sharedIndex, id(n))).toBe(expected)
   })
 })

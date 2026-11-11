@@ -2,12 +2,14 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from '../components/ui'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http } from 'msw/http'
+import { http, HttpResponse } from 'msw/http'
 import { describe, expect, it, vi } from 'vitest'
 import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from '../app/router'
+import { exampleResponses } from '../mocks/fixtures'
 import { problemResponse } from '../mocks/problems'
 import { server } from '../mocks/server'
+import type { TreeData } from '../features/tree'
 import { createTestQueryClient, mockViewport, renderAt } from '../test-utils'
 
 const MEDIA = '7c1e5a10-0000-4000-8000-000000000001'
@@ -16,6 +18,13 @@ const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
 const ITEM = '7c1e5a10-0000-4000-8000-000000000101'
 const ITEM_PATH = `/lists/${WATCHLIST}/items/${ITEM}`
 const SIDEBAR_KEY = 'collection:sidebar'
+
+/** The fixture tree with the top-level Media folder shared (F-027). The fixture itself is unshared. */
+function sharedMediaTree(): TreeData {
+  const tree = structuredClone(exampleResponses.getTree.body) as TreeData
+  tree.folders.find((f) => f.name === 'Media')!.shared = true
+  return tree
+}
 const settingsUrl = `${location.origin}/api/v1/settings`
 
 const storedSidebar = () => JSON.parse(localStorage.getItem(SIDEBAR_KEY) ?? 'null')
@@ -245,6 +254,19 @@ describe('AT-14 collapsible sidebar (icon rail)', () => {
     expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument()
     expect(within(nav()!).queryByRole('tree')).not.toBeInTheDocument()
     expect(separator()).not.toBeInTheDocument()
+  })
+
+  it('F-027: the rail badges the shared folder, and only that one', async () => {
+    server.use(
+      http.get(`${location.origin}/api/v1/tree`, () => HttpResponse.json(sharedMediaTree())),
+    )
+    mockViewport(1100)
+    localStorage.setItem(SIDEBAR_KEY, JSON.stringify({ collapsed: true, width: 280 }))
+    renderAt('/')
+    const media = await within(nav()!).findByRole('button', { name: 'Media, shared' })
+    expect(within(media).getByTestId('shared-badge')).toBeInTheDocument()
+    const vehicles = within(nav()!).getByRole('button', { name: 'Vehicles' })
+    expect(within(vehicles).queryByTestId('shared-badge')).not.toBeInTheDocument()
   })
 
   it('highlights the root folder that contains the open list', async () => {

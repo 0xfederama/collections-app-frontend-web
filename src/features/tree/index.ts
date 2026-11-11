@@ -11,6 +11,7 @@ export {
   useUpdateList,
 } from './mutations'
 export { flattenFolders } from './order'
+export { isInSharedFolder } from './treeLookup'
 export { DestinationPicker } from './DestinationPicker'
 export type { DestinationOption } from './DestinationPicker'
 export { ListActionsMenu } from './ListActionsMenu'

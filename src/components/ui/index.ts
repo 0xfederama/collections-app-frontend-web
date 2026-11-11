@@ -20,6 +20,7 @@ export {
 } from './Select'
 export { SegmentedControl, type SegmentedControlProps } from './SegmentedControl'
 export { Skeleton } from './Skeleton'
+export { SharedBadge, type SharedBadgeProps } from './SharedBadge'
 export { TextArea, type TextAreaProps } from './TextArea'
 export { TextField, type TextFieldProps } from './TextField'
 export { ToastProvider, useToast, type ToastKind, type ToastOptions } from './Toast'

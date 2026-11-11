@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useMatch, useNavigate } from 'react-router'
-import { Button, EmptyState, Skeleton, Tree, type TreeRowState } from '../../components/ui'
+import {
+  Button,
+  EmptyState,
+  SharedBadge,
+  Skeleton,
+  Tree,
+  type TreeRowState,
+} from '../../components/ui'
 import { Folder, FolderOpen, Inbox } from '../../components/ui/icons'
 import { ListIconMark } from '../lists'
 import { useTreeIndex, type TreeNode } from './api'
@@ -103,11 +110,15 @@ function Row({ node, state }: { node: TreeNode; state: TreeRowState }) {
     return (
       <>
         <span aria-hidden className="grid size-[22px] shrink-0 place-items-center text-text-muted">
-          <Icon className="size-[18px]" />
+          <SharedBadge shared={node.folder.shared}>
+            <Icon className="size-[18px]" />
+          </SharedBadge>
         </span>
         {/* ml-1 on top of the row's gap-1 = the 8 px gap of a list row, so every name shares one column. */}
         <span className="ml-1 min-w-0 flex-1 truncate font-medium text-text-muted">
           {node.folder.name}
+          {/* Shared is said in the name too: the badge alone is not enough for assistive tech. */}
+          {node.folder.shared && <span className="sr-only">, shared</span>}
         </span>
         <TreeRowActions node={node} />
       </>
