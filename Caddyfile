@@ -36,6 +36,21 @@
 		respond "{err.status_code} {err.status_text}"
 	}
 
+	# LAN redirect (F-027 decision 14, W8). Host-based only: when PUBLIC_URL is set (e.g. https://collections.federama.dev, a trailing
+	# slash is ignored) a request whose Host (port ignored) is not PUBLIC_URL's host gets a 307 to PUBLIC_URL + same path and query.
+	# 307, not 301/308, so browsers never cache it and the switch can be turned off; it also keeps the method. Off when PUBLIC_URL is
+	# unset/empty (dev and test stacks) or LAN_OWNER_FALLBACK=true (LAN requests are served and the backend treats them as the owner).
+	# A request already on the public host never matches, so the Access Bypass icon paths cannot loop. /healthz is never redirected.
+	map {env.PUBLIC_URL} {public_origin} {public_host} {
+		~^(https?://([^/:]+)(?::[0-9]+)?) "${1}" "${2}"
+		default "" ""
+	}
+	@lan {
+		not path /healthz
+		not expression `{public_origin} == "" || {env.LAN_OWNER_FALLBACK} == "true" || {http.request.host} == {public_host}`
+	}
+	redir @lan {public_origin}{uri} 307
+
 	# Health check for Docker: answered by Caddy itself, never proxied to the API.
 	handle /healthz {
 		header Cache-Control no-store
