@@ -75,11 +75,27 @@ describe('F-027 W1 settings: account', () => {
 
   it('has no Log out with dev identities', async () => {
     server.use(
-      http.get(meUrl, () => HttpResponse.json({ ...OWNER_ME, dev_identities: ['owner@dev.test'] })),
+      http.get(meUrl, () =>
+        HttpResponse.json({
+          ...OWNER_ME,
+          identity_source: 'dev',
+          dev_identities: ['owner@dev.test'],
+        }),
+      ),
     )
     const section = await openAccount()
     await section.findByText('Owner')
     expect(section.queryByRole('link', { name: 'Log out' })).not.toBeInTheDocument()
+  })
+
+  it('D-150 on the home network shows the owner normally, with no Log out', async () => {
+    server.use(http.get(meUrl, () => HttpResponse.json({ ...OWNER_ME, identity_source: 'lan' })))
+    const section = await openAccount()
+    expect(await section.findByText('Owner')).toBeInTheDocument()
+    expect(section.getByText('owner@dev.test')).toBeInTheDocument()
+    expect(section.getByTestId('user-avatar-fallback')).toBeInTheDocument()
+    expect(section.queryByRole('link', { name: 'Log out' })).not.toBeInTheDocument()
+    expect(section.queryByRole('combobox', { name: 'Signed in as (dev)' })).toBeNull()
   })
 
   it('shows an error with Retry when /me fails', async () => {
@@ -94,7 +110,11 @@ describe('F-027 W7 dev user switcher', () => {
   const reload = vi.fn()
   const identities = ['owner@dev.test', 'alice@dev.test', 'bob@dev.test']
   const withIdentities = (value: string[] | null) =>
-    server.use(http.get(meUrl, () => HttpResponse.json({ ...OWNER_ME, dev_identities: value })))
+    server.use(
+      http.get(meUrl, () =>
+        HttpResponse.json({ ...OWNER_ME, identity_source: 'dev', dev_identities: value }),
+      ),
+    )
 
   beforeEach(() => {
     reload.mockClear()
