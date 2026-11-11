@@ -18,6 +18,10 @@ Production web image (Q-03w, D-069): a Node 24 build stage, then a Caddy 2.11.7 
 - Listens on `:8080`; no `EXPOSE` ports are published by the image itself.
 - `/healthz`: answered by Caddy (image `HEALTHCHECK`), never proxied.
 - `/api/*`, `/readyz`: reverse-proxied to `$API_UPSTREAM` (env var, default `api:8080`).
+- LAN redirect (F-027 decision 14, W8), read by Caddy at run time:
+  - `PUBLIC_URL` (e.g. `https://collections.federama.dev`; a trailing slash is ignored, any path is dropped). When set, a request whose `Host` (port ignored) differs from its host gets a `307` to `PUBLIC_URL` + the same path and query. 307 is not cached by browsers (so the switch can be turned off) and keeps the method. Unset or empty (dev and test stacks): no redirect.
+  - `LAN_OWNER_FALLBACK=true`: no redirect; LAN requests are served and the backend treats them as the owner.
+  - Host-based only (no token or cookie), so requests on the public host, including the Access Bypass icon paths, never redirect. `/healthz` is never redirected, whatever the `Host`.
 - `/assets/*`: hashed files, `immutable` for 1 year; a missing asset is a 404.
 - Other paths: real files served as-is; paths without a file extension fall back to `index.html`; a missing file with an extension is a 404.
 - `/manifest.webmanifest`: `application/manifest+json`, `no-cache` (so installed home-screen apps pick up a new name or icon); the icons under `/icons/` and `/apple-touch-icon.png` get the one-day cache of other real files.
