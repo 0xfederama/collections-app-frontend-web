@@ -1173,6 +1173,11 @@ export interface components {
             email: string;
             /** Format: uuid */
             id: string;
+            /**
+             * @description How the caller was identified: access (verified Cloudflare Access token, log out available), lan (home network without Cloudflare, always the owner, D-150; no log out) or dev (dev/test identity).
+             * @enum {string}
+             */
+            identity_source: "access" | "lan" | "dev";
             /** @description Display name from the identity provider; null when unknown (show the e-mail). */
             name: string | null;
         };
