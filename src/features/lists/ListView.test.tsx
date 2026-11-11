@@ -39,6 +39,8 @@ function makeItem(n: number, over: Partial<ItemSummary> = {}): ItemSummary {
     version: 1,
     created_at: '2026-10-14T09:30:00Z',
     updated_at: '2026-10-14T09:30:00Z',
+    created_by_user_id: null,
+    updated_by_user_id: null,
     ...over,
   }
 }

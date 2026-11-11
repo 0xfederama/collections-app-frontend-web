@@ -144,6 +144,46 @@ export interface paths {
         patch: operations["updateFolder"];
         trace?: never;
     };
+    "/api/v1/folders/{id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Share a top-level folder with a user
+         * @description Owner only (403 `forbidden`). The folder must be top level (409 `folder_not_top_level`). The e-mail must belong to a user who has signed in and is not the owner (422 on `email`). Already a member: 200, unchanged. No `If-Match` and no version change.
+         */
+        post: operations["addFolderMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/folders/{id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Stop sharing a folder with a user, or leave a shared folder
+         * @description The owner may remove anyone; a member may remove only themself. Everything the member added stays in the folder. A user who is not a member: 404.
+         */
+        delete: operations["removeFolderMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/folders/{id}/move": {
         parameters: {
             query?: never;
@@ -155,7 +195,7 @@ export interface paths {
         put?: never;
         /**
          * Move a folder under another parent
-         * @description Requires `If-Match`. `parent_folder_id: null` moves it to the root.
+         * @description Requires `If-Match`. `parent_folder_id: null` moves it to the root. A top-level folder moves only by its owner (403 `forbidden`); a folder with members cannot go into a folder (409 `folder_shared`). Moving out of a shared folder to the top level makes the caller the owner.
          */
         post: operations["moveFolder"];
         delete?: never;
@@ -492,6 +532,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the signed-in account
+         * @description The account of the caller, created on the first request. `dev_identities` is only set on dev/test servers.
+         */
+        get: operations["getMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/recent-items": {
         parameters: {
             query?: never;
@@ -542,7 +602,7 @@ export interface paths {
         };
         /**
          * Get workspace settings
-         * @description The settings, including the workspace name.
+         * @description The workspace settings.
          */
         get: operations["getSettings"];
         put?: never;
@@ -671,7 +731,8 @@ export interface paths {
         };
         /**
          * Get the sidebar tree
-         * @description All **active** folders and lists, flat and unpaginated. The client builds the tree.
+         * @description The **active** folders and lists the caller can see, flat and unpaginated. The client builds the tree.
+         *     The `sort_order` of a top-level folder or list is the caller's own position (each user orders their top level); nested entries keep the shared order.
          */
         get: operations["getTree"];
         put?: never;
@@ -691,6 +752,26 @@ export interface paths {
         };
         /** List the built-in types and their fields */
         get: operations["listTypes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the known users
+         * @description Every user who has signed in, ordered by e-mail: the names behind `*_user_id` fields and the sharing picker. Any signed-in user may read it.
+         */
+        get: operations["listUsers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -743,6 +824,9 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AddFolderMemberRequest: {
+            email: string;
+        };
         BlockingParent: {
             id: string;
             name: string;
@@ -777,6 +861,11 @@ export interface components {
             results: components["schemas"]["BookSuggestion"][];
         };
         Content: {
+            /**
+             * Format: uuid
+             * @description The user who saved this version. null for version 0 and for versions saved before authorship was recorded.
+             */
+            author_user_id: string | null;
             /** @description Markdown source, up to 1 MiB UTF-8. */
             body: string;
             /** Format: uuid */
@@ -793,6 +882,11 @@ export interface components {
             version: number;
         };
         ContentVersionInfo: {
+            /**
+             * Format: uuid
+             * @description The user who saved this version; null when unknown.
+             */
+            author_user_id: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: int64 */
@@ -843,15 +937,34 @@ export interface components {
         Folder: {
             /** Format: date-time */
             created_at: string;
+            /**
+             * Format: uuid
+             * @description The user who created it; null when unknown (created before authorship was recorded).
+             */
+            created_by_user_id: string | null;
             /** Format: uuid */
             id: string;
+            /** @description The users a top-level folder is shared with, besides its owner; empty for a nested or an unshared folder. */
+            member_user_ids: string[];
             name: string;
+            /**
+             * Format: uuid
+             * @description The owner of a top-level folder; null for a nested one, which belongs to its top-level ancestor.
+             */
+            owner_user_id: string | null;
             /** Format: uuid */
             parent_folder_id: string | null;
+            /** @description True for a top-level folder shared with at least one other user. */
+            shared: boolean;
             /** Format: int64 */
             sort_order: number;
             /** Format: date-time */
             updated_at: string;
+            /**
+             * Format: uuid
+             * @description The user who last changed it; null when unknown. A system refresh keeps the previous value.
+             */
+            updated_by_user_id: string | null;
             /** Format: int64 */
             version: number;
         };
@@ -865,6 +978,11 @@ export interface components {
             content_version: number;
             /** Format: date-time */
             created_at: string;
+            /**
+             * Format: uuid
+             * @description The user who created it; null when unknown (created before authorship was recorded).
+             */
+            created_by_user_id: string | null;
             /** Format: uuid */
             id: string;
             /** @description An item image, either an external URL or an uploaded attachment. null when the item has no image. */
@@ -885,6 +1003,11 @@ export interface components {
             type: string | null;
             /** Format: date-time */
             updated_at: string;
+            /**
+             * Format: uuid
+             * @description The user who last changed it, content saves included; null when unknown. A system refresh keeps the previous value.
+             */
+            updated_by_user_id: string | null;
             /** Format: int64 */
             version: number;
             website: string | null;
@@ -898,6 +1021,11 @@ export interface components {
             content_version: number;
             /** Format: date-time */
             created_at: string;
+            /**
+             * Format: uuid
+             * @description The user who created it; null when unknown (created before authorship was recorded).
+             */
+            created_by_user_id: string | null;
             /** Format: uuid */
             id: string;
             image: components["schemas"]["ImageSummary"] | null;
@@ -913,6 +1041,11 @@ export interface components {
             type: string | null;
             /** Format: date-time */
             updated_at: string;
+            /**
+             * Format: uuid
+             * @description The user who last changed it, content saves included; null when unknown. A system refresh keeps the previous value.
+             */
+            updated_by_user_id: string | null;
             /** Format: int64 */
             version: number;
             website: string | null;
@@ -920,6 +1053,11 @@ export interface components {
         List: {
             /** Format: date-time */
             created_at: string;
+            /**
+             * Format: uuid
+             * @description The user who created it; null when unknown (created before authorship was recorded).
+             */
+            created_by_user_id: string | null;
             description: string | null;
             /** @enum {string} */
             display_mode: "compact" | "thumbnail" | "grid";
@@ -933,12 +1071,22 @@ export interface components {
             /** Format: int64 */
             item_count: number;
             name: string;
+            /**
+             * Format: uuid
+             * @description The owner of a top-level list; null for a list in a folder, which belongs to the folder's top-level ancestor.
+             */
+            owner_user_id: string | null;
             sort_mode: string;
             /** Format: int64 */
             sort_order: number;
             type: string | null;
             /** Format: date-time */
             updated_at: string;
+            /**
+             * Format: uuid
+             * @description The user who last changed it; null when unknown. A system refresh keeps the previous value.
+             */
+            updated_by_user_id: string | null;
             /** Format: int64 */
             version: number;
         };
@@ -967,6 +1115,11 @@ export interface components {
         ListWithPath: {
             /** Format: date-time */
             created_at: string;
+            /**
+             * Format: uuid
+             * @description The user who created it; null when unknown (created before authorship was recorded).
+             */
+            created_by_user_id: string | null;
             description: string | null;
             /** @enum {string} */
             display_mode: "compact" | "thumbnail" | "grid";
@@ -980,6 +1133,11 @@ export interface components {
             /** Format: int64 */
             item_count: number;
             name: string;
+            /**
+             * Format: uuid
+             * @description The owner of a top-level list; null for a list in a folder, which belongs to the folder's top-level ancestor.
+             */
+            owner_user_id: string | null;
             path: components["schemas"]["PathSegment"][];
             sort_mode: string;
             /** Format: int64 */
@@ -987,6 +1145,11 @@ export interface components {
             type: string | null;
             /** Format: date-time */
             updated_at: string;
+            /**
+             * Format: uuid
+             * @description The user who last changed it; null when unknown. A system refresh keeps the previous value.
+             */
+            updated_by_user_id: string | null;
             /** Format: int64 */
             version: number;
         };
@@ -1000,6 +1163,18 @@ export interface components {
              * @description Selects a known TMDB match (movie and TV items). Without it, the lookup searches by title.
              */
             tmdb_id?: number;
+        };
+        Me: {
+            /** @description Absolute https URL of the avatar; null when unknown. */
+            avatar_url: string | null;
+            /** @description Dev/test only: the identities selectable with the X-Dev-User header or the dev_user cookie. Null in production. */
+            dev_identities: string[] | null;
+            /** @description Lower-cased e-mail, the account key. */
+            email: string;
+            /** Format: uuid */
+            id: string;
+            /** @description Display name from the identity provider; null when unknown (show the e-mail). */
+            name: string | null;
         };
         MoveFolderRequest: {
             /** Format: uuid */
@@ -1051,6 +1226,8 @@ export interface components {
          *     - `precondition_required`: A versioned resource is changed without a usable `If-Match` (428).
          *     - `payload_too_large`: The body is over the limit of the operation (413).
          *     - `unsupported_media_type`: An upload is not JPEG, PNG or WebP (415).
+         *     - `unauthenticated`: The request carries no valid identity: a missing, invalid or expired Cloudflare Access token, or no identity provider matches (401). Sign in again.
+         *     - `forbidden`: You can see this resource, but only its owner may do this (403): delete or move a top-level folder or list, share or unshare a folder.
          *     - `not_found`: The resource is missing or trashed, or the endpoint does not exist (404).
          *     - `favicon_not_found`: The site of a favicon request has no usable icon (404). The web shows its fallback.
          *     - `method_not_allowed`: The path exists but does not accept this method (405).
@@ -1059,6 +1236,8 @@ export interface components {
          *     - `cycle_detected`: A folder would be moved into itself or one of its descendants (409).
          *     - `parent_in_trash`: A restore without a destination whose parent is trashed (409). `blocking_parent` names it.
          *     - `destination_unavailable`: A move, restore or create targets a folder or list that is missing or trashed (409).
+         *     - `folder_not_top_level`: Only a top-level folder can be shared (409).
+         *     - `folder_shared`: A folder shared with others cannot be moved into another folder (409). Stop sharing it first.
          *     - `type_mismatch`: An item would move to a list of another type (409).
          *     - `duplicate_title`: An item create, rename or move would repeat a title of the target list, ignoring case, accents and outer spaces (409).
          *     - `order_stale`: A reorder names an id set that no longer matches the stored one (409).
@@ -1159,7 +1338,6 @@ export interface components {
             trash_retention_days: number | null;
             /** Format: int64 */
             version: number;
-            workspace_name: string;
         };
         StoreProvider: {
             /** @description A store key, as a stores field or the preferred_store setting names it. */
@@ -1276,7 +1454,6 @@ export interface components {
             streaming_country_code?: string;
             /** Format: int64 */
             trash_retention_days?: number | null;
-            workspace_name?: string;
         };
         UploadImage: {
             /** Format: uuid */
@@ -1295,6 +1472,16 @@ export interface components {
             /** @enum {string} */
             source: "url";
             url: string;
+        };
+        User: {
+            avatar_url: string | null;
+            email: string;
+            /** Format: uuid */
+            id: string;
+            name: string | null;
+        };
+        UserList: {
+            data: components["schemas"]["User"][];
         };
     };
     responses: never;
@@ -1325,6 +1512,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1381,6 +1577,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1447,6 +1652,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -1499,6 +1713,15 @@ export interface operations {
                     "image/png": string;
                     "image/webp": string;
                     "image/x-icon": string;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Not Found */
@@ -1556,6 +1779,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1623,6 +1855,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1707,6 +1948,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -1759,6 +2009,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1850,6 +2109,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -1906,6 +2174,180 @@ export interface operations {
             };
         };
     };
+    addFolderMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddFolderMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Folder"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeFolderMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     moveFolder: {
         parameters: {
             query?: never;
@@ -1936,6 +2378,24 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2038,6 +2498,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -2090,6 +2559,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2174,6 +2652,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2276,6 +2763,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -2335,6 +2831,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2435,6 +2940,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -2520,6 +3034,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -2574,6 +3097,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2651,6 +3183,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2756,6 +3297,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -2833,6 +3383,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2942,6 +3501,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -3040,6 +3608,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Conflict */
             409: {
                 headers: {
@@ -3100,6 +3677,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3184,6 +3770,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -3236,6 +3831,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3320,6 +3924,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3431,6 +4044,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -3488,6 +4110,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3582,6 +4213,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -3647,6 +4287,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListLookupRefresh"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Not Found */
@@ -3724,6 +4373,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -3789,6 +4447,44 @@ export interface operations {
             };
         };
     };
+    getMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     listRecentItems: {
         parameters: {
             query?: {
@@ -3812,6 +4508,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3873,6 +4578,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -3910,6 +4624,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Settings"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Internal Server Error */
@@ -3951,6 +4674,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4023,6 +4755,15 @@ export interface operations {
                     "application/json": components["schemas"]["StoreProviders"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Internal Server Error */
             500: {
                 headers: {
@@ -4059,6 +4800,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4127,6 +4877,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -4163,6 +4922,15 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Internal Server Error */
             500: {
                 headers: {
@@ -4194,6 +4962,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4256,6 +5033,15 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4328,6 +5114,15 @@ export interface operations {
                     "application/json": components["schemas"]["Tree"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Internal Server Error */
             500: {
                 headers: {
@@ -4355,6 +5150,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TypeDefinition"][] | null;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserList"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Internal Server Error */

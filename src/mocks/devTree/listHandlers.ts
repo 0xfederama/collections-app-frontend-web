@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw/http'
 import { problemResponse } from '../problems'
+import { OWNER_USER_ID, ownerFor } from '../users'
 import { mockTypes } from '../types'
 import {
   checkMatch,
@@ -71,6 +72,9 @@ export function listHandlers(db: TreeDb) {
         version: 1,
         created_at: now(),
         updated_at: now(),
+        owner_user_id: ownerFor(parent),
+        created_by_user_id: OWNER_USER_ID,
+        updated_by_user_id: OWNER_USER_ID,
       }
       state.lists.push(list)
       return HttpResponse.json(list, { status: 201, headers: etag('l', 1) })
@@ -198,6 +202,7 @@ export function listHandlers(db: TreeDb) {
       if (target !== null && !folderOf(state, target))
         return problemResponse(409, 'destination_unavailable')
       list.folder_id = target
+      list.owner_user_id = ownerFor(target)
       list.sort_order = nextOrder(state, target, 'list')
       list.version += 1
       list.updated_at = now()

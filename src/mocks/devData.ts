@@ -1,5 +1,6 @@
 import type { components } from '../generated/schema'
 import { createTreeBackend } from './devTree'
+import { OWNER_USER_ID, ownerFor } from './users'
 import type { Tree } from './devTree/helpers'
 
 type Folder = components['schemas']['Folder']
@@ -16,6 +17,11 @@ const folder = (n: number, name: string, parent: number | null, sortOrder: numbe
   version: 1,
   created_at: stamp,
   updated_at: stamp,
+  owner_user_id: ownerFor(parent === null ? null : id(parent)),
+  shared: false,
+  member_user_ids: [],
+  created_by_user_id: OWNER_USER_ID,
+  updated_by_user_id: OWNER_USER_ID,
 })
 
 const list = (
@@ -40,6 +46,9 @@ const list = (
   version: 1,
   created_at: stamp,
   updated_at: stamp,
+  owner_user_id: ownerFor(parent === null ? null : id(parent)),
+  created_by_user_id: OWNER_USER_ID,
+  updated_by_user_id: OWNER_USER_ID,
 })
 
 /** A richer tree than the spec example (three levels, root lists), for `VITE_API_MOCKS=1 npm run dev`. */

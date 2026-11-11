@@ -52,6 +52,8 @@ const item: Item = {
   version: 3,
   created_at: '2026-10-19T00:00:00Z',
   updated_at: '2026-10-19T00:00:00Z',
+  created_by_user_id: null,
+  updated_by_user_id: null,
 }
 
 const defaults = { country: 'IT' }

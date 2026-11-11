@@ -12,8 +12,8 @@ import {
 } from '../components/ui/icons'
 import { useQuickAdd } from '../features/quickadd'
 import { SidebarSearch } from '../features/search'
-import { useWorkspaceName } from '../features/settings'
 import { RailTree, SidebarTree } from '../features/tree'
+import { APP_NAME } from '../lib/appName'
 import { cx } from '../lib/cx'
 
 export interface SidebarProps {
@@ -28,11 +28,10 @@ export interface SidebarProps {
 }
 
 /**
- * Sidebar content (landmark `nav`): workspace name, search, Quick add, the tree, then Trash and
+ * Sidebar content (landmark `nav`): app name, search, Quick add, the tree, then Trash and
  * Settings. Collapsed, it is a rail with the top-level entries only.
  */
 export function Sidebar({ rail = false, onToggleRail, searchRef, onSearch }: SidebarProps) {
-  const workspaceName = useWorkspaceName()
   const quickAdd = useQuickAdd()
   const openQuickAdd = () => quickAdd.open()
 
@@ -55,7 +54,7 @@ export function Sidebar({ rail = false, onToggleRail, searchRef, onSearch }: Sid
               to="/"
               className="flex min-w-0 items-center truncate font-display text-[1.1875rem] font-bold tracking-[-0.02em]"
             >
-              <span className="min-w-0 truncate">{workspaceName}</span>
+              <span className="min-w-0 truncate">{APP_NAME}</span>
             </Link>
           )}
           {onToggleRail && (

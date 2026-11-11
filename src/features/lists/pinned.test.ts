@@ -42,6 +42,8 @@ const item = (
   version: 1,
   created_at: '2026-10-19T00:00:00Z',
   updated_at: '2026-10-19T00:00:00Z',
+  created_by_user_id: null,
+  updated_by_user_id: null,
 })
 
 describe('F-022 W2 fixed pinned fields per built-in type', () => {

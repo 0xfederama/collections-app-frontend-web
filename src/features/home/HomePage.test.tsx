@@ -125,6 +125,15 @@ describe('F-025 phone home: Quick add sits below the search field', () => {
   })
 })
 
+describe('F-027 W2 phone home title', () => {
+  it('shows "Collections" as the title', async () => {
+    mockViewport(390)
+    renderAt('/')
+    const main = screen.getByRole('main')
+    expect(await within(main).findByRole('heading', { level: 1 })).toHaveTextContent('Collections')
+  })
+})
+
 describe('W-13 home: recently updated', () => {
   it('rows link to /lists/{list_id}/items/{id}', async () => {
     await openHome()

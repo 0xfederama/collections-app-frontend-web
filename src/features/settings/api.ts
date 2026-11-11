@@ -36,15 +36,10 @@ export function useSettings() {
   })
 }
 
-/** The workspace name for the sidebar, with a neutral fallback while loading or on failure. */
-export function useWorkspaceName(): string {
-  return useSettings().data?.workspace_name || 'Collections'
-}
-
 /**
  * `PATCH /settings`. `If-Match` comes from the version of the settings the form was opened on, and a
- * 412 is never retried. The response replaces the cached settings, so the sidebar's workspace name
- * and the item form's defaults update at once.
+ * 412 is never retried. The response replaces the cached settings, so the item form's defaults
+ * update at once.
  */
 export function useUpdateSettings() {
   const client = useQueryClient()

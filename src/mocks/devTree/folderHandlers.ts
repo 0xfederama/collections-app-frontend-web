@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw/http'
 import { problemResponse } from '../problems'
+import { OWNER_USER_ID, ownerFor } from '../users'
 import {
   checkMatch,
   descendantsOf,
@@ -33,6 +34,11 @@ export function folderHandlers(db: TreeDb) {
         version: 1,
         created_at: now(),
         updated_at: now(),
+        owner_user_id: ownerFor(parent),
+        shared: false,
+        member_user_ids: [],
+        created_by_user_id: OWNER_USER_ID,
+        updated_by_user_id: OWNER_USER_ID,
       }
       state.folders.push(folder)
       return HttpResponse.json(folder, { status: 201, headers: etag('f', 1) })
@@ -96,6 +102,7 @@ export function folderHandlers(db: TreeDb) {
         return problemResponse(409, 'cycle_detected')
       }
       folder.parent_folder_id = target
+      folder.owner_user_id = ownerFor(target)
       folder.sort_order = nextOrder(state, target, 'folder')
       folder.version += 1
       folder.updated_at = now()

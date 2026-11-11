@@ -10,9 +10,9 @@ import {
   Trash2,
   type LucideIcon,
 } from '../../components/ui/icons'
+import { APP_NAME } from '../../lib/appName'
 import { useQuickAdd } from '../quickadd'
 import { normalizeQuery } from '../search'
-import { useWorkspaceName } from '../settings'
 import { SidebarTree } from '../tree'
 import { RecentItems } from './RecentItems'
 
@@ -21,13 +21,12 @@ const MOBILE_RECENT_LIMIT = 5
 
 /**
  * Phones (< 768 px, F-025 W14): Home is the root page, there is no drawer. The iOS large-title
- * pattern: the workspace name as a large title that wraps (never truncated), a full-width search field
+ * pattern: the app name as a large title that wraps (never truncated), a full-width search field
  * (Enter opens `/search?q=`) with the labelled Quick add button just below it, then the
  * folders and lists (the sidebar tree, so expand, row actions and "+ New" are the same), recently
  * updated items, and Settings and Trash as plain rows last.
  */
 export function MobileHome({ empty }: { empty: ReactNode }) {
-  const workspaceName = useWorkspaceName()
   const quickAdd = useQuickAdd()
   const navigate = useNavigate()
   const here = useLocation()
@@ -35,7 +34,7 @@ export function MobileHome({ empty }: { empty: ReactNode }) {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
-        <h1 className="font-display text-display break-words">{workspaceName}</h1>
+        <h1 className="font-display text-display break-words">{APP_NAME}</h1>
         <form
           role="search"
           onSubmit={(event) => {

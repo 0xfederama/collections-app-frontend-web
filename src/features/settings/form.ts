@@ -2,16 +2,14 @@ import { ApiError, failureKind, type FieldError } from '../../lib/api'
 import { serviceLabel } from '../../components/serviceIcons/owned'
 import type { Settings, UpdateSettingsRequest } from './api'
 
-/** API.md Settings: `markdown_history_limit` is 0–200, the name 1–200 characters. */
+/** API.md Settings: `markdown_history_limit` is 0–200. */
 export const HISTORY_LIMIT_MAX = 200
-export const NAME_MAX = 200
 
 /**
  * What the inputs hold: strings, and the owned streaming services as a list of provider keys. Keys are
  * the API field names, so a 422 finds its input.
  */
 export interface SettingsDraft {
-  workspace_name: string
   streaming_country_code: string
   metadata_language: string
   markdown_history_limit: string
@@ -29,7 +27,6 @@ export type ErrorMap = Partial<Record<SettingsField, string>>
 
 /** Page order: where focus goes when several fields are invalid. */
 const FIELD_ORDER: SettingsField[] = [
-  'workspace_name',
   'streaming_country_code',
   'metadata_language',
   'trash_retention_days',
@@ -41,7 +38,6 @@ const FIELD_ORDER: SettingsField[] = [
 export const inputId = (field: SettingsField) => `settings-${field.replaceAll('_', '-')}`
 
 const FIELD_LABELS: Record<SettingsField, string> = {
-  workspace_name: 'Workspace name',
   streaming_country_code: 'Country',
   metadata_language: 'Metadata language',
   trash_retention_days: 'Delete trash automatically',
@@ -63,7 +59,6 @@ export type Failure = { kind: 'conflict' | 'network' } | { kind: 'other'; messag
 
 export function draftFromSettings(settings: Settings): SettingsDraft {
   return {
-    workspace_name: settings.workspace_name,
     streaming_country_code: settings.streaming_country_code,
     metadata_language: settings.metadata_language,
     markdown_history_limit: String(settings.markdown_history_limit),
@@ -87,7 +82,6 @@ function parseLimit(text: string): number | null {
 /** Normalized values, ready to compare with the stored ones or to send. */
 function normalized(draft: SettingsDraft) {
   return {
-    workspace_name: draft.workspace_name.trim(),
     streaming_country_code: draft.streaming_country_code,
     metadata_language: draft.metadata_language,
     markdown_history_limit: parseLimit(draft.markdown_history_limit),
@@ -101,10 +95,6 @@ function normalized(draft: SettingsDraft) {
 export function validate(draft: SettingsDraft): ErrorMap {
   const errors: ErrorMap = {}
   const value = normalized(draft)
-  if (value.workspace_name === '') errors.workspace_name = 'Enter a name.'
-  else if (value.workspace_name.length > NAME_MAX) {
-    errors.workspace_name = `Use at most ${NAME_MAX} characters.`
-  }
   if (!/^[A-Z]{2}$/.test(value.streaming_country_code)) {
     errors.streaming_country_code = 'Choose a country.'
   }
@@ -122,7 +112,6 @@ export function validate(draft: SettingsDraft): ErrorMap {
 export function buildPatch(base: Settings, draft: SettingsDraft): UpdateSettingsRequest {
   const value = normalized(draft)
   const patch: UpdateSettingsRequest = {}
-  if (value.workspace_name !== base.workspace_name) patch.workspace_name = value.workspace_name
   if (value.streaming_country_code !== base.streaming_country_code) {
     patch.streaming_country_code = value.streaming_country_code
   }
@@ -148,7 +137,6 @@ export function buildPatch(base: Settings, draft: SettingsDraft): UpdateSettings
 export function isDirty(base: Settings, draft: SettingsDraft): boolean {
   const value = normalized(draft)
   return (
-    value.workspace_name !== base.workspace_name ||
     value.streaming_country_code !== base.streaming_country_code ||
     value.metadata_language !== base.metadata_language ||
     value.markdown_history_limit !== base.markdown_history_limit ||
@@ -162,7 +150,6 @@ export function isDirty(base: Settings, draft: SettingsDraft): boolean {
 export function isFormDirty(base: Settings, draft: SettingsDraft): boolean {
   const value = normalized(draft)
   return (
-    value.workspace_name !== base.workspace_name ||
     value.streaming_country_code !== base.streaming_country_code ||
     value.metadata_language !== base.metadata_language ||
     value.markdown_history_limit !== base.markdown_history_limit ||
@@ -235,9 +222,6 @@ const serverOrGenericFailure = (caught: unknown): Failure =>
 export function draftDump(base: Settings, draft: SettingsDraft): string {
   const value = normalized(draft)
   const lines: string[] = []
-  if (value.workspace_name !== base.workspace_name) {
-    lines.push(`${FIELD_LABELS.workspace_name}: ${value.workspace_name}`)
-  }
   if (value.streaming_country_code !== base.streaming_country_code) {
     lines.push(`${FIELD_LABELS.streaming_country_code}: ${value.streaming_country_code}`)
   }

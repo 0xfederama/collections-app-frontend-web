@@ -22,7 +22,6 @@ const isStoreKey = (value: string): value is StoreKey => STORE_KEYS.some((key) =
 const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 
 const initial = (): Settings => ({
-  workspace_name: 'Collections',
   streaming_country_code: 'IT',
   metadata_language: 'en-US',
   lookup_available: false,
@@ -43,14 +42,7 @@ const OWNED_MAX = 64
 
 /** The first validation error of a PATCH body, in the shape of the backend's 422 (API.md). */
 function validationError(body: UpdateSettingsRequest) {
-  const {
-    workspace_name: name,
-    streaming_country_code: country,
-    metadata_language: metadataLanguage,
-  } = body
-  if (name !== undefined && (name.trim() === '' || name.trim().length > 200)) {
-    return invalid('workspace_name', 'must be 1 to 200 characters')
-  }
+  const { streaming_country_code: country, metadata_language: metadataLanguage } = body
   if (country !== undefined && !/^[A-Z]{2}$/.test(country)) {
     return invalid('streaming_country_code', 'must be an ISO 3166-1 alpha-2 code')
   }
@@ -115,7 +107,6 @@ export function createSettingsBackend(start: Settings = initial()) {
         ...(store !== undefined && isStoreKey(store) && { preferred_store: store }),
         // `null` or absent keeps the list (API.md Settings).
         ...(owned != null && { owned_streaming_services: [...owned] }),
-        ...(body.workspace_name !== undefined && { workspace_name: body.workspace_name.trim() }),
       }
       // Arrays compare as sets: a PATCH that repeats the stored list, in any order, changes nothing (D-059).
       const same = (a: unknown, b: unknown) =>

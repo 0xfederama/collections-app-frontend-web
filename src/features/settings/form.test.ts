@@ -17,7 +17,6 @@ import {
 } from './form'
 
 const base: Settings = {
-  workspace_name: 'Collections',
   streaming_country_code: 'IT',
   metadata_language: 'en-US',
   lookup_available: true,
@@ -36,7 +35,6 @@ const draftWith = (over: Partial<SettingsDraft> = {}): SettingsDraft => ({
 describe('AT-14 settings form model', () => {
   it('draftFromSettings uses strings', () => {
     expect(draftFromSettings(base)).toEqual({
-      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       metadata_language: 'en-US',
       markdown_history_limit: '20',
@@ -53,10 +51,7 @@ describe('AT-14 settings form model', () => {
     expect(buildPatch(base, draft)).toEqual({})
   })
 
-  it('buildPatch sends only changed fields, trimmed, history as a number', () => {
-    expect(buildPatch(base, draftWith({ workspace_name: '  Home  ' }))).toEqual({
-      workspace_name: 'Home',
-    })
+  it('buildPatch sends only changed fields, history as a number', () => {
     expect(buildPatch(base, draftWith({ markdown_history_limit: '0' }))).toEqual({
       markdown_history_limit: 0,
     })
@@ -74,23 +69,6 @@ describe('AT-14 settings form model', () => {
     const savedRetention = { ...base, trash_retention_days: 30 }
     expect(isDirty(savedRetention, draftWith({ trash_retention_days: 'off' }))).toBe(true)
     expect(isFormDirty(savedRetention, draftWith({ trash_retention_days: 'off' }))).toBe(false)
-  })
-
-  it('whitespace around the name is not a change', () => {
-    expect(isDirty(base, draftWith({ workspace_name: ' Collections ' }))).toBe(false)
-  })
-
-  describe('workspace name', () => {
-    it('rejects empty and whitespace-only', () => {
-      expect(validate(draftWith({ workspace_name: '' })).workspace_name).toBeDefined()
-      expect(validate(draftWith({ workspace_name: '   ' })).workspace_name).toBeDefined()
-    })
-    it('accepts 200 characters and rejects 201', () => {
-      expect(
-        validate(draftWith({ workspace_name: 'a'.repeat(200) })).workspace_name,
-      ).toBeUndefined()
-      expect(validate(draftWith({ workspace_name: 'a'.repeat(201) })).workspace_name).toBeDefined()
-    })
   })
 
   describe('history limit bounds', () => {
@@ -132,12 +110,12 @@ describe('AT-14 settings form model', () => {
   describe('mapServerErrors', () => {
     it('maps known fields and joins repeated ones', () => {
       const result = mapServerErrors([
-        { field: 'workspace_name', message: 'too long' },
-        { field: 'workspace_name', message: 'again' },
+        { field: 'markdown_history_limit', message: 'too long' },
+        { field: 'markdown_history_limit', message: 'again' },
         { field: 'streaming_country_code', message: 'bad' },
       ])
       expect(result.fields).toEqual({
-        workspace_name: 'too long again',
+        markdown_history_limit: 'too long again',
         streaming_country_code: 'bad',
       })
       expect(result.other).toEqual([])
@@ -154,9 +132,9 @@ describe('AT-14 settings form model', () => {
 
   it('draftDump lists only the changed fields', () => {
     expect(draftDump(base, draftWith())).toBe('')
-    expect(
-      draftDump(base, draftWith({ workspace_name: 'Home', markdown_history_limit: '5' })),
-    ).toBe('Workspace name: Home\nDescription history limit: 5')
+    expect(draftDump(base, draftWith({ markdown_history_limit: '5' }))).toBe(
+      'Description history limit: 5',
+    )
   })
 })
 
@@ -255,13 +233,13 @@ describe('F020 save failure classification', () => {
       apiError({
         status: 422,
         errors: [
-          { field: 'workspace_name', message: 'too long' },
+          { field: 'markdown_history_limit', message: 'too long' },
           { field: 'nope', message: 'bad' },
         ],
       }),
       {
         failure: null,
-        fields: { workspace_name: 'too long' },
+        fields: { markdown_history_limit: 'too long' },
         other: ['nope: bad'],
       },
     ],

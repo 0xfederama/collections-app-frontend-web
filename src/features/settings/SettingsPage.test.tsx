@@ -18,7 +18,7 @@ async function openSettings(pane = 'General') {
   const user = userEvent.setup()
   renderAt('/settings')
   await screen.findByRole('dialog', { name: 'Settings' })
-  await screen.findByLabelText(/Workspace name/)
+  await screen.findByLabelText(/Description history limit/)
   if (pane !== 'General') await user.click(screen.getByRole('button', { name: pane }))
   if (pane === 'Media') await screen.findByLabelText('Country')
   if (pane === 'About') await screen.findByRole('region', { name: 'About' })
@@ -33,7 +33,6 @@ interface Patch {
 /** Wraps a PATCH recorder in front of the stateful backend. */
 function mountBackend(start?: Partial<Settings>) {
   const backend = createSettingsBackend({
-    workspace_name: 'Collections',
     streaming_country_code: 'IT',
     metadata_language: 'en-US',
     lookup_available: false,
@@ -74,9 +73,9 @@ describe('W-13 settings: saving', () => {
       ['Settings', 'General', 'Country & language', 'Books', 'Connection', 'About'],
     )
     expect(dialog.querySelector('#settings-movies-tv')?.parentElement).toHaveAttribute('hidden')
-    expect(screen.getByLabelText(/Workspace name/)).toBeInTheDocument()
+    // F-027 W2: the app is always called "Collections", there is no name to edit.
+    expect(screen.queryByLabelText(/workspace name/i)).not.toBeInTheDocument()
     expect(screen.getByLabelText(/Description history limit/)).toBeInTheDocument()
-    expect(field('Workspace name')).toHaveValue('Collections')
     expect(field('Description history limit')).toHaveValue('20')
     expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toHaveTextContent(
       'Off',
@@ -91,15 +90,15 @@ describe('W-13 settings: saving', () => {
   it('saves retention immediately from the settings snapshot and preserves other drafts', async () => {
     const { patches } = mountBackend()
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Still a draft')
+    await retype(user, 'Description history limit', '5')
     await user.click(screen.getByRole('combobox', { name: 'Delete trash automatically' }))
     await user.click(await screen.findByRole('option', { name: '7 days' }))
     await screen.findByText('Trash retention saved')
     expect(patches[0]).toEqual({ ifMatch: '"s-1"', body: { trash_retention_days: 7 } })
-    expect(field('Workspace name')).toHaveValue('Still a draft')
+    expect(field('Description history limit')).toHaveValue('5')
     await user.click(closeSettings())
     await screen.findByRole('heading', { level: 1, name: 'Home' })
-    expect(patches[1]).toEqual({ ifMatch: '"s-2"', body: { workspace_name: 'Still a draft' } })
+    expect(patches[1]).toEqual({ ifMatch: '"s-2"', body: { markdown_history_limit: 5 } })
   })
 
   it('finishes a pending retention save before saving other drafts and closing', async () => {
@@ -122,7 +121,7 @@ describe('W-13 settings: saving', () => {
       }),
     )
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Saved after retention')
+    await retype(user, 'Description history limit', '6')
     await user.click(screen.getByRole('combobox', { name: 'Delete trash automatically' }))
     await user.click(await screen.findByRole('option', { name: '7 days' }))
     await retentionStarted
@@ -134,13 +133,12 @@ describe('W-13 settings: saving', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
     expect(patches).toEqual([
       { ifMatch: '"s-1"', body: { trash_retention_days: 7 } },
-      { ifMatch: '"s-2"', body: { workspace_name: 'Saved after retention' } },
+      { ifMatch: '"s-2"', body: { markdown_history_limit: 6 } },
     ])
   })
 
   it('shows an externally configured retention value instead of displaying Off', async () => {
     mountBackend({
-      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: 365,
@@ -186,14 +184,14 @@ describe('W-13 settings: saving', () => {
       }),
     )
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Unsubmitted name')
+    await retype(user, 'Description history limit', '7')
     await user.click(screen.getByRole('combobox', { name: 'Delete trash automatically' }))
     await user.click(await screen.findByRole('option', { name: '30 days' }))
     const alert = await screen.findByRole('alert')
     expect(screen.getByRole('combobox', { name: 'Delete trash automatically' })).toHaveTextContent(
       '30 days',
     )
-    expect(field('Workspace name')).toHaveValue('Unsubmitted name')
+    expect(field('Description history limit')).toHaveValue('7')
     fail = false
     await user.click(within(alert).getByRole('button', { name: 'Retry' }))
     await screen.findByText('Trash retention saved')
@@ -219,24 +217,22 @@ describe('W-13 settings: saving', () => {
 
   it('saves changed settings on close with the snapshot If-Match', async () => {
     const { patches, backend } = mountBackend({
-      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: null,
       version: 4,
     })
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Casa')
+    await retype(user, 'Description history limit', '8')
     await user.click(closeSettings())
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
-    expect(patches).toEqual([{ ifMatch: '"s-4"', body: { workspace_name: 'Casa' } }])
+    expect(patches).toEqual([{ ifMatch: '"s-4"', body: { markdown_history_limit: 8 } }])
     expect(backend.settings.version).toBe(5)
   })
 
   it('saves all changed form fields in one patch on close', async () => {
     const { patches } = mountBackend({
-      workspace_name: 'A',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: null,
@@ -244,11 +240,13 @@ describe('W-13 settings: saving', () => {
     })
     const user = await openSettings()
     await retype(user, 'Description history limit', '0')
-    await retype(user, 'Workspace name', 'B')
+    await user.click(screen.getByRole('button', { name: 'Media' }))
+    await user.click(screen.getByRole('combobox', { name: 'Default store' }))
+    await user.click(await screen.findByRole('option', { name: 'Kobo' }))
     await user.click(closeSettings())
     await screen.findByRole('heading', { level: 1, name: 'Home' })
     expect(patches).toEqual([
-      { ifMatch: '"s-4"', body: { workspace_name: 'B', markdown_history_limit: 0 } },
+      { ifMatch: '"s-4"', body: { markdown_history_limit: 0, preferred_store: 'kobo' } },
     ])
   })
 
@@ -263,7 +261,6 @@ describe('W-13 settings: saving', () => {
 
   it('saves the metadata language through the settings snapshot', async () => {
     const { patches } = mountBackend({
-      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       metadata_language: 'en-US',
       lookup_available: true,
@@ -293,7 +290,6 @@ describe('W-13 settings: saving', () => {
 
   it('F-022-W3 saves only the owned streaming services, ticked in the Media pane', async () => {
     const { patches } = mountBackend({
-      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: null,
@@ -320,7 +316,6 @@ describe('W-13 settings: saving', () => {
 
   it('F-022-W3 unticking every service sends an empty list, which shows all', async () => {
     const { patches } = mountBackend({
-      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: null,
@@ -339,7 +334,6 @@ describe('W-13 settings: saving', () => {
 
   it('F-022-W3 leaves owned services out of the patch when they are not touched', async () => {
     const { patches } = mountBackend({
-      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       markdown_history_limit: 20,
       trash_retention_days: null,
@@ -412,8 +406,8 @@ describe('W-13 settings: saving', () => {
   it('reverting an edit closes without a request', async () => {
     const { patches } = mountBackend()
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'X')
-    await retype(user, 'Workspace name', 'Collections')
+    await retype(user, 'Description history limit', '9')
+    await retype(user, 'Description history limit', '20')
     await user.click(closeSettings())
     await screen.findByRole('heading', { level: 1, name: 'Home' })
     expect(patches).toEqual([])
@@ -452,16 +446,6 @@ describe('W-13 settings: history limit validation', () => {
     expect(patches[0]!.body).toEqual({ markdown_history_limit: expected })
   })
 
-  it('rejects an empty workspace name without a request', async () => {
-    const { patches } = mountBackend()
-    const user = await openSettings()
-    await retype(user, 'Workspace name', '   ')
-    await user.click(closeSettings())
-    expect(await screen.findByText('Enter a name.')).toBeInTheDocument()
-    expect(field('Workspace name')).toHaveFocus()
-    expect(patches).toEqual([])
-  })
-
   it('clears a field error when the field is edited', async () => {
     mountBackend()
     const user = await openSettings()
@@ -475,7 +459,6 @@ describe('W-13 settings: history limit validation', () => {
 
 describe('W-13 settings: server errors', () => {
   it.each([
-    ['workspace_name', 'Workspace name'],
     ['streaming_country_code', 'Country'],
     ['markdown_history_limit', 'Description history limit'],
   ])('422 on %s lands on the input and focuses it', async (apiField, label) => {
@@ -488,12 +471,12 @@ describe('W-13 settings: server errors', () => {
       ),
     )
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Changed')
+    await retype(user, 'Description history limit', '30')
     await user.click(closeSettings())
     expect(await screen.findByText('server says no')).toBeInTheDocument()
     expect(field(label)).toHaveFocus()
     expect(field(label)).toBeInvalid()
-    expect(field('Workspace name')).toHaveValue('Changed')
+    expect(field('Description history limit')).toHaveValue('30')
   })
 
   it('a 422 on an unknown field shows a general message and keeps the draft', async () => {
@@ -506,10 +489,10 @@ describe('W-13 settings: server errors', () => {
       ),
     )
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Changed')
+    await retype(user, 'Description history limit', '30')
     await user.click(closeSettings())
     expect(await screen.findByText('mystery: odd')).toBeInTheDocument()
-    expect(field('Workspace name')).toHaveValue('Changed')
+    expect(field('Description history limit')).toHaveValue('30')
   })
 
   it('network error shows Retry, keeps the draft, and Retry re-sends', async () => {
@@ -522,15 +505,15 @@ describe('W-13 settings: server errors', () => {
       }),
     )
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Casa')
+    await retype(user, 'Description history limit', '8')
     await user.click(closeSettings())
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent(/could not be reached/)
-    expect(field('Workspace name')).toHaveValue('Casa')
+    expect(field('Description history limit')).toHaveValue('8')
     fail = false
     await user.click(within(alert).getByRole('button', { name: 'Retry' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
-    expect(patches.at(-1)).toEqual({ ifMatch: '"s-1"', body: { workspace_name: 'Casa' } })
+    expect(patches.at(-1)).toEqual({ ifMatch: '"s-1"', body: { markdown_history_limit: 8 } })
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })
@@ -539,9 +522,8 @@ describe('W-13 settings: conflict (412)', () => {
   async function conflict() {
     const { backend } = mountBackend()
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'My name')
     await user.type(field('Description history limit'), '0')
-    backend.bumpExternally({ workspace_name: 'Theirs', markdown_history_limit: 99 })
+    backend.bumpExternally({ markdown_history_limit: 99 })
     await user.click(closeSettings())
     const banner = await screen.findByRole('alert')
     return { user, banner, backend }
@@ -550,7 +532,6 @@ describe('W-13 settings: conflict (412)', () => {
   it('keeps the draft and shows the conflict recovery banner', async () => {
     const { banner } = await conflict()
     expect(banner).toHaveTextContent(/Someone else changed the settings/)
-    expect(field('Workspace name')).toHaveValue('My name')
     expect(field('Description history limit')).toHaveValue('200')
     expect(within(banner).getByRole('button', { name: 'Copy my draft' })).toBeInTheDocument()
   })
@@ -559,10 +540,8 @@ describe('W-13 settings: conflict (412)', () => {
     const { user, banner } = await conflict()
     await user.click(within(banner).getByRole('button', { name: 'Copy my draft' }))
     expect(await screen.findByText('Draft copied to the clipboard')).toBeInTheDocument()
-    expect(await navigator.clipboard.readText()).toBe(
-      'Workspace name: My name\nDescription history limit: 200',
-    )
-    expect(field('Workspace name')).toHaveValue('My name')
+    expect(await navigator.clipboard.readText()).toBe('Description history limit: 200')
+    expect(field('Description history limit')).toHaveValue('200')
   })
 
   it('Reload latest asks first; cancelling keeps the draft', async () => {
@@ -571,7 +550,7 @@ describe('W-13 settings: conflict (412)', () => {
     const dialog = await screen.findByRole('alertdialog')
     await user.click(within(dialog).getByRole('button', { name: 'Keep my draft' }))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(field('Workspace name')).toHaveValue('My name')
+    expect(field('Description history limit')).toHaveValue('200')
   })
 
   it('Reload latest replaces the draft with the fresh values after confirming', async () => {
@@ -579,15 +558,14 @@ describe('W-13 settings: conflict (412)', () => {
     await user.click(within(banner).getByRole('button', { name: 'Reload latest' }))
     const dialog = await screen.findByRole('alertdialog')
     await user.click(within(dialog).getByRole('button', { name: 'Reload latest' }))
-    await waitFor(() => expect(field('Workspace name')).toHaveValue('Theirs'))
-    expect(field('Description history limit')).toHaveValue('99')
+    await waitFor(() => expect(field('Description history limit')).toHaveValue('99'))
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 
     // The next save uses the reloaded version.
-    await retype(user, 'Workspace name', 'Mine again')
+    await retype(user, 'Description history limit', '42')
     await user.click(closeSettings())
     expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
-    expect(backend.settings.workspace_name).toBe('Mine again')
+    expect(backend.settings.markdown_history_limit).toBe(42)
   })
 })
 
@@ -602,7 +580,7 @@ describe('W-13 settings: load failure', () => {
     expect(alert).toBeInTheDocument()
     fail = false
     await user.click(screen.getByRole('button', { name: 'Retry' }))
-    expect(await screen.findByLabelText(/Workspace name/)).toBeInTheDocument()
+    expect(await screen.findByLabelText(/Description history limit/)).toBeInTheDocument()
   })
 })
 
@@ -636,11 +614,11 @@ describe('W-13 settings: close saves changes', () => {
   it('keeps the pane open when the draft is invalid', async () => {
     mountBackend()
     const user = await openSettings()
-    await retype(user, 'Workspace name', '   ')
+    await retype(user, 'Description history limit', 'abc')
     await user.click(closeSettings())
-    expect(await screen.findByText('Enter a name.')).toBeInTheDocument()
+    expect(await screen.findByText(/whole number/)).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(field('Workspace name')).toHaveValue('   ')
+    expect(field('Description history limit')).toHaveValue('abc')
   })
 
   it('keeps the pane open after a network failure and closes after Retry succeeds', async () => {
@@ -648,7 +626,7 @@ describe('W-13 settings: close saves changes', () => {
     let fail = true
     server.use(http.patch(settingsUrl, () => (fail ? HttpResponse.error() : undefined)))
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Dirty')
+    await retype(user, 'Description history limit', '11')
     await user.click(closeSettings())
     const alert = await screen.findByRole('alert')
     expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
@@ -668,7 +646,7 @@ describe('W-13 settings: close saves changes', () => {
   it('saves successfully before closing', async () => {
     mountBackend()
     const user = await openSettings()
-    await retype(user, 'Workspace name', 'Saved')
+    await retype(user, 'Description history limit', '12')
     await user.click(closeSettings())
     expect(await screen.findByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
   })
