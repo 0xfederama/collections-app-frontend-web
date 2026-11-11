@@ -7,7 +7,15 @@ import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from '../../../app/router'
 import { ToastProvider } from '../../../components/ui'
 import { exampleResponses } from '../../../mocks/fixtures'
-import { OWNER_USER, OWNER_USER_ID } from '../../../mocks/users'
+import { OWNER_ME, OWNER_USER_ID } from '../../../mocks/users'
+
+/** The fixture owner as `GET /users` lists it (no `dev_identities`). */
+const OWNER_USER = {
+  id: OWNER_ME.id,
+  email: OWNER_ME.email,
+  name: OWNER_ME.name,
+  avatar_url: OWNER_ME.avatar_url,
+}
 import { problemResponse } from '../../../mocks/problems'
 import { server } from '../../../mocks/server'
 import { createTestQueryClient, mockViewport } from '../../../test-utils'

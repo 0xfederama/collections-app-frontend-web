@@ -9,7 +9,15 @@ import { mockViewport, renderAt } from '../../test-utils'
 import type { Item } from './api'
 import { createContentBackend } from './content/contentTestBackend'
 import { mockTypes } from '../../mocks/types'
-import { OWNER_USER } from '../../mocks/users'
+import { OWNER_ME } from '../../mocks/users'
+
+/** The fixture owner as `GET /users` lists it (no `dev_identities`). */
+const OWNER_USER = {
+  id: OWNER_ME.id,
+  email: OWNER_ME.email,
+  name: OWNER_ME.name,
+  avatar_url: OWNER_ME.avatar_url,
+}
 
 const WATCHLIST = '7c1e5a10-0000-4000-8000-000000000011'
 const ITEM = '7c1e5a10-0000-4000-8000-000000000101'
