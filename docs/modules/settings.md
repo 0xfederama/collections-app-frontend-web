@@ -7,7 +7,7 @@
 ## Key files
 
 - `src/routes/SettingsRoute.tsx`: dialog, pane switcher and save-before-close flow.
-- `src/features/settings/index.ts`: public face (`useSettings`, `useTypes`, `useWorkspaceName`); `screens.ts` holds the panes for `SettingsRoute`.
+- `src/features/settings/index.ts`: public face (`useSettings`, `useTypes`); `screens.ts` holds the panes for `SettingsRoute`.
 - `src/features/settings/api.ts`: settings and types hooks and ETag helpers; `settingsKeys` and `typeKeys` are in `src/data/keys.ts`.
 - `form.ts`: Collection and Media draft, validation, `buildPatch`, `classifySaveFailure`.
 - `useSettingsForm.ts`, `useLeaveGuard.ts`: save and close state machine; blocks leaving with unsaved changes.
@@ -20,7 +20,7 @@
 
 ## Interfaces
 
-- `useSettings()`, `useWorkspaceName()`, `useUpdateSettings()`.
+- `useSettings()`, `useUpdateSettings()`.
 - `useTypes()` (read only; the field operation hooks are gone).
 - `SettingsRoute()`, `SettingsForm({ settings, pane, onPaneChange, closeRequestRef })`.
 - `validate`, `buildPatch`, `draftFromSettings` (`form.ts`).
