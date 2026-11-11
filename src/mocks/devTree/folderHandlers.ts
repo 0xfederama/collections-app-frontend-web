@@ -132,6 +132,9 @@ export function folderHandlers(db: TreeDb) {
       const target = body.parent_folder_id
       if (target !== null && !folderOf(state, target))
         return problemResponse(409, 'destination_unavailable')
+      // Server order (D-148): destination_unavailable, then folder_shared, then cycle_detected.
+      if (target !== null && folder.member_user_ids.length > 0)
+        return problemResponse(409, 'folder_shared')
       if (target !== null && descendantsOf(state, folder.id).has(target)) {
         return problemResponse(409, 'cycle_detected')
       }

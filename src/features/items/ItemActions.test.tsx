@@ -9,6 +9,7 @@ import { ToastProvider } from '../../components/ui'
 import { exampleResponses } from '../../mocks/fixtures'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
+import { MEMBER_USER_ID } from '../../mocks/users'
 import { createTestQueryClient, mockViewport } from '../../test-utils'
 import type { Item } from './api'
 
@@ -60,9 +61,9 @@ const CARS = '7c1e5a10-0000-4000-8000-000000000013'
  * The example tree has one list per type. The move picker only offers lists of the item's type
  * (F007-W7), so the Vehicles list is served as a movie list here, next to a Cars list of another type.
  */
-function serveMoveTree() {
+function serveMoveTree(shareMedia = false) {
   const tree = exampleResponses.getTree.body as {
-    folders: unknown[]
+    folders: Record<string, unknown>[]
     lists: Record<string, unknown>[]
   }
   const motorbikes = tree.lists.find((list) => list.id === MOTORBIKES)!
@@ -70,6 +71,11 @@ function serveMoveTree() {
     http.get(`${location.origin}/api/v1/tree`, () =>
       HttpResponse.json({
         ...tree,
+        folders: shareMedia
+          ? tree.folders.map((f) =>
+              f.name === 'Media' ? { ...f, shared: true, member_user_ids: [MEMBER_USER_ID] } : f,
+            )
+          : tree.folders,
         lists: [
           ...tree.lists.filter((list) => list.id !== MOTORBIKES),
           { ...motorbikes, type: 'movie' },
@@ -80,8 +86,8 @@ function serveMoveTree() {
   )
 }
 
-async function openMove(path = PATH) {
-  serveMoveTree()
+async function openMove(path = PATH, shareMedia = false) {
+  serveMoveTree(shareMedia)
   const router = renderRouter(path)
   const user = userEvent.setup()
   await user.click(await screen.findByRole('button', { name: 'Move' }))
@@ -325,6 +331,68 @@ describe('move item (UI_SPEC §9 errors)', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Move' }))
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
       'server could not be reached',
+    )
+  })
+})
+
+describe('F-027 W5 item move out of a shared folder', () => {
+  const moveButton = (dialog: HTMLElement) => within(dialog).getByRole('button', { name: 'Move' })
+
+  it('asks first, lists the other people, and sends the move only on confirm', async () => {
+    let moves = 0
+    server.use(
+      http.post(moveUrl, () => {
+        moves++
+        return HttpResponse.json({ ...matrix, list_id: MOTORBIKES })
+      }),
+    )
+    const { user, dialog } = await openMove(PATH, true)
+    await user.click(within(dialog).getByRole('combobox', { name: 'Destination list' }))
+    await user.click(await screen.findByRole('option', { name: 'Vehicles › Vehicles' }))
+    await user.click(moveButton(dialog))
+
+    const confirm = await screen.findByRole('alertdialog')
+    expect(confirm).toHaveTextContent('Move ‘The Matrix’ out of ‘Media’?')
+    expect(confirm).toHaveTextContent('It becomes yours. Alice will no longer see it.')
+    expect(moves).toBe(0)
+    await user.click(within(confirm).getByRole('button', { name: 'Move' }))
+    await waitFor(() => expect(moves).toBe(1))
+  })
+
+  it('cancel sends nothing', async () => {
+    let moves = 0
+    server.use(http.post(moveUrl, () => (moves++, HttpResponse.json(matrix))))
+    const { user, dialog } = await openMove(PATH, true)
+    await user.click(within(dialog).getByRole('combobox', { name: 'Destination list' }))
+    await user.click(await screen.findByRole('option', { name: 'Vehicles › Vehicles' }))
+    await user.click(moveButton(dialog))
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Cancel' }),
+    )
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(moves).toBe(0)
+  })
+
+  it('does not ask when the box is not shared', async () => {
+    server.use(http.post(moveUrl, () => HttpResponse.json({ ...matrix, list_id: MOTORBIKES })))
+    const { user, dialog } = await openMove()
+    await user.click(within(dialog).getByRole('combobox', { name: 'Destination list' }))
+    await user.click(await screen.findByRole('option', { name: 'Vehicles › Vehicles' }))
+    await user.click(moveButton(dialog))
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: /Move/ })).not.toBeInTheDocument(),
+    )
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('409 destination_unavailable asks for another place', async () => {
+    server.use(http.post(moveUrl, () => problemResponse(409, 'destination_unavailable')))
+    const { user, dialog } = await openMove()
+    await user.click(within(dialog).getByRole('combobox', { name: 'Destination list' }))
+    await user.click(await screen.findByRole('option', { name: 'Vehicles › Vehicles' }))
+    await user.click(moveButton(dialog))
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'That place is no longer available. Pick another one.',
     )
   })
 })

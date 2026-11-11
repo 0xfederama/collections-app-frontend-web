@@ -1,9 +1,18 @@
-import { ApiError, failureKind, type FieldError } from '../../lib/api'
+import {
+  ApiError,
+  failureKind,
+  isDestinationUnavailable,
+  isFolderShared,
+  isForbidden,
+  type FieldError,
+} from '../../lib/api'
 
 type TreeErrorKind =
   | 'conflict' // 412: someone else changed it
   | 'unavailable' // 409 destination_unavailable
   | 'cycle' // 409 cycle_detected
+  | 'forbidden' // 403: not the owner
+  | 'shared' // 409 folder_shared
   | 'not_found' // 404
   | 'validation' // 422
   | 'network' // no answer, or 5xx
@@ -18,9 +27,30 @@ export interface TreeError {
 
 /**
  * Turns a failed tree write into the message UI_SPEC §9 asks for. `noun` is what was being
- * edited ("folder" / "list") and only shapes the wording.
+ * edited ("folder" / "list") and only shapes the wording; `name` is what the 403 message calls it.
  */
-export function classifyError(error: unknown, noun: 'folder' | 'list'): TreeError {
+export function classifyError(error: unknown, noun: 'folder' | 'list', name?: string): TreeError {
+  if (isForbidden(error)) {
+    return {
+      kind: 'forbidden',
+      message: `Only the owner of ‘${name ?? `this ${noun}`}’ can do that.`,
+      fieldErrors: [],
+    }
+  }
+  if (isFolderShared(error)) {
+    return {
+      kind: 'shared',
+      message: 'A shared folder can’t go inside another folder.',
+      fieldErrors: [],
+    }
+  }
+  if (isDestinationUnavailable(error)) {
+    return {
+      kind: 'unavailable',
+      message: 'That place is no longer available. Pick another one.',
+      fieldErrors: [],
+    }
+  }
   switch (failureKind(error)) {
     case 'precondition':
       return {
@@ -84,5 +114,8 @@ const serverOrGenericError = (error: unknown): TreeError =>
     : { kind: 'other', message: 'Something went wrong. Please try again.', fieldErrors: [] }
 
 /** Failures after which the tree on screen may be wrong, so it should be refetched. 412 is excluded on purpose. */
+/** The toast for a reorder that lost to a change elsewhere (409 `order_stale`). */
+export const ORDER_STALE_MESSAGE = 'The order changed elsewhere. Try again.'
+
 export const shouldRefreshTree = (error: unknown) =>
   error instanceof ApiError && (error.status === 404 || error.status === 409)

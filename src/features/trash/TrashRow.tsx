@@ -48,7 +48,7 @@ export function TrashRow({ entry, entries, onRestoreTo, onPurge, onRestored }: T
         target.id === entry.id ? undefined : `${name} is still in Trash and can now be restored.`,
       )
     } catch (caught) {
-      const classified = classifyTrashError(caught)
+      const classified = classifyTrashError(caught, target.root_name)
       if (classified.kind === 'gone') {
         toast({ kind: 'info', title: 'Already gone', description: classified.message })
       } else if (classified.kind === 'parent_in_trash') {

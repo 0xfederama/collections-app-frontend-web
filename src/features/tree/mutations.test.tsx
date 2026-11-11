@@ -126,7 +126,7 @@ describe('AT-03 tree write errors (web): other failures', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create' }))
     expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent(
-      'That destination no longer exists or is in Trash.',
+      'That place is no longer available. Pick another one.',
     )
     expect(field).toHaveValue('Tripods')
     await waitFor(() =>

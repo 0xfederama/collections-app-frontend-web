@@ -1,9 +1,17 @@
-import { ApiError, failureKind } from '../../lib/api'
+import {
+  ApiError,
+  failureKind,
+  isDestinationUnavailable,
+  isFolderShared,
+  isForbidden,
+} from '../../lib/api'
 
 type TrashErrorKind =
   | 'gone' // 404: already restored or purged elsewhere
   | 'parent_in_trash' // 409: the parent was trashed since the list loaded
   | 'cycle' // 409 cycle_detected
+  | 'forbidden' // 403: restoring a shared top-level folder to a new place is owner-only
+  | 'shared' // 409 folder_shared
   | 'unavailable' // 409 destination_unavailable
   | 'validation' // 422
   | 'network' // no answer, or 5xx
@@ -17,8 +25,23 @@ export interface TrashError {
 export const GONE_MESSAGE =
   'That entry is no longer in Trash. It may have been restored or deleted elsewhere.'
 
-/** Turns a failed restore or purge into the message UI_SPEC §9 asks for. */
-export function classifyTrashError(error: unknown): TrashError {
+/** Turns a failed restore or purge into the message UI_SPEC §9 asks for. `name` is the entry's root. */
+export function classifyTrashError(error: unknown, name?: string): TrashError {
+  if (isForbidden(error)) {
+    return {
+      kind: 'forbidden',
+      message: `Only the owner of ‘${name ?? 'this entry'}’ can do that.`,
+    }
+  }
+  if (isFolderShared(error)) {
+    return { kind: 'shared', message: 'A shared folder can’t go inside another folder.' }
+  }
+  if (isDestinationUnavailable(error)) {
+    return {
+      kind: 'unavailable',
+      message: 'That place is no longer available. Pick another one.',
+    }
+  }
   switch (failureKind(error)) {
     case 'not_found':
       return { kind: 'gone', message: GONE_MESSAGE }

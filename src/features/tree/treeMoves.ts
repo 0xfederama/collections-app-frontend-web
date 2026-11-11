@@ -1,8 +1,10 @@
 import type { useToast } from '../../components/ui'
 import { arrayMove, type SortableMove } from '../../components/ui/sortable'
-import type { TreeIndex } from './api'
+import type { Folder, TreeIndex } from './api'
+import { classifyError } from './errors'
 import type { useMoveFolder, useMoveList, useReorderSiblings } from './mutations'
 import { buildSortable, canDropInto } from './order'
+import { leavesSharedBox } from './sharing/leavesBox'
 
 /**
  * The move side of the tree's write flows: drag reorder and move into a folder (`applyMove`),
@@ -18,6 +20,7 @@ export function createTreeMoves({
   moveList,
   reorder,
   meId,
+  askMoveOut,
 }: {
   index: TreeIndex | undefined
   sortable: ReturnType<typeof buildSortable> | undefined
@@ -28,6 +31,8 @@ export function createTreeMoves({
   reorder: ReturnType<typeof useReorderSiblings>
   /** The signed-in user, for the folders they may not move. */
   meId?: string
+  /** Asks before a drag takes something out of a shared folder; `proceed` sends the move. */
+  askMoveOut?: (ask: { name: string; box: Folder; proceed: () => void }) => void
 }) {
   const applyMove = ({ id, group, from, to, into }: SortableMove) => {
     if (into !== undefined) {
@@ -36,12 +41,21 @@ export function createTreeMoves({
       const list = index?.lists.get(id)
       const target = index?.folders.get(into)
       if (!index || !target || !canDropInto(index, id, into, meId)) return
-      const onError = () =>
+      const name = (folder ?? list)?.name ?? ''
+      const onError = (error: unknown) => {
+        const failure = classifyError(error, folder ? 'folder' : 'list', name)
+        const specific =
+          failure.kind === 'forbidden' ||
+          failure.kind === 'shared' ||
+          failure.kind === 'unavailable'
         toast({
           kind: 'error',
           title: 'Couldn’t move it',
-          description: 'The folders and lists were refreshed. Please try again.',
+          description: specific
+            ? failure.message
+            : 'The folders and lists were refreshed. Please try again.',
         })
+      }
       const done = () => {
         onCreatedFolder?.(into)
         toast({
@@ -50,8 +64,13 @@ export function createTreeMoves({
           description: `Now inside “${target.name}”.`,
         })
       }
-      if (folder) moveFolder.mutate({ folder, parentId: into }, { onSuccess: done, onError })
-      else if (list) moveList.mutate({ list, folderId: into }, { onSuccess: done, onError })
+      const send = () => {
+        if (folder) moveFolder.mutate({ folder, parentId: into }, { onSuccess: done, onError })
+        else if (list) moveList.mutate({ list, folderId: into }, { onSuccess: done, onError })
+      }
+      const box = leavesSharedBox(index, id, into)
+      if (box && askMoveOut) askMoveOut({ name, box, proceed: send })
+      else send()
       return
     }
     const siblings = sortable?.groups.get(group)

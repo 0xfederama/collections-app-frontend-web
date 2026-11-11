@@ -3,7 +3,13 @@ import { useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { AlertDialog, Button, Combobox, Dialog, useToast } from '../../components/ui'
 import { FolderInput, Trash2 } from '../../components/ui/icons'
-import { useTreeIndex, type TreeIndex, type TreeNode } from '../tree'
+import {
+  leavesSharedBox,
+  MoveOutConfirm,
+  useTreeIndex,
+  type TreeIndex,
+  type TreeNode,
+} from '../tree'
 import { countsText } from '../trash'
 import { itemKeys, treeKeys } from '../../data/keys'
 import { useDeleteItem, useMoveItem, type ItemRef, type ItemType } from './api'
@@ -126,8 +132,19 @@ function MoveItemDialog({ item, onClose }: { item: ItemRef; onClose: () => void 
   const options = tree.status === 'success' ? listOptions(tree.index, item.list_id, item.type) : []
   const choice = options.find((o) => o.value === target && !o.disabled)
 
+  const [confirming, setConfirming] = useState(false)
+  const box =
+    choice && tree.status === 'success'
+      ? leavesSharedBox(
+          tree.index,
+          item.list_id,
+          tree.index.lists.get(choice.value)?.folder_id ?? null,
+        )
+      : null
+
   const submit = async () => {
     if (!choice) return
+    setConfirming(false)
     setError(null)
     try {
       const moved = await move.mutateAsync({ item, listId: choice.value })
@@ -151,7 +168,11 @@ function MoveItemDialog({ item, onClose }: { item: ItemRef; onClose: () => void 
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => void submit()} pending={move.isPending} disabled={!choice}>
+          <Button
+            onClick={() => (box ? setConfirming(true) : void submit())}
+            pending={move.isPending}
+            disabled={!choice}
+          >
             Move
           </Button>
         </>
@@ -173,6 +194,14 @@ function MoveItemDialog({ item, onClose }: { item: ItemRef; onClose: () => void 
         )}
         {error && <ErrorBox error={error} />}
       </div>
+      {confirming && box && (
+        <MoveOutConfirm
+          name={item.title}
+          box={box}
+          onConfirm={() => void submit()}
+          onCancel={() => setConfirming(false)}
+        />
+      )}
     </Dialog>
   )
 }
