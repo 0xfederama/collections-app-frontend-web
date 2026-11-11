@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { OWNER_ME } from '../../mocks/users'
 import { problemResponse } from '../../mocks/problems'
 import { server } from '../../mocks/server'
@@ -87,5 +87,64 @@ describe('F-027 W1 settings: account', () => {
     const section = await openAccount()
     expect(await section.findByRole('alert')).toHaveTextContent('Couldn’t load your account.')
     expect(section.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  })
+})
+
+describe('F-027 W7 dev user switcher', () => {
+  const reload = vi.fn()
+  const identities = ['owner@dev.test', 'alice@dev.test', 'bob@dev.test']
+  const withIdentities = (value: string[] | null) =>
+    server.use(http.get(meUrl, () => HttpResponse.json({ ...OWNER_ME, dev_identities: value })))
+
+  beforeEach(() => {
+    reload.mockClear()
+    document.cookie = 'dev_user=; Path=/; Max-Age=0'
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('is not shown when dev_identities is null (production)', async () => {
+    const section = await openAccount()
+    await section.findByText('Owner')
+    expect(section.queryByRole('combobox', { name: 'Signed in as (dev)' })).toBeNull()
+  })
+
+  it('is not shown when dev_identities is empty', async () => {
+    withIdentities([])
+    const section = await openAccount()
+    await section.findByText('Owner')
+    expect(section.queryByRole('combobox', { name: 'Signed in as (dev)' })).toBeNull()
+  })
+
+  it('lists the identities, current value is the signed-in e-mail, with the note', async () => {
+    withIdentities(identities)
+    const section = await openAccount()
+    const select = await section.findByRole('combobox', { name: 'Signed in as (dev)' })
+    expect(select).toHaveTextContent('owner@dev.test')
+    expect(select).toHaveAccessibleDescription('Test users: this server runs with fake identities.')
+    await userEvent.click(select)
+    const options = await screen.findAllByRole('option')
+    expect(options.map((option) => option.textContent)).toEqual(identities)
+  })
+
+  it('choosing another identity writes the dev_user cookie and reloads', async () => {
+    withIdentities(identities)
+    const section = await openAccount()
+    vi.stubGlobal('location', { ...window.location, origin: window.location.origin, reload })
+    await userEvent.click(await section.findByRole('combobox', { name: 'Signed in as (dev)' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'bob@dev.test' }))
+    expect(document.cookie).toContain('dev_user=bob%40dev.test')
+    expect(reload).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not write the cookie or reload when the current identity is chosen again', async () => {
+    withIdentities(identities)
+    const section = await openAccount()
+    vi.stubGlobal('location', { ...window.location, origin: window.location.origin, reload })
+    await userEvent.click(await section.findByRole('combobox', { name: 'Signed in as (dev)' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'owner@dev.test' }))
+    expect(document.cookie).not.toContain('dev_user=')
+    expect(reload).not.toHaveBeenCalled()
   })
 })

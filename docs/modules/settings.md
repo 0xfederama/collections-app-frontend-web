@@ -14,6 +14,7 @@
 - `SettingsForm.tsx`, `SettingsBanners.tsx`, `CollectionFields.tsx`, `MediaFields.tsx`: Collection and Media panes and their failure banners.
 - `OwnedServicesField.tsx`: Media picker of the owned streaming services (`owned_streaming_services`).
 - `AccountSection.tsx`: avatar, name (e-mail when the name is null), e-mail and a "Log out" link to `/cdn-cgi/access/logout` (hidden when `me.dev_identities` is non-null). Data from `useMe()` in `features/account`. The dialog still opens on General.
+- Dev/test only (F-027 W7): when `me.dev_identities` is non-empty the pane shows "Signed in as (dev)" (`DevUserSwitcher.tsx`), which writes the `dev_user` cookie (`src/lib/devUser.ts`) and reloads. Never gated on `import.meta.env.DEV`.
 - `AppearanceSection.tsx`, `ConnectionSection.tsx`, `AboutSection.tsx`: the other panes.
 - `src/mocks/devSettings.ts`, `src/mocks/types.ts`: dev and test fakes (types are read-only).
 

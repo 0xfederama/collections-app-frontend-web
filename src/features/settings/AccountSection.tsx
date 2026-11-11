@@ -1,6 +1,7 @@
 import { Button, Skeleton } from '../../components/ui'
 import { UserAvatar } from '../../components/UserAvatar'
 import { useMe, userLabel } from '../account'
+import { DevUserSwitcher } from './DevUserSwitcher'
 
 const externalLink =
   'text-accent underline decoration-border-strong underline-offset-4 hover:text-accent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring'
@@ -45,6 +46,10 @@ export function AccountSection() {
         <a className={`${externalLink} self-start`} href="/cdn-cgi/access/logout">
           Log out
         </a>
+      ) : null}
+      {/* Only servers with fake identities send them, so the switcher never shows in prod (F-027 W7). */}
+      {dev_identities !== null && dev_identities.length > 0 ? (
+        <DevUserSwitcher email={email} identities={dev_identities} />
       ) : null}
     </div>
   )
