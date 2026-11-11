@@ -2,14 +2,13 @@ import type { ReactNode } from 'react'
 import { Select, TextField } from '../../components/ui'
 import {
   HISTORY_LIMIT_MAX,
-  NAME_MAX,
   inputId,
   type ErrorMap,
   type SettingsDraft,
   type ScalarSettingsField,
 } from './form'
 
-/** The General pane: workspace name, trash retention (saved on change), history limit, appearance. */
+/** The General pane: trash retention (saved on change), history limit, appearance. */
 export function CollectionFields({
   hidden,
   draft,
@@ -37,16 +36,6 @@ export function CollectionFields({
       <h2 id="settings-general" className="font-display text-section text-text">
         General
       </h2>
-      <TextField
-        id={inputId('workspace_name')}
-        label="Workspace name"
-        required
-        autoComplete="off"
-        maxLength={NAME_MAX + 50}
-        value={draft.workspace_name}
-        onChange={(event) => set('workspace_name', event.target.value)}
-        error={errors.workspace_name}
-      />
       <Select
         id={inputId('trash_retention_days')}
         label="Delete trash automatically"

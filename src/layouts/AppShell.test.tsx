@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from '../components/ui'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw/http'
+import { http } from 'msw/http'
 import { describe, expect, it, vi } from 'vitest'
 import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from '../app/router'
@@ -149,7 +149,7 @@ describe('AT-14 scroll containment', () => {
 })
 
 describe('AT-14 sidebar content order', () => {
-  it('has the workspace name, then search, then Quick add, then the tree', async () => {
+  it('has the app name, then search, then Quick add, then the tree', async () => {
     mockViewport(1100)
     renderAt('/')
     const tree = await within(nav()!).findByRole('tree')
@@ -164,7 +164,7 @@ describe('AT-14 sidebar content order', () => {
     expect(screen.queryByRole('banner')).not.toBeInTheDocument()
   })
 
-  it('the workspace name is larger than 15px type', async () => {
+  it('the app name is larger than 15px type', async () => {
     mockViewport(1100)
     renderAt('/')
     expect(await within(nav()!).findByRole('link', { name: 'Collections' })).toHaveClass(
@@ -376,8 +376,8 @@ describe('AT-14 desktop sidebar resize', () => {
   })
 })
 
-describe('W-04 workspace name', () => {
-  it('shows the workspace name from /api/v1/settings in the sidebar', async () => {
+describe('F-027 W2 app name', () => {
+  it('shows "Collections" in the sidebar, linking to Home', async () => {
     mockViewport(1100)
     renderAt('/')
     expect(await within(nav()!).findByRole('link', { name: 'Collections' })).toHaveAttribute(
@@ -386,7 +386,7 @@ describe('W-04 workspace name', () => {
     )
   })
 
-  it('falls back to "Collections" while loading and when settings fail', async () => {
+  it('does not depend on /api/v1/settings', async () => {
     mockViewport(1100)
     server.use(http.get(settingsUrl, () => problemResponse(500, 'internal_error')))
     renderAt('/')
@@ -394,23 +394,6 @@ describe('W-04 workspace name', () => {
     await waitFor(() =>
       expect(within(nav()!).getByRole('link', { name: 'Collections' })).toBeVisible(),
     )
-  })
-
-  it('falls back to "Collections" for a blank workspace name', async () => {
-    mockViewport(1100)
-    server.use(
-      http.get(settingsUrl, () =>
-        HttpResponse.json({
-          workspace_name: '',
-          streaming_country_code: 'IT',
-          markdown_history_limit: 20,
-          trash_retention_days: null,
-          version: 1,
-        }),
-      ),
-    )
-    renderAt('/')
-    expect(within(nav()!).getByRole('link', { name: 'Collections' })).toBeInTheDocument()
   })
 })
 

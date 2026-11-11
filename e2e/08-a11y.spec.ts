@@ -40,7 +40,7 @@ test.describe('AT-14 axe: no serious or critical issues (light and dark, 375 and
         await page.addInitScript((value) => localStorage.setItem('collection:theme', value), theme)
 
         await page.goto('/')
-        // Phones: Home is the workspace name (F-025 W14), no "Home" heading.
+        // Phones: Home is the app name (F-025 W14), no "Home" heading.
         await expect(
           page.getByRole('heading', { level: 1, name: width === 375 ? undefined : 'Home' }),
         ).toBeVisible()
