@@ -11,6 +11,7 @@ import { NavigationSection } from './sections/NavigationSection'
 import { OverlaysSection } from './sections/OverlaysSection'
 import { SelectionSection } from './sections/SelectionSection'
 import { ServiceIconsSection } from './sections/ServiceIconsSection'
+import { UserAvatarSection } from './sections/UserAvatarSection'
 
 const sections = [
   'buttons',
@@ -19,6 +20,7 @@ const sections = [
   'overlays',
   'feedback',
   'service-icons',
+  'user-avatar',
   'display',
   'materials',
   'navigation',
@@ -69,6 +71,7 @@ export function DevUiRoute() {
         <OverlaysSection />
         <FeedbackSection />
         <ServiceIconsSection />
+        <UserAvatarSection />
         <DisplaySection />
         <MaterialsSection />
         <NavigationSection />

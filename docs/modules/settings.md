@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`/settings` opens as a modal with three panes: General (Appearance, Collection), Media and About (Connection sits under About). Collection and Media save one snapshot on close. The Types & fields pane was removed (F-023).
+`/settings` opens as a modal with four panes: Account (first, F-027), General (Appearance, Collection), Media and About (Connection sits under About). Collection and Media save one snapshot on close. The Types & fields pane was removed (F-023).
 
 ## Key files
 
@@ -13,6 +13,7 @@
 - `useSettingsForm.ts`, `useLeaveGuard.ts`: save and close state machine; blocks leaving with unsaved changes.
 - `SettingsForm.tsx`, `SettingsBanners.tsx`, `CollectionFields.tsx`, `MediaFields.tsx`: Collection and Media panes and their failure banners.
 - `OwnedServicesField.tsx`: Media picker of the owned streaming services (`owned_streaming_services`).
+- `AccountSection.tsx`: avatar, name (e-mail when the name is null), e-mail and a "Log out" link to `/cdn-cgi/access/logout` (hidden when `me.dev_identities` is non-null). Data from `useMe()` in `features/account`. The dialog still opens on General.
 - `AppearanceSection.tsx`, `ConnectionSection.tsx`, `AboutSection.tsx`: the other panes.
 - `src/mocks/devSettings.ts`, `src/mocks/types.ts`: dev and test fakes (types are read-only).
 
