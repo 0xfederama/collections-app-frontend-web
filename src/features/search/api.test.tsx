@@ -35,6 +35,8 @@ function makePage(total: number, offset: number, limit: number): SearchPage {
         version: 1,
         created_at: '2026-10-14T09:31:00Z',
         updated_at: '2026-10-14T09:31:00Z',
+        created_by_user_id: null,
+        updated_by_user_id: null,
       },
       type_name: 'No type',
       path: [{ type: 'list' as const, id: uuid(11), name: 'Things', icon: null, icon_color: null }],

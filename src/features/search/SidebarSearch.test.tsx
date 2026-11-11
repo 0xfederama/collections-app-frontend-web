@@ -30,6 +30,8 @@ function makeResult(n: number, title = `Result ${n}`) {
       version: 1,
       created_at: '2026-10-14T09:31:00Z',
       updated_at: '2026-10-14T09:31:00Z',
+      created_by_user_id: null,
+      updated_by_user_id: null,
     },
     type_name: 'Movies',
     path: [

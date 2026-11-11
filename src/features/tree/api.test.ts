@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { exampleResponses } from '../../mocks/fixtures'
+import { OWNER_USER_ID } from '../../mocks/users'
 import { buildTree, createTreeIndex, type Folder, type FolderNode, type List } from './api'
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
@@ -14,6 +15,11 @@ function folder(n: number, parent: number | null, sort_order = 0, name = `F${n}`
     version: 1,
     created_at: stamp,
     updated_at: stamp,
+    owner_user_id: parent === null ? OWNER_USER_ID : null,
+    shared: false,
+    member_user_ids: [],
+    created_by_user_id: null,
+    updated_by_user_id: null,
   }
 }
 
@@ -33,6 +39,9 @@ function list(n: number, parent: number | null, sort_order = 0, name = `L${n}`):
     version: 1,
     created_at: stamp,
     updated_at: stamp,
+    owner_user_id: parent === null ? OWNER_USER_ID : null,
+    created_by_user_id: null,
+    updated_by_user_id: null,
   }
 }
 

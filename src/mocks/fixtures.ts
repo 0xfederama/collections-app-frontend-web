@@ -1,6 +1,7 @@
 // Hand-owned MSW fixtures: the first 2xx response of every operation (api-v1.0.0 carries no examples, so these
 // were kept from api-v0.17.0). Add or adjust a body here when the contract changes.
 import type { operations } from '../generated/schema'
+import { OWNER_ME, OWNER_USER, OWNER_USER_ID } from './users'
 
 /** The first 2xx response of an operation and its fixture body (used by the MSW mocks). */
 export interface ExampleResponse {
@@ -52,7 +53,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     status: 200,
     contentType: 'application/json',
     body: {
-      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       metadata_language: 'it-IT',
       lookup_available: true,
@@ -70,7 +70,6 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     status: 200,
     contentType: 'application/json',
     body: {
-      workspace_name: 'Collections',
       streaming_country_code: 'IT',
       metadata_language: 'it-IT',
       lookup_available: true,
@@ -160,6 +159,46 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       ],
     },
   },
+  getMe: {
+    method: 'get',
+    path: '/api/v1/me',
+    status: 200,
+    contentType: 'application/json',
+    body: OWNER_ME,
+  },
+  listUsers: {
+    method: 'get',
+    path: '/api/v1/users',
+    status: 200,
+    contentType: 'application/json',
+    body: { data: [OWNER_USER] },
+  },
+  addFolderMember: {
+    method: 'post',
+    path: '/api/v1/folders/{id}/members',
+    status: 200,
+    contentType: 'application/json',
+    body: {
+      id: '7c1e5a10-0000-4000-8000-000000000001',
+      parent_folder_id: null,
+      name: 'Media',
+      sort_order: 0,
+      version: 1,
+      created_at: '2026-10-14T09:00:00Z',
+      updated_at: '2026-10-14T09:00:00Z',
+      owner_user_id: OWNER_USER_ID,
+      shared: true,
+      member_user_ids: ['00000000-0000-4000-8000-000000000002'],
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
+    },
+  },
+  removeFolderMember: {
+    method: 'delete',
+    path: '/api/v1/folders/{id}/members/{user_id}',
+    status: 204,
+    contentType: null,
+  },
   getTree: {
     method: 'get',
     path: '/api/v1/tree',
@@ -175,6 +214,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           version: 1,
           created_at: '2026-10-14T09:00:00Z',
           updated_at: '2026-10-14T09:00:00Z',
+          owner_user_id: OWNER_USER_ID,
+          shared: false,
+          member_user_ids: [],
+          created_by_user_id: OWNER_USER_ID,
+          updated_by_user_id: OWNER_USER_ID,
         },
         {
           id: '7c1e5a10-0000-4000-8000-000000000002',
@@ -184,6 +228,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           version: 1,
           created_at: '2026-10-14T09:30:00Z',
           updated_at: '2026-10-14T09:30:00Z',
+          owner_user_id: null,
+          shared: false,
+          member_user_ids: [],
+          created_by_user_id: OWNER_USER_ID,
+          updated_by_user_id: OWNER_USER_ID,
         },
         {
           id: '7c1e5a10-0000-4000-8000-000000000003',
@@ -193,6 +242,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           version: 1,
           created_at: '2026-10-14T09:05:00Z',
           updated_at: '2026-10-14T09:05:00Z',
+          owner_user_id: OWNER_USER_ID,
+          shared: false,
+          member_user_ids: [],
+          created_by_user_id: OWNER_USER_ID,
+          updated_by_user_id: OWNER_USER_ID,
         },
       ],
       lists: [
@@ -211,6 +265,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           version: 1,
           created_at: '2026-10-14T09:30:00Z',
           updated_at: '2026-10-14T09:30:00Z',
+          owner_user_id: null,
+          created_by_user_id: OWNER_USER_ID,
+          updated_by_user_id: OWNER_USER_ID,
         },
         {
           id: '7c1e5a10-0000-4000-8000-000000000012',
@@ -227,6 +284,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           version: 2,
           created_at: '2026-10-14T09:10:00Z',
           updated_at: '2026-10-14T09:40:00Z',
+          owner_user_id: OWNER_USER_ID,
+          created_by_user_id: OWNER_USER_ID,
+          updated_by_user_id: OWNER_USER_ID,
         },
       ],
     },
@@ -244,6 +304,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 1,
       created_at: '2026-10-14T09:30:00Z',
       updated_at: '2026-10-14T09:30:00Z',
+      owner_user_id: null,
+      shared: false,
+      member_user_ids: [],
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   reorderFolders: {
@@ -265,6 +330,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 1,
       created_at: '2026-10-14T09:30:00Z',
       updated_at: '2026-10-14T09:30:00Z',
+      owner_user_id: null,
+      shared: false,
+      member_user_ids: [],
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   updateFolder: {
@@ -280,6 +350,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 1,
       created_at: '2026-10-14T09:30:00Z',
       updated_at: '2026-10-14T09:30:00Z',
+      owner_user_id: null,
+      shared: false,
+      member_user_ids: [],
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   deleteFolder: {
@@ -301,6 +376,11 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 1,
       created_at: '2026-10-14T09:30:00Z',
       updated_at: '2026-10-14T09:30:00Z',
+      owner_user_id: null,
+      shared: false,
+      member_user_ids: [],
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   createList: {
@@ -323,6 +403,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 1,
       created_at: '2026-10-14T09:30:00Z',
       updated_at: '2026-10-14T09:30:00Z',
+      owner_user_id: null,
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   reorderLists: {
@@ -351,6 +434,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 1,
       created_at: '2026-10-14T09:30:00Z',
       updated_at: '2026-10-14T09:30:00Z',
+      owner_user_id: null,
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
       path: [
         {
           type: 'folder',
@@ -385,6 +471,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 1,
       created_at: '2026-10-14T09:30:00Z',
       updated_at: '2026-10-14T09:30:00Z',
+      owner_user_id: null,
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   deleteList: {
@@ -420,6 +509,9 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 1,
       created_at: '2026-10-14T09:30:00Z',
       updated_at: '2026-10-14T09:30:00Z',
+      owner_user_id: null,
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   listItems: {
@@ -459,6 +551,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           version: 3,
           created_at: '2026-10-14T09:31:00Z',
           updated_at: '2026-10-14T10:00:00Z',
+          created_by_user_id: OWNER_USER_ID,
+          updated_by_user_id: OWNER_USER_ID,
         },
         {
           id: '7c1e5a10-0000-4000-8000-000000000103',
@@ -476,6 +570,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           version: 1,
           created_at: '2026-10-14T09:35:00Z',
           updated_at: '2026-10-14T09:35:00Z',
+          created_by_user_id: OWNER_USER_ID,
+          updated_by_user_id: OWNER_USER_ID,
         },
       ],
       page: {
@@ -526,6 +622,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 3,
       created_at: '2026-10-14T09:31:00Z',
       updated_at: '2026-10-14T10:00:00Z',
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   reorderListItems: {
@@ -567,6 +665,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 3,
       created_at: '2026-10-14T09:31:00Z',
       updated_at: '2026-10-14T10:00:00Z',
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
       path: [
         {
           type: 'folder',
@@ -614,6 +714,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 2,
       created_at: '2026-10-14T09:20:00Z',
       updated_at: '2026-10-14T09:40:00Z',
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   deleteItem: {
@@ -663,6 +765,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 3,
       created_at: '2026-10-14T09:31:00Z',
       updated_at: '2026-10-14T10:00:00Z',
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   moveItem: {
@@ -693,6 +797,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 2,
       created_at: '2026-10-14T09:20:00Z',
       updated_at: '2026-10-14T09:40:00Z',
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   setItemImage: {
@@ -736,6 +842,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 3,
       created_at: '2026-10-14T09:31:00Z',
       updated_at: '2026-10-14T10:00:00Z',
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   deleteItemImage: {
@@ -766,6 +874,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       version: 2,
       created_at: '2026-10-14T09:20:00Z',
       updated_at: '2026-10-14T09:40:00Z',
+      created_by_user_id: OWNER_USER_ID,
+      updated_by_user_id: OWNER_USER_ID,
     },
   },
   getAttachmentFile: {
@@ -787,6 +897,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     contentType: 'application/json',
     body: {
       item_id: '7c1e5a10-0000-4000-8000-000000000101',
+      author_user_id: OWNER_USER_ID,
       version: 2,
       body: '# Notes\n\nGreat film, rewatch in 4K.',
       updated_at: '2026-10-14T10:00:00Z',
@@ -799,6 +910,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     contentType: 'application/json',
     body: {
       item_id: '7c1e5a10-0000-4000-8000-000000000101',
+      author_user_id: OWNER_USER_ID,
       version: 2,
       body: '# Notes\n\nGreat film, rewatch in 4K.',
       updated_at: '2026-10-14T10:00:00Z',
@@ -814,11 +926,13 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
         {
           version: 2,
           size_bytes: 36,
+          author_user_id: OWNER_USER_ID,
           created_at: '2026-10-14T10:00:00Z',
         },
         {
           version: 1,
           size_bytes: 8,
+          author_user_id: OWNER_USER_ID,
           created_at: '2026-10-14T09:45:00Z',
         },
       ],
@@ -831,6 +945,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     contentType: 'application/json',
     body: {
       item_id: '7c1e5a10-0000-4000-8000-000000000101',
+      author_user_id: OWNER_USER_ID,
       version: 2,
       body: '# Notes\n\nGreat film, rewatch in 4K.',
       updated_at: '2026-10-14T10:00:00Z',
@@ -843,6 +958,7 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
     contentType: 'application/json',
     body: {
       item_id: '7c1e5a10-0000-4000-8000-000000000101',
+      author_user_id: OWNER_USER_ID,
       version: 2,
       body: '# Notes\n\nGreat film, rewatch in 4K.',
       updated_at: '2026-10-14T10:00:00Z',
@@ -883,6 +999,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             version: 3,
             created_at: '2026-10-14T09:31:00Z',
             updated_at: '2026-10-14T10:00:00Z',
+            created_by_user_id: OWNER_USER_ID,
+            updated_by_user_id: OWNER_USER_ID,
           },
           type_name: 'Movie',
           path: [
@@ -952,6 +1070,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
             version: 3,
             created_at: '2026-10-14T09:31:00Z',
             updated_at: '2026-10-14T10:00:00Z',
+            created_by_user_id: OWNER_USER_ID,
+            updated_by_user_id: OWNER_USER_ID,
           },
           type_name: 'Movie',
           path: [
