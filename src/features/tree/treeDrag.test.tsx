@@ -8,8 +8,7 @@ import { ID, openTree, seedTree, sidebar } from './treeTestKit'
 // Pointer drags in the sidebar, end to end through the stateful fake (web 3.3.0, D-158). jsdom has no
 // layout, so `stubLayout` stacks the rows 36 px apart in DOM order; with every folder open the rows are
 // Media, Movies, Festival picks, Cannes, Watchlist, Seen, TV, Currently watching, Vehicles, Motorbikes,
-// Cars, Gear, Gadgets, Empty folder, Wishlist, Ideas. dnd-kit keeps a placeholder where the lifted row
-// was, so rows below it shift by one slot while it is lifted.
+// Cars, Gear, Gadgets, Empty folder, Wishlist, Ideas. The lifted row stays where it is.
 const ROWS = [
   ID.media,
   ID.movies,
@@ -30,10 +29,9 @@ const ROWS = [
 ]
 const HEIGHT = 36
 
-/** Pointer y at `where` of row `id` while `source` is lifted. */
-function yOf(id: string, where: 'top' | 'middle' | 'bottom', source: string) {
-  const at = ROWS.indexOf(id) + (ROWS.indexOf(id) > ROWS.indexOf(source) ? 1 : 0)
-  return at * HEIGHT + { top: 4, middle: HEIGHT / 2, bottom: HEIGHT - 4 }[where]
+/** Pointer y at `where` of row `id`. */
+function yOf(id: string, where: 'top' | 'middle' | 'bottom') {
+  return ROWS.indexOf(id) * HEIGHT + { top: 4, middle: HEIGHT / 2, bottom: HEIGHT - 4 }[where]
 }
 
 async function dragTo(source: string, y: number) {
@@ -58,7 +56,7 @@ describe('web 3.3.0 sidebar pointer drag', () => {
 
   it('a list dropped between two lists of another folder moves there at that place', async () => {
     const { backend } = await openTree()
-    const user = await dragTo(ID.wishlist, yOf(ID.seen, 'top', ID.wishlist))
+    const user = await dragTo(ID.wishlist, yOf(ID.seen, 'top'))
     await waitFor(() => expect(line()).not.toBeNull())
     expect(line()).toHaveAttribute('data-tree-drop-line', 'before')
     expect(line()).toHaveAttribute('data-tree-drop-level', '3')
@@ -75,7 +73,7 @@ describe('web 3.3.0 sidebar pointer drag', () => {
 
   it('a folder dropped on a folder’s middle goes into it, last', async () => {
     const { backend } = await openTree()
-    const user = await dragTo(ID.gear, yOf(ID.vehicles, 'middle', ID.gear))
+    const user = await dragTo(ID.gear, yOf(ID.vehicles, 'middle'))
     await waitFor(() =>
       expect(within(sidebar()).getAllByRole('treeitem')[ROWS.indexOf(ID.vehicles)]).toHaveClass(
         'bg-accent-tint',
@@ -107,7 +105,7 @@ describe('web 3.3.0 sidebar pointer drag', () => {
 
   it('inside one parent it is a move with before_id, not a PUT of the whole order', async () => {
     const { backend } = await openTree()
-    const user = await dragTo(ID.gear, yOf(ID.vehicles, 'top', ID.gear))
+    const user = await dragTo(ID.gear, yOf(ID.vehicles, 'top'))
     await drop(user)
     await waitFor(() =>
       expect(backend.writes('POST', `/api/v1/folders/${ID.gear}/move`)).toHaveLength(1),
@@ -121,7 +119,7 @@ describe('web 3.3.0 sidebar pointer drag', () => {
 
   it('a folder into its own descendant: no line, nothing sent', async () => {
     const { backend } = await openTree()
-    const user = await dragTo(ID.media, yOf(ID.movies, 'middle', ID.media))
+    const user = await dragTo(ID.media, yOf(ID.movies, 'middle'))
     expect(line()).toBeNull()
     await drop(user)
     await screen.findByText(/^Dropped Media/)
@@ -130,7 +128,7 @@ describe('web 3.3.0 sidebar pointer drag', () => {
 
   it('dropping where it already is sends nothing', async () => {
     const { backend } = await openTree()
-    const user = await dragTo(ID.gear, yOf(ID.empty, 'top', ID.gear))
+    const user = await dragTo(ID.gear, yOf(ID.empty, 'top'))
     expect(line()).toBeNull()
     await drop(user)
     await screen.findByText(/^Dropped Gear/)

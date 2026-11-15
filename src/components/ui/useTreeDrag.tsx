@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from 'react'
-import { DRAG_PLACEHOLDER, type TreeDragHandlers } from './sortable'
+import type { TreeDragHandlers } from './sortable'
 import { hitTest, type TreeDrop, type TreeHit, type TreeHitRow } from './treeDrag'
 
 /** What `Tree` needs to know about the feature's drag rules (web 3.3.0, D-158). */
@@ -53,7 +53,11 @@ export function useTreeDrag<D extends TreeDrop>({
 }) {
   const instructionsId = useId()
   const [announcement, setAnnouncement] = useState('')
-  const [pointer, setPointer] = useState<{ sourceId: string; drop: D | null } | null>(null)
+  const [pointer, setPointer] = useState<{
+    sourceId: string
+    drop: D | null
+    point: { x: number; y: number } | null
+  } | null>(null)
   const [keyboard, setKeyboard] = useState<KeyboardDrag<D> | null>(null)
   const sourceRef = useRef<string | null>(null)
   const pointRef = useRef<{ x: number; y: number } | null>(null)
@@ -73,12 +77,11 @@ export function useTreeDrag<D extends TreeDrop>({
   const measure = () => {
     const list = listRef.current
     if (!list) return null
-    // While a row is lifted dnd-kit leaves a placeholder in its place and moves the real element
-    // with the pointer: the placeholder is where the row's slot is.
+    // The dragged row stays in its place (no dnd-kit feedback), so every row is where it is measured.
     const found = new Map<string, Element>()
     for (const element of list.querySelectorAll('[data-tree-id]')) {
       const id = element.getAttribute('data-tree-id')
-      if (id && (!found.has(id) || element.matches(DRAG_PLACEHOLDER))) found.set(id, element)
+      if (id && !found.has(id)) found.set(id, element)
     }
     const measured: TreeHitRow[] = []
     for (const row of rowsRef.current) {
@@ -104,17 +107,13 @@ export function useTreeDrag<D extends TreeDrop>({
     onStart: (id) => {
       sourceRef.current = id
       pointRef.current = null
-      later(() => setPointer({ sourceId: id, drop: null }))
+      later(() => setPointer({ sourceId: id, drop: null, point: null }))
       announce(`Picked up ${labelOf(id)}.`)
     },
     onMove: (point) => {
       pointRef.current = point
       const drop = resolve(point)
-      later(() =>
-        setPointer((current) =>
-          current && current.drop?.key !== drop?.key ? { ...current, drop } : current,
-        ),
-      )
+      later(() => setPointer((current) => (current ? { ...current, drop, point } : current)))
     },
     onEnd: (canceled, released) => {
       const sourceId = sourceRef.current
@@ -201,9 +200,19 @@ export function useTreeDrag<D extends TreeDrop>({
   }
 
   const active = pointer
-    ? { sourceId: pointer.sourceId, drop: pointer.drop }
+    ? {
+        kind: 'pointer' as const,
+        sourceId: pointer.sourceId,
+        label: rows.find((row) => row.id === pointer.sourceId)?.label ?? '',
+        drop: pointer.drop,
+      }
     : keyboard
-      ? { sourceId: keyboard.sourceId, drop: keyboard.steps[keyboard.at] ?? null }
+      ? {
+          kind: 'keyboard' as const,
+          sourceId: keyboard.sourceId,
+          label: rows.find((row) => row.id === keyboard.sourceId)?.label ?? '',
+          drop: keyboard.steps[keyboard.at] ?? null,
+        }
       : null
 
   return {
@@ -211,6 +220,8 @@ export function useTreeDrag<D extends TreeDrop>({
     onKeyDown,
     onBlur,
     active,
+    /** Where the pointer is during a pointer drag, for the chip that follows it. */
+    pointerAt: pointer?.point ?? null,
     announcement,
     instructionsId,
     instructions: INSTRUCTIONS,

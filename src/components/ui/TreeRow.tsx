@@ -96,7 +96,8 @@ export function TreeRow<T extends TreeNodeBase>({
       style={{ paddingInlineStart: `${(level - 1) * INDENT + BASE_INDENT}px` }}
       className={cx(
         'group/row relative flex min-h-9 cursor-pointer select-none items-center [-webkit-touch-callout:none] gap-1 rounded-md pr-2 text-ui text-text hover:bg-fill-hover focus-visible:bg-fill-hover focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus-ring aria-selected:bg-accent-tint aria-selected:focus-visible:bg-accent-tint aria-selected:font-medium aria-selected:text-accent-text pointer-coarse:min-h-11',
-        (isDragging || lifted) && 'bg-surface-raised opacity-80 shadow-md',
+        lifted && 'bg-surface-raised opacity-80 shadow-md',
+        isDragging && 'opacity-50',
         drop?.kind === 'into' && 'bg-accent-tint text-accent-text',
       )}
     >
@@ -108,10 +109,13 @@ export function TreeRow<T extends TreeNodeBase>({
           data-tree-drop-level={drop.level}
           style={{ left: `${(drop.level - 1) * INDENT + BASE_INDENT}px` }}
           className={cx(
-            'pointer-events-none absolute right-2 h-0.5 rounded-full bg-accent',
+            'pointer-events-none absolute right-2 h-[3px] rounded-full bg-accent',
             drop.edge === 'before' ? 'top-0' : 'bottom-0',
           )}
-        />
+        >
+          {/* The classic insertion marker: a dot at the line's start. */}
+          <span className="absolute top-1/2 -left-1 size-[7px] -translate-y-1/2 rounded-full bg-accent" />
+        </span>
       )}
     </li>
   )

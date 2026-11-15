@@ -218,15 +218,16 @@ describe('F002-W2 pointer drag from anywhere on the row (web 3.3.0)', () => {
     expect(onSelect).toHaveBeenCalledExactlyOnceWith('a')
     onSelect.mockClear()
 
-    // stubLayout stacks 36 px rows in DOM order and counts dnd-kit's placeholder (Alpha's slot) as a
-    // row, so y 100 is the bottom half of Beta: Alpha lands before Gamma.
+    // stubLayout stacks 36 px rows in DOM order (the dragged row stays in place), so y 80 is the top
+    // half of Gamma: Alpha lands before Gamma.
     await user.pointer([
       { keys: '[MouseLeft>]', target: row, coords: { clientX: 20, clientY: 10 } },
       { coords: { clientX: 20, clientY: 40 } },
-      { coords: { clientX: 20, clientY: 100 } },
+      { coords: { clientX: 20, clientY: 80 } },
     ])
     await screen.findByText(/^Picked up Alpha/)
     await waitFor(() => expect(lines()).toEqual([['c', 'before']]))
+    expect(document.querySelector('[data-tree-drag-chip]')).toHaveTextContent('Alpha')
     await user.pointer({ keys: '[/MouseLeft]' })
     await screen.findByText(/^Dropped Alpha/)
     expect(onDrop).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: 'a', to: 1 }))

@@ -1,6 +1,7 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
 import { TreeDragProvider } from './sortable'
+import { TreeDragChip } from './TreeDragChip'
 import { TreeRow, type TreeRowDrop } from './TreeRow'
 import type { TreeDrop } from './treeDrag'
 import { useTreeDrag, type TreeDragRules } from './useTreeDrag'
@@ -189,7 +190,7 @@ export function Tree<T extends TreeNodeBase, D extends TreeDrop = TreeDrop>({
             expanded={expanded}
             selected={node.id === selected}
             draggable={drag?.canDrag(node) ?? false}
-            lifted={dragState.active?.sourceId === node.id}
+            lifted={dragState.active?.kind === 'keyboard' && dragState.active.sourceId === node.id}
             describedBy={dragState.instructionsId}
             drop={dropOn(node.id)}
             onFocusRow={setFocusedId}
@@ -198,6 +199,9 @@ export function Tree<T extends TreeNodeBase, D extends TreeDrop = TreeDrop>({
           />
         ))}
       </ul>
+      {drag && dragState.active?.kind === 'pointer' && dragState.pointerAt && (
+        <TreeDragChip point={dragState.pointerAt} label={dragState.active.label} />
+      )}
       {drag && (
         <>
           <span id={dragState.instructionsId} hidden>

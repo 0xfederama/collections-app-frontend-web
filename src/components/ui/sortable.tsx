@@ -1,5 +1,6 @@
 import {
   Accessibility,
+  Feedback,
   KeyboardSensor,
   PointerActivationConstraints,
   PointerSensor,
@@ -263,8 +264,8 @@ export function useSortableRow(id: string, slot: SortableSlot | undefined) {
 }
 
 /**
- * The pointer half of a tree drag (web 3.3.0, D-158). dnd-kit only lifts the row and follows the
- * pointer (no sorting, so the other rows stay where they are); where the row would land is decided by
+ * The pointer half of a tree drag (web 3.3.0, D-158). dnd-kit only tracks the pointer (the row
+ * stays in place, no sorting, so the other rows stay where they are too); where the row would land is decided by
  * the caller from the pointer position (`onMove`), and `onEnd` fires once with the last position.
  * The keyboard path is the tree's own (`useTreeDrag`).
  */
@@ -274,9 +275,6 @@ export interface TreeDragHandlers {
   /** `point` is where the pointer was released, when the event says. */
   onEnd: (canceled: boolean, point?: { x: number; y: number }) => void
 }
-
-/** dnd-kit leaves this element in a lifted row's place while the real one follows the pointer. */
-export const DRAG_PLACEHOLDER = '[data-dnd-placeholder]'
 
 export function TreeDragProvider({
   handlers,
@@ -317,8 +315,14 @@ export function TreeDragProvider({
   )
 }
 
-/** Makes a tree row pick-up-able by the pointer. `ref` goes on the row; the whole row is the handle. */
+const noFeedback = [Feedback.configure({ feedback: 'none' })]
+
+/**
+ * Makes a tree row pick-up-able by the pointer. `ref` goes on the row; the whole row is the handle.
+ * `feedback: 'none'`: dnd-kit does not move the row (it would cover the insertion line the user aims
+ * at); the tree draws its own chip at the pointer instead.
+ */
 export function useTreeDragRow(id: string, disabled: boolean) {
-  const { ref, isDragging } = useDraggable({ id, disabled })
+  const { ref, isDragging } = useDraggable({ id, disabled, plugins: noFeedback })
   return { ref, isDragging }
 }
