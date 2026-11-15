@@ -9,6 +9,7 @@
 ### Fixed
 
 - After a sidebar or list drag, starting another drag within a tenth of a second of a click could leave every later click in the app swallowed (nothing reacted until the next drag). The click guard of each drag now cleans up only itself.
+- Reopening a list's icon popover right after picking an icon no longer shows the old icon (Remove disabled, and the next pick conflicting with your own save).
 - Quick add's accessible name matches its visible label (axe 4.14 `label-content-name-mismatch`); the `N` shortcut is announced with `aria-keyshortcuts`.
 
 ### Upkeep (roadmap 37, D-161)

@@ -41,11 +41,15 @@ export function ListIconEdit({
   const action = useAction('list')
   const toast = useToast()
 
-  // Each opening starts from the list as it is now (the version the user saw).
+  // Each opening starts from the list as it is now (the version the user saw), unless our own last
+  // write is newer than the prop: reopening right after a pick, before the refetch lands, must not
+  // fall back to the old version (stale icon, and a 412 against our own write).
   if (open !== wasOpen) {
     setWasOpen(open)
     if (open) {
-      setSnapshot(list)
+      setSnapshot((current) =>
+        current.id === list.id && current.version > list.version ? current : list,
+      )
       action.clearError()
     }
   }
