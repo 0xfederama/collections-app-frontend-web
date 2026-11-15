@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { createList, createViaSidebar, drag, sidebarTree, uniqueName } from './helpers'
+import { createList, createViaSidebar, dragTo, sidebarTree, uniqueName } from './helpers'
 
 const row = (page: Page, name: string) =>
   sidebarTree(page).getByRole('treeitem').filter({ hasText: name })
@@ -117,8 +117,8 @@ test.describe('AT-03 organize folders and lists', () => {
     await page.goto('/')
     await expect.poll(() => orderOf(page, [a, b, c])).toEqual([a, b, c])
 
-    // Drag: Charlie onto Alpha.
-    await drag(page, row(page, c), row(page, a))
+    // Drag: Charlie to the top of Alpha's row (the top part lands before it, web 3.3.0).
+    await dragTo(page, row(page, c), row(page, a), 'above')
     await expect.poll(() => orderOf(page, [a, b, c])).toEqual([c, a, b])
     await page.reload()
     await expect.poll(() => orderOf(page, [a, b, c])).toEqual([c, a, b])
@@ -126,11 +126,11 @@ test.describe('AT-03 organize folders and lists', () => {
     // Keyboard: focus Alpha's row, pick up with Space, ArrowDown, drop with Space.
     await row(page, a).focus()
     await page.keyboard.press('Space')
-    const live = page.locator('[aria-live]').filter({ hasText: a })
-    await expect(live).toContainText(a)
-    const before = await live.innerText()
+    const live = page.locator('[aria-live="assertive"]')
+    await expect(live).toContainText(`Picked up ${a}`)
     await page.keyboard.press('ArrowDown')
-    await expect(live).not.toHaveText(before)
+    // The announcement now names the target slot.
+    await expect(live).toContainText(/^(Before |At the end)/)
     await page.keyboard.press('Space')
     await expect.poll(() => orderOf(page, [a, b, c])).toEqual([c, b, a])
     await page.reload()

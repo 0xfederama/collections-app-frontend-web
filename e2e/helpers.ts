@@ -114,54 +114,80 @@ export async function drag(page: Page, handle: Locator, target: Locator) {
   await page.mouse.up()
 }
 
-/**
- * Like `drag`, but drops at a point of the target row: `above` / `below` reorder (top or bottom
- * fifth of the row), `into` is the middle (a folder's "drop into" zone).
- */
-export async function dragTo(
-  page: Page,
-  handle: Locator,
-  target: Locator,
-  where: 'above' | 'below' | 'into',
-) {
-  const from = await center(handle)
+/** Where on a row a drag is dropped (web 3.3.0): the top part, the middle band of a folder, the bottom part. */
+export type DropPart = 'above' | 'into' | 'below'
+const PART_Y = { above: 0.1, into: 0.5, below: 0.9 } as const
+
+/** The point of `part` of `target`, after scrolling it into view. */
+async function pointOf(target: Locator, part: DropPart) {
   await target.scrollIntoViewIfNeeded()
   const box = await target.boundingBox()
   if (!box) throw new Error('target has no box')
-  const y = box.y + box.height * (where === 'above' ? 0.1 : where === 'below' ? 0.9 : 0.5)
-  const x = box.x + box.width / 2
+  return { x: box.x + box.width / 2, y: box.y + box.height * PART_Y[part] }
+}
+
+/** The empty space below the last row of the sidebar tree: dropping there means the end of the top level. */
+async function treeEndPoint(page: Page) {
+  const area = await sidebarTree(page).locator('xpath=..').boundingBox()
+  if (!area) throw new Error('the tree area has no box')
+  return { x: area.x + area.width / 2, y: area.y + area.height - 6 }
+}
+
+async function mouseDrag(
+  page: Page,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  release = true,
+) {
   await page.mouse.move(from.x, from.y)
   await page.mouse.down()
-  await page.mouse.move(from.x, from.y + (y < from.y ? -8 : 8), { steps: 4 })
-  await page.mouse.move(x, y, { steps: 20 })
-  await page.mouse.up()
+  await page.mouse.move(from.x, from.y + (to.y < from.y ? -8 : 8), { steps: 4 })
+  await page.mouse.move(to.x, to.y, { steps: 20 })
+  if (release) await page.mouse.up()
 }
 
 /**
- * Presses on `handle`, moves until `zone` shows up, and drops in its middle. On a long tree the zone
- * starts below the fold: holding the pointer at the bottom edge auto-scrolls to it, as a user would.
+ * Like `drag`, but drops at a part of the target row: `above` (top) lands before it, `below`
+ * (bottom) after it (the first child of an open folder), `into` (middle) is a folder's "drop into".
  */
-export async function dragToZone(page: Page, handle: Locator, zone: Locator) {
-  const from = await center(handle)
-  await page.mouse.move(from.x, from.y)
-  await page.mouse.down()
-  await page.mouse.move(from.x, from.y + 8, { steps: 4 })
-  await expect(zone).toBeVisible()
-  // The zone's scroll container (the sidebar's tree area): its bottom edge is where auto-scroll starts.
-  const bottom = await zone.evaluate((el) => {
-    let node = el.parentElement
-    while (node && getComputedStyle(node).overflowY !== 'auto') node = node.parentElement
-    return (node ?? document.documentElement).getBoundingClientRect().bottom
-  })
-  for (let i = 0; i < 60 && !(await isInView(zone, bottom)); i++)
-    await page.mouse.move(from.x, bottom - 6 - (i % 2), { steps: 2 })
-  const box = await zone.boundingBox()
-  if (!box) throw new Error('zone has no box')
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 10 })
-  await page.mouse.up()
+export async function dragTo(page: Page, handle: Locator, target: Locator, where: DropPart) {
+  await mouseDrag(page, await center(handle), await pointOf(target, where))
 }
 
-async function isInView(locator: Locator, bottom: number) {
-  const box = await locator.boundingBox()
-  return !!box && box.y >= 0 && box.y + box.height <= bottom
+/** Drags `handle` below the last row of the tree. */
+export async function dragToEnd(page: Page, handle: Locator) {
+  await mouseDrag(page, await center(handle), await treeEndPoint(page))
+}
+
+/** Drags to a part of `target` and stops there with the button still down; the caller releases. */
+export async function dragHold(page: Page, handle: Locator, target: Locator, where: DropPart) {
+  await mouseDrag(page, await center(handle), await pointOf(target, where), false)
+}
+
+/**
+ * A press-and-hold touch drag (dnd-kit starts it after 250 ms) with real touch input through the
+ * Chrome DevTools Protocol, so the app sees pointerType "touch". Chromium only: WebKit has no CDP.
+ */
+export async function touchDragTo(page: Page, handle: Locator, target: Locator, where: DropPart) {
+  const from = await center(handle)
+  const to = await pointOf(target, where)
+  const cdp = await page.context().newCDPSession(page)
+  const touch = (
+    type: 'touchStart' | 'touchMove' | 'touchEnd',
+    points: { x: number; y: number }[],
+  ) =>
+    cdp.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints: points.map((p) => ({ ...p, id: 1 })),
+    })
+  await touch('touchStart', [from])
+  // The hold: nothing moves, so the page does not scroll and the drag activates.
+  await page.waitForTimeout(400)
+  const steps = 20
+  for (let i = 1; i <= steps; i++)
+    await touch('touchMove', [
+      { x: from.x + ((to.x - from.x) * i) / steps, y: from.y + ((to.y - from.y) * i) / steps },
+    ])
+  await touch('touchEnd', [])
+  await cdp.detach()
 }

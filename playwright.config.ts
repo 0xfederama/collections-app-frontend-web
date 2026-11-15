@@ -22,6 +22,13 @@ export default defineConfig({
       ],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
+    // Web 3.3.0: the sidebar drag layer on desktop WebKit (Safari's engine), where pointer and focus
+    // behave differently. Only the drag specs run there. Once: `npx playwright install webkit`.
+    {
+      name: 'webkit',
+      testMatch: ['**/25-tree-drag-moves.spec.ts', '**/tree-dnd.spec.ts'],
+      use: { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } },
+    },
     // F-025: phone layout, run in WebKit (the engine of iOS Safari). Once: `npx playwright install webkit`.
     {
       name: 'mobile-webkit',

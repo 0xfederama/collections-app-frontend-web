@@ -271,7 +271,8 @@ export function useSortableRow(id: string, slot: SortableSlot | undefined) {
 export interface TreeDragHandlers {
   onStart: (id: string) => void
   onMove: (point: { x: number; y: number }) => void
-  onEnd: (canceled: boolean) => void
+  /** `point` is where the pointer was released, when the event says. */
+  onEnd: (canceled: boolean, point?: { x: number; y: number }) => void
 }
 
 /** dnd-kit leaves this element in a lifted row's place while the real one follows the pointer. */
@@ -301,7 +302,14 @@ export function TreeDragProvider({
       }}
       onDragEnd={(event) => {
         stopSwallowingClick()
-        handlers.onEnd(event.canceled)
+        // The release carries the true last position: dnd-kit batches moves per frame, so the final
+        // `dragmove` can be missing when the button goes up right after the last move.
+        const native = event.nativeEvent as Partial<MouseEvent> | undefined
+        const released =
+          typeof native?.clientX === 'number' && typeof native.clientY === 'number'
+            ? { x: native.clientX, y: native.clientY }
+            : undefined
+        handlers.onEnd(event.canceled, released)
       }}
     >
       {children}

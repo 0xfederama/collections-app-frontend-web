@@ -116,9 +116,9 @@ export function useTreeDrag<D extends TreeDrop>({
         ),
       )
     },
-    onEnd: (canceled) => {
+    onEnd: (canceled, released) => {
       const sourceId = sourceRef.current
-      const point = pointRef.current
+      const point = released ?? pointRef.current
       const drop = canceled || !point ? null : resolve(point)
       sourceRef.current = null
       later(() => setPointer(null))
