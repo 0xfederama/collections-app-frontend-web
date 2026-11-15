@@ -4,7 +4,7 @@
   "version": "3.4.1",
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=26"
   },
   "scripts": {
     "dev": "vite",
@@ -29,9 +29,9 @@
     "@codemirror/lang-markdown": "6.5.2",
     "@codemirror/language": "6.13.1",
     "@codemirror/state": "6.7.6",
-    "@codemirror/view": "6.43.14",
-    "@dnd-kit/dom": "0.5.0",
-    "@dnd-kit/react": "0.5.0",
+    "@codemirror/view": "6.43.15",
+    "@dnd-kit/dom": "0.5.3",
+    "@dnd-kit/react": "0.5.3",
     "@fontsource-variable/geist": "5.3.0",
     "@fontsource-variable/geist-mono": "5.3.0",
     "@fontsource-variable/space-grotesk": "5.3.0",
@@ -54,15 +54,15 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.13.0",
+    "@axe-core/playwright": "4.14.0",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "1.64.0",
+    "@playwright/test": "1.65.1",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
-    "@types/node": "^24.19.2",
+    "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
@@ -83,7 +83,7 @@
     "vitest": "^5.0.4"
   },
   "overrides": {
-    "playwright-core": "1.64.0",
+    "playwright-core": "1.65.1",
     "openapi-typescript": {
       "typescript": "$typescript"
     },

@@ -120,7 +120,7 @@ Run them when a user flow changes and before a release (D-076). Each spec create
 - **Upload over 10 MiB returns an empty 502 in dev:** the Vite proxy hides the backend's 413 when it closes the connection early. The app's client-side size check stops such files first; straight to the backend you get a proper 413.
 - **`VITE_API_MOCKS=1` does nothing in the Claude desktop browser pane:** it refuses service workers, so MSW can't start. Use a normal browser.
 - **Port 5173 in use:** the dev server uses `strictPort`, so stop the other process (or the `./deploy/test` stack).
-- **Wrong Node version:** `nvm use` (reads `.nvmrc`). `engines` requires Node 24 or newer.
+- **Wrong Node version:** `nvm use` (reads `.nvmrc`). `engines` requires Node 26 or newer.
 - **`install-scripts` warning from npm:** about the optional `fsevents` package, harmless.
 
 ## Trademarks

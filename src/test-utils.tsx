@@ -30,6 +30,7 @@ export async function preloadRoutes() {
     import('./routes/ListRoute'),
     import('./routes/SearchRoute'),
     import('./routes/SettingsRoute'),
+    import('./routes/SettingsPanes'),
     import('./routes/TrashRoute'),
     import('./routes/ItemRoute'),
     import('./features/items/ItemPage'),

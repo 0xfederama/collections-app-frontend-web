@@ -1,41 +1,14 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { Button, Dialog, focusRing, Skeleton } from '../components/ui'
+import { Dialog, focusRing } from '../components/ui'
 import { useSettings, type SettingsCloseRequestRef } from '../features/settings'
-import {
-  AboutSection,
-  AccountSection,
-  AppearanceSection,
-  ConnectionSection,
-  SettingsForm,
-} from '../features/settings/screens'
+import { WorkspaceSkeleton } from './SettingsSkeleton'
 
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
-  return (
-    <section aria-labelledby={id} className="flex flex-col gap-4">
-      <h2 id={id} className="font-display text-section text-text">
-        {title}
-      </h2>
-      {children}
-    </section>
-  )
-}
+// The panes (and their form code) load after the dialog is already on screen, so opening
+// Settings is instant; the settings request starts at the same time, from this component.
+const SettingsPanes = lazy(() => import('./SettingsPanes'))
 
 const PANES = ['Account', 'General', 'Media', 'About']
-
-function WorkspaceSkeleton() {
-  return (
-    <div role="status" className="flex flex-col gap-4">
-      <span className="sr-only">Loading settings</span>
-      {Array.from({ length: 4 }, (_, i) => (
-        <div key={i} aria-hidden className="flex flex-col gap-1.5">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-10" />
-        </div>
-      ))}
-    </div>
-  )
-}
 
 /**
  * `/settings` (UI_SPEC §8): a large pane over the page it was opened from (the shell renders that
@@ -78,49 +51,14 @@ export function SettingsRoute() {
         ))}
       </nav>
       <div className="-mx-2 min-h-0 flex-1 overflow-y-auto px-2 py-1">
-        <div hidden={pane !== 'Account'}>
-          <Section id="settings-account" title="Account">
-            <AccountSection />
-          </Section>
-        </div>
-        {settings.isPending ? (
-          <div hidden={pane !== 'General'}>
-            <Section id="settings-general" title="General">
-              <WorkspaceSkeleton />
-              <AppearanceSection />
-            </Section>
-          </div>
-        ) : settings.isError || !settings.data ? (
-          <div hidden={pane !== 'General'}>
-            <Section id="settings-general" title="General">
-              <div role="alert" className="flex flex-col items-start gap-2">
-                <p>Couldn’t load the settings.</p>
-                <Button variant="secondary" onClick={() => void settings.refetch()}>
-                  Retry
-                </Button>
-              </div>
-              <AppearanceSection />
-            </Section>
-          </div>
-        ) : (
-          <SettingsForm
-            closeRequestRef={closeRequestRef}
-            settings={settings.data}
+        <Suspense fallback={<WorkspaceSkeleton />}>
+          <SettingsPanes
             pane={pane}
             onPaneChange={setPane}
-            appearance={<AppearanceSection />}
+            settings={settings}
+            closeRequestRef={closeRequestRef}
           />
-        )}
-        <div hidden={pane !== 'About'}>
-          <Section id="settings-connection" title="Connection">
-            <ConnectionSection />
-          </Section>
-          <div className="mt-4">
-            <Section id="settings-about" title="About">
-              <AboutSection />
-            </Section>
-          </div>
-        </div>
+        </Suspense>
       </div>
     </Dialog>
   )

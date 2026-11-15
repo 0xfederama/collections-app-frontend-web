@@ -1,14 +1,7 @@
 import { createBrowserRouter, createMemoryRouter, type RouteObject } from 'react-router'
 import { AppShell } from '../layouts/AppShell'
 import { contentRoutes } from './contentRoutes'
-import { lazyRoute } from './lazyRoute'
-
-// The Settings pane loads on first visit. It is an overlay on the page behind it, so it shows no
-// skeleton while loading (that would appear in the page flow under the background page).
-const SettingsRoute = lazyRoute(
-  () => import('../routes/SettingsRoute').then((m) => m.SettingsRoute),
-  { fallback: null },
-)
+import { SettingsRoute } from '../routes/SettingsRoute'
 
 // Component gallery: dev only, lazy, so it never reaches the production bundle.
 const devRoutes: RouteObject[] = import.meta.env.DEV
