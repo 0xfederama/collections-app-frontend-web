@@ -210,3 +210,29 @@ export async function touchDragTo(page: Page, handle: Locator, target: Locator, 
   await touch('touchEnd', [])
   await cdp.detach()
 }
+
+interface TreeNode {
+  id: string
+  version: number
+  created_at: string
+  parent_folder_id?: string | null
+  folder_id?: string | null
+}
+
+/**
+ * Trashes every top-level folder and list created since `since` (best effort: a folder someone else
+ * owns stays). The drag specs call it after each test so the shared tree stays shorter than the
+ * window: once it is taller, a drag starts or ends off screen and the sidebar scrolls under the
+ * pointer, which was the flaky drag-reorder e2e (web 3.5.0, D-161).
+ */
+export async function trashCreatedSince(request: APIRequestContext, since: number) {
+  const tree = (await (await request.get('/api/v1/tree')).json()) as {
+    folders: TreeNode[]
+    lists: TreeNode[]
+  }
+  const fresh = (n: TreeNode) => Date.parse(n.created_at) >= since - 1000
+  for (const f of tree.folders.filter((n) => n.parent_folder_id === null && fresh(n)))
+    await request.delete(`/api/v1/folders/${f.id}`, { headers: { 'If-Match': `"f-${f.version}"` } })
+  for (const l of tree.lists.filter((n) => n.folder_id === null && fresh(n)))
+    await request.delete(`/api/v1/lists/${l.id}`, { headers: { 'If-Match': `"l-${l.version}"` } })
+}

@@ -14,6 +14,7 @@ import {
   sidebarTree,
   touchDragTo,
   uniqueName,
+  trashCreatedSince,
 } from './helpers'
 
 // Web 3.3.0 (roadmap 35, D-158): any list or folder can be dragged anywhere in the sidebar tree and
@@ -95,6 +96,15 @@ async function signInAs(
     { name: 'dev_user', value: encodeURIComponent(`${who}@dev.test`), domain: host, path: '/' },
   ])
 }
+
+// Keep the shared tree short: each test trashes what it created at the top level (D-161).
+let startedAt = 0
+test.beforeEach(() => {
+  startedAt = Date.now()
+})
+test.afterEach(async ({ request }) => {
+  await trashCreatedSince(request, startedAt)
+})
 
 test.describe('web 3.3.0 drag anywhere: mouse', () => {
   test('into an open folder, between two children, at that exact place', async ({
