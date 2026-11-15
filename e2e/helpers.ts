@@ -200,8 +200,9 @@ export async function touchDragTo(page: Page, handle: Locator, target: Locator, 
       touchPoints: points.map((p) => ({ ...p, id: 1 })),
     })
   await touch('touchStart', [from])
-  // The hold: nothing moves, so the page does not scroll and the drag activates.
-  await page.waitForTimeout(400)
+  // The hold: nothing moves, so the page does not scroll and the drag activates. Wait for the drag's
+  // own announcement, not a fixed time: under load 400 ms was sometimes not enough (D-161).
+  await expect(page.getByText(/^Picked up /)).toBeAttached()
   const steps = 20
   for (let i = 1; i <= steps; i++)
     await touch('touchMove', [
