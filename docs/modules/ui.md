@@ -8,7 +8,7 @@ Design-system primitives in `src/components/ui/` that features compose instead o
 
 - `src/components/ui/index.ts`: barrel; import primitives from `components/ui`.
 - `src/components/ui/icons.ts`: the only Lucide import site; named glyphs, `typeIcons`, `typeLabels` (five built-in types, plural names; no type = `List`).
-- `src/components/ui/sortable.tsx`: the only `@dnd-kit` importer (pinned 0.5.0, D-061): list sortable and the tree's pointer drag provider.
+- `src/components/ui/sortable.tsx`: the only `@dnd-kit` importer (pinned 0.5.3, D-061): list sortable and the tree's pointer drag provider.
 - `src/components/ui/Tree.tsx`, `TreeRow.tsx`: ARIA tree and one row (drop line or "into" highlight; `TreeRow` is not in the barrel).
 - `src/components/ui/useTreeDrag.tsx`: pointer and keyboard drag state of `Tree`; `treeDrag.ts`: pure hit test (`hitTest`) and shared drag types.
 - `src/components/ui/SharedBadge.tsx`: two-person mark on the bottom right of a shared folder's icon (F-027).

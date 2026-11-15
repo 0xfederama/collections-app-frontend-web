@@ -169,11 +169,15 @@ test.describe('web 3.3.0 drag anywhere: mouse', () => {
     const listName = uniqueName('Leaver')
     const list = await createList(request, listName, 'movie', box.id)
     await open(page, [boxName])
+    // Lists other specs leave at the top level: the moved list must come after all of them
+    // (checking only "last" broke when anything else was created on the shared stack meanwhile).
+    const before = await order(request, 'list', null)
 
     await dragToEnd(page, row(page, listName))
     await expect.poll(() => parentOf(request, list.id)).toBeNull()
     const all = await order(request, 'list', null)
-    expect(all.at(-1)).toBe(list.id)
+    expect(all.slice(0, before.length)).toEqual(before)
+    expect(all.indexOf(list.id)).toBeGreaterThanOrEqual(before.length)
   })
 
   test('reorders inside a folder', async ({ page, request }) => {

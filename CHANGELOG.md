@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.5.0 — 2026-11-15
+
+### Changed
+
+- Settings opens at once: the dialog and its pane tabs show right away with a loading placeholder, while the panes' code and the settings load in the background (before, nothing showed until both arrived).
+
+### Upkeep (roadmap 37, D-161)
+
+- Node 26 LTS: `.nvmrc` 26, `engines` `>=26`, Dockerfile build stage `node:26.13.1-alpine` (pinned digest), `@types/node` 26.
+- TypeScript stays on 6.0.3, the latest 6.x: typescript-eslint 8.72.2 still declares `typescript <6.1.0` (D-040).
+- Dependencies to their latest minor/patch: React 19.3.1, React Router 8.5.1, Vite 8.3.8, Vitest 5.1.0, TanStack Query 5.107.1, Tailwind 4.3.5, ESLint 10.15.0, typescript-eslint 8.72.2, Playwright 1.65.1, MSW 3.0.6, lucide-react 1.73.0, dnd-kit 0.5.3, knip 6.45.1, Prettier 3.10.1 and others.
+- E2E: the sidebar drag specs are stable in Chromium and WebKit (see D-161).
+
 ## 3.4.1 — 2026-11-15
 
 ### Fixed

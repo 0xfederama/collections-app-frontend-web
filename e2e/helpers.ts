@@ -151,17 +151,36 @@ async function mouseDrag(
  * (bottom) after it (the first child of an open folder), `into` (middle) is a folder's "drop into".
  */
 export async function dragTo(page: Page, handle: Locator, target: Locator, where: DropPart) {
-  await mouseDrag(page, await center(handle), await pointOf(target, where))
+  await mouseDrag(page, ...(await endpoints(handle, () => pointOf(target, where))))
+}
+
+/**
+ * Both ends of a drag, read after every scroll: scrolling the target into view can move the handle,
+ * so a handle position read first goes stale once the tree is taller than the window (the old flake).
+ */
+async function endpoints(
+  handle: Locator,
+  target: () => Promise<{ x: number; y: number }>,
+): Promise<[{ x: number; y: number }, { x: number; y: number }]> {
+  await handle.scrollIntoViewIfNeeded()
+  const to = await target()
+  const box = await handle.boundingBox()
+  if (!box) throw new Error('handle has no box')
+  const vh = handle.page().viewportSize()?.height ?? Infinity
+  const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+  if (from.y < 0 || from.y > vh) throw new Error('handle and target do not fit in one viewport')
+  return [from, to]
 }
 
 /** Drags `handle` below the last row of the tree. */
 export async function dragToEnd(page: Page, handle: Locator) {
-  await mouseDrag(page, await center(handle), await treeEndPoint(page))
+  await mouseDrag(page, ...(await endpoints(handle, () => treeEndPoint(page))))
 }
 
 /** Drags to a part of `target` and stops there with the button still down; the caller releases. */
 export async function dragHold(page: Page, handle: Locator, target: Locator, where: DropPart) {
-  await mouseDrag(page, await center(handle), await pointOf(target, where), false)
+  const [from, to] = await endpoints(handle, () => pointOf(target, where))
+  await mouseDrag(page, from, to, false)
 }
 
 /**
