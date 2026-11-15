@@ -100,25 +100,55 @@ export function useUpdateList() {
   )
 }
 
+// TODO(api-v4.2.0): drop this extension after `api:sync`. The move bodies gain an optional
+// `before_id` (the same-kind sibling to land before; null or absent = last of its kind, atomic), but
+// the generated types of api-v4.1.0 do not have it yet.
+type WithBefore<T> = T & { before_id?: string | null }
+
+/** `beforeId` is sent only when given (a drag); the Move dialog omits it, which appends. */
 export function useMoveFolder() {
-  return useTreeMutation(({ folder, parentId }: { folder: Folder; parentId: string | null }) =>
-    unwrap(
-      api.POST('/api/v1/folders/{id}/move', {
-        params: { path: { id: folder.id }, header: ifMatch('folder', folder.version) },
-        body: { parent_folder_id: parentId },
-      }),
-    ),
+  return useTreeMutation(
+    ({
+      folder,
+      parentId,
+      beforeId,
+    }: {
+      folder: Folder
+      parentId: string | null
+      beforeId?: string | null
+    }) => {
+      const body: WithBefore<{ parent_folder_id: string | null }> = { parent_folder_id: parentId }
+      if (beforeId !== undefined) body.before_id = beforeId
+      return unwrap(
+        api.POST('/api/v1/folders/{id}/move', {
+          params: { path: { id: folder.id }, header: ifMatch('folder', folder.version) },
+          body,
+        }),
+      )
+    },
   )
 }
 
 export function useMoveList() {
-  return useTreeMutation(({ list, folderId }: { list: List; folderId: string | null }) =>
-    unwrap(
-      api.POST('/api/v1/lists/{id}/move', {
-        params: { path: { id: list.id }, header: ifMatch('list', list.version) },
-        body: { folder_id: folderId },
-      }),
-    ),
+  return useTreeMutation(
+    ({
+      list,
+      folderId,
+      beforeId,
+    }: {
+      list: List
+      folderId: string | null
+      beforeId?: string | null
+    }) => {
+      const body: WithBefore<{ folder_id: string | null }> = { folder_id: folderId }
+      if (beforeId !== undefined) body.before_id = beforeId
+      return unwrap(
+        api.POST('/api/v1/lists/{id}/move', {
+          params: { path: { id: list.id }, header: ifMatch('list', list.version) },
+          body,
+        }),
+      )
+    },
   )
 }
 

@@ -61,12 +61,27 @@ async function render(
   return { backend, user }
 }
 
+/** A finished drag of `id` into folder `into`, as the tree reports it (appended last). */
 const drag = (
   tree: ReturnType<typeof seedTree>,
   id: string,
   into: string,
   override?: Parameters<typeof server.use>,
-) => render((a) => a.applyMove({ id, group: 'g', from: 0, to: 0, into }), tree, override)
+) =>
+  render(
+    (a) =>
+      a.applyDrop({
+        id,
+        kind: tree.folders.some((f) => f.id === id) ? 'folder' : 'list',
+        parentId: into,
+        beforeId: null,
+        key: 'test',
+        indicator: { kind: 'into', rowId: into },
+        description: '',
+      }),
+    tree,
+    override,
+  )
 
 describe('F-027 W5 move out of a shared folder: Move dialog', () => {
   it('asks before moving a list out of a shared folder and names the other people', async () => {

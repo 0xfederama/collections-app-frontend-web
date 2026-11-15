@@ -5,8 +5,6 @@ import { createTreeIndex, type TreeNode } from './api'
 import {
   applyOrder,
   buildSortable,
-  canDropInto,
-  canDropToTop,
   flattenFolders,
   groupKey,
   parentIdOf,
@@ -178,58 +176,5 @@ describe('AT-21 arrayMove', () => {
 
   it('leaves the array unchanged for an out-of-range source', () => {
     expect(arrayMove(['a', 'b'], 5, 0)).toEqual(['a', 'b'])
-  })
-})
-
-describe('F008-W4 canDropInto', () => {
-  it('accepts a list or folder dropped on another folder', () => {
-    expect(canDropInto(index, id(18), id(5))).toBe(true) // root list -> folder
-    expect(canDropInto(index, id(11), id(5))).toBe(true) // list in a folder -> other folder
-    expect(canDropInto(index, id(5), id(1))).toBe(true) // root folder -> folder
-  })
-
-  it('refuses a folder onto itself and into its own descendants', () => {
-    expect(canDropInto(index, id(1), id(1))).toBe(false)
-    expect(canDropInto(index, id(1), id(2))).toBe(false) // child
-    expect(canDropInto(index, id(2), id(1))).toBe(false) // already inside it
-  })
-
-  it('refuses a drop on the folder the node is already in, and unknown ids', () => {
-    expect(canDropInto(index, id(11), id(2))).toBe(false)
-    expect(canDropInto(index, 'nope', id(2))).toBe(false)
-  })
-})
-
-describe('F-027 W3 canDropInto rights', () => {
-  const OWNER = '00000000-0000-4000-8000-000000000001'
-  const OTHER = '00000000-0000-4000-8000-000000000009'
-  const shared = structuredClone(devTree)
-  shared.folders.find((f) => f.id === id(6))!.member_user_ids = [OTHER]
-  shared.folders.find((f) => f.id === id(6))!.shared = true
-  shared.folders.find((f) => f.id === id(7))!.owner_user_id = OTHER
-  const sharedIndex = createTreeIndex(shared)
-
-  it.each([
-    ['my private folder', id(5), true],
-    ['my folder with members', id(6), false],
-    ['someone else’s top-level folder', id(7), false],
-  ])('%s', (_name, source, expected) => {
-    expect(canDropInto(sharedIndex, source, id(1), OWNER)).toBe(expected)
-  })
-
-  it('keeps lists draggable', () => {
-    expect(canDropInto(sharedIndex, id(18), id(1), OWNER)).toBe(true)
-  })
-})
-
-describe('web 3.1.0 canDropToTop', () => {
-  it.each([
-    ['a list inside a folder', id(11), true],
-    ['a list already at the top level', id(18), false],
-    ['a top-level folder', id(5), false],
-    ['a nested folder', id(2), true],
-    ['an unknown id', 'missing', false],
-  ])('%s', (_label, source, expected) => {
-    expect(canDropToTop(index, source)).toBe(expected)
   })
 })

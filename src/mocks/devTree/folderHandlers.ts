@@ -8,6 +8,7 @@ import {
   folderOf,
   invalid,
   nextOrder,
+  placeInParent,
   url,
   validName,
   type Folder,
@@ -127,7 +128,10 @@ export function folderHandlers(db: TreeDb) {
       if (!folder) return problemResponse(404, 'not_found')
       const mismatch = checkMatch(request, 'f', folder.version)
       if (mismatch) return mismatch
-      const body = (await request.json()) as { parent_folder_id?: string | null }
+      const body = (await request.json()) as {
+        parent_folder_id?: string | null
+        before_id?: string | null
+      }
       if (body.parent_folder_id === undefined) return invalid('parent_folder_id', 'Required.')
       const target = body.parent_folder_id
       if (target !== null && !folderOf(state, target))
@@ -138,9 +142,14 @@ export function folderHandlers(db: TreeDb) {
       if (target !== null && descendantsOf(state, folder.id).has(target)) {
         return problemResponse(409, 'cycle_detected')
       }
+      // `before_id`: a folder that is a sibling in the new parent, else 422; null or absent = last.
+      const previousParent = folder.parent_folder_id
       folder.parent_folder_id = target
+      if (!placeInParent(state, target, 'folder', folder, body.before_id)) {
+        folder.parent_folder_id = previousParent
+        return invalid('before_id', 'Must be a folder in the destination.')
+      }
       folder.owner_user_id = ownerFor(target)
-      folder.sort_order = nextOrder(state, target, 'folder')
       folder.version += 1
       folder.updated_at = now()
       return HttpResponse.json(folder, { headers: etag('f', folder.version) })

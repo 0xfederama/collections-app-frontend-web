@@ -1,13 +1,9 @@
-import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { cx } from '../../lib/cx'
-import {
-  SortableProvider,
-  useSortableRow,
-  useTopLevelDropZone,
-  type SortableDropInto,
-  type SortableMove,
-  type SortableSlot,
-} from './sortable'
+import { TreeDragProvider } from './sortable'
+import { TreeRow, type TreeRowDrop } from './TreeRow'
+import type { TreeDrop } from './treeDrag'
+import { useTreeDrag, type TreeDragRules } from './useTreeDrag'
 
 export interface TreeNodeBase {
   id: string
@@ -21,7 +17,18 @@ export interface TreeRowState {
   hasChildren: boolean
 }
 
-export interface TreeProps<T extends TreeNodeBase> {
+/** Opt-in drag and drop of rows (web 3.3.0, D-158): the rules come from the feature that owns the tree. */
+interface TreeDragConfig<
+  T extends TreeNodeBase,
+  D extends TreeDrop = TreeDrop,
+> extends TreeDragRules<D> {
+  /** Name read out in announcements. */
+  label: (node: T) => string
+  /** Whether the row can be picked up. */
+  canDrag: (node: T) => boolean
+}
+
+export interface TreeProps<T extends TreeNodeBase, D extends TreeDrop = TreeDrop> {
   'aria-label': string
   nodes: T[]
   /** Controlled: ids of expanded nodes. */
@@ -33,22 +40,10 @@ export interface TreeProps<T extends TreeNodeBase> {
   /** Row content (icon, name, count). Indentation is drawn by the Tree; a folder's own icon shows and toggles its state. */
   renderRow: (node: T, state: TreeRowState) => ReactNode
   /**
-   * Opt-in drag reorder: which sortable group and position a node has (`undefined` = not
-   * sortable). Dragging only reorders inside a group, never across groups or parents.
+   * Opt-in drag and drop. A pointer drag projects a target from the row under the pointer, a
+   * keyboard drag (Space, arrows, Space) walks `steps`; both draw the drop's indicator.
    */
-  sortable?: (node: T) => SortableSlot | undefined
-  /** Called once when a drag ends with a changed position. Not called on cancel. */
-  onReorder?: (move: SortableMove) => void
-  /**
-   * Opt-in "drop into": whether the container `target` (a node with `children`) accepts the dragged
-   * node `sourceId`. Rows that refuse show nothing; accepting rows highlight only while hovered.
-   */
-  acceptsDrop?: (target: T, sourceId: string) => boolean
-  /**
-   * Opt-in "move to the top level": while a pointer drag of a row it accepts runs, a zone under the
-   * tree takes the drop and `onReorder` gets `into: null`.
-   */
-  topLevelDrop?: { label: string; accepts: (sourceId: string) => boolean }
+  drag?: TreeDragConfig<T, D>
   className?: string
 }
 
@@ -62,24 +57,21 @@ interface FlatRow<T> {
 
 /**
  * ARIA tree (flat treeitems with aria-level): roving tabindex, arrows, Home/End, Enter/Space.
- * Presentational: no data fetching. Drag reorder is opt-in through `sortable` + `onReorder`: each
- * sortable row is its own drag handle (press and drag; Space then arrows on the keyboard) and the
- * library itself stays behind `./sortable`.
+ * Presentational: no data fetching. Drag and drop is opt-in through `drag`: each draggable row is its
+ * own handle (press and drag; Space then arrows on the keyboard) and the library itself stays behind
+ * `./sortable`.
  */
-export function Tree<T extends TreeNodeBase>({
+export function Tree<T extends TreeNodeBase, D extends TreeDrop = TreeDrop>({
   nodes,
   expanded,
   onExpandedChange,
   selected,
   onSelectedChange,
   renderRow,
-  sortable,
-  onReorder,
-  acceptsDrop,
-  topLevelDrop,
+  drag,
   className,
   ...rest
-}: TreeProps<T>) {
+}: TreeProps<T, D>) {
   const rows: FlatRow<T>[] = []
   const walk = (list: T[], level: number, parentId: string | null) => {
     list.forEach((node, index) => {
@@ -89,6 +81,25 @@ export function Tree<T extends TreeNodeBase>({
     })
   }
   walk(nodes, 1, null)
+
+  const listRef = useRef<HTMLUListElement | null>(null)
+  const dragState = useTreeDrag<D>({
+    listRef,
+    rules: drag,
+    rows: rows.map(({ node }) => ({
+      id: node.id,
+      container: !!node.children,
+      label: drag?.label(node) ?? '',
+      draggable: drag?.canDrag(node) ?? false,
+    })),
+  })
+  const drop = dragState.active?.drop?.indicator ?? null
+  const dropOn = (id: string): TreeRowDrop | undefined => {
+    if (!drop || drop.rowId !== id) return undefined
+    return drop.kind === 'into'
+      ? { kind: 'into' }
+      : { kind: 'line', edge: drop.edge, level: drop.level }
+  }
 
   const [focusedId, setFocusedId] = useState<string | null>(null)
   const focusIndexRaw = rows.findIndex((r) => r.node.id === (focusedId ?? selected))
@@ -110,7 +121,8 @@ export function Tree<T extends TreeNodeBase>({
 
   const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
     const row = rows[focusIndex]
-    // A keyboard drag in progress owns Space and the arrows (the sortable layer already handled them).
+    // A keyboard drag in progress owns Space, Enter and the arrows; Space on a draggable row starts one.
+    if (dragState.onKeyDown(event)) return
     if (event.defaultPrevented) return
     // Keys pressed inside a row's own buttons or links (the menu) are theirs, not the tree's.
     if (!row || (event.target as HTMLElement).getAttribute('role') !== 'treeitem') return
@@ -157,11 +169,13 @@ export function Tree<T extends TreeNodeBase>({
   }
 
   return (
-    <SortableProvider onMove={(move) => onReorder?.(move)}>
+    <TreeDragProvider handlers={dragState.handlers}>
       <ul
+        ref={listRef}
         role="tree"
         aria-label={rest['aria-label']}
         onKeyDown={onKeyDown}
+        onBlur={dragState.onBlur}
         className={cx('flex flex-col gap-0.5', className)}
       >
         {rows.map(({ node, level, setSize, posInSet }, index) => (
@@ -174,129 +188,26 @@ export function Tree<T extends TreeNodeBase>({
             tabbable={index === focusIndex}
             expanded={expanded}
             selected={node.id === selected}
-            slot={sortable?.(node)}
-            dropInto={
-              acceptsDrop && node.children
-                ? {
-                    accepts: (sourceId) => acceptsDrop(node, sourceId),
-                    label: sortable?.(node)?.label ?? '',
-                  }
-                : undefined
-            }
+            draggable={drag?.canDrag(node) ?? false}
+            lifted={dragState.active?.sourceId === node.id}
+            describedBy={dragState.instructionsId}
+            drop={dropOn(node.id)}
             onFocusRow={setFocusedId}
             onSelect={onSelectedChange}
             renderRow={renderRow}
           />
         ))}
       </ul>
-      {topLevelDrop && <TopLevelZone {...topLevelDrop} />}
-    </SortableProvider>
-  )
-}
-
-function TopLevelZone({ label, accepts }: NonNullable<TreeProps<TreeNodeBase>['topLevelDrop']>) {
-  const { ref, visible, isDropTarget } = useTopLevelDropZone('tree-top-level', accepts, label)
-  return (
-    <div
-      ref={ref}
-      aria-hidden
-      hidden={!visible}
-      className={cx(
-        'mt-1 grid min-h-11 place-items-center rounded-md border border-dashed border-border px-2 text-secondary text-text-muted',
-        isDropTarget && 'border-accent bg-accent-tint text-accent-text',
+      {drag && (
+        <>
+          <span id={dragState.instructionsId} hidden>
+            {dragState.instructions}
+          </span>
+          <div role="status" aria-live="assertive" className="sr-only">
+            {dragState.announcement}
+          </div>
+        </>
       )}
-    >
-      {`Move to ${label}`}
-    </div>
-  )
-}
-
-interface TreeRowProps<T extends TreeNodeBase> {
-  node: T
-  level: number
-  setSize: number
-  posInSet: number
-  tabbable: boolean
-  expanded: ReadonlySet<string>
-  selected: boolean
-  slot: SortableSlot | undefined
-  dropInto: SortableDropInto | undefined
-  onFocusRow: (id: string) => void
-  onSelect: (id: string) => void
-  renderRow: TreeProps<T>['renderRow']
-}
-
-/** Indent per nesting level, px (web 3.1.0: 16 read as too shallow; D-entry in DECISIONS.md). */
-const INDENT = 24
-
-const INNER_CONTROLS = 'button, a[href], input, select, textarea, [tabindex]'
-
-function TreeRow<T extends TreeNodeBase>({
-  node,
-  level,
-  setSize,
-  posInSet,
-  tabbable,
-  expanded,
-  selected,
-  slot,
-  dropInto,
-  onFocusRow,
-  onSelect,
-  renderRow,
-}: TreeRowProps<T>) {
-  const { ref, isDragging, isDropTarget, a11y } = useSortableRow(node.id, slot, dropInto)
-  const liRef = useRef<HTMLLIElement | null>(null)
-  // The whole tree is one Tab stop: only the roving row's inner controls (menu button,
-  // anything the consumer renders) stay in the Tab order. Others are set to -1 and restored later.
-  useLayoutEffect(() => {
-    liRef.current?.querySelectorAll<HTMLElement>(INNER_CONTROLS).forEach((el) => {
-      if (tabbable) {
-        const original = el.dataset.treeTab
-        if (original === undefined) return
-        if (original === '') el.removeAttribute('tabindex')
-        else el.setAttribute('tabindex', original)
-        delete el.dataset.treeTab
-      } else if (el.dataset.treeTab === undefined) {
-        el.dataset.treeTab = el.getAttribute('tabindex') ?? ''
-        el.setAttribute('tabindex', '-1')
-      }
-    })
-  })
-  const hasChildren = !!node.children?.length
-  const isExpanded = expanded.has(node.id)
-  return (
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- keys are handled on the parent tree list (onKeyDown, roving tabindex); a click only selects the row
-    <li
-      ref={(el) => {
-        liRef.current = el
-        return ref(el)
-      }}
-      role="treeitem"
-      {...a11y}
-      data-tree-id={node.id}
-      aria-level={level}
-      aria-setsize={setSize}
-      aria-posinset={posInSet}
-      aria-expanded={hasChildren ? isExpanded : undefined}
-      aria-selected={selected}
-      tabIndex={tabbable ? 0 : -1}
-      // Focus anywhere inside the row (its link or menu button) makes it the roving stop.
-      onFocus={() => onFocusRow(node.id)}
-      onClick={(event) => {
-        // A drag that ended on this row is not a click (dnd-kit cancels it).
-        if (event.defaultPrevented) return
-        onFocusRow(node.id)
-        onSelect(node.id)
-      }}
-      style={{ paddingInlineStart: `${(level - 1) * INDENT + 8}px` }}
-      className={cx(
-        'group/row flex min-h-9 cursor-pointer select-none items-center [-webkit-touch-callout:none] gap-1 rounded-md pr-2 text-ui text-text hover:bg-fill-hover focus-visible:bg-fill-hover focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus-ring aria-selected:bg-accent-tint aria-selected:focus-visible:bg-accent-tint aria-selected:font-medium aria-selected:text-accent-text pointer-coarse:min-h-11',
-        isDragging && 'bg-surface-raised opacity-80 shadow-md',
-        isDropTarget && 'bg-accent-tint text-accent-text',
-      )}
-    >
-      {renderRow(node, { level, expanded: isExpanded, selected, hasChildren })}
-    </li>
+    </TreeDragProvider>
   )
 }

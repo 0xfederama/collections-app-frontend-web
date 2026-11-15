@@ -31,6 +31,35 @@ export const nextOrder = (
   return siblings.length === 0 ? 0 : Math.max(...siblings.map((s) => s.sort_order)) + 1
 }
 
+type Placed = { id: string; sort_order: number }
+
+/**
+ * Puts the folder or list `moving` into `parent` before its sibling `beforeId` (`null` or absent =
+ * after the last of its kind), renumbering that kind's siblings `0..n-1` (the planned `before_id` of
+ * the move endpoints, api-v4.2.0). Returns false, changing nothing, when `beforeId` is not a sibling
+ * of that kind in `parent` (the server answers 422).
+ */
+export const placeInParent = (
+  state: TreeDb['state'],
+  parent: string | null,
+  kind: 'folder' | 'list',
+  moving: Placed,
+  beforeId: string | null | undefined,
+): boolean => {
+  const all: Placed[] =
+    kind === 'folder'
+      ? state.folders.filter((f) => f.parent_folder_id === parent)
+      : state.lists.filter((l) => l.folder_id === parent)
+  const others = all
+    .filter((s) => s.id !== moving.id)
+    .sort((a, b) => a.sort_order - b.sort_order || (a.id < b.id ? -1 : 1))
+  const at = beforeId == null ? others.length : others.findIndex((s) => s.id === beforeId)
+  if (at < 0) return false
+  others.splice(at, 0, moving)
+  others.forEach((s, i) => (s.sort_order = i))
+  return true
+}
+
 /** The folder and all its descendants (folders only), including `id` itself. */
 export const descendantsOf = (state: TreeDb['state'], id: string): Set<string> => {
   const found = new Set<string>([id])
