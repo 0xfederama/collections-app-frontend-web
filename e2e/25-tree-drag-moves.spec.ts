@@ -80,7 +80,7 @@ async function shareWithAlice(request: APIRequestContext, folderId: string) {
   const me = await request.get('/api/v1/me', { headers: { Cookie: 'dev_user=alice@dev.test' } })
   expect(me.status()).toBe(200)
   const added = await request.post(`/api/v1/folders/${folderId}/members`, {
-    headers: { Cookie: 'dev_user=owner@dev.test' },
+    headers: { Cookie: `dev_user=${DRAG_USER}` },
     data: { email: 'alice@dev.test' },
   })
   expect(added.status(), 'add member').toBe(200)
@@ -88,7 +88,7 @@ async function shareWithAlice(request: APIRequestContext, folderId: string) {
 
 async function signInAs(
   context: BrowserContext,
-  who: 'owner' | 'alice',
+  who: 'bob' | 'alice',
   baseURL: string | undefined,
 ) {
   const host = new URL(baseURL ?? 'http://localhost:5183').hostname
@@ -96,6 +96,31 @@ async function signInAs(
     { name: 'dev_user', value: encodeURIComponent(`${who}@dev.test`), domain: host, path: '/' },
   ])
 }
+
+// The drag specs run as their own dev identity (Bob), page and API alike: his tree holds only what
+// these tests create, so rows other specs leave on the shared stack never make it taller than the
+// window (the cause of the flaky drag e2e, D-161). Bob owns the shared folders; Alice is the member.
+const DRAG_USER = 'bob@dev.test'
+test.use({
+  storageState: async ({ baseURL }, provide) => {
+    const domain = new URL(baseURL ?? 'http://localhost:5183').hostname
+    await provide({
+      cookies: [
+        {
+          name: 'dev_user',
+          value: encodeURIComponent(DRAG_USER),
+          domain,
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax',
+        },
+      ],
+      origins: [],
+    })
+  },
+})
 
 // Keep the shared tree short: each test trashes what it created at the top level (D-161).
 let startedAt = 0
