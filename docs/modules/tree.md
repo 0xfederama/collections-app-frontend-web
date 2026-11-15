@@ -10,7 +10,8 @@ The folder/list tree, its query and index, and folder and list writes including 
 - `api.ts`: tree query, types and index; `treeLookup.ts`: `findNode`, `nameOf`, `isOpenWithin`, `isInSharedFolder`.
 - `SidebarTree.tsx`, `RailTree.tsx`: sidebar and collapsed rail.
 - `mutations.ts`: folder/list writes, reorder and icon updates; success calls `invalidateContent`.
-- `treeMoves.ts`: move actions behind the menus and dialogs.
+- `treeMoves.ts`: move actions behind the menus and dialogs; `applyDrop` turns a finished drag into a reorder (same parent) or a move with `before_id`.
+- `model/drop.ts`: pure drop projection for the sidebar drag (`projectDrop`, `dropSteps`); no fetching.
 - `useTreeDialogs.tsx`, `NameDialog.tsx`: create flows and dialogs; `Vanished.tsx` tells a dialog its target is gone.
 - `listFolderMemory.ts`: folder a new list goes into (session only).
 - `ListIconEdit.tsx`: list icon popover bound to a list snapshot; each choice is its own write with `If-Match`.
@@ -43,5 +44,7 @@ The folder/list tree, its query and index, and folder and list writes including 
 - "Refresh details" is in the list header "…" menu only, shown for movie and TV lists with items. It posts `lookup-refresh` (no `If-Match`), shows a "Refreshing details…" toast, then invalidates content. "Run again" (action on the result toast) appears while `remaining` > 0. Covered by `e2e/17-refresh-details.spec.ts`.
 - Folder and list names share one text column. The "New" row uses the same 8 px inset, 22 px icon box and gap as a top-level list row; `px-2!` overrides the Button size padding. `e2e/19-tree-new-row.spec.ts` (chromium) checks the alignment.
 - Create/move bodies include `folder_id` (`null` = top level); reorder is within same-kind siblings under one parent.
+- Sidebar drag (web 3.3.0, D-158) moves across parents too: a drop into another parent sends the move with `before_id` (atomic position; `null` = last of its kind). `before_id` is added by a local type extension in `mutations.ts` until `api:sync` picks up api-v4.2.0.
+- A drop can land at the top level (below the last row) or inside a folder (its middle half); folders stay before lists in every parent. Rights (`folderRights`) and shared-box moves (`MoveOutConfirm`) apply to drags too.
 - Shared folders (F-027) get the two-person `SharedBadge` on their icon in the sidebar and the rail, and ", shared" in the accessible name. Only folders are badged here; a list inside a shared folder is shared through it (the badge shows on [home](home.md) quick links), a top-level list never is.
 - See [design docs](/Users/federico/Developer/collections-app/design-docs/) for full interaction details.
