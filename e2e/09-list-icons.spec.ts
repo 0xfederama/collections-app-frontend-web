@@ -80,6 +80,9 @@ test.describe('F012-W1 list icons (popover)', () => {
       await expect(page.getByRole('textbox', { name: SEARCH })).toBeFocused()
       await expectNoSeriousIssues(page)
       await page.getByRole('tab', { name: 'Emoji' }).click()
+      // The emoji data loads lazily and the grid remounts when it lands, then grows group by group:
+      // wait for the last group so the click cannot hit a cell that is about to be replaced.
+      await expect(page.getByRole('group', { name: 'Flags' })).toBeVisible()
       await page.getByRole('button', { name: '📷 camera', exact: true }).click()
       await expect(page.getByRole('textbox', { name: SEARCH })).toBeHidden()
       await expect.poll(read).toMatchObject({ icon: '📷', icon_color: null })
