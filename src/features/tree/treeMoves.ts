@@ -58,7 +58,9 @@ export function createTreeMoves({
         title: 'Couldn’t move it',
         description: specific
           ? failure.message
-          : 'The folders and lists were refreshed. Please try again.',
+          : failure.kind === 'conflict'
+            ? `“${name}” was changed somewhere else. The folders and lists were refreshed; please try again.`
+            : 'The folders and lists were refreshed. Please try again.',
       })
     }
     const done = () => {
@@ -72,8 +74,8 @@ export function createTreeMoves({
     // A reorder inside one parent is quiet on success, as it always was; the tree refetch shows it.
     const options = { onSuccess: sameParent ? undefined : done, onError }
     const send = () => {
-      if (folder) moveFolder.mutate({ folder, parentId, beforeId }, options)
-      else if (list) moveList.mutate({ list, folderId: parentId, beforeId }, options)
+      if (folder) moveFolder.mutate({ folder, parentId, beforeId, drag: true }, options)
+      else if (list) moveList.mutate({ list, folderId: parentId, beforeId, drag: true }, options)
     }
     const box = leavesSharedBox(index, id, parentId)
     if (box && askMoveOut) askMoveOut({ name, box, proceed: send })

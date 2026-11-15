@@ -14,14 +14,18 @@ import { shouldRefreshTree } from './errors'
  * A 412 does NOT refetch: the dialog keeps the user's draft and the stale version, so a second
  * click cannot silently overwrite the other change. "Reload latest" is the explicit way out.
  */
+const isDrag = (vars: unknown) =>
+  typeof vars === 'object' && vars !== null && 'drag' in vars && vars.drag === true
+
 function useTreeMutation<TVars, TData = unknown>(mutationFn: (vars: TVars) => Promise<TData>) {
   const queryClient = useQueryClient()
   const refresh = () => invalidateContent(queryClient)
   return useMutation({
     mutationFn,
     onSuccess: refresh,
-    onError: (error) => {
-      if (shouldRefreshTree(error)) void refresh()
+    onError: (error, vars) => {
+      // A drag keeps no draft, so even a 412 refetches: the next drag starts from the latest tree.
+      if (shouldRefreshTree(error) || isDrag(vars)) void refresh()
     },
   })
 }
@@ -114,6 +118,8 @@ export function useMoveFolder() {
       folder: Folder
       parentId: string | null
       beforeId?: string | null
+      /** Sent by a drag: no draft to protect, so a 412 refetches too. */
+      drag?: boolean
     }) => {
       const body: WithBefore<{ parent_folder_id: string | null }> = { parent_folder_id: parentId }
       if (beforeId !== undefined) body.before_id = beforeId
@@ -137,6 +143,8 @@ export function useMoveList() {
       list: List
       folderId: string | null
       beforeId?: string | null
+      /** Sent by a drag: no draft to protect, so a 412 refetches too. */
+      drag?: boolean
     }) => {
       const body: WithBefore<{ folder_id: string | null }> = { folder_id: folderId }
       if (beforeId !== undefined) body.before_id = beforeId
