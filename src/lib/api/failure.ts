@@ -96,9 +96,12 @@ export function isDestinationUnavailable(error: unknown): boolean {
   )
 }
 
-/** 409 `order_stale`: the siblings changed elsewhere since the order was read. */
-export function isOrderStale(error: unknown): boolean {
-  return error instanceof ApiError && error.status === 409 && error.code === 'order_stale'
+/**
+ * 422 `invalid_before_id` (api-v4.2.0): the sibling a move lands before is unknown, trashed, of the other
+ * kind, not in the destination, not visible, or the item itself. Nothing was written.
+ */
+export function isInvalidBeforeId(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 422 && error.code === 'invalid_before_id'
 }
 
 /** 401: the Cloudflare Access session ended. The client reloads for the login; if it could not, say so. */

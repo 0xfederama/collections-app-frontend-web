@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.0 — 2026-11-15
+
+### Changed
+
+- Sidebar drag and drop, anywhere (roadmap 35, D-158): a folder or list lands exactly where it is dropped. Between two rows inside an open folder = into that folder at that position; between two top-level rows = top level at that position (this is how something leaves a folder); over the middle of a folder row = into it, at the end; above the first or below the last child of an open folder stays inside it. Folders stay before lists in a parent: a slot of the wrong kind snaps to the nearest valid one. During a drag an insertion line shows the target, indented to its depth, and a folder is highlighted for a drop into it. The "Move to the top level" zone under the tree is gone. Cross-parent drops send the move with `before_id` (api-v4.2.0). Rights, cycle checks and the confirm when leaving a shared folder are unchanged; keyboard drags still reorder among siblings ("Move…" moves into a folder).
+
 ## 3.2.0 — 2026-11-11
 
 ### Added

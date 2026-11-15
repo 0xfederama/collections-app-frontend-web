@@ -10,7 +10,7 @@
 - [shell](modules/shell.md): Providers, router, responsive frame (sidebar, rail, detail sheet), phone back chevron on list and item pages, phone scroll, home-screen safe-area strip and lazy route loading.
 - [theme](modules/theme.md): Light, dark and system theme (sidebar footer toggle), Editorial tokens, solid surfaces, type scale and self-hosted fonts.
 - [trash](modules/trash.md): Trash page at `/trash`: restore, permanent deletion, empty trash and paginated query.
-- [tree](modules/tree.md): Sidebar folder and list tree, list icon create/edit flows, queries, mutations, reorder and list "Refresh details".
+- [tree](modules/tree.md): Sidebar folder and list tree, list icon create/edit flows, queries, mutations, drag to reorder or move (anywhere in the tree) and list "Refresh details".
 - [ui](modules/ui.md): Design-system primitives in `src/components/ui/`, service, link and website icons, and the `/dev/ui` gallery.
 - [items](modules/items.md): Item detail, metadata lookup for new movie, TV and book items, populated in-place fields, description, image dialog including clipboard paste, inline new item, Move and Delete. Duplicate-title (409) messages inline.
 - [links](modules/links.md): Pure URL builders: item external links, store links (`amazonDomain`) and streaming search links.

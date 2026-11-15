@@ -8,6 +8,7 @@ import {
   folderOf,
   invalid,
   nextOrder,
+  placeInParent,
   url,
   validName,
   type List,
@@ -196,14 +197,22 @@ export function listHandlers(db: TreeDb) {
       if (!list) return problemResponse(404, 'not_found')
       const mismatch = checkMatch(request, 'l', list.version)
       if (mismatch) return mismatch
-      const body = (await request.json()) as { folder_id?: string | null }
+      const body = (await request.json()) as {
+        folder_id?: string | null
+        before_id?: string | null
+      }
       if (body.folder_id === undefined) return invalid('folder_id', 'Required.')
       const target = body.folder_id
       if (target !== null && !folderOf(state, target))
         return problemResponse(409, 'destination_unavailable')
+      // `before_id`: a list that is a sibling in the new folder, else 422; null or absent = last.
+      const previousFolder = list.folder_id
       list.folder_id = target
+      if (!placeInParent(state, target, 'list', list, body.before_id)) {
+        list.folder_id = previousFolder
+        return problemResponse(422, 'invalid_before_id')
+      }
       list.owner_user_id = ownerFor(target)
-      list.sort_order = nextOrder(state, target, 'list')
       list.version += 1
       list.updated_at = now()
       return HttpResponse.json(list, { headers: etag('l', list.version) })

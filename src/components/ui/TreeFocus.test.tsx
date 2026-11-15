@@ -2,7 +2,6 @@ import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { Tree, type TreeNodeBase } from './Tree'
-import type { SortableSlot } from './sortable'
 
 interface N extends TreeNodeBase {
   name: string
@@ -18,11 +17,11 @@ const nodes: N[] = [
 function Harness({
   onSelect = () => {},
   onAction = () => {},
-  sortable,
+  draggable = false,
 }: {
   onSelect?: (id: string) => void
   onAction?: (name: string) => void
-  sortable?: (node: N) => SortableSlot | undefined
+  draggable?: boolean
 }) {
   return (
     <Tree
@@ -32,7 +31,17 @@ function Harness({
       onExpandedChange={() => {}}
       selected={null}
       onSelectedChange={onSelect}
-      sortable={sortable}
+      drag={
+        draggable
+          ? {
+              label: (n) => n.name,
+              canDrag: () => true,
+              project: () => null,
+              steps: () => [],
+              onDrop: () => {},
+            }
+          : undefined
+      }
       renderRow={(n) => (
         <>
           <a href={`#${n.id}`} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
@@ -127,16 +136,7 @@ describe('AT-03 tree row focus (web): keys inside a row control are not tree key
 
   it('arrow keys on a button inside a sortable row do not move the tree focus', async () => {
     const user = userEvent.setup()
-    render(
-      <Harness
-        sortable={(n) => ({
-          group: 'g',
-          index: nodes.findIndex((x) => x.id === n.id),
-          size: nodes.length,
-          label: n.name,
-        })}
-      />,
-    )
+    render(<Harness draggable />)
     const menuButton = screen.getByRole('button', { name: 'Actions for Beta' })
     act(() => menuButton.focus())
     expect(tabbable()).toEqual(['b'])
@@ -168,14 +168,7 @@ describe('F006-W2 tree is reachable by Tab and navigated by arrows', () => {
     render(
       <>
         <button type="button">Before</button>
-        <Harness
-          sortable={(n) => ({
-            group: 'g',
-            index: nodes.findIndex((x) => x.id === n.id),
-            size: nodes.length,
-            label: n.name,
-          })}
-        />
+        <Harness draggable />
         <button type="button">After</button>
       </>,
     )

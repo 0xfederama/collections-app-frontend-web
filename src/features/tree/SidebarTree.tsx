@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useMatch, useNavigate } from 'react-router'
 import {
   Button,
@@ -11,9 +11,9 @@ import {
 import { Folder, FolderOpen, Inbox } from '../../components/ui/icons'
 import { ListIconMark } from '../lists'
 import { useTreeIndex, type TreeNode } from './api'
-import { buildSortable } from './order'
 import { TreeNewButton, TreeRowActions } from './slots'
 import { TreeActionsContext } from './TreeActionsContext'
+import { nameOf } from './treeLookup'
 import { useTreeDialogs } from './useTreeDialogs'
 import { useExpandedFolders } from './useExpandedFolders'
 
@@ -52,7 +52,6 @@ export function SidebarTree() {
     if (pendingFocus.current && focusRow(pendingFocus.current)) pendingFocus.current = null
   }, [index])
   const selected = picked && picked.forList === activeListId ? picked.id : activeListId
-  const sortable = useMemo(() => (index ? buildSortable(index.nodes) : undefined), [index])
 
   return (
     <TreeActionsContext.Provider value={actions}>
@@ -90,10 +89,13 @@ export function SidebarTree() {
                   setExpanded(next)
                 }
               }}
-              sortable={(node) => sortable?.slots.get(node.id)}
-              onReorder={actions.applyMove}
-              acceptsDrop={(target, sourceId) => actions.canDropInto(sourceId, target.id)}
-              topLevelDrop={{ label: 'the top level', accepts: actions.canDropToTop }}
+              drag={{
+                label: nameOf,
+                canDrag: () => true,
+                project: (sourceId, hit) => actions.projectDrop(expanded, sourceId, hit),
+                steps: (sourceId) => actions.dropSteps(expanded, sourceId),
+                onDrop: actions.applyDrop,
+              }}
               renderRow={(node, state) => <Row node={node} state={state} />}
             />
           )}

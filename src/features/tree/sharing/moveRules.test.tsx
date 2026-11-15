@@ -61,12 +61,27 @@ async function render(
   return { backend, user }
 }
 
+/** A finished drag of `id` into folder `into`, as the tree reports it (appended last). */
 const drag = (
   tree: ReturnType<typeof seedTree>,
   id: string,
   into: string,
   override?: Parameters<typeof server.use>,
-) => render((a) => a.applyMove({ id, group: 'g', from: 0, to: 0, into }), tree, override)
+) =>
+  render(
+    (a) =>
+      a.applyDrop({
+        id,
+        kind: tree.folders.some((f) => f.id === id) ? 'folder' : 'list',
+        parentId: into,
+        beforeId: null,
+        key: 'test',
+        indicator: { kind: 'into', rowId: into },
+        description: '',
+      }),
+    tree,
+    override,
+  )
 
 describe('F-027 W5 move out of a shared folder: Move dialog', () => {
   it('asks before moving a list out of a shared folder and names the other people', async () => {
@@ -241,11 +256,33 @@ describe('F-027 W5 errors', () => {
     )
   })
 
-  it('409 order_stale on a reorder refetches and asks to try again', async () => {
-    await render((a) => a.nudge(ID.vehicles, 1), seedTree(), [
-      http.put(apiUrl('/api/v1/folders/order'), () => problemResponse(409, 'order_stale')),
+  it('422 invalid_before_id on a drag says the folders changed and asks to try again', async () => {
+    await drag(seedTree(), ID.wishlist, ID.gear, [
+      http.post(apiUrl(`/api/v1/lists/${ID.wishlist}/move`), () =>
+        problemResponse(422, 'invalid_before_id'),
+      ),
     ])
-    expect(await screen.findByText('The order changed elsewhere. Try again.')).toBeInTheDocument()
+    expect(await screen.findByText('Couldn’t move it')).toBeInTheDocument()
+    expect(
+      screen.getByText('The folders and lists changed. They were refreshed; please try again.'),
+    ).toBeInTheDocument()
+  })
+
+  it('422 invalid_before_id on a nudge (a same-parent reorder) says the same, through the move call', async () => {
+    // The override answers before the recorder, so the body is read here.
+    let sent: unknown
+    const { backend } = await render((a) => a.nudge(ID.vehicles, 1), seedTree(), [
+      http.post(apiUrl(`/api/v1/folders/${ID.vehicles}/move`), async ({ request }) => {
+        sent = await request.json()
+        return problemResponse(422, 'invalid_before_id')
+      }),
+    ])
+    expect(await screen.findByText('Couldn’t move it')).toBeInTheDocument()
+    expect(
+      screen.getByText('The folders and lists changed. They were refreshed; please try again.'),
+    ).toBeInTheDocument()
+    expect(sent).toEqual({ parent_folder_id: null, before_id: ID.empty })
+    expect(backend.writes('PUT')).toHaveLength(0)
   })
 })
 

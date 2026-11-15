@@ -196,6 +196,8 @@ export interface paths {
         /**
          * Move a folder under another parent
          * @description Requires `If-Match`. `parent_folder_id: null` moves it to the root. A top-level folder moves only by its owner (403 `forbidden`); a folder with members cannot go into a folder (409 `folder_shared`). Moving out of a shared folder to the top level makes the caller the owner.
+         *
+         *     `before_id` (optional) places it in front of that sibling; absent or `null` appends it last. The sibling must be another active folder of the same kind: a child folder of the target parent, or at the top level a folder the caller can see there (422 `invalid_before_id` otherwise, also for the folder itself). A move within the same parent reorders it. Top level: the order is the caller's own; nested: the shared order. One request, one version bump.
          */
         post: operations["moveFolder"];
         delete?: never;
@@ -523,7 +525,9 @@ export interface paths {
         put?: never;
         /**
          * Move a list to another folder
-         * @description Requires `If-Match` (`"l-N"`). `folder_id: null` moves it to the root. Appended to the end of the new siblings.
+         * @description Requires `If-Match` (`"l-N"`). `folder_id: null` moves it to the root. Appended to the end of the new siblings when `before_id` is absent or `null`.
+         *
+         *     `before_id` (optional) places it in front of that sibling: another active list of the same kind in the target folder (or at the top level a list the caller can see there). Absent or `null`: last. A sibling that is not one of those, or the list itself, is 422 `invalid_before_id`. A move within the same folder reorders it. Top level: the order is the caller's own; inside a folder: the shared order. One request, one version bump.
          */
         post: operations["moveList"];
         delete?: never;
@@ -1182,6 +1186,11 @@ export interface components {
             name: string | null;
         };
         MoveFolderRequest: {
+            /**
+             * Format: uuid
+             * @description Place the folder in front of this sibling (a folder of the same kind in the target). Absent or null: last.
+             */
+            before_id?: string | null;
             /** Format: uuid */
             parent_folder_id: string | null;
         };
@@ -1190,6 +1199,11 @@ export interface components {
             list_id?: string;
         };
         MoveListRequest: {
+            /**
+             * Format: uuid
+             * @description Place the list in front of this sibling (a list of the same kind in the target folder). Absent or null: last.
+             */
+            before_id?: string | null;
             /** Format: uuid */
             folder_id: string | null;
         };
@@ -1245,6 +1259,7 @@ export interface components {
          *     - `folder_shared`: A folder shared with others cannot be moved into another folder (409). Stop sharing it first.
          *     - `type_mismatch`: An item would move to a list of another type (409).
          *     - `duplicate_title`: An item create, rename or move would repeat a title of the target list, ignoring case, accents and outer spaces (409).
+         *     - `invalid_before_id`: A move's `before_id` is not another active sibling of the moved item in the target: unknown, trashed, of the other kind, not in the target, not visible at the top level, or the item itself (422).
          *     - `order_stale`: A reorder names an id set that no longer matches the stored one (409).
          *     - `lookup_disabled`: A lookup was requested but its integration is not configured on this server (503).
          *     - `upstream_unavailable`: A lookup provider could not be reached or answered in time (503).

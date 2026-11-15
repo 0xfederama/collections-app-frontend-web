@@ -1,6 +1,5 @@
 import type { SortableSlot } from '../../components/ui/sortable'
-import type { Folder, List, TreeData, TreeIndex, TreeNode } from './api'
-import { folderRights } from './sharing/rights'
+import type { Folder, TreeIndex, TreeNode } from './api'
 
 export type SiblingKind = 'folder' | 'list'
 
@@ -41,49 +40,6 @@ export function buildSortable(nodes: readonly TreeNode[]) {
   }
   visit(nodes, null)
   return { groups, slots }
-}
-
-/**
- * Whether dropping `sourceId` (a folder or a list) onto folder `folderId` is a real move: not onto
- * itself, not into its own descendants (the server refuses a cycle), not where it already is, and
- * not a folder `meId` may not move (someone else's, or one with members: F-027).
- */
-export function canDropInto(
-  index: TreeIndex,
-  sourceId: string,
-  folderId: string,
-  meId?: string,
-): boolean {
-  if (sourceId === folderId) return false
-  const folder = index.folders.get(sourceId)
-  if (folder && !folderRights(folder, meId).canMove) return false
-  const list = index.lists.get(sourceId)
-  if (!folder && !list) return false
-  if ((folder ? folder.parent_folder_id : list?.folder_id) === folderId) return false
-  return !index.ancestorsOf(folderId).some((a) => a.id === sourceId)
-}
-
-/**
- * Whether `sourceId` (a folder or a list) can be dragged out to the top level: it is nested now, and
- * a folder must be one `meId` may move (nested folders always are: F-027 rights live on the box).
- */
-export function canDropToTop(index: TreeIndex, sourceId: string, meId?: string): boolean {
-  const folder = index.folders.get(sourceId)
-  if (folder) return folder.parent_folder_id !== null && folderRights(folder, meId).canMove
-  const list = index.lists.get(sourceId)
-  return !!list && list.folder_id !== null
-}
-
-/** The tree with `ids` (all siblings of one kind under one parent) renumbered `0..n-1` in that order. */
-export function applyOrder(data: TreeData, kind: SiblingKind, ids: readonly string[]): TreeData {
-  const position = new Map(ids.map((id, i) => [id, i]))
-  const renumber = <T extends Folder | List>(item: T): T => {
-    const sort_order = position.get(item.id)
-    return sort_order === undefined ? item : { ...item, sort_order }
-  }
-  return kind === 'folder'
-    ? { ...data, folders: data.folders.map(renumber) }
-    : { ...data, lists: data.lists.map(renumber) }
 }
 
 /** Every folder in display order with its depth, for the move picker. */

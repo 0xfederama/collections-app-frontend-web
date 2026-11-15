@@ -2,16 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { arrayMove } from '../../components/ui/sortable'
 import { devTree } from '../../mocks/devData'
 import { createTreeIndex, type TreeNode } from './api'
-import {
-  applyOrder,
-  buildSortable,
-  canDropInto,
-  canDropToTop,
-  flattenFolders,
-  groupKey,
-  parentIdOf,
-  subtreeCounts,
-} from './order'
+import { buildSortable, flattenFolders, groupKey, parentIdOf, subtreeCounts } from './order'
 
 const id = (n: number) => `7c1e5a10-0000-4000-8000-${String(n).padStart(12, '0')}`
 const index = createTreeIndex(devTree)
@@ -74,42 +65,6 @@ describe('AT-03 order helpers: buildSortable', () => {
     const empty = buildSortable([])
     expect(empty.slots.size).toBe(0)
     expect(empty.groups.get('folder:root')?.ids).toEqual([])
-  })
-})
-
-describe('AT-03 order helpers: applyOrder', () => {
-  it('renumbers the given folders 0..n-1 in the given order and leaves the rest untouched', () => {
-    const next = applyOrder(devTree, 'folder', [id(6), id(1), id(7), id(5)])
-    const order = (folderId: number) => next.folders.find((f) => f.id === id(folderId))!.sort_order
-    expect([order(6), order(1), order(7), order(5)]).toEqual([0, 1, 2, 3])
-    // Other folders and all lists keep their values.
-    expect(order(2)).toBe(0)
-    expect(order(4)).toBe(1)
-    expect(next.lists).toBe(devTree.lists)
-  })
-
-  it('renumbers lists only for the given ids', () => {
-    const next = applyOrder(devTree, 'list', [id(12), id(11)])
-    expect(next.lists.find((l) => l.id === id(12))?.sort_order).toBe(0)
-    expect(next.lists.find((l) => l.id === id(11))?.sort_order).toBe(1)
-    expect(next.lists.find((l) => l.id === id(18))?.sort_order).toBe(0)
-    expect(next.folders).toBe(devTree.folders)
-  })
-
-  it('does not mutate its input and changes the display order of the rebuilt tree', () => {
-    const snapshot = structuredClone(devTree)
-    const next = applyOrder(devTree, 'folder', [id(5), id(1), id(6), id(7)])
-    expect(devTree).toEqual(snapshot)
-    const roots = createTreeIndex(next)
-      .nodes.filter((n) => n.kind === 'folder')
-      .map((n) => n.id)
-    expect(roots).toEqual([id(5), id(1), id(6), id(7)])
-  })
-
-  it('ignores ids that are not in the tree', () => {
-    const next = applyOrder(devTree, 'list', [id(999), id(12), id(11)])
-    expect(next.lists.find((l) => l.id === id(12))?.sort_order).toBe(1)
-    expect(next.lists.find((l) => l.id === id(11))?.sort_order).toBe(2)
   })
 })
 
@@ -178,58 +133,5 @@ describe('AT-21 arrayMove', () => {
 
   it('leaves the array unchanged for an out-of-range source', () => {
     expect(arrayMove(['a', 'b'], 5, 0)).toEqual(['a', 'b'])
-  })
-})
-
-describe('F008-W4 canDropInto', () => {
-  it('accepts a list or folder dropped on another folder', () => {
-    expect(canDropInto(index, id(18), id(5))).toBe(true) // root list -> folder
-    expect(canDropInto(index, id(11), id(5))).toBe(true) // list in a folder -> other folder
-    expect(canDropInto(index, id(5), id(1))).toBe(true) // root folder -> folder
-  })
-
-  it('refuses a folder onto itself and into its own descendants', () => {
-    expect(canDropInto(index, id(1), id(1))).toBe(false)
-    expect(canDropInto(index, id(1), id(2))).toBe(false) // child
-    expect(canDropInto(index, id(2), id(1))).toBe(false) // already inside it
-  })
-
-  it('refuses a drop on the folder the node is already in, and unknown ids', () => {
-    expect(canDropInto(index, id(11), id(2))).toBe(false)
-    expect(canDropInto(index, 'nope', id(2))).toBe(false)
-  })
-})
-
-describe('F-027 W3 canDropInto rights', () => {
-  const OWNER = '00000000-0000-4000-8000-000000000001'
-  const OTHER = '00000000-0000-4000-8000-000000000009'
-  const shared = structuredClone(devTree)
-  shared.folders.find((f) => f.id === id(6))!.member_user_ids = [OTHER]
-  shared.folders.find((f) => f.id === id(6))!.shared = true
-  shared.folders.find((f) => f.id === id(7))!.owner_user_id = OTHER
-  const sharedIndex = createTreeIndex(shared)
-
-  it.each([
-    ['my private folder', id(5), true],
-    ['my folder with members', id(6), false],
-    ['someone else’s top-level folder', id(7), false],
-  ])('%s', (_name, source, expected) => {
-    expect(canDropInto(sharedIndex, source, id(1), OWNER)).toBe(expected)
-  })
-
-  it('keeps lists draggable', () => {
-    expect(canDropInto(sharedIndex, id(18), id(1), OWNER)).toBe(true)
-  })
-})
-
-describe('web 3.1.0 canDropToTop', () => {
-  it.each([
-    ['a list inside a folder', id(11), true],
-    ['a list already at the top level', id(18), false],
-    ['a top-level folder', id(5), false],
-    ['a nested folder', id(2), true],
-    ['an unknown id', 'missing', false],
-  ])('%s', (_label, source, expected) => {
-    expect(canDropToTop(index, source)).toBe(expected)
   })
 })

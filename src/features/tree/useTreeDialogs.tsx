@@ -2,7 +2,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useMatch, useNavigate } from 'react-router'
 import { useToast } from '../../components/ui'
-import type { SortableMove } from '../../components/ui/sortable'
+import type { TreeHit } from '../../components/ui'
+import type { TreeDropResult } from './model/drop'
 import { treeKeys } from '../../data/keys'
 import { useMe } from '../account'
 import { useTreeIndex, type Folder, type TreeData } from './api'
@@ -20,7 +21,6 @@ import {
   useMoveFolder,
   useMoveList,
   useRenameFolder,
-  useReorderSiblings,
   useUpdateList,
 } from './mutations'
 import { MoveDialog, listPathOptions } from './MoveDialog'
@@ -51,12 +51,16 @@ export interface TreeActions {
   nudge: (id: string, delta: -1 | 1) => void
   /** Position among same-kind siblings, or `undefined` while the tree is loading. */
   position: (id: string) => { index: number; size: number } | undefined
-  /** Applies a finished drag: a reorder between rows, or a move into a folder (`move.into`). */
-  applyMove: (move: SortableMove) => void
-  /** Whether dropping the node `sourceId` onto folder `folderId` is a valid move. */
-  canDropInto: (sourceId: string, folderId: string) => boolean
-  /** Whether a drag may take this nested folder or list out to the top level. */
-  canDropToTop: (sourceId: string) => boolean
+  /** Applies a finished drag or a nudge: a move to its place (`before_id`), a reorder when the parent stays the same. */
+  applyDrop: (drop: TreeDropResult) => void
+  /** The drop a pointer over this part of a visible row means for `sourceId`, or `null` when forbidden. */
+  projectDrop: (
+    expanded: ReadonlySet<string>,
+    sourceId: string,
+    hit: TreeHit,
+  ) => TreeDropResult | null
+  /** The places the arrow keys walk through for a picked-up row (its siblings). */
+  dropSteps: (expanded: ReadonlySet<string>, sourceId: string) => TreeDropResult[]
 }
 
 /**
@@ -95,7 +99,6 @@ export function useTreeDialogs({
   const moveList = useMoveList()
   const deleteFolder = useDeleteFolder()
   const deleteList = useDeleteList()
-  const reorder = useReorderSiblings()
 
   const sortable = useMemo(() => (index ? buildSortable(index.nodes) : undefined), [index])
   const [moveOut, setMoveOut] = useState<{
@@ -112,14 +115,13 @@ export function useTreeDialogs({
     return queryClient.getQueryData<TreeData>(treeKeys.tree)
   }
 
-  const { position, applyMove, canDropInto, canDropToTop, nudge } = createTreeMoves({
+  const { position, applyDrop, projectDrop, dropSteps, nudge } = createTreeMoves({
     index,
     sortable,
     toast,
     onCreatedFolder,
     moveFolder,
     moveList,
-    reorder,
     meId,
     askMoveOut: setMoveOut,
   })
@@ -134,9 +136,9 @@ export function useTreeDialogs({
     share: (id) => setDialog({ type: 'share', id }),
     leave: (id) => setDialog({ type: 'leave', id }),
     position,
-    applyMove,
-    canDropInto,
-    canDropToTop,
+    applyDrop,
+    projectDrop,
+    dropSteps,
     nudge,
   }
 
