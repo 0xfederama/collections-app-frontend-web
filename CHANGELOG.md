@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.1 — 2026-11-15
+
+### Fixed
+
+- Search on phones has the "Back to Home" chevron at the top left of its title, like lists. Phones have no sidebar, so there was no way back from the results except the browser's own.
+
 ## 3.4.0 — 2026-11-15
 
 ### Added

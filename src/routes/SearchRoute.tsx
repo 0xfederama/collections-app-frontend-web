@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Button, EmptyState, Skeleton, TextField } from '../components/ui'
 import { Search } from '../components/ui/icons'
+import { BackToHomeButton } from '../components/BackToHomeButton'
 import {
   MAX_QUERY_LENGTH,
   normalizeQuery,
@@ -137,6 +138,8 @@ export function SearchRoute() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
+        {/* Phones have no sidebar: the chevron is the way back to Home (web 3.4.1). */}
+        <BackToHomeButton />
         <h1 className="font-display text-display">Search</h1>
       </div>
       <form
