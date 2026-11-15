@@ -6,6 +6,11 @@
 
 - Settings opens at once: the dialog and its pane tabs show right away with a loading placeholder, while the panes' code and the settings load in the background (before, nothing showed until both arrived).
 
+### Fixed
+
+- After a sidebar or list drag, starting another drag within a tenth of a second of a click could leave every later click in the app swallowed (nothing reacted until the next drag). The click guard of each drag now cleans up only itself.
+- Quick add's accessible name matches its visible label (axe 4.14 `label-content-name-mismatch`); the `N` shortcut is announced with `aria-keyshortcuts`.
+
 ### Upkeep (roadmap 37, D-161)
 
 - Node 26 LTS: `.nvmrc` 26, `engines` `>=26`, Dockerfile build stage `node:26.13.1-alpine` (pinned digest), `@types/node` 26.
