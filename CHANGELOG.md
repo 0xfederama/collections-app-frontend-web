@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.0 — 2026-11-15
+
+### Added
+
+- Movies lists (roadmap 36, D-160): two entries in the list's "…" menu, after Type. "Movie Vector Map" opens mikeyguinness.com/movies in a new tab. "Pick a random movie" picks one of the movies shown right now (the search, filter and availability apply), scrolls to it and highlights it briefly; on wide screens it opens in the side panel like a tap, on smaller ones a banner offers Open. "Pick another" never repeats the previous pick, the pick is announced to screen readers, smooth scrolling is off with reduced motion, and the entry is disabled ("No movies shown") when nothing is listed. Nothing is sent to the server.
+
 ## 3.3.0 — 2026-11-15
 
 ### Changed

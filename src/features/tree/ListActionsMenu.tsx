@@ -13,8 +13,9 @@ import { useRefreshDetails } from './useRefreshDetails'
  * The icon is changed from the header icon button (F018-W1), not from here.
  * It owns its dialogs, so it works outside the sidebar. After a delete it navigates home when
  * that list was open. Type lives here (F008-W5); a change on a list with items asks first.
+ * `extra` entries (the movie extras, roadmap 36) go after Type, in their own group.
  */
-export function ListActionsMenu({ list }: { list: List }) {
+export function ListActionsMenu({ list, extra = [] }: { list: List; extra?: MenuItem[] }) {
   const { actions, dialogs } = useTreeDialogs()
   const type = useChangeType(list)
   const refresh = useRefreshDetails(list.id)
@@ -27,6 +28,7 @@ export function ListActionsMenu({ list }: { list: List }) {
       onValueChange: (value) => type.pick(valueToType(value)),
     },
     { type: 'separator' },
+    ...(extra.length > 0 ? [...extra, { type: 'separator' } satisfies MenuItem] : []),
     ...(canRefreshDetails(list)
       ? ([
           {

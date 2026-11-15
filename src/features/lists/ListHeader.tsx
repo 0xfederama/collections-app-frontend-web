@@ -1,6 +1,6 @@
 import { KeyboardTapTarget } from '../../components/KeyboardTapTarget'
 import { useId, useState } from 'react'
-import { Button, Skeleton, type SelectOption } from '../../components/ui'
+import { Button, Skeleton, type MenuItem, type SelectOption } from '../../components/ui'
 import { Pencil, Plus, Search } from '../../components/ui/icons'
 import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { useBreakpoint } from '../../lib/breakpoints'
@@ -69,6 +69,8 @@ export interface ListHeaderProps {
   availability: Availability | null
   onAvailability: (value: Availability | null) => void
   onAddItem: () => void
+  /** Type-specific entries for the "…" menu (the movie extras, roadmap 36). */
+  menuExtras?: MenuItem[]
 }
 
 /**
@@ -154,7 +156,7 @@ export function ListHeader(props: ListHeaderProps) {
           <h1 className="min-w-0 flex-1 font-display text-display break-words">
             <ListTitle list={props.treeList} />
           </h1>
-          <ListActionsMenu list={props.treeList} />
+          <ListActionsMenu list={props.treeList} extra={props.menuExtras} />
         </div>
         <TypeChip type={props.treeList.type} definition={props.definition} />
         {list ? (

@@ -96,12 +96,15 @@ function EntryRow({
     'group/entry relative list-none [-webkit-touch-callout:none] pointer-coarse:select-none',
     surface,
     reorder?.isDragging && 'z-20 shadow-lg ring-2 ring-focus-ring',
+    // The random pick (roadmap 36) sets `data-picked` for a moment.
+    'transition-shadow duration-500 motion-reduce:transition-none data-[picked]:ring-2 data-[picked]:ring-accent',
   )
 
   if (mode === 'compact') {
     return (
       <li
         ref={reorder?.rowRef}
+        data-item-id={item.id}
         {...reorder?.rowProps}
         {...press}
         className={cx(shell, 'flex items-center gap-3 rounded-md py-1.5 pr-3 pl-1.5')}
@@ -136,6 +139,7 @@ function EntryRow({
     return (
       <li
         ref={reorder?.rowRef}
+        data-item-id={item.id}
         {...reorder?.rowProps}
         {...press}
         className={cx(shell, 'flex items-center gap-3.5 rounded-md py-1.5 pr-3 pl-1.5')}
@@ -174,6 +178,7 @@ function EntryRow({
   return (
     <li
       ref={reorder?.rowRef}
+      data-item-id={item.id}
       {...reorder?.rowProps}
       {...press}
       className={cx(shell, 'flex flex-col rounded-lg p-1.5 pb-3')}

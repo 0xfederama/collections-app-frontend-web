@@ -12,6 +12,15 @@ export type MenuItem =
       icon?: ReactNode
       destructive?: boolean
       disabled?: boolean
+      /** A short muted note after the label, e.g. why the entry is disabled. */
+      hint?: string
+    }
+  | {
+      /** A link that opens in a new tab (never fetched by the app). */
+      type: 'link'
+      label: string
+      href: string
+      icon?: ReactNode
     }
   | {
       /** A submenu with one choice checked (e.g. a list's kind). */
@@ -95,6 +104,14 @@ export function Menu({ trigger, items, align = 'end', open, onOpenChange }: Menu
                   </DropdownMenu.SubContent>
                 </DropdownMenu.Portal>
               </DropdownMenu.Sub>
+            ) : item.type === 'link' ? (
+              <DropdownMenu.Item key={item.label} asChild className={menuItemClass}>
+                <a href={item.href} target="_blank" rel="noopener noreferrer">
+                  {item.icon && <span aria-hidden>{item.icon}</span>}
+                  {item.label}
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              </DropdownMenu.Item>
             ) : (
               <DropdownMenu.Item
                 key={item.label}
@@ -110,6 +127,9 @@ export function Menu({ trigger, items, align = 'end', open, onOpenChange }: Menu
               >
                 {item.icon && <span aria-hidden>{item.icon}</span>}
                 {item.label}
+                {item.hint && (
+                  <span className="ml-auto pl-4 text-secondary text-text-muted">{item.hint}</span>
+                )}
               </DropdownMenu.Item>
             ),
           )}

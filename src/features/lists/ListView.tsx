@@ -26,6 +26,8 @@ import { parseFieldFilter, type FieldFilterValue } from './FieldFilter'
 import { AVAILABILITY_PARAM, parseAvailability, type Availability } from './availability'
 import { activeFieldFilter, buildItemsParams, parseSort, resolveSortOverride } from './listParams'
 import { useDebouncedFilter } from './useDebouncedFilter'
+import { movieMenuItems } from './movieExtras'
+import { useRandomPick } from './useRandomPick'
 
 /**
  * The list screen in the shell. URL state (UI_SPEC §1, D-063): `?q=` is the title
@@ -72,6 +74,11 @@ export function ListView({ treeList }: { treeList: List }) {
 
   const root = useRef<HTMLDivElement>(null)
   const remember = useScrollRestore(root, itemsQuery.isSuccess)
+  const randomPick = useRandomPick(root, items)
+  const menuExtras = movieMenuItems(treeList.type, {
+    shown: itemsQuery.isSuccess ? items.length : 0,
+    onPick: randomPick.pick,
+  })
 
   const [filter, setFilter] = useDebouncedFilter(q, setSearchParams)
 
@@ -254,7 +261,10 @@ export function ListView({ treeList }: { treeList: List }) {
         availability={availability}
         onAvailability={setAvailability}
         onAddItem={addItem}
+        menuExtras={menuExtras}
       />
+      {randomPick.banner}
+      {randomPick.status}
       {itemsQuery.isError ? (
         <div
           role="alert"
