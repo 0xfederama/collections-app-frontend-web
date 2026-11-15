@@ -4,6 +4,7 @@ import {
   isDestinationUnavailable,
   isFolderShared,
   isForbidden,
+  isInvalidBeforeId,
   type FieldError,
 } from '../../lib/api'
 
@@ -13,6 +14,7 @@ type TreeErrorKind =
   | 'cycle' // 409 cycle_detected
   | 'forbidden' // 403: not the owner
   | 'shared' // 409 folder_shared
+  | 'stale' // 422 invalid_before_id: the place is no longer a sibling there
   | 'not_found' // 404
   | 'validation' // 422
   | 'network' // no answer, or 5xx
@@ -48,6 +50,13 @@ export function classifyError(error: unknown, noun: 'folder' | 'list', name?: st
     return {
       kind: 'unavailable',
       message: 'That place is no longer available. Pick another one.',
+      fieldErrors: [],
+    }
+  }
+  if (isInvalidBeforeId(error)) {
+    return {
+      kind: 'stale',
+      message: 'The folders and lists changed. They were refreshed; please try again.',
       fieldErrors: [],
     }
   }
@@ -113,9 +122,10 @@ const serverOrGenericError = (error: unknown): TreeError =>
     ? { kind: 'other', message: error.detail ?? error.title, fieldErrors: [] }
     : { kind: 'other', message: 'Something went wrong. Please try again.', fieldErrors: [] }
 
-/** Failures after which the tree on screen may be wrong, so it should be refetched. 412 is excluded on purpose. */
-/** The toast for a reorder that lost to a change elsewhere (409 `order_stale`). */
-export const ORDER_STALE_MESSAGE = 'The order changed elsewhere. Try again.'
-
+/**
+ * Failures after which the tree on screen may be wrong, so it should be refetched: 404 and 409, and a
+ * 422 `invalid_before_id` (the siblings changed under the drop). 412 is excluded on purpose.
+ */
 export const shouldRefreshTree = (error: unknown) =>
-  error instanceof ApiError && (error.status === 404 || error.status === 409)
+  (error instanceof ApiError && (error.status === 404 || error.status === 409)) ||
+  isInvalidBeforeId(error)

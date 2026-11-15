@@ -210,7 +210,7 @@ export function listHandlers(db: TreeDb) {
       list.folder_id = target
       if (!placeInParent(state, target, 'list', list, body.before_id)) {
         list.folder_id = previousFolder
-        return invalid('before_id', 'Must be a list in the destination.')
+        return problemResponse(422, 'invalid_before_id')
       }
       list.owner_user_id = ownerFor(target)
       list.version += 1

@@ -14,7 +14,8 @@ async function move(
     headers: { 'content-type': 'application/json', 'If-Match': `"${kind[0]}-${node.version}"` },
     body: JSON.stringify(body),
   })
-  return response.status
+  const json = response.status === 200 ? undefined : ((await response.json()) as { code: string })
+  return { status: response.status, code: json?.code }
 }
 
 const listOrder = (backend: ReturnType<typeof installTreeBackend>, folderId: string | null) =>
@@ -32,7 +33,8 @@ describe('web 3.3.0 move with before_id (fake backend)', () => {
   it('a list lands before the given sibling and the others are renumbered', async () => {
     const backend = installTreeBackend()
     expect(
-      await move(backend, 'lists', ID.wishlist, { folder_id: ID.movies, before_id: ID.seen }),
+      (await move(backend, 'lists', ID.wishlist, { folder_id: ID.movies, before_id: ID.seen }))
+        .status,
     ).toBe(200)
     expect(listOrder(backend, ID.movies)).toEqual([ID.watchlist, ID.wishlist, ID.seen])
     expect(backend.state.lists.map((l) => l.sort_order).every((n) => Number.isInteger(n))).toBe(
@@ -52,27 +54,39 @@ describe('web 3.3.0 move with before_id (fake backend)', () => {
   it('a folder lands before a sibling folder, at the top level too', async () => {
     const backend = installTreeBackend()
     expect(
-      await move(backend, 'folders', ID.gear, { parent_folder_id: ID.media, before_id: ID.tv }),
+      (await move(backend, 'folders', ID.gear, { parent_folder_id: ID.media, before_id: ID.tv }))
+        .status,
     ).toBe(200)
     expect(folderOrder(backend, ID.media)).toEqual([ID.movies, ID.gear, ID.tv])
     expect(
-      await move(backend, 'folders', ID.tv, { parent_folder_id: null, before_id: ID.vehicles }),
+      (await move(backend, 'folders', ID.tv, { parent_folder_id: null, before_id: ID.vehicles }))
+        .status,
     ).toBe(200)
     expect(folderOrder(backend, null)).toEqual([ID.media, ID.tv, ID.vehicles, ID.empty])
   })
 
-  it('422 when before_id is not a same-kind sibling in the destination; nothing changes', async () => {
+  it('a move inside one parent with before_id is a reorder in place', async () => {
+    const backend = installTreeBackend()
+    expect(
+      (await move(backend, 'folders', ID.media, { parent_folder_id: null, before_id: ID.empty }))
+        .status,
+    ).toBe(200)
+    expect(folderOrder(backend, null)).toEqual([ID.vehicles, ID.gear, ID.media, ID.empty])
+  })
+
+  it('422 invalid_before_id when before_id is not a same-kind sibling in the destination; nothing changes', async () => {
     const backend = installTreeBackend()
     // A list of another folder, a folder for a list, a list for a folder.
-    expect(
+    const cases = [
       await move(backend, 'lists', ID.wishlist, { folder_id: ID.movies, before_id: ID.cars }),
-    ).toBe(422)
-    expect(
       await move(backend, 'lists', ID.wishlist, { folder_id: ID.movies, before_id: ID.festival }),
-    ).toBe(422)
-    expect(
       await move(backend, 'folders', ID.gear, { parent_folder_id: ID.media, before_id: ID.seen }),
-    ).toBe(422)
+      // The item itself is never its own sibling.
+      await move(backend, 'folders', ID.gear, { parent_folder_id: null, before_id: ID.gear }),
+    ]
+    for (const result of cases) {
+      expect(result).toEqual({ status: 422, code: 'invalid_before_id' })
+    }
     expect(backend.state.lists.find((l) => l.id === ID.wishlist)?.folder_id).toBeNull()
     expect(backend.state.folders.find((f) => f.id === ID.gear)?.parent_folder_id).toBeNull()
   })

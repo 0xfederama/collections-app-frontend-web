@@ -105,16 +105,18 @@ describe('web 3.3.0 sidebar pointer drag', () => {
     })
   })
 
-  it('inside one parent it is a reorder, not a move', async () => {
+  it('inside one parent it is a move with before_id, not a PUT of the whole order', async () => {
     const { backend } = await openTree()
     const user = await dragTo(ID.gear, yOf(ID.vehicles, 'top', ID.gear))
     await drop(user)
-    await waitFor(() => expect(backend.writes('PUT')).toHaveLength(1))
-    expect(backend.writes('PUT')[0]).toMatchObject({
-      path: '/api/v1/folders/order',
-      body: { parent_folder_id: null, ids: [ID.media, ID.gear, ID.vehicles, ID.empty] },
+    await waitFor(() =>
+      expect(backend.writes('POST', `/api/v1/folders/${ID.gear}/move`)).toHaveLength(1),
+    )
+    expect(backend.writes('POST', `/api/v1/folders/${ID.gear}/move`)[0]?.body).toEqual({
+      parent_folder_id: null,
+      before_id: ID.vehicles,
     })
-    expect(backend.writes('POST')).toHaveLength(0)
+    expect(backend.writes('PUT')).toHaveLength(0)
   })
 
   it('a folder into its own descendant: no line, nothing sent', async () => {

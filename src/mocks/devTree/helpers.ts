@@ -35,9 +35,9 @@ type Placed = { id: string; sort_order: number }
 
 /**
  * Puts the folder or list `moving` into `parent` before its sibling `beforeId` (`null` or absent =
- * after the last of its kind), renumbering that kind's siblings `0..n-1` (the planned `before_id` of
- * the move endpoints, api-v4.2.0). Returns false, changing nothing, when `beforeId` is not a sibling
- * of that kind in `parent` (the server answers 422).
+ * after the last of its kind), renumbering that kind's siblings `0..n-1` (the `before_id` of the move
+ * endpoints, api-v4.2.0). Returns false, changing nothing, when `beforeId` is not a sibling of that kind
+ * in `parent` (the server answers 422 `invalid_before_id`); the moving row is never its own sibling.
  */
 export const placeInParent = (
   state: TreeDb['state'],

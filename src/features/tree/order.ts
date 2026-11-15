@@ -1,5 +1,5 @@
 import type { SortableSlot } from '../../components/ui/sortable'
-import type { Folder, List, TreeData, TreeIndex, TreeNode } from './api'
+import type { Folder, TreeIndex, TreeNode } from './api'
 
 export type SiblingKind = 'folder' | 'list'
 
@@ -40,18 +40,6 @@ export function buildSortable(nodes: readonly TreeNode[]) {
   }
   visit(nodes, null)
   return { groups, slots }
-}
-
-/** The tree with `ids` (all siblings of one kind under one parent) renumbered `0..n-1` in that order. */
-export function applyOrder(data: TreeData, kind: SiblingKind, ids: readonly string[]): TreeData {
-  const position = new Map(ids.map((id, i) => [id, i]))
-  const renumber = <T extends Folder | List>(item: T): T => {
-    const sort_order = position.get(item.id)
-    return sort_order === undefined ? item : { ...item, sort_order }
-  }
-  return kind === 'folder'
-    ? { ...data, folders: data.folders.map(renumber) }
-    : { ...data, lists: data.lists.map(renumber) }
 }
 
 /** Every folder in display order with its depth, for the move picker. */

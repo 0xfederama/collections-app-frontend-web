@@ -9,6 +9,6 @@ export {
   isFolderNotTopLevel,
   isFolderShared,
   isForbidden,
-  isOrderStale,
+  isInvalidBeforeId,
 } from './failure'
 export { etag, ifMatch } from './etag'

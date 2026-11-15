@@ -1,17 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useToast, type ItemType } from '../../components/ui'
-import { api, ifMatch, isOrderStale, unwrap } from '../../lib/api'
+import type { ItemType } from '../../components/ui'
+import { api, ifMatch, unwrap } from '../../lib/api'
 import { invalidateContent } from '../../data/invalidate'
 import type { IconChoice } from '../lists'
-import { treeKeys } from '../../data/keys'
-import type { Folder, List, TreeData } from './api'
-import { ORDER_STALE_MESSAGE, shouldRefreshTree } from './errors'
-import { applyOrder, type SiblingKind } from './order'
+import type { Folder, List } from './api'
+import { shouldRefreshTree } from './errors'
 
 /**
  * Tree writes (folders and lists). Every write sends `If-Match` built from the version the user
- * saw, is never retried (mutation defaults), and refetches all content (`invalidateContent`) when it succeeds. Move and
- * reorder bodies always carry the parent field, `null` meaning the root (D-060).
+ * saw, is never retried (mutation defaults), and refetches all content (`invalidateContent`) when it succeeds. Move bodies
+ * always carry the parent field, `null` meaning the root (D-060); a drag's position travels as `before_id`.
  *
  * A 412 does NOT refetch: the dialog keeps the user's draft and the stale version, so a second
  * click cannot silently overwrite the other change. "Reload latest" is the explicit way out.
@@ -165,51 +163,5 @@ export function useDeleteList() {
     await api.DELETE('/api/v1/lists/{id}', {
       params: { path: { id: list.id }, header: ifMatch('list', list.version) },
     })
-  })
-}
-
-export interface ReorderVars {
-  kind: SiblingKind
-  /** Parent folder id, `null` = root. */
-  parentId: string | null
-  /** All siblings of that kind under that parent, in the new order. */
-  ids: string[]
-}
-
-/**
- * Reorders siblings. The tree is updated before the server answers (optimistic) and restored if
- * the write fails. `409 order_stale` means the siblings changed elsewhere: roll back, refetch and
- * tell the user (UI_SPEC §9).
- */
-export function useReorderSiblings() {
-  const queryClient = useQueryClient()
-  const toast = useToast()
-  return useMutation({
-    mutationFn: async ({ kind, parentId, ids }: ReorderVars) => {
-      if (kind === 'folder') {
-        await api.PUT('/api/v1/folders/order', { body: { parent_folder_id: parentId, ids } })
-      } else {
-        await api.PUT('/api/v1/lists/order', { body: { folder_id: parentId, ids } })
-      }
-    },
-    onMutate: async ({ kind, ids }) => {
-      await queryClient.cancelQueries({ queryKey: treeKeys.tree })
-      const previous = queryClient.getQueryData<TreeData>(treeKeys.tree)
-      if (previous) queryClient.setQueryData(treeKeys.tree, applyOrder(previous, kind, ids))
-      return { previous }
-    },
-    onError: (error, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(treeKeys.tree, context.previous)
-      if (isOrderStale(error)) {
-        toast({ kind: 'info', title: ORDER_STALE_MESSAGE })
-      } else {
-        toast({
-          kind: 'error',
-          title: 'Couldn’t save the new order',
-          description: 'The previous order was restored. Please try again.',
-        })
-      }
-    },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: treeKeys.tree }),
   })
 }

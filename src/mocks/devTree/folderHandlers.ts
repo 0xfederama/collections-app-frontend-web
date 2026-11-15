@@ -147,7 +147,7 @@ export function folderHandlers(db: TreeDb) {
       folder.parent_folder_id = target
       if (!placeInParent(state, target, 'folder', folder, body.before_id)) {
         folder.parent_folder_id = previousParent
-        return invalid('before_id', 'Must be a folder in the destination.')
+        return problemResponse(422, 'invalid_before_id')
       }
       folder.owner_user_id = ownerFor(target)
       folder.version += 1

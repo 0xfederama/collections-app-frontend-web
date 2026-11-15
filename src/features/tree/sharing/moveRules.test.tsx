@@ -256,11 +256,33 @@ describe('F-027 W5 errors', () => {
     )
   })
 
-  it('409 order_stale on a reorder refetches and asks to try again', async () => {
-    await render((a) => a.nudge(ID.vehicles, 1), seedTree(), [
-      http.put(apiUrl('/api/v1/folders/order'), () => problemResponse(409, 'order_stale')),
+  it('422 invalid_before_id on a drag says the folders changed and asks to try again', async () => {
+    await drag(seedTree(), ID.wishlist, ID.gear, [
+      http.post(apiUrl(`/api/v1/lists/${ID.wishlist}/move`), () =>
+        problemResponse(422, 'invalid_before_id'),
+      ),
     ])
-    expect(await screen.findByText('The order changed elsewhere. Try again.')).toBeInTheDocument()
+    expect(await screen.findByText('Couldn’t move it')).toBeInTheDocument()
+    expect(
+      screen.getByText('The folders and lists changed. They were refreshed; please try again.'),
+    ).toBeInTheDocument()
+  })
+
+  it('422 invalid_before_id on a nudge (a same-parent reorder) says the same, through the move call', async () => {
+    // The override answers before the recorder, so the body is read here.
+    let sent: unknown
+    const { backend } = await render((a) => a.nudge(ID.vehicles, 1), seedTree(), [
+      http.post(apiUrl(`/api/v1/folders/${ID.vehicles}/move`), async ({ request }) => {
+        sent = await request.json()
+        return problemResponse(422, 'invalid_before_id')
+      }),
+    ])
+    expect(await screen.findByText('Couldn’t move it')).toBeInTheDocument()
+    expect(
+      screen.getByText('The folders and lists changed. They were refreshed; please try again.'),
+    ).toBeInTheDocument()
+    expect(sent).toEqual({ parent_folder_id: null, before_id: ID.empty })
+    expect(backend.writes('PUT')).toHaveLength(0)
   })
 })
 

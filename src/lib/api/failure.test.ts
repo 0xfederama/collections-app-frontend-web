@@ -6,6 +6,7 @@ import {
   isUnauthenticated,
   fieldErrorText,
   isDuplicateTitle,
+  isInvalidBeforeId,
   validationMessage,
 } from './failure'
 
@@ -160,5 +161,29 @@ describe('F-027 W1 unauthenticated', () => {
 
   it('errorMessage tells the user to reload and sign in on a 401', () => {
     expect(errorMessage(apiError(401))).toBe('You’re signed out. Reload the page to sign in.')
+  })
+})
+
+describe('isInvalidBeforeId', () => {
+  it.each([
+    [
+      '422 invalid_before_id',
+      new ApiError({ status: 422, code: 'invalid_before_id', title: 'T', raw: null }),
+      true,
+    ],
+    [
+      '409 invalid_before_id is not the same failure',
+      new ApiError({ status: 409, code: 'invalid_before_id', title: 'T', raw: null }),
+      false,
+    ],
+    [
+      '422 validation_failed',
+      new ApiError({ status: 422, code: 'validation_failed', title: 'T', raw: null }),
+      false,
+    ],
+    ['a network failure', new NetworkError(), false],
+    ['a plain Error', new Error('boom'), false],
+  ])('%s: %s', (_label, error, expected) => {
+    expect(isInvalidBeforeId(error)).toBe(expected)
   })
 })

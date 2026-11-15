@@ -2,14 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { arrayMove } from '../../components/ui/sortable'
 import { devTree } from '../../mocks/devData'
 import { createTreeIndex, type TreeNode } from './api'
-import {
-  applyOrder,
-  buildSortable,
-  flattenFolders,
-  groupKey,
-  parentIdOf,
-  subtreeCounts,
-} from './order'
+import { buildSortable, flattenFolders, groupKey, parentIdOf, subtreeCounts } from './order'
 
 const id = (n: number) => `7c1e5a10-0000-4000-8000-${String(n).padStart(12, '0')}`
 const index = createTreeIndex(devTree)
@@ -72,42 +65,6 @@ describe('AT-03 order helpers: buildSortable', () => {
     const empty = buildSortable([])
     expect(empty.slots.size).toBe(0)
     expect(empty.groups.get('folder:root')?.ids).toEqual([])
-  })
-})
-
-describe('AT-03 order helpers: applyOrder', () => {
-  it('renumbers the given folders 0..n-1 in the given order and leaves the rest untouched', () => {
-    const next = applyOrder(devTree, 'folder', [id(6), id(1), id(7), id(5)])
-    const order = (folderId: number) => next.folders.find((f) => f.id === id(folderId))!.sort_order
-    expect([order(6), order(1), order(7), order(5)]).toEqual([0, 1, 2, 3])
-    // Other folders and all lists keep their values.
-    expect(order(2)).toBe(0)
-    expect(order(4)).toBe(1)
-    expect(next.lists).toBe(devTree.lists)
-  })
-
-  it('renumbers lists only for the given ids', () => {
-    const next = applyOrder(devTree, 'list', [id(12), id(11)])
-    expect(next.lists.find((l) => l.id === id(12))?.sort_order).toBe(0)
-    expect(next.lists.find((l) => l.id === id(11))?.sort_order).toBe(1)
-    expect(next.lists.find((l) => l.id === id(18))?.sort_order).toBe(0)
-    expect(next.folders).toBe(devTree.folders)
-  })
-
-  it('does not mutate its input and changes the display order of the rebuilt tree', () => {
-    const snapshot = structuredClone(devTree)
-    const next = applyOrder(devTree, 'folder', [id(5), id(1), id(6), id(7)])
-    expect(devTree).toEqual(snapshot)
-    const roots = createTreeIndex(next)
-      .nodes.filter((n) => n.kind === 'folder')
-      .map((n) => n.id)
-    expect(roots).toEqual([id(5), id(1), id(6), id(7)])
-  })
-
-  it('ignores ids that are not in the tree', () => {
-    const next = applyOrder(devTree, 'list', [id(999), id(12), id(11)])
-    expect(next.lists.find((l) => l.id === id(12))?.sort_order).toBe(1)
-    expect(next.lists.find((l) => l.id === id(11))?.sort_order).toBe(2)
   })
 })
 
