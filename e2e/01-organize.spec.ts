@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
-import { createList, createViaSidebar, dragTo, sidebarTree, uniqueName } from './helpers'
+import {
+  createList,
+  createViaSidebar,
+  dragTo,
+  sidebarTree,
+  trashCreatedSince,
+  uniqueName,
+} from './helpers'
 
 const row = (page: Page, name: string) =>
   sidebarTree(page).getByRole('treeitem').filter({ hasText: name })
@@ -13,6 +20,15 @@ async function orderOf(page: Page, names: string[]) {
     .map((text) => names.find((n) => text.includes(n)))
     .filter((n): n is string => n !== undefined)
 }
+
+// Keep the shared tree short: each test trashes what it created at the top level (D-161).
+let startedAt = 0
+test.beforeEach(() => {
+  startedAt = Date.now()
+})
+test.afterEach(async ({ request }) => {
+  await trashCreatedSince(request, startedAt)
+})
 
 test.describe('F010-W1 the folder path of a new list', () => {
   test('choose the folder in the dialog; the next list remembers it for the session', async ({

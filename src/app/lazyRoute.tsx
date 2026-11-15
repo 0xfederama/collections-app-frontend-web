@@ -17,7 +17,7 @@ function RouteSkeleton() {
 
 /**
  * A route component that is loaded on first render and shows a skeleton meanwhile. Pass
- * `fallback: null` for an overlay route (Settings), whose placeholder would otherwise show in the
+ * `fallback: null` for an overlay route, whose placeholder would otherwise show in the
  * page flow under the page behind it.
  */
 export function lazyRoute(

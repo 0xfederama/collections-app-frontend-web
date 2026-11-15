@@ -138,27 +138,33 @@ const announcements = {
 // Browsers differ in where the click that ends a mouse drag lands (dnd-kit captures the pointer on
 // <body>, so most send it there). Whichever element gets it, a drag must never open a link or select
 // a row, so the click is swallowed from the drag's start until just after it ends.
-let stopSwallowing: (() => void) | undefined
+// Each drag owns its swallow: its `stop` clears its own timer and listeners and is safe to call
+// twice (pointerdown and the timer both call it). Only the current drag's stop resets the module
+// state, so a late timer from the previous drag can never orphan the next drag's swallow (which
+// left every click in the app swallowed, D-161).
+let current: { stop: () => void; arm: () => void } | undefined
 const startSwallowingClick = () => {
-  if (stopSwallowing) return
+  if (current) return
   const swallow = (event: Event) => {
     event.preventDefault()
     event.stopPropagation()
   }
-  window.addEventListener('click', swallow, true)
-  stopSwallowing = () => {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const stop = () => {
+    clearTimeout(timer)
     window.removeEventListener('click', swallow, true)
-    if (stopSwallowing) window.removeEventListener('pointerdown', stopSwallowing, true)
-    stopSwallowing = undefined
+    window.removeEventListener('pointerdown', stop, true)
+    if (current?.stop === stop) current = undefined
   }
-}
-const stopSwallowingClick = () => {
-  const stop = stopSwallowing
-  if (!stop) return
   // The drag's own click comes right after it ends; a new press means none is coming.
-  window.addEventListener('pointerdown', stop, true)
-  setTimeout(stop, 100)
+  const arm = () => {
+    window.addEventListener('pointerdown', stop, true)
+    timer = setTimeout(stop, 100)
+  }
+  window.addEventListener('click', swallow, true)
+  current = { stop, arm }
 }
+const stopSwallowingClick = () => current?.arm()
 
 const withoutAccessibility = (defaults: readonly unknown[]) =>
   defaults.filter((plugin) => plugin !== Accessibility) as never

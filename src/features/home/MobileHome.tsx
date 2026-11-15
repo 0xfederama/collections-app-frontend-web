@@ -65,7 +65,6 @@ export function MobileHome({ empty }: { empty: ReactNode }) {
             <Button
               variant="ink"
               size="sm"
-              aria-label="Quick add"
               onClick={() => quickAdd.open()}
               className="w-full pointer-coarse:min-h-11"
             >

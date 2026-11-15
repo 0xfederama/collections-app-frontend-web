@@ -14,6 +14,7 @@ import {
   sidebarTree,
   touchDragTo,
   uniqueName,
+  trashCreatedSince,
 } from './helpers'
 
 // Web 3.3.0 (roadmap 35, D-158): any list or folder can be dragged anywhere in the sidebar tree and
@@ -79,7 +80,7 @@ async function shareWithAlice(request: APIRequestContext, folderId: string) {
   const me = await request.get('/api/v1/me', { headers: { Cookie: 'dev_user=alice@dev.test' } })
   expect(me.status()).toBe(200)
   const added = await request.post(`/api/v1/folders/${folderId}/members`, {
-    headers: { Cookie: 'dev_user=owner@dev.test' },
+    headers: { Cookie: `dev_user=${DRAG_USER}` },
     data: { email: 'alice@dev.test' },
   })
   expect(added.status(), 'add member').toBe(200)
@@ -87,7 +88,7 @@ async function shareWithAlice(request: APIRequestContext, folderId: string) {
 
 async function signInAs(
   context: BrowserContext,
-  who: 'owner' | 'alice',
+  who: 'bob' | 'alice',
   baseURL: string | undefined,
 ) {
   const host = new URL(baseURL ?? 'http://localhost:5183').hostname
@@ -96,7 +97,43 @@ async function signInAs(
   ])
 }
 
+// The drag specs run as their own dev identity (Bob), page and API alike: his tree holds only what
+// these tests create, so rows other specs leave on the shared stack never make it taller than the
+// window (the cause of the flaky drag e2e, D-161). Bob owns the shared folders; Alice is the member.
+const DRAG_USER = 'bob@dev.test'
+test.use({
+  storageState: async ({ baseURL }, provide) => {
+    const domain = new URL(baseURL ?? 'http://localhost:5183').hostname
+    await provide({
+      cookies: [
+        {
+          name: 'dev_user',
+          value: encodeURIComponent(DRAG_USER),
+          domain,
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax',
+        },
+      ],
+      origins: [],
+    })
+  },
+})
+
+// Keep the shared tree short: each test trashes what it created at the top level (D-161).
+let startedAt = 0
+test.beforeEach(() => {
+  startedAt = Date.now()
+})
+test.afterEach(async ({ request }) => {
+  await trashCreatedSince(request, startedAt)
+})
+
 test.describe('web 3.3.0 drag anywhere: mouse', () => {
+  // Tall like the touch block: the whole tree fits, so the sidebar never scrolls mid-drag (D-161).
+  test.use({ viewport: { width: 1440, height: 8000 } })
   test('into an open folder, between two children, at that exact place', async ({
     page,
     request,
@@ -169,11 +206,15 @@ test.describe('web 3.3.0 drag anywhere: mouse', () => {
     const listName = uniqueName('Leaver')
     const list = await createList(request, listName, 'movie', box.id)
     await open(page, [boxName])
+    // Lists other specs leave at the top level: the moved list must come after all of them
+    // (checking only "last" broke when anything else was created on the shared stack meanwhile).
+    const before = await order(request, 'list', null)
 
     await dragToEnd(page, row(page, listName))
     await expect.poll(() => parentOf(request, list.id)).toBeNull()
     const all = await order(request, 'list', null)
-    expect(all.at(-1)).toBe(list.id)
+    expect(all.slice(0, before.length)).toEqual(before)
+    expect(all.indexOf(list.id)).toBeGreaterThanOrEqual(before.length)
   })
 
   test('reorders inside a folder', async ({ page, request }) => {
@@ -303,6 +344,7 @@ test.describe('web 3.3.0 drag anywhere: mouse', () => {
 
 // Alice's view: the owner's shared top-level folder is in her tree, and it is not hers to move.
 test.describe('web 3.3.0 drag anywhere: someone else’s shared folder', () => {
+  test.use({ viewport: { width: 1440, height: 8000 } })
   test('cannot be dropped into one of my folders: nothing is sent', async ({
     page,
     request,

@@ -72,6 +72,13 @@ describe('W-04 routes render their heading', () => {
     expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
   })
 
+  it('/settings opens the dialog before the settings load', async () => {
+    server.use(http.get(`${location.origin}/api/v1/settings`, () => new Promise<never>(() => {})))
+    renderAt('/settings')
+    const dialog = await screen.findByRole('dialog', { name: 'Settings' })
+    expect(await within(dialog).findAllByText('Loading settings')).not.toHaveLength(0)
+  })
+
   it('an unknown path is Page not found', async () => {
     renderAt('/nope')
     expect(await heading('Page not found')).toBeInTheDocument()

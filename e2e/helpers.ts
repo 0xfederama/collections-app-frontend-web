@@ -151,17 +151,36 @@ async function mouseDrag(
  * (bottom) after it (the first child of an open folder), `into` (middle) is a folder's "drop into".
  */
 export async function dragTo(page: Page, handle: Locator, target: Locator, where: DropPart) {
-  await mouseDrag(page, await center(handle), await pointOf(target, where))
+  await mouseDrag(page, ...(await endpoints(handle, () => pointOf(target, where))))
+}
+
+/**
+ * Both ends of a drag, read after every scroll: scrolling the target into view can move the handle,
+ * so a handle position read first goes stale once the tree is taller than the window (the old flake).
+ */
+async function endpoints(
+  handle: Locator,
+  target: () => Promise<{ x: number; y: number }>,
+): Promise<[{ x: number; y: number }, { x: number; y: number }]> {
+  await handle.scrollIntoViewIfNeeded()
+  const to = await target()
+  const box = await handle.boundingBox()
+  if (!box) throw new Error('handle has no box')
+  const vh = handle.page().viewportSize()?.height ?? Infinity
+  const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+  if (from.y < 0 || from.y > vh) throw new Error('handle and target do not fit in one viewport')
+  return [from, to]
 }
 
 /** Drags `handle` below the last row of the tree. */
 export async function dragToEnd(page: Page, handle: Locator) {
-  await mouseDrag(page, await center(handle), await treeEndPoint(page))
+  await mouseDrag(page, ...(await endpoints(handle, () => treeEndPoint(page))))
 }
 
 /** Drags to a part of `target` and stops there with the button still down; the caller releases. */
 export async function dragHold(page: Page, handle: Locator, target: Locator, where: DropPart) {
-  await mouseDrag(page, await center(handle), await pointOf(target, where), false)
+  const [from, to] = await endpoints(handle, () => pointOf(target, where))
+  await mouseDrag(page, from, to, false)
 }
 
 /**
@@ -181,8 +200,9 @@ export async function touchDragTo(page: Page, handle: Locator, target: Locator, 
       touchPoints: points.map((p) => ({ ...p, id: 1 })),
     })
   await touch('touchStart', [from])
-  // The hold: nothing moves, so the page does not scroll and the drag activates.
-  await page.waitForTimeout(400)
+  // The hold: nothing moves, so the page does not scroll and the drag activates. Wait for the drag's
+  // own announcement, not a fixed time: under load 400 ms was sometimes not enough (D-161).
+  await expect(page.getByText(/^Picked up /)).toBeAttached()
   const steps = 20
   for (let i = 1; i <= steps; i++)
     await touch('touchMove', [
@@ -190,4 +210,30 @@ export async function touchDragTo(page: Page, handle: Locator, target: Locator, 
     ])
   await touch('touchEnd', [])
   await cdp.detach()
+}
+
+interface TreeNode {
+  id: string
+  version: number
+  created_at: string
+  parent_folder_id?: string | null
+  folder_id?: string | null
+}
+
+/**
+ * Trashes every top-level folder and list created since `since` (best effort: a folder someone else
+ * owns stays). The drag specs call it after each test so the shared tree stays shorter than the
+ * window: once it is taller, a drag starts or ends off screen and the sidebar scrolls under the
+ * pointer, which was the flaky drag-reorder e2e (web 3.5.0, D-161).
+ */
+export async function trashCreatedSince(request: APIRequestContext, since: number) {
+  const tree = (await (await request.get('/api/v1/tree')).json()) as {
+    folders: TreeNode[]
+    lists: TreeNode[]
+  }
+  const fresh = (n: TreeNode) => Date.parse(n.created_at) >= since - 1000
+  for (const f of tree.folders.filter((n) => n.parent_folder_id === null && fresh(n)))
+    await request.delete(`/api/v1/folders/${f.id}`, { headers: { 'If-Match': `"f-${f.version}"` } })
+  for (const l of tree.lists.filter((n) => n.folder_id === null && fresh(n)))
+    await request.delete(`/api/v1/lists/${l.id}`, { headers: { 'If-Match': `"l-${l.version}"` } })
 }
