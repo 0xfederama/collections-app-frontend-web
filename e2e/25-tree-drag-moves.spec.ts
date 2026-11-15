@@ -107,6 +107,8 @@ test.afterEach(async ({ request }) => {
 })
 
 test.describe('web 3.3.0 drag anywhere: mouse', () => {
+  // Tall like the touch block: the whole tree fits, so the sidebar never scrolls mid-drag (D-161).
+  test.use({ viewport: { width: 1440, height: 8000 } })
   test('into an open folder, between two children, at that exact place', async ({
     page,
     request,
@@ -317,6 +319,7 @@ test.describe('web 3.3.0 drag anywhere: mouse', () => {
 
 // Alice's view: the owner's shared top-level folder is in her tree, and it is not hers to move.
 test.describe('web 3.3.0 drag anywhere: someone else’s shared folder', () => {
+  test.use({ viewport: { width: 1440, height: 8000 } })
   test('cannot be dropped into one of my folders: nothing is sent', async ({
     page,
     request,

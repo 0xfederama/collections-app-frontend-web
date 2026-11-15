@@ -84,7 +84,7 @@ export function Sidebar({ rail = false, onToggleRail, searchRef, onSearch }: Sid
           <Button
             variant="ink"
             size="sm"
-            aria-label="Quick add"
+            aria-keyshortcuts="N"
             onClick={openQuickAdd}
             className="w-full"
           >
