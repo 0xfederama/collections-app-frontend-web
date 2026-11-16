@@ -82,7 +82,8 @@ export function ListView({ treeList }: { treeList: List }) {
   const remember = useScrollRestore(root, itemsQuery.isSuccess)
   const randomPick = useRandomPick(root, items)
   const menuExtras = movieMenuItems(treeList.type, {
-    shown: itemsQuery.isSuccess ? items.length : 0,
+    // The random pick waits for the whole list (D-166).
+    shown: itemsQuery.complete ? items.length : 0,
     onPick: randomPick.pick,
   })
 
@@ -309,9 +310,7 @@ export function ListView({ treeList }: { treeList: List }) {
           total={total}
           params={params}
           effectiveSort={effectiveSort}
-          hasNextPage={itemsQuery.hasNextPage}
-          isFetchingNextPage={itemsQuery.isFetchingNextPage}
-          onLoadMore={() => void itemsQuery.fetchNextPage()}
+          complete={itemsQuery.complete}
           search={search}
           onOpenItem={remember}
           onClearFilter={clearFilter}

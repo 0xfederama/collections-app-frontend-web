@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   useInfiniteQuery,
   useMutation,
@@ -18,7 +19,7 @@ export type DisplayMode = 'compact' | 'thumbnail' | 'grid'
 export type SortMode = string
 
 /** Max page size of `GET /lists/{id}/items` (D-018). */
-export const ITEMS_PAGE_SIZE = 200
+const ITEMS_PAGE_SIZE = 200
 
 /** The list view's query parameters; the key shape lives in `data/keys.ts` (`ItemsKeyParams`). */
 export type ItemsParams = ItemsKeyParams
@@ -51,8 +52,15 @@ export function useListGenres(listId: string, enabled: boolean) {
   })
 }
 
+/**
+ * Every item of the list for the current sort and filters (roadmap 39, D-166): the first page shows
+ * as soon as it arrives and the following pages are fetched one after another until `page.total` is
+ * reached, so there is never a "Load more". A refetch (after an edit, delete or reorder) refetches
+ * every loaded page, and a total that grew meanwhile is fetched by the same loop. `complete` is true
+ * once every page is in.
+ */
 export function useListItems(listId: string, params: ItemsParams) {
-  return useInfiniteQuery({
+  const query = useInfiniteQuery({
     queryKey: listKeys.itemsQuery(listId, params),
     initialPageParam: 0,
     queryFn: ({ signal, pageParam }) =>
@@ -82,6 +90,14 @@ export function useListItems(listId: string, params: ItemsParams) {
       return last.data.length > 0 && next < last.page.total ? next : undefined
     },
   })
+  const { hasNextPage, isFetching, isError, fetchNextPage } = query
+  // The page count is a dependency too: two fetches can end without a render in between.
+  const loaded = query.data?.pages.length ?? 0
+  useEffect(() => {
+    // One page at a time; an error stops the loop until the user retries (refetch).
+    if (hasNextPage && !isFetching && !isError) void fetchNextPage()
+  }, [hasNextPage, isFetching, isError, fetchNextPage, loaded])
+  return { ...query, complete: query.isSuccess && !hasNextPage }
 }
 
 export type ItemsData = InfiniteData<components['schemas']['ItemPage'], unknown>

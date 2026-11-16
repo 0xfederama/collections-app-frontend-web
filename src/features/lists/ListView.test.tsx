@@ -906,30 +906,6 @@ describe('W-06 reorder', () => {
       noHandles()
     })
 
-    it(
-      'when not all items are loaded: hint and Load more fetching offset=<loaded>',
-      async () => {
-        const backend = useBackend({ items: makeItems(205) })
-        const user = userEvent.setup()
-        renderList(at())
-        await itemsList()
-        expect(screen.getByText('Load all items to reorder them.')).toBeInTheDocument()
-        noHandles()
-        await user.click(screen.getByRole('button', { name: /^Load more/ }))
-        await waitFor(() =>
-          expect(backend.itemRequests.at(-1)!.searchParams.get('offset')).toBe('200'),
-        )
-        await waitFor(() => expect(titles()).toHaveLength(205))
-        // Everything is loaded now: reordering is back and the hint goes away.
-        expect(
-          await screen.findByRole('button', { name: 'Actions for Item 1' }),
-        ).toBeInTheDocument()
-        expect(screen.queryByText('Load all items to reorder them.')).toBeNull()
-        expect(screen.queryByRole('button', { name: /^Load more/ })).toBeNull()
-      },
-      HEAVY_TEST_TIMEOUT,
-    )
-
     it('a single item has nothing to reorder', async () => {
       useBackend({ items: makeItems(1) })
       renderList(at())
@@ -939,30 +915,162 @@ describe('W-06 reorder', () => {
   })
 })
 
-describe('W-06 load more', () => {
-  it(
-    'page 1 of 200 with total 250 shows Load more; clicking requests offset=200',
-    async () => {
-      const backend = useBackend({ items: makeItems(250) })
-      const user = userEvent.setup()
+/** Item offsets requested so far, in order. */
+const offsets = (backend: Recorded) =>
+  backend.itemRequests.map((url) => Number(url.searchParams.get('offset')))
+
+function renderListWithClient(path: string) {
+  const client = createTestQueryClient()
+  render(
+    <QueryClientProvider client={client}>
+      <ToastProvider>
+        <RouterProvider router={createTestRouter([path])} />
+      </ToastProvider>
+    </QueryClientProvider>,
+  )
+  return client
+}
+
+describe('roadmap 39 every item is always shown (D-166)', () => {
+  it.each([
+    [200, [0]],
+    [201, [0, 200]],
+    [450, [0, 200, 400]],
+  ])(
+    '%i items: every page is fetched on its own, no Load more',
+    async (count, expected) => {
+      const backend = useBackend({ items: makeItems(count) })
       renderList(at())
       await itemsList()
-      expect(titles()).toHaveLength(200)
-      expect(backend.itemRequests[0]!.searchParams.get('limit')).toBe('200')
-      expect(backend.itemRequests[0]!.searchParams.get('offset')).toBe('0')
-      await user.click(screen.getByRole('button', { name: /^Load more/ }))
-      await waitFor(() => expect(titles()).toHaveLength(250))
-      expect(backend.itemRequests.at(-1)!.searchParams.get('offset')).toBe('200')
-      expect(screen.queryByRole('button', { name: /^Load more/ })).toBeNull()
+      await waitFor(() => expect(titles()).toHaveLength(count), { timeout: 20_000 })
+      expect(offsets(backend)).toEqual(expected)
+      expect(backend.itemRequests.every((url) => url.searchParams.get('limit') === '200')).toBe(
+        true,
+      )
+      expect(screen.queryByRole('button', { name: /Load more/ })).toBeNull()
+      expect(screen.getByText(`${count} items`)).toBeInTheDocument()
+      // The whole list is there, so reordering is offered.
+      expect(screen.queryByText(/Load all items/)).toBeNull()
+      expect(screen.getByRole('button', { name: 'Actions for Item 1' })).toBeInTheDocument()
     },
     HEAVY_TEST_TIMEOUT,
   )
 
-  it('no Load more when everything fits in one page', async () => {
-    useBackend({ items: makeItems(3) })
+  it('0 items: one request and the empty state', async () => {
+    const backend = useBackend({ items: [], list: { item_count: 0 } })
     renderList(at())
+    expect(await screen.findByText('No items yet')).toBeInTheDocument()
+    expect(offsets(backend)).toEqual([0])
+    expect(screen.queryByRole('button', { name: /Load more/ })).toBeNull()
+  })
+
+  it(
+    'a sort change refetches every page in the new order',
+    async () => {
+      const items = makeItems(450).map((item, i) =>
+        // Titles reversed against the manual order, so "title" sorts the last item first.
+        ({ ...item, title: `Movie ${String(450 - i).padStart(3, '0')}` }),
+      )
+      const backend = useBackend({ items })
+      renderList(at('?sort=title'))
+      await itemsList()
+      await waitFor(() => expect(titles()).toHaveLength(450), { timeout: 20_000 })
+      expect(titles()[0]).toBe('Movie 001')
+      expect(titles().at(-1)).toBe('Movie 450')
+      // The pages of the title sort: 0, 200, 400 (an unsorted first page may precede them).
+      const sorted = backend.itemRequests.filter((url) => url.searchParams.get('sort') === 'title')
+      expect(sorted.map((url) => Number(url.searchParams.get('offset')))).toEqual([0, 200, 400])
+    },
+    HEAVY_TEST_TIMEOUT,
+  )
+
+  it(
+    'a filter over 200 matches loads all of them; the count says N of total',
+    async () => {
+      const backend = useBackend({ items: makeItems(450) })
+      renderList(at('?q=Item%201'))
+      await itemsList()
+      // "Item 1", "Item 10".."Item 19", "Item 100".."Item 199" = 111 matches: one page.
+      await waitFor(() => expect(titles()).toHaveLength(111))
+      expect(screen.getByText('111 of 450 items')).toBeInTheDocument()
+      expect(backend.itemRequests.every((url) => url.searchParams.get('q') === 'Item 1')).toBe(true)
+    },
+    HEAVY_TEST_TIMEOUT,
+  )
+
+  it(
+    'a refetch after an edit or delete keeps every page; a new total is fetched too',
+    async () => {
+      const backend = useBackend({ items: makeItems(201) })
+      const client = renderListWithClient(at())
+      await itemsList()
+      await waitFor(() => expect(titles()).toHaveLength(201), { timeout: 20_000 })
+      // Edit: same total, every page refetched.
+      backend.items = backend.items.map((item, i) =>
+        i === 200 ? { ...item, title: 'Edited last' } : item,
+      )
+      await client.invalidateQueries({ queryKey: ['lists'] })
+      await waitFor(() => expect(titles().at(-1)).toBe('Edited last'))
+      expect(titles()).toHaveLength(201)
+      // Delete down to one page.
+      backend.items = backend.items.slice(1)
+      backend.list = { ...backend.list, item_count: 200 }
+      await client.invalidateQueries({ queryKey: ['lists'] })
+      await waitFor(() => expect(titles()).toHaveLength(200))
+      expect(titles()[0]).toBe('Item 2')
+      // Growth past a page boundary (an add elsewhere): the extra page arrives on its own.
+      backend.items = [...backend.items, ...makeItems(450).slice(201)]
+      await client.invalidateQueries({ queryKey: ['lists'] })
+      await waitFor(() => expect(titles()).toHaveLength(449), { timeout: 20_000 })
+      expect(screen.queryByRole('button', { name: /Load more/ })).toBeNull()
+    },
+    HEAVY_TEST_TIMEOUT,
+  )
+
+  it(
+    'a reorder in a 201-item list sends every id and the refetch keeps both pages',
+    async () => {
+      const backend = useBackend({ items: makeItems(201) })
+      const user = userEvent.setup()
+      renderList(at())
+      await itemsList()
+      await waitFor(() => expect(titles()).toHaveLength(201), { timeout: 20_000 })
+      const before = backend.itemRequests.length
+      await user.click(screen.getByRole('button', { name: 'Actions for Item 1' }))
+      await user.click(await screen.findByRole('menuitem', { name: 'Move down' }))
+      await waitFor(() => expect(backend.puts).toHaveLength(1))
+      expect(backend.puts[0]!.ids).toHaveLength(201)
+      // The settle refetch asks for both pages again and nothing is lost.
+      await waitFor(() => expect(backend.itemRequests.length).toBeGreaterThanOrEqual(before + 2))
+      await waitFor(() => expect(titles().slice(0, 2)).toEqual(['Item 2', 'Item 1']))
+      expect(titles()).toHaveLength(201)
+    },
+    HEAVY_TEST_TIMEOUT,
+  )
+
+  it('a failed second page shows the retry, which loads the rest', async () => {
+    const items = makeItems(201)
+    let fail = true
+    const requests: number[] = []
+    useBackend({ items })
+    server.use(
+      http.get(itemsUrl, ({ request }) => {
+        const offset = Number(new URL(request.url).searchParams.get('offset'))
+        requests.push(offset)
+        if (offset === 200 && fail) return problemResponse(500, 'internal')
+        return HttpResponse.json({
+          data: items.slice(offset, offset + 200),
+          page: { limit: 200, offset, total: 201 },
+        })
+      }),
+    )
+    const user = userEvent.setup()
+    renderList(at())
+    await screen.findByText('Couldn’t load the items.')
+    fail = false
+    await user.click(screen.getByRole('button', { name: 'Retry' }))
     await itemsList()
-    expect(screen.queryByRole('button', { name: /^Load more/ })).toBeNull()
+    await waitFor(() => expect(titles()).toHaveLength(201), { timeout: 20_000 })
   })
 })
 

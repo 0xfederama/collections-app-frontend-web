@@ -5,7 +5,6 @@ import { List as ListIcon, Search } from '../../components/ui/icons'
 import { ApiError } from '../../lib/api'
 import { cx } from '../../lib/cx'
 import {
-  ITEMS_PAGE_SIZE,
   useReorderItems,
   type DisplayMode,
   type ItemSummary,
@@ -34,9 +33,8 @@ export interface ItemsViewProps {
   params: ItemsParams
   /** The sort in effect: the URL override, else the list's `sort_mode`. */
   effectiveSort: SortMode
-  hasNextPage: boolean
-  isFetchingNextPage: boolean
-  onLoadMore: () => void
+  /** Every page is loaded (the rest arrive on their own, D-166). */
+  complete: boolean
   /** Query string carried to item URLs. */
   search: string
   onOpenItem: () => void
@@ -46,7 +44,7 @@ export interface ItemsViewProps {
   draft?: boolean
 }
 
-/** The list body: empty states, the items in the display mode, drag-reorder and "Load more". */
+/** The list body: empty states, the items in the display mode, and drag-reorder. */
 export function ItemsView(props: ItemsViewProps) {
   const {
     listId,
@@ -58,7 +56,7 @@ export function ItemsView(props: ItemsViewProps) {
     total,
     params,
     effectiveSort,
-    hasNextPage,
+    complete,
     search,
   } = props
   const toast = useToast()
@@ -104,16 +102,14 @@ export function ItemsView(props: ItemsViewProps) {
     !params.filterField &&
     !params.availability &&
     params.genres.length === 0 &&
-    !hasNextPage &&
+    complete &&
     items.length === total &&
     items.length > 1
   const hint = canReorder
     ? null
     : params.q || params.filterField || params.availability || params.genres.length > 0
       ? 'Clear the filter to reorder items.'
-      : hasNextPage
-        ? 'Load all items to reorder them.'
-        : null
+      : null
 
   const move = ({ from, to }: Pick<SortableMove, 'from' | 'to'>) => {
     if (from === to || to < 0 || to >= items.length) return
@@ -193,19 +189,6 @@ export function ItemsView(props: ItemsViewProps) {
       <p role="status" className="sr-only">
         {announcement}
       </p>
-      {hasNextPage && (
-        <div className="flex justify-center">
-          <Button
-            variant="secondary"
-            onClick={props.onLoadMore}
-            disabled={props.isFetchingNextPage}
-          >
-            {props.isFetchingNextPage
-              ? 'Loading…'
-              : `Load more (${Math.min(ITEMS_PAGE_SIZE, total - items.length)} of ${total - items.length} remaining)`}
-          </Button>
-        </div>
-      )}
       <p className="text-ui text-text-muted">{props.countLabel}</p>
     </div>
   )
