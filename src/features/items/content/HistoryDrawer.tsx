@@ -5,6 +5,9 @@ import { AlertDialog, Button, Drawer, Skeleton, useToast } from '../../../compon
 import { ApiError, errorMessage, NetworkError } from '../../../lib/api'
 import { contentKeys, itemKeys } from '../../../data/keys'
 import { findUser, UserMark, useUsers } from '../../account'
+
+/** F-028: a version the lookup wrote (the provider's summary), which has no author. */
+const isLookupVersion = (entry: object): boolean => 'origin' in entry && entry.origin === 'lookup'
 import type { ItemContent } from '../api'
 import { useContentVersion, useContentVersions, useRestoreContent } from './api'
 import { formatBytes, relativeTime } from './limits'
@@ -133,10 +136,16 @@ export function HistoryDrawer({
                       <span className="block font-mono text-secondary text-text-muted">
                         <time dateTime={entry.created_at}>{relativeTime(entry.created_at)}</time>
                       </span>
-                      {author && (
+                      {isLookupVersion(entry) ? (
                         <span className="block text-secondary text-text-muted">
-                          by <UserMark user={author} size={16} />
+                          Imported summary
                         </span>
+                      ) : (
+                        author && (
+                          <span className="block text-secondary text-text-muted">
+                            by <UserMark user={author} size={16} />
+                          </span>
+                        )
                       )}
                     </span>
                     <span className="font-mono text-secondary text-text-muted">

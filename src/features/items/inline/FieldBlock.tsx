@@ -14,6 +14,7 @@ import type { Item } from '../api'
 import { InlineField } from './InlineField'
 import { SiteLink } from './SiteLink'
 import { typeSpecs, newPrice, priceSpec, websiteSpec, type FieldSpec } from './fields'
+import { isImportedOnlyKey } from '../tmdbData'
 
 type Streaming = { country: string; platforms?: string[]; paid_platforms?: string[] }
 
@@ -143,7 +144,10 @@ export function FieldBlock({
   /** A counter: each increase opens the website editor (the links row's "Add website"). */
   addWebsiteRequest?: number
 }) {
-  const type = typeSpecs(definition)
+  // F-028: imported-only keys (genres, TMDB score) are shown by TmdbDetails, never as rows or add-menu entries.
+  const type = typeSpecs(definition).filter(
+    (spec) => !spec.field || !isImportedOnlyKey(spec.field.key),
+  )
   // An item of a list with no type has no type fields, and only the types with a price get the price field (D-085).
   const price = hasPrice(definition) ? [priceSpec] : []
   const specs = [...type, ...price, websiteSpec]

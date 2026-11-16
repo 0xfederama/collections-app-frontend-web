@@ -93,6 +93,12 @@ function useBackend(options: Options = {}): Recorded {
       }
       return HttpResponse.json(state.list)
     }),
+    // F-028 W3: the genres the list's items carry (the endpoint is api-v4.3.0).
+    http.get(`${listUrl}/genres`, () =>
+      HttpResponse.json({
+        genres: genresOf(state.items).map((name) => ({ name, count: 1 })),
+      }),
+    ),
     http.get(itemsUrl, ({ request }) => {
       const url = new URL(request.url)
       state.itemRequests.push(url)
@@ -127,8 +133,18 @@ function useBackend(options: Options = {}): Recorded {
           )
         })
       }
-      if ((url.searchParams.get('sort') ?? state.list.sort_mode) === 'title') {
+      // F-028 W3: any-of genre match, combined with the other filters.
+      const genres = url.searchParams.getAll('genre')
+      if (genres.length > 0) {
+        rows = rows.filter((item) => itemGenres(item).some((genre) => genres.includes(genre)))
+      }
+      const sort = url.searchParams.get('sort') ?? state.list.sort_mode
+      if (sort === 'title') {
         rows = rows.sort((a, b) => a.title.localeCompare(b.title))
+      }
+      // F-028 W2: the TMDB score, highest first, unrated last.
+      if (sort === 'rating') {
+        rows = rows.sort((a, b) => ratingOf(b) - ratingOf(a))
       }
       const offset = Number(url.searchParams.get('offset') ?? 0)
       const limit = Number(url.searchParams.get('limit') ?? 50)
@@ -150,6 +166,23 @@ function useBackend(options: Options = {}): Recorded {
   )
   return state
 }
+
+/** The genre names an item carries in its metadata (F-028). */
+function itemGenres(item: ItemSummary): string[] {
+  const genres = item.metadata.genres
+  return Array.isArray(genres)
+    ? genres.filter((genre): genre is string => typeof genre === 'string')
+    : []
+}
+
+/** The TMDB score, or -1 for an unrated item so that it sorts last (F-028 W2). */
+function ratingOf(item: ItemSummary): number {
+  const rating = item.metadata.tmdb_rating
+  return typeof rating === 'number' ? rating : -1
+}
+
+const genresOf = (items: ItemSummary[]) =>
+  [...new Set(items.flatMap(itemGenres))].sort((a, b) => a.localeCompare(b))
 
 function renderList(path: string) {
   const router = createTestRouter([path])
@@ -1632,5 +1665,180 @@ describe('F-026 W4 availability filter', () => {
     renderList(at('?availability=nope'))
     await itemsList()
     expect(backend.itemRequests.at(-1)!.searchParams.has('availability')).toBe(false)
+  })
+})
+
+describe('F-028 W2 rating sort', () => {
+  const rated = () => [
+    makeItem(1, { title: 'Low', metadata: { tmdb_rating: 5.1 } }),
+    makeItem(2, { title: 'Unrated', metadata: {} }),
+    makeItem(3, { title: 'High', metadata: { tmdb_rating: 8.4 } }),
+  ]
+
+  it('a movie list offers "Rating", sends sort=rating and lists the highest first, unrated last', async () => {
+    treeWithType('movie')
+    const backend = useBackend({ list: { type: 'movie' }, items: rated() })
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(sortSelect())
+    await user.click(await screen.findByRole('menuitemradio', { name: 'Rating' }))
+    expect(router.state.location.search).toBe('?sort=rating')
+    await waitFor(() =>
+      expect(backend.itemRequests.at(-1)!.searchParams.get('sort')).toBe('rating'),
+    )
+    expect(titles()).toEqual(['High', 'Low', 'Unrated'])
+  })
+
+  it('F-028 W2 ?sort=rating checks "Rating" on a TV list', async () => {
+    treeWithType('tv_show')
+    useBackend({ list: { type: 'tv_show' }, items: rated() })
+    renderList(at('?sort=rating'))
+    await itemsList()
+    expect(await checkedSort()).toBe('Rating')
+  })
+
+  it('a book list has no "Rating" choice and ignores ?sort=rating', async () => {
+    treeWithType('book')
+    const backend = useBackend({ list: { type: 'book' } })
+    const user = userEvent.setup()
+    renderList(at('?sort=rating'))
+    await itemsList()
+    expect(backend.itemRequests.at(-1)!.searchParams.has('sort')).toBe(false)
+    await user.click(sortSelect())
+    expect(screen.queryByRole('menuitemradio', { name: 'Rating' })).not.toBeInTheDocument()
+  })
+
+  it('F-028 W2 "make default" saves rating as the list sort_mode', async () => {
+    treeWithType('movie')
+    const backend = useBackend({ list: { type: 'movie', sort_mode: 'manual' }, items: rated() })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await user.click(sortSelect())
+    await user.click(await screen.findByRole('menuitemradio', { name: 'Rating' }))
+    await user.click(
+      await screen.findByRole('button', { name: 'Make “Rating” the default sort for this list' }),
+    )
+    await waitFor(() => expect(backend.patches.at(-1)?.body).toEqual({ sort_mode: 'rating' }))
+  })
+})
+
+describe('F-028 W3 genre filter', () => {
+  const genreItems = () => [
+    makeItem(1, { title: 'Heat', metadata: { genres: ['Crime', 'Drama'] } }),
+    makeItem(2, { title: 'Up', metadata: { genres: ['Animation', 'Comedy'] } }),
+    makeItem(3, { title: 'Alien', metadata: { genres: ['Horror', 'Science Fiction'] } }),
+  ]
+  const genreGroup = () => screen.findByRole('group', { name: 'Filter by genre' })
+
+  it('offers the list genres in the Filter menu, matches any of them and shows a chip per genre', async () => {
+    treeWithType('movie')
+    const backend = useBackend({ list: { type: 'movie' }, items: genreItems() })
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    const group = await genreGroup()
+    expect(
+      within(group)
+        .getAllByRole('checkbox')
+        .map((box) => box.closest('label')?.textContent),
+    ).toEqual(['Animation', 'Comedy', 'Crime', 'Drama', 'Horror', 'Science Fiction'])
+    await user.click(within(group).getByRole('checkbox', { name: 'Drama' }))
+    await user.click(within(group).getByRole('checkbox', { name: 'Horror' }))
+    await waitFor(() => expect(router.state.location.search).toBe('?genre=Drama&genre=Horror'))
+    await waitFor(() =>
+      expect(backend.itemRequests.at(-1)!.searchParams.getAll('genre')).toEqual([
+        'Drama',
+        'Horror',
+      ]),
+    )
+    expect(titles()).toEqual(['Heat', 'Alien'])
+    await user.keyboard('{Escape}')
+    expect(screen.getByRole('button', { name: 'Remove filter Genre: Drama' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Remove filter Genre: Drama' }))
+    await waitFor(() => expect(router.state.location.search).toBe('?genre=Horror'))
+    expect(titles()).toEqual(['Alien'])
+  })
+
+  it('F-028 W3 a genre checkbox toggles from the keyboard', async () => {
+    treeWithType('movie')
+    useBackend({ list: { type: 'movie' }, items: genreItems() })
+    const user = userEvent.setup()
+    const router = renderList(at())
+    await itemsList()
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    const box = within(await genreGroup()).getByRole('checkbox', { name: 'Comedy' })
+    box.focus()
+    await user.keyboard(' ')
+    await waitFor(() => expect(router.state.location.search).toBe('?genre=Comedy'))
+    expect(box).toBeChecked()
+  })
+
+  it('F-028 W3 combines the genre with the title search', async () => {
+    treeWithType('movie')
+    const backend = useBackend({ list: { type: 'movie' }, items: genreItems() })
+    renderList(at('?genre=Horror&q=ali'))
+    await itemsList()
+    expect(titles()).toEqual(['Alien'])
+    expect(backend.itemRequests.at(-1)!.searchParams.get('q')).toBe('ali')
+    expect(backend.itemRequests.at(-1)!.searchParams.getAll('genre')).toEqual(['Horror'])
+  })
+
+  it('F-028 W3 unknown and blank genres are dropped from the request and the chips', async () => {
+    treeWithType('movie')
+    const backend = useBackend({ list: { type: 'movie' }, items: genreItems() })
+    renderList(at('?genre=Nope&genre=&genre=Drama'))
+    await itemsList()
+    await waitFor(() =>
+      expect(backend.itemRequests.at(-1)!.searchParams.getAll('genre')).toEqual(['Drama']),
+    )
+    expect(titles()).toEqual(['Heat'])
+    expect(screen.queryByRole('button', { name: /Remove filter Genre: Nope/ })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Remove filter Genre: Drama' })).toBeInTheDocument()
+  })
+
+  it('F-028 W3 hides the genre choices on a list without genres', async () => {
+    treeWithType('movie')
+    useBackend({ list: { type: 'movie' }, items: [makeItem(1, { title: 'Plain' })] })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    await screen.findByRole('group', { name: 'Filter by availability' })
+    expect(screen.queryByRole('group', { name: 'Filter by genre' })).toBeNull()
+  })
+
+  it('F-028 W3 shows the genre choices on a phone too', async () => {
+    mockViewport(375)
+    treeWithType('movie')
+    useBackend({ list: { type: 'movie' }, items: genreItems() })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    expect(await genreGroup()).toBeInTheDocument()
+  })
+
+  it('F-028 W3 a book list ignores ?genre= and sends none', async () => {
+    treeWithType('book')
+    const backend = useBackend({ list: { type: 'book' }, items: genreItems() })
+    renderList(at('?genre=Drama'))
+    await itemsList()
+    expect(backend.itemRequests.at(-1)!.searchParams.has('genre')).toBe(false)
+    expect(screen.queryByRole('button', { name: /Remove filter Genre/ })).toBeNull()
+  })
+
+  it('F-028 W3 "Clear filter" on an empty genre result clears the genre', async () => {
+    treeWithType('movie')
+    useBackend({ list: { type: 'movie' }, items: genreItems() })
+    const user = userEvent.setup()
+    const router = renderList(at('?genre=Comedy&q=alien'))
+    expect(await screen.findByText('No items match')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Clear filter' }))
+    await waitFor(() => expect(router.state.location.search).toBe(''))
+    // The list element can be replaced while the view settles, so wait on its content.
+    await waitFor(() => expect(titles()).toEqual(['Heat', 'Up', 'Alien']))
   })
 })

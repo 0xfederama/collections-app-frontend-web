@@ -2,6 +2,7 @@ import type { TypeDefinition } from '../settings'
 import type { ItemsParams, SortMode } from './api'
 import type { FieldFilterValue } from './FieldFilter'
 import type { Availability } from './availability'
+import { supportsTmdbData } from './tmdb'
 
 /** The `?sort=` URL value, trimmed; blank means no override. */
 export function parseSort(value: string | null): SortMode | null {
@@ -11,7 +12,8 @@ export function parseSort(value: string | null): SortMode | null {
 /**
  * The sort keys a list's type defines. A sort the type does not define falls back to the list's mode, so a stale bookmark (or a
  * type change) cannot put the list in a sort the server rejects: a type field on a list with no type
- * (F007-W9), `price` where the type has no price (D-085), or `director` off movie lists (F013).
+ * (F007-W9), `price` where the type has no price (D-085), `director` off movie lists (F013), or
+ * `rating` (the TMDB score, F-028 W2) off movie and TV lists.
  */
 export function supportedSorts(definition: TypeDefinition | undefined | null): Set<string> {
   if (!definition) return new Set<string>()
@@ -20,6 +22,7 @@ export function supportedSorts(definition: TypeDefinition | undefined | null): S
     'title',
     'updated',
     ...(definition.allows_price ? ['price'] : []),
+    ...(supportsTmdbData(definition) ? ['rating'] : []),
     ...definition.fields.map((field) => field.key),
   ])
 }
@@ -47,12 +50,15 @@ export function buildItemsParams({
   filter,
   definition,
   availability = null,
+  genres = [],
 }: {
   sortOverride: SortMode | null
   q: string
   filter: FieldFilterValue | null
   definition: TypeDefinition | undefined | null
   availability?: Availability | null
+  /** Movie and TV lists only (F-028 W3), already checked against the list's genres. */
+  genres?: string[]
 }): ItemsParams {
   const active = activeFieldFilter(filter)
   const filterDefinitionField = definition?.fields.find((field) => field.key === active?.field)
@@ -70,5 +76,6 @@ export function buildItemsParams({
     filterMin: active?.min || null,
     filterMax: active?.max || null,
     availability,
+    genres,
   }
 }

@@ -162,3 +162,26 @@ describe('F016-W4 the stores field in the item draft', () => {
     })
   })
 })
+
+describe('item PATCH keeps the provider link (bug: a field edit dropped tmdb_id)', () => {
+  it('sends tmdb_id, openlibrary_id and lookup_disabled back as saved when metadata changes', () => {
+    const linked: Item = {
+      ...item,
+      metadata: { ...item.metadata, tmdb_id: 603, openlibrary_id: 'OL1W', lookup_disabled: true },
+    }
+    const draft = draftFromItem(linked, definition)
+    draft.meta.notes = 'Three players'
+    expect(buildPatch(linked, draft, defaults)).toEqual({
+      metadata: { ...linked.metadata, notes: 'Three players' },
+    })
+  })
+
+  it('adds nothing when the item has no provider link, and nothing at all without a metadata change', () => {
+    const draft = draftFromItem(item, definition)
+    expect(buildPatch(item, draft, defaults)).toEqual({})
+    draft.meta.notes = 'Three players'
+    expect(buildPatch(item, draft, defaults)).toEqual({
+      metadata: { ...item.metadata, notes: 'Three players' },
+    })
+  })
+})

@@ -514,6 +514,14 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       updated_by_user_id: OWNER_USER_ID,
     },
   },
+  listGenres: {
+    method: 'get',
+    path: '/api/v1/lists/{id}/genres',
+    status: 200,
+    contentType: 'application/json',
+    // Empty, so the genre filter stays hidden in tests that do not serve genres themselves (F-028).
+    body: { genres: [] },
+  },
   listItems: {
     method: 'get',
     path: '/api/v1/lists/{id}/items',
@@ -535,6 +543,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           metadata: {
             release_year: 1999,
             runtime_minutes: 136,
+            genres: ['Action', 'Science Fiction'],
+            tmdb_rating: 8.2,
             streaming: {
               country: 'IT',
               platforms: ['Netflix', 'Prime Video'],
@@ -605,6 +615,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       metadata: {
         release_year: 1999,
         runtime_minutes: 136,
+        genres: ['Action', 'Science Fiction'],
+        tmdb_rating: 8.2,
         imdb_url: 'https://www.imdb.com/title/tt0133093/',
         streaming: {
           country: 'IT',

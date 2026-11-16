@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.6.0 — 2026-11-16
+
+Contract: `api-v4.3.0` (backend 3.2.0). Synopsis, TMDB score and genres (F-028, roadmap 38, D-165).
+
+### Added
+
+- Movies and TV: the expanded item shows the TMDB genres as chips and the TMDB score with its vote count ("TMDB score 7.4 (1,200 votes)"). Both come from TMDB, can't be edited, and never show in list rows; an item without them looks as before.
+- Movie and TV lists: "Rating" in the Sort menu (highest TMDB score first, unrated last), also as the list's default sort.
+- Movie and TV lists: a genre filter in the Filter menu, built from the genres in the list. Ticking several keeps items with any of them; it combines with the availability and field filters, and each genre shows as a removable chip under the toolbar.
+- Description history: a version written by the lookup (the provider's summary that fills an empty description) reads "Imported summary".
+
+### Fixed
+
+- Editing a type field of a movie, TV show or book (for example Runtime) no longer unlinks it from TMDB or Open Library: the save now sends the provider id back.
+
 ## 3.5.0 — 2026-11-15
 
 ### Changed

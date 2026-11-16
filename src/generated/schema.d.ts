@@ -450,6 +450,26 @@ export interface paths {
         patch: operations["updateList"];
         trace?: never;
     };
+    "/api/v1/lists/{id}/genres": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the genres of a list
+         * @description The genres of the active items of a movie or TV list, each with the number of items that carry it, sorted by name (case-insensitive). The first spelling seen is the name. Any other list type answers an empty array.
+         */
+        get: operations["listGenres"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lists/{id}/items": {
         parameters: {
             query?: never;
@@ -459,7 +479,7 @@ export interface paths {
         };
         /**
          * List the items of a list
-         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title and, on movie lists, director. `price` sorts by `price.min` and is available only when the type allows price. Field filters and `availability` combine with `q` and each other.
+         * @description Sorted by `sort` (default: the list's `sort_mode`), tie-break `id`. `q` filters by title and, on movie lists, director. `price` sorts by `price.min` and is available only when the type allows price. `rating` (movie and TV only) sorts by `tmdb_rating`, highest first, unrated last. Field filters, `availability` and `genre` (movie and TV only) combine with `q` and each other, before paging.
          */
         get: operations["listItems"];
         put?: never;
@@ -875,6 +895,11 @@ export interface components {
             /** Format: uuid */
             item_id: string;
             /**
+             * @description Who wrote this version: user (a save or restore, and version 0) or lookup (a provider's description). Read-only.
+             * @enum {string}
+             */
+            origin: "user" | "lookup";
+            /**
              * Format: date-time
              * @description When this version was saved. null for version 0.
              */
@@ -893,6 +918,11 @@ export interface components {
             author_user_id: string | null;
             /** Format: date-time */
             created_at: string;
+            /**
+             * @description Who wrote this version: user or lookup. Read-only.
+             * @enum {string}
+             */
+            origin: "user" | "lookup";
             /** Format: int64 */
             size_bytes: number;
             /** Format: int64 */
@@ -971,6 +1001,14 @@ export interface components {
             updated_by_user_id: string | null;
             /** Format: int64 */
             version: number;
+        };
+        GenreCount: {
+            /** Format: int64 */
+            count: number;
+            name: string;
+        };
+        Genres: {
+            genres: components["schemas"]["GenreCount"][];
         };
         ImageSummary: {
             /** @description Present for uploads only. */
@@ -1259,6 +1297,8 @@ export interface components {
          *     - `folder_shared`: A folder shared with others cannot be moved into another folder (409). Stop sharing it first.
          *     - `type_mismatch`: An item would move to a list of another type (409).
          *     - `duplicate_title`: An item create, rename or move would repeat a title of the target list, ignoring case, accents and outer spaces (409).
+         *     - `invalid_sort`: A list sort the list's type does not offer: `sort=rating` on a list that is not movie or TV (422).
+         *     - `invalid_filter`: A `genre` filter on a list that is not movie or TV, or with values out of range (422). Field filters that do not match their field's type stay `invalid_parameter` (400).
          *     - `invalid_before_id`: A move's `before_id` is not another active sibling of the moved item in the target: unknown, trashed, of the other kind, not in the target, not visible at the top level, or the item itself (422).
          *     - `order_stale`: A reorder names an id set that no longer matches the stored one (409).
          *     - `lookup_disabled`: A lookup was requested but its integration is not configured on this server (503).
@@ -1435,7 +1475,7 @@ export interface components {
             /** Format: int64 */
             position: number;
             /** @enum {string} */
-            type: "text" | "number" | "date" | "boolean" | "link" | "streaming" | "stores";
+            type: "text" | "number" | "date" | "boolean" | "link" | "streaming" | "stores" | "text_list";
         };
         UpdateContentRequest: {
             body: string;
@@ -4016,6 +4056,64 @@ export interface operations {
             };
         };
     };
+    listGenres: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Genres"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     listItems: {
         parameters: {
             query?: {
@@ -4033,6 +4131,8 @@ export interface operations {
                 filter_max?: string;
                 /** @description Movie and TV lists only. available: at least one streaming platform on an owned service (any service when settings.owned_streaming_services is empty). included: the same, counting only platforms not paid per title (subscription, free or ads; no rent or buy). */
                 availability?: "available" | "included";
+                /** @description Movie and TV lists only. Repeatable, 1 to 10 values of at most 100 characters: keeps the items with any of them (trimmed, case-insensitive). 422 invalid_filter otherwise. */
+                genre?: string[] | null;
                 /** @description Page size. */
                 limit?: number;
                 /** @description Number of rows to skip. */

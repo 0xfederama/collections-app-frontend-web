@@ -758,3 +758,29 @@ describe('F-027 W6 item footer: Updated by', () => {
     expect(footer.queryByText('Owner')).not.toBeInTheDocument()
   })
 })
+
+describe('F-028 W1 item page: TMDB details', () => {
+  it('F-028 W1 shows the genres and the TMDB score of a movie', async () => {
+    await renderOverride({
+      title: 'Heat',
+      type: 'movie',
+      metadata: {
+        release_year: 1995,
+        genres: ['Crime', 'Thriller'],
+        tmdb_rating: 7.9,
+        tmdb_vote_count: 1234,
+      },
+    })
+    const genres = await screen.findByRole('list', { name: 'Genres' })
+    expect(within(genres).getByText('Crime')).toBeInTheDocument()
+    expect(within(genres).getByText('Thriller')).toBeInTheDocument()
+    expect(screen.getByText('TMDB score 7.9 (1,234 votes)')).toBeInTheDocument()
+  })
+
+  it('F-028 W1 shows neither genres nor a score when the item has none', async () => {
+    await renderOverride({ title: 'Heat', type: 'movie', metadata: { release_year: 1995 } })
+    await screen.findByRole('heading', { name: 'Details' })
+    expect(screen.queryByRole('list', { name: 'Genres' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/TMDB score/)).not.toBeInTheDocument()
+  })
+})

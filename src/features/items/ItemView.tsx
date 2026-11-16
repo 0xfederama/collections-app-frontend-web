@@ -16,6 +16,7 @@ import { InlineField } from './inline/InlineField'
 import { ItemHero } from './ItemHero'
 import { typeDefinition, typeName } from './types'
 import { ItemSkeleton } from './ItemSkeleton'
+import { TmdbDetails } from './TmdbDetails'
 
 const formatDate = (iso: string) =>
   new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(
@@ -83,6 +84,7 @@ export function ItemView({ item, pinned = false }: { item: Item; pinned?: boolea
           </div>
           <ExternalLinks item={item} onAddWebsite={() => setWebsiteRequest((n) => n + 1)} />
         </header>
+        <TmdbDetails item={item} />
         <FieldBlock item={item} definition={definition} addWebsiteRequest={websiteRequest} />
         <DescriptionField itemId={item.id} listId={item.list_id} />
       </div>

@@ -8,6 +8,8 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 
 - `src/features/lists/ListView.tsx`: list screen and URL state (`?q=`, `?sort=`, `filter_*`).
 - `ListTitle.tsx`: the list title, renamed in place by clicking it.
+- `GenreFilter.tsx`, `genres.ts`, `useGenreFilter.ts`: movie and TV genre filter (`?genre=`, any-of; F-028 W3).
+- `tmdb.ts`: `supportsTmdbData(definition)`, the gate for the rating sort and the genre filter.
 - `FieldFilter.tsx`: per-field filter control, `parseFieldFilter` for URL params, `FieldFilterMenu` (the "+ Filter" popover, with the availability choices on movie and TV) and `FieldFilterChip` / `AvailabilityChip` (the applied filters, removable, under the bar).
 - `availability.ts`: the two availability values, their labels and `parseAvailability` (`?availability=`, movie and TV only).
 - `src/lib/keyboardProxy.ts`: iOS keyboard proxy used by "New item" (`focusKeyboardProxy`, `releaseKeyboardProxy`).
@@ -36,7 +38,8 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - `supportsAvailability(definition)`, `parseAvailability(value, definition)`, `availabilityLabel(value)`, `compactPinned(pinned)`.
 - `ViewMenu({ value, onValueChange })`: display mode menu (compact, thumbnail, grid).
 - `useScrollRestore(anchor, ready)`: returns `remember`, called before navigating away.
-- `useList`, `useListItems`, `useUpdateList`, `useReorderItems` (`api.ts`); `listKeys` from `src/data/keys.ts`.
+- `useList`, `useListItems`, `useListGenres`, `useUpdateList`, `useReorderItems` (`api.ts`); `listKeys` from `src/data/keys.ts`.
+- `GenreChoices({ genres, value, onChange })` (Filter menu checkboxes), `GenreChips` (removable chips), `parseGenres`, `withGenres`, `toggleGenre` (`genres.ts`).
 - `fixedPinned(definition)`, `pinnedPlacements`, `pinnedPieces`, `isLowPriorityPin`, `formatPinnedValue`, `formatPrice`; `sortOptionsFor` (in `ListHeader.tsx`): display helpers.
 - `SortMenu({ options, value, onValueChange })`: icon button that opens radio items; the active sort is checked.
 
@@ -50,6 +53,9 @@ The list screen at `/lists/:listId`, its header and item rows, including pinned 
 - "New item" on a tap calls `focusKeyboardProxy()` (not while the draft is open) so iOS opens the keyboard for the draft title; see [items](items.md).
 - Streaming in a row shows only the services in Settings `owned_streaming_services` (`filterOwnedPlatforms`); empty = all.
 - Sort and filter accept only the built-in field keys of the list's type (plus `price` where the type allows it); a custom key in the URL is ignored (F-023).
+- Rating sort (F-028 W2): `?sort=rating` (the TMDB score) on movie and TV lists only; the server sorts unrated items last.
+- Genre filter (F-028 W3): movie and TV lists only. Checkboxes sit in the "+ Filter" popover, applied genres are chips under the bar, and the URL repeats `?genre=<name>` (any-of). `GET /lists/{id}/genres` supplies the choices (`useListGenres`, cast in `api.ts` until api-v4.3.0 is synced); genres the list lacks are ignored once the list's genres have loaded.
+- A genre filter counts as a filter: no manual reorder ("Clear the filter to reorder items.") and "Clear filter" resets it.
 - Filter URL params: `filter_field` plus `filter_value` (text, link, boolean), or `filter_min` / `filter_max` (number, date). Invalid or stale params are dropped; streaming and stores fields are not filterable, and stores fields are not sortable.
 - A sort the type does not define falls back to the list's `sort_mode`, so stale `?sort=` values are ignored.
 - Icon choices are stored as `i:<name>` for built-in marks or as one emoji; keyword aliases are vendored locally. There is no free-text emoji field.

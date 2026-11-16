@@ -67,3 +67,39 @@ describe('roadmap 28 website on the item page', () => {
     expect(bar.closest('dd')).toHaveClass('min-w-0')
   })
 })
+
+describe('F-028 W1 imported-only fields', () => {
+  const withImported: typeof movie = {
+    ...movie,
+    fields: [
+      ...movie.fields,
+      { key: 'genres', label: 'Genres', type: 'text', position: 9 },
+      { key: 'tmdb_rating', label: 'TMDB rating', type: 'number', position: 10 },
+    ],
+  }
+
+  it('F-028 W1 an imported field is never offered by Add field', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(
+      <MemoryRouter>
+        <FieldBlock item={{ ...matrix, metadata: {} }} definition={withImported} />
+      </MemoryRouter>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Add field' }))
+    expect(await screen.findByRole('menuitem', { name: 'Runtime' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Genres' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'TMDB rating' })).not.toBeInTheDocument()
+  })
+
+  it('F-028 W1 an imported field that is set is not a detail row either', () => {
+    renderWithProviders(
+      <MemoryRouter>
+        <FieldBlock
+          item={{ ...matrix, metadata: { ...matrix.metadata, genres: ['Drama'] } }}
+          definition={withImported}
+        />
+      </MemoryRouter>,
+    )
+    expect(screen.queryByText('Genres')).not.toBeInTheDocument()
+  })
+})

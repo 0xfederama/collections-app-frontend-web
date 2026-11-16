@@ -27,6 +27,8 @@ const toMswPath = (path: string) =>
   `${globalThis.location?.origin ?? ''}${path.replace(/\{(\w+)\}/g, ':$1')}`
 
 /** One stateless handler per spec operation, answering with the spec's first success example. */
-export const handlers = Object.values(exampleResponses).map((example) =>
+const specHandlers = Object.values(exampleResponses).map((example) =>
   http[example.method](toMswPath(example.path), () => respond(example)),
 )
+
+export const handlers = specHandlers

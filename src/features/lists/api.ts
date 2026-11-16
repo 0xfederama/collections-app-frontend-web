@@ -31,6 +31,26 @@ export function useList(listId: string) {
   })
 }
 
+/**
+ * F-028 W3: the genres the list's items have, sorted (`GET /lists/{id}/genres` → `{ genres: { name, count }[] }`, sorted by name; api-v4.3.0).
+ */
+/** The genres of a list, for the genre filter. Only movie and TV lists ask (`enabled`). */
+export function useListGenres(listId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: listKeys.genres(listId),
+    enabled,
+    queryFn: async ({ signal }) => {
+      const body = await unwrap(
+        api.GET('/api/v1/lists/{id}/genres', {
+          params: { path: { id: listId } },
+          signal,
+        }),
+      )
+      return body.genres.map((genre) => genre.name)
+    },
+  })
+}
+
 export function useListItems(listId: string, params: ItemsParams) {
   return useInfiniteQuery({
     queryKey: listKeys.itemsQuery(listId, params),
@@ -48,6 +68,8 @@ export function useListItems(listId: string, params: ItemsParams) {
               ...(params.filterMin !== null ? { filter_min: params.filterMin } : {}),
               ...(params.filterMax !== null ? { filter_max: params.filterMax } : {}),
               ...(params.availability ? { availability: params.availability } : {}),
+              // Repeated `genre=` (any-of); the generated query type lacks it until api-v4.3.0.
+              ...(params.genres.length > 0 ? { genre: params.genres } : {}),
               limit: ITEMS_PAGE_SIZE,
               offset: pageParam,
             },

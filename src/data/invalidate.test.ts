@@ -38,6 +38,7 @@ describe('F020-W4 invalidateItemWrite', () => {
     await invalidateItemWrite(client, 'l1')
     expect(spy.mock.calls.map(([filters]) => filters?.queryKey)).toEqual([
       listKeys.items('l1'),
+      listKeys.genres('l1'),
       listKeys.detail('l1'),
       treeKeys.tree,
       searchKeys.all,

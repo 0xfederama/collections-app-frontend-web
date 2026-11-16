@@ -92,6 +92,24 @@ export function toFields(draft: Draft, defaults: Defaults): FormFields {
 const BASIC_KEYS = ['title', 'price', 'website'] as const
 
 /**
+ * Provider bookkeeping the type fields never show (`useTypes` hides them) but the item carries. A metadata
+ * PATCH replaces the object, so they are sent back as saved; otherwise a field edit unlinks the TMDB or Open
+ * Library match (the server drops an omitted `tmdb_id`). The F-028 lookup-owned keys are kept by the server.
+ */
+const CARRIED_KEYS = ['tmdb_id', 'openlibrary_id', 'lookup_disabled'] as const
+
+function withCarriedKeys(base: Item, metadata: Record<string, unknown>): Record<string, unknown> {
+  const saved: unknown = base.metadata
+  if (typeof saved !== 'object' || saved === null) return metadata
+  const carried: Record<string, unknown> = {}
+  for (const key of CARRIED_KEYS) {
+    const value = (saved as Record<string, unknown>)[key]
+    if (value !== undefined && value !== null) carried[key] = value
+  }
+  return { ...carried, ...metadata }
+}
+
+/**
  * The PATCH body: only the fields that differ from the saved item. `metadata` replaces the whole
  * object on the server (D-062), so it goes as the full object whenever any type field changed. The
  * type is never sent: it belongs to the list. An unchanged price sends nothing; removing it sends `null`.
@@ -107,7 +125,7 @@ export function buildPatch(base: Item, draft: Draft, defaults: Defaults): Update
     if (!same(before[key], after[key])) patch[key] = after[key]
   }
   if (!same(before.metadata, after.metadata)) {
-    patch.metadata = after.metadata
+    patch.metadata = withCarriedKeys(base, after.metadata)
   }
   return patch as UpdateItemRequest
 }
