@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.6.1 — 2026-11-16
+
+Contract unchanged (`api-v4.3.0`). Roadmap 39, D-166.
+
+### Fixed
+
+- A list always shows all its items. Lists over 200 items (the server's page size) ended with a "Load more" button and hid the rest; now every page is fetched on its own right after the first, which shows at once. Sort (including Rating), the search, the genre, availability and field filters, drag reorder, the item count and "Pick a random movie" work on the whole list, and a refresh after an edit, delete or reorder keeps every item.
+
 ## 3.6.0 — 2026-11-16
 
 Contract: `api-v4.3.0` (backend 3.2.0). Synopsis, TMDB score and genres (F-028, roadmap 38, D-165).
