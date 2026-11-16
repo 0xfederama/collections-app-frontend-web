@@ -14,6 +14,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - Who changed (F-027 W6): the item footer reads "Updated by <avatar> name · date" when `updated_by_user_id` resolves through `useUsers()` (else the plain "Updated <date>"); history rows show "by <avatar> name" from `author_user_id`. Both use `UserMark` from `features/account`.
 - `image/`: `ImageDialog`, `ImageSection`, `ImageStatus` (busy and status types), `api.ts`, `upload.ts`.
 - `types/index.ts`: helpers over the API type definitions (no static registry); `typeDefinition` returns built-in fields only.
+- `TmdbDetails.tsx`, `tmdbData.ts`: read-only TMDB genre chips and score line under the header (F-028); `isImportedOnlyKey` keeps those keys out of field rows.
 - `TitleLookupField.tsx`, `lookup.ts`, `LookupStatus.tsx`: TMDB suggestions (movie and TV) and the pending line for books.
 - `NewItemDraft.tsx`, `api.ts`: inline creation and item data. External links live in [links](links.md).
 - `duplicate.ts`: `duplicateTitleMessage(type)`, the inline wording for a 409 `duplicate_title` (F-026 W7).
@@ -25,6 +26,7 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - `useItem`, `useItemContent`, `useUpdateItem`, `useCreateItem`, `useDeleteItem`, `useMoveItem` (`api.ts`); `ItemRef` is the subset they read (list rows have it too).
 - `useItemActions(item: ItemRef)` (`ItemActions.tsx`): Move and Delete dialogs, shared by the item page and list rows.
 - `typeDefinition(definitions, key)`, `hasPrice(definition)`, `formatField(field, value)`, `typeRows(definition, metadata)`, `typeName`.
+- `TmdbDetails({ item })`, `tmdbGenres(item)`, `tmdbScore(item)`, `formatTmdbScore(score)`, `isImportedOnlyKey(key)` (`tmdbData.ts`).
 - `createLookupSelection(type, settings, selection)`, `hasSuggestions(type)`, `isBookLookup(type, settings)`, `lookupSource(type)`.
 - `DescriptionField({ itemId, listId })`, `InlineField`, `FieldBlock`.
 - `SiteLink({ url })`: the address as a new-tab link with `SiteIcon` in front, truncated (`inline/SiteLink.tsx`).
@@ -38,6 +40,9 @@ Item detail and inline editing at `/lists/:listId/items/:itemId`, including imag
 - Lookup ids: movie and TV send `tmdb_id`; a book sends only `lookup: true` (no `source_id`). The server fills the item from the first Open Library result and creates it unchanged if Open Library is slow or fails. While pending (2-5 s) `NewItemDraft` shows a `role="status"` line.
 - No re-match or refresh UI on an item; lookup suggestions appear only when creating (inline draft and Quick add).
 - `isHiddenTmdbField` and `isStreamingField` keep IMDb and streaming out of plain field rows.
+- Imported keys (F-028, `genres`, `tmdb_rating`, `tmdb_vote_count`) are read-only: shown by `TmdbDetails` (genre chips, "TMDB score 7.4 (1,234 votes)"), never as field rows or "+ Add field" entries. The shape is assumed until api-v4.3.0 is synced (see the TODO in `tmdbData.ts`).
+- A metadata PATCH replaces the whole object, so `buildPatch` sends `tmdb_id`, `openlibrary_id` and `lookup_disabled` back as saved (`withCarriedKeys`); otherwise a field edit would unlink the provider match.
+- The history drawer labels a version the lookup wrote (`origin === 'lookup'`) "Imported summary" instead of an author.
 - The stores field is an editor of ticked provider keys (see [stores](stores.md)); it is never sorted or filtered.
 - The item's streaming row shows only the services in Settings `owned_streaming_services` (`filterOwnedPlatforms`); the streaming editor still lists every service. Empty = all.
 - Pasting an image file while an item's detail page is open opens the image dialog and uploads through the normal path.
