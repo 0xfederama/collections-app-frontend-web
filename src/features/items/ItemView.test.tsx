@@ -774,7 +774,7 @@ describe('F-028 W1 item page: TMDB details', () => {
     const genres = await screen.findByRole('list', { name: 'Genres' })
     expect(within(genres).getByText('Crime')).toBeInTheDocument()
     expect(within(genres).getByText('Thriller')).toBeInTheDocument()
-    expect(screen.getByText('TMDB score 7.9 /10 · 1,234 votes')).toBeInTheDocument()
+    expect(screen.getByText('TMDB score 7.9 (1,234 votes)')).toBeInTheDocument()
   })
 
   it('F-028 W1 shows neither genres nor a score when the item has none', async () => {

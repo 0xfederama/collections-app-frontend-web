@@ -62,11 +62,11 @@ describe('F-028 W1 TMDB score', () => {
 
 describe('F-028 W1 TMDB score text', () => {
   it.each<[string, { rating: number; votes: number | null }, string]>([
-    ['with a count', { rating: 7.4, votes: 1234 }, 'TMDB score 7.4 /10 · 1,234 votes'],
-    ['without a count', { rating: 7.4, votes: null }, 'TMDB score 7.4 /10'],
-    ['one decimal, whole ratings too', { rating: 8, votes: 5 }, 'TMDB score 8.0 /10 · 5 votes'],
-    ['a single vote', { rating: 9.25, votes: 1 }, 'TMDB score 9.3 /10 · 1 vote'],
-    ['zero votes', { rating: 6, votes: 0 }, 'TMDB score 6.0 /10 · 0 votes'],
+    ['with a count', { rating: 7.4, votes: 1234 }, 'TMDB score 7.4 (1,234 votes)'],
+    ['without a count', { rating: 7.4, votes: null }, 'TMDB score 7.4'],
+    ['one decimal, whole ratings too', { rating: 8, votes: 5 }, 'TMDB score 8.0 (5 votes)'],
+    ['a single vote', { rating: 9.25, votes: 1 }, 'TMDB score 9.3 (1 vote)'],
+    ['zero votes', { rating: 6, votes: 0 }, 'TMDB score 6.0 (0 votes)'],
   ])('formats the score %s', (_name, score, expected) => {
     expect(formatTmdbScore(score, 'en-US')).toBe(expected)
   })

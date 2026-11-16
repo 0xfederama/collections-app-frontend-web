@@ -23,12 +23,12 @@ describe('F-028 W1 TMDB details on the item page', () => {
 
   it('states the TMDB score as readable text with the vote count', () => {
     renderDetails({ tmdb_rating: 7.4, tmdb_vote_count: 1234 })
-    expect(screen.getByText(/^TMDB score 7\.4 \/10 · 1,234 votes$/)).toBeInTheDocument()
+    expect(screen.getByText(/^TMDB score 7\.4 \(1,234 votes\)$/)).toBeInTheDocument()
   })
 
   it('shows the score without a count when the item has none', () => {
     renderDetails({ tmdb_rating: 8 })
-    expect(screen.getByText('TMDB score 8.0 /10')).toBeInTheDocument()
+    expect(screen.getByText('TMDB score 8.0')).toBeInTheDocument()
   })
 
   it('shows the genres and no score when there is no rating', () => {

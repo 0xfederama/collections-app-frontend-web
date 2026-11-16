@@ -55,7 +55,7 @@ export function tmdbScore(item: Pick<Item, 'metadata'>): TmdbScore | null {
 }
 
 /**
- * The line shown under the genres: `TMDB score 7.4 /10 · 1,234 votes` (the count only when known).
+ * The line shown under the genres: `TMDB score 7.4 (1,234 votes)` (the count only when known).
  * `locale` is for tests; the app passes `undefined` (the user's language).
  */
 export function formatTmdbScore(score: TmdbScore, locale?: string): string {
@@ -63,8 +63,8 @@ export function formatTmdbScore(score: TmdbScore, locale?: string): string {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   })
-  const base = `TMDB score ${rating} /10`
+  const base = `TMDB score ${rating}`
   if (score.votes === null) return base
   const votes = score.votes.toLocaleString(locale)
-  return `${base} · ${votes} ${score.votes === 1 ? 'vote' : 'votes'}`
+  return `${base} (${votes} ${score.votes === 1 ? 'vote' : 'votes'})`
 }
