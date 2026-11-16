@@ -6,7 +6,6 @@ import { ApiError, errorMessage, NetworkError } from '../../../lib/api'
 import { contentKeys, itemKeys } from '../../../data/keys'
 import { findUser, UserMark, useUsers } from '../../account'
 
-// TODO(api-v4.3.0): read `entry.origin` directly after `npm run api:sync`.
 /** F-028: a version the lookup wrote (the provider's summary), which has no author. */
 const isLookupVersion = (entry: object): boolean => 'origin' in entry && entry.origin === 'lookup'
 import type { ItemContent } from '../api'

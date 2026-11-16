@@ -1,9 +1,7 @@
 import type { Item } from './api'
 
-// TODO(api-v4.3.0): the backend contract for these keys is not published yet (F-028). Assumed:
-// `metadata.genres: string[]` (TMDB genre names in the metadata language), `metadata.tmdb_rating: number | null`
-// (TMDB `vote_average`, 0-10) and `metadata.tmdb_vote_count: number | null`. Every read of these keys is in this
-// file; once api:sync lands, check the names and drop this note.
+// F-028 (api-v4.3.0, D-162): lookup-owned `genres` (string[]), `tmdb_rating` (0-10, absent under ten votes) and
+// `tmdb_vote_count` in movie/TV metadata. Every read of these keys is in this file.
 
 /** Imported-only keys (F-028): provider data the user never adds, edits or lists as a type field. */
 const IMPORTED_ONLY_KEYS: readonly string[] = ['genres', 'tmdb_rating', 'tmdb_vote_count']

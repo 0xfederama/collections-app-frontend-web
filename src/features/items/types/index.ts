@@ -83,6 +83,14 @@ export function formatField(field: TypeField, value: unknown): string | null {
       return value
     case 'link':
       return typeof value === 'string' && value.trim() ? value : null
+    case 'text_list': {
+      // Lookup-owned (F-028 `genres`); `useTypes` hides it, so this is only a safe fallback.
+      if (!Array.isArray(value)) return null
+      const names = value.filter(
+        (name): name is string => typeof name === 'string' && !!name.trim(),
+      )
+      return names.length > 0 ? names.join(', ') : null
+    }
     case 'number': {
       if (typeof value !== 'number' || !Number.isFinite(value)) return null
       const presentation = BUILTIN_NUMBER_FORMAT[field.key]

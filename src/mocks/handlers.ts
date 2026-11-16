@@ -31,10 +31,4 @@ const specHandlers = Object.values(exampleResponses).map((example) =>
   http[example.method](toMswPath(example.path), () => respond(example)),
 )
 
-// `GET /lists/{id}/genres` (F-028 W3, api-v4.3.0) is not in the vendored spec, so it has no example:
-// an empty answer keeps the genre filter hidden in tests that do not serve genres themselves.
-const genresDefault = http.get(toMswPath('/api/v1/lists/:id/genres'), () =>
-  HttpResponse.json({ genres: [] }),
-)
-
-export const handlers = [...specHandlers, genresDefault]
+export const handlers = specHandlers

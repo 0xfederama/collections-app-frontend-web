@@ -514,6 +514,14 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       updated_by_user_id: OWNER_USER_ID,
     },
   },
+  listGenres: {
+    method: 'get',
+    path: '/api/v1/lists/{id}/genres',
+    status: 200,
+    contentType: 'application/json',
+    // Empty, so the genre filter stays hidden in tests that do not serve genres themselves (F-028).
+    body: { genres: [] },
+  },
   listItems: {
     method: 'get',
     path: '/api/v1/lists/{id}/items',
