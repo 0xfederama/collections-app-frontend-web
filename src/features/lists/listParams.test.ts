@@ -115,6 +115,7 @@ describe('listParams', () => {
       sort: null,
       q: '',
       availability: null,
+      genres: [],
       ...expected,
     })
   })
@@ -130,6 +131,7 @@ describe('listParams', () => {
       filterMin: null,
       filterMax: null,
       availability: null,
+      genres: [],
     })
   })
 
@@ -168,5 +170,62 @@ describe('?sort= with a key the type does not define', () => {
 
   it('supportedSorts lists the type fields only', () => {
     expect(supportedSorts(movie)).toEqual(new Set(['manual', 'title', 'updated', 'director']))
+  })
+})
+
+const streamingDefinition = (fields: TypeDefinition['fields'] = []) =>
+  ({
+    key: 'movie',
+    allows_price: false,
+    fields: [{ key: 'streaming', type: 'streaming' }, ...fields],
+  }) as unknown as TypeDefinition
+
+const bookDefinition = {
+  key: 'book',
+  allows_price: true,
+  fields: [{ key: 'stores', type: 'stores' }],
+} as unknown as TypeDefinition
+
+describe('F-028 W2 rating sort', () => {
+  it.each([
+    ['a movie or TV list (streaming field)', streamingDefinition(), 'rating'],
+    ['a book list', bookDefinition, null],
+    ['no definition yet', undefined, null],
+  ])('resolveSortOverride keeps ?sort=rating on %s only', (_name, def, expected) => {
+    expect(resolveSortOverride('rating', def)).toBe(expected)
+  })
+
+  it('supportedSorts lists rating only where TMDB data exists', () => {
+    expect(supportedSorts(streamingDefinition())).toContain('rating')
+    expect(supportedSorts(bookDefinition)).not.toContain('rating')
+  })
+
+  it('buildItemsParams sends sort=rating when the override is rating', () => {
+    expect(
+      buildItemsParams({
+        sortOverride: 'rating',
+        q: '',
+        filter: null,
+        definition: streamingDefinition(),
+      }).sort,
+    ).toBe('rating')
+  })
+})
+
+describe('F-028 W3 genres in the items query', () => {
+  it('buildItemsParams passes the chosen genres through and defaults to none', () => {
+    expect(
+      buildItemsParams({
+        sortOverride: null,
+        q: '',
+        filter: null,
+        definition: streamingDefinition(),
+        genres: ['Drama', 'Comedy'],
+      }).genres,
+    ).toEqual(['Drama', 'Comedy'])
+    expect(
+      buildItemsParams({ sortOverride: null, q: '', filter: null, definition: bookDefinition })
+        .genres,
+    ).toEqual([])
   })
 })

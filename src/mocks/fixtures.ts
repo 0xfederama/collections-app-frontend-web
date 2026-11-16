@@ -535,6 +535,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
           metadata: {
             release_year: 1999,
             runtime_minutes: 136,
+            genres: ['Action', 'Science Fiction'],
+            tmdb_rating: 8.2,
             streaming: {
               country: 'IT',
               platforms: ['Netflix', 'Prime Video'],
@@ -605,6 +607,8 @@ export const exampleResponses: Record<keyof operations, ExampleResponse> = {
       metadata: {
         release_year: 1999,
         runtime_minutes: 136,
+        genres: ['Action', 'Science Fiction'],
+        tmdb_rating: 8.2,
         imdb_url: 'https://www.imdb.com/title/tt0133093/',
         streaming: {
           country: 'IT',

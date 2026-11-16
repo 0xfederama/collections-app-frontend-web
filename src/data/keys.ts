@@ -16,6 +16,8 @@ export interface ItemsKeyParams {
   filterMax: string | null
   /** Movie and TV lists only (F-026 W4); `null` = no availability filter. */
   availability: 'available' | 'included' | null
+  /** Movie and TV lists only (F-028 W3): any-of genre names; `[]` = no genre filter. */
+  genres: string[]
 }
 
 /** Exported so other features (W-05, W-06, W-07) invalidate by key, not by string literal. */
@@ -23,6 +25,8 @@ export const listKeys = {
   detail: (listId: string) => ['lists', listId, 'detail'] as const,
   /** Prefix of every items query of a list, whatever its sort or filter. */
   items: (listId: string) => ['lists', listId, 'items'] as const,
+  /** The genres present in a list (F-028 W3); under `['lists']`, so every content write refetches it. */
+  genres: (listId: string) => ['lists', listId, 'genres'] as const,
   itemsQuery: (listId: string, params: ItemsKeyParams) =>
     [
       'lists',
@@ -35,6 +39,7 @@ export const listKeys = {
       params.filterMin,
       params.filterMax,
       params.availability,
+      params.genres,
     ] as const,
 }
 

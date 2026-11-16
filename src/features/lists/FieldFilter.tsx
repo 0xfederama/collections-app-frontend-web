@@ -4,6 +4,7 @@ import { ListFilter, X } from '../../components/ui/icons'
 import type { TypeField } from '../items'
 import { toolbarIconControl } from './toolbarStyles'
 import { AVAILABILITY_OPTIONS, availabilityLabel, type Availability } from './availability'
+import { GenreChoices, type GenreChoicesProps } from './GenreFilter'
 
 export interface FieldFilterValue {
   field: string
@@ -198,9 +199,14 @@ export function describeFieldFilter(
 }
 
 /** "+ Filter" opens the field filter in a popover; an applied filter then shows as a chip (`FieldFilterChip`). */
-export function FieldFilterMenu({ availability, ...props }: FieldFilterProps & AvailabilityProps) {
+export function FieldFilterMenu({
+  availability,
+  genres,
+  ...props
+}: FieldFilterProps & AvailabilityProps & { genres?: GenreChoicesProps }) {
   const hasFields = props.fields.some(filterable)
-  if (!hasFields && !availability) return null
+  const hasGenres = !!genres && genres.genres.length > 0
+  if (!hasFields && !availability && !hasGenres) return null
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
@@ -219,6 +225,7 @@ export function FieldFilterMenu({ availability, ...props }: FieldFilterProps & A
         >
           <div className="flex flex-col gap-3">
             {availability && <AvailabilityChoices {...availability} />}
+            {hasGenres && <GenreChoices {...genres} />}
             {hasFields && <FieldFilter {...props} />}
           </div>
         </Popover.Content>

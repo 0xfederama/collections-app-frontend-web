@@ -30,3 +30,34 @@ describe('F016-W4 sort choices', () => {
     expect(values).not.toContain('stores')
   })
 })
+
+describe('F-028 W2 rating sort choice', () => {
+  const movie: TypeDefinition = {
+    key: 'movie',
+    name: 'Movies',
+    default_icon: null,
+    allows_price: false,
+    default_sort_field: null,
+    fields: [field('director', 'text', 'Director'), field('streaming', 'streaming', 'Streaming')],
+  }
+
+  it('offers "Rating" on movie and TV lists, after the built-in sorts', () => {
+    const options = sortOptionsFor(movie)
+    expect(options.find((option) => option.value === 'rating')).toEqual({
+      value: 'rating',
+      label: 'Rating',
+    })
+    expect(options.map((option) => option.value)).toEqual([
+      'manual',
+      'title',
+      'updated',
+      'rating',
+      'director',
+      'streaming',
+    ])
+  })
+
+  it('does not offer "Rating" on a book list', () => {
+    expect(sortOptionsFor(book).map((option) => option.value)).not.toContain('rating')
+  })
+})
