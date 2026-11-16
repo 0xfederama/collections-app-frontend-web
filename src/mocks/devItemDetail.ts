@@ -13,6 +13,21 @@ const url = (path: string) => `${globalThis.location?.origin ?? ''}${path}`
 /** Stable small number from an id, to vary the sample data without randomness. */
 const seed = (id: string) => [...id].reduce((sum, ch) => (sum * 31 + ch.charCodeAt(0)) % 9973, 7)
 
+const GENRES = ['Drama', 'Crime', 'Comedy', 'Thriller', 'Science Fiction', 'Mystery']
+
+/**
+ * The TMDB data of F-028 (api-v4.3.0 assumed). Two in every nine titles have none (`n % 4 === 2`),
+ * so the item page shows its hidden state too.
+ */
+const importedFor = (n: number): Record<string, unknown> =>
+  n % 4 === 2
+    ? {}
+    : {
+        genres: [GENRES[n % GENRES.length], GENRES[(n + 2) % GENRES.length]],
+        tmdb_rating: Math.round((5 + (n % 50) / 10) * 10) / 10,
+        tmdb_vote_count: 150 + ((n * 37) % 9000),
+      }
+
 const metadataFor = (summary: Pick<ItemSummary, 'id' | 'type'>): Record<string, unknown> => {
   const n = seed(summary.id)
   const sparse = n % 5 === 0 // every fifth item has no type details at all
@@ -28,6 +43,7 @@ const metadataFor = (summary: Pick<ItemSummary, 'id' | 'type'>): Record<string, 
           platforms: ['Netflix', 'Prime Video'],
           paid_platforms: ['Prime Video'],
         },
+        ...importedFor(n),
       }
     case 'tv_show':
       return {
@@ -37,6 +53,7 @@ const metadataFor = (summary: Pick<ItemSummary, 'id' | 'type'>): Record<string, 
         episodes_per_season: 8 + (n % 5),
         episode_minutes: 45,
         streaming: { country: 'IT', platforms: ['Disney+'] },
+        ...importedFor(n),
       }
     case 'vehicle':
       return {
