@@ -94,7 +94,11 @@ function useBackend(options: Options = {}): Recorded {
       return HttpResponse.json(state.list)
     }),
     // F-028 W3: the genres the list's items carry (the endpoint is api-v4.3.0).
-    http.get(`${listUrl}/genres`, () => HttpResponse.json({ data: genresOf(state.items) })),
+    http.get(`${listUrl}/genres`, () =>
+      HttpResponse.json({
+        genres: genresOf(state.items).map((name) => ({ name, count: 1 })),
+      }),
+    ),
     http.get(itemsUrl, ({ request }) => {
       const url = new URL(request.url)
       state.itemRequests.push(url)

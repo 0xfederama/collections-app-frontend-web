@@ -8,9 +8,18 @@ export type UpdateSettingsRequest = components['schemas']['UpdateSettingsRequest
 export type TypeDefinition = components['schemas']['TypeDefinition']
 export type TypeField = components['schemas']['TypeField']
 
-// Provider bookkeeping (TMDB id, Open Library work id, lookup switch) lives in item metadata but is
-// never user-facing: not an editable field, and never sortable or filterable.
-const BOOKKEEPING_FIELDS = new Set(['tmdb_id', 'lookup_disabled', 'openlibrary_id'])
+// Provider bookkeeping (TMDB id, Open Library work id, lookup switch) and the lookup-owned F-028 fields
+// (TMDB score, votes, genres; D-162, shown by the item's TMDB details and sorted/filtered by `rating` and
+// `genre`) live in item metadata but are never type fields here: not editable, and never in the field
+// sort or filter menus.
+const BOOKKEEPING_FIELDS = new Set([
+  'tmdb_id',
+  'lookup_disabled',
+  'openlibrary_id',
+  'tmdb_rating',
+  'tmdb_vote_count',
+  'genres',
+])
 const withoutBookkeeping = (types: TypeDefinition[]): TypeDefinition[] =>
   types.map((type) => ({
     ...type,

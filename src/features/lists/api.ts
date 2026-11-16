@@ -32,14 +32,14 @@ export function useList(listId: string) {
 }
 
 /**
- * F-028 W3: the genres the list's items have, sorted (`GET /lists/{id}/genres` → `{ data: string[] }`).
+ * F-028 W3: the genres the list's items have, sorted (`GET /lists/{id}/genres` → `{ genres: { name, count }[] }`, sorted by name; api-v4.3.0).
  * It is not in the vendored spec yet, so it is called through the same client with a typed cast.
  */
 // TODO(api-v4.3.0): call `api.GET('/api/v1/lists/{id}/genres')` directly after `npm run api:sync`, and drop this cast.
 type GenresGet = (
   path: '/api/v1/lists/{id}/genres',
   init: { params: { path: { id: string } }; signal?: AbortSignal },
-) => Promise<{ data?: { data: string[] } }>
+) => Promise<{ data?: { genres: { name: string; count: number }[] } }>
 
 /** The genres of a list, for the genre filter. Only movie and TV lists ask (`enabled`). */
 export function useListGenres(listId: string, enabled: boolean) {
@@ -53,7 +53,7 @@ export function useListGenres(listId: string, enabled: boolean) {
           signal,
         }),
       )
-      return body.data
+      return body.genres.map((genre) => genre.name)
     },
   })
 }

@@ -270,7 +270,12 @@ function createItemsBackend(tree: Tree, findList: (id: string) => List | undefin
       const all = itemsOf(String(params.id))
       if (!all) return problemResponse(404, 'not_found')
       const genres = [...new Set(all.flatMap(itemGenres))].sort((a, b) => a.localeCompare(b))
-      return HttpResponse.json({ data: genres })
+      return HttpResponse.json({
+        genres: genres.map((name) => ({
+          name,
+          count: all.filter((item) => itemGenres(item).includes(name)).length,
+        })),
+      })
     }),
 
     http.put(url('/api/v1/lists/:id/items/order'), async ({ request, params }) => {
