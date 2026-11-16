@@ -66,14 +66,16 @@ export function ItemsView(props: ItemsViewProps) {
   const [announcement, setAnnouncement] = useState('')
 
   if (items.length === 0 && !props.draft) {
-    return params.q || params.filterField || params.availability ? (
+    return params.q || params.filterField || params.availability || params.genres.length > 0 ? (
       <EmptyState
         icon={Search}
         title="No items match"
         description={
           params.q
             ? `Nothing in this list has “${params.q}” in its title.`
-            : 'No items match the selected field filter.'
+            : params.filterField
+              ? 'No items match the selected field filter.'
+              : 'No items match the selected filters.'
         }
         action={
           <Button variant="secondary" onClick={props.onClearFilter}>
@@ -101,12 +103,13 @@ export function ItemsView(props: ItemsViewProps) {
     !params.q &&
     !params.filterField &&
     !params.availability &&
+    params.genres.length === 0 &&
     !hasNextPage &&
     items.length === total &&
     items.length > 1
   const hint = canReorder
     ? null
-    : params.q || params.filterField || params.availability
+    : params.q || params.filterField || params.availability || params.genres.length > 0
       ? 'Clear the filter to reorder items.'
       : hasNextPage
         ? 'Load all items to reorder them.'

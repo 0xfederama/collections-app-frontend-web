@@ -47,6 +47,10 @@ const STREAMING = [
   'Crunchyroll',
 ]
 const STORES = ['amazon', 'bookshop', 'apple_books', 'google_play_books', 'kobo']
+/** TMDB genre names, as the list's genres endpoint and the movie and TV items carry them (F-028). */
+const GENRES = ['Action', 'Comedy', 'Crime', 'Drama', 'Horror', 'Science Fiction', 'Thriller']
+/** The types whose sort by TMDB rating the server accepts (F-028 W2): movie and TV lists. */
+const RATING_TYPES = new Set<string | null>(['movie', 'tv_show'])
 const pick = <T>(pool: readonly T[], i: number, n: number) =>
   Array.from({ length: n }, (_, k) => pool[(i * 3 + k) % pool.length] as T)
 
@@ -83,7 +87,19 @@ function isAvailable(item: ItemSummary, includedOnly: boolean): boolean {
   return (streaming?.platforms ?? []).some((platform) => !paid.has(platform))
 }
 
+/** The genre names an item carries in its metadata (F-028); none on other types. */
+function itemGenres(item: ItemSummary): string[] {
+  const genres = item.metadata.genres
+  return Array.isArray(genres) ? genres.filter((g): g is string => typeof g === 'string') : []
+}
+
 /** Type fields for the pinned layout. The contract's summaries carry none yet, so the dev fake adds them. */
+/** Every sixth movie or TV item is unrated, so the rating sort's "unrated last" shows. */
+const tmdbFields = (i: number) => ({
+  genres: pick(GENRES, i, 2),
+  ...(i % 6 === 5 ? {} : { tmdb_rating: Math.round((5 + ((i * 7) % 50) / 10) * 10) / 10 }),
+})
+
 function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
   switch (type) {
     case 'movie':
@@ -94,6 +110,7 @@ function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
           platforms: pick(STREAMING, i, 5),
           paid_platforms: i % 3 ? [] : pick(STREAMING, i, 1),
         },
+        ...tmdbFields(i),
       }
     case 'tv_show':
       return {
@@ -101,6 +118,7 @@ function fakeMetadata(type: ItemType, i: number): Record<string, unknown> {
         episodes_per_season: 6 + (i % 5),
         episode_minutes: 30 + ((i * 5) % 30),
         streaming: { country: 'IT', platforms: pick(STREAMING, i + 2, 4), paid_platforms: [] },
+        ...tmdbFields(i),
       }
     case 'book':
       return {
@@ -174,6 +192,14 @@ function createItemsBackend(tree: Tree, findList: (id: string) => List | undefin
   const bySort = (sort: SortMode) => (a: ItemSummary, b: ItemSummary) => {
     if (sort === 'title') return a.title.localeCompare(b.title)
     if (sort === 'updated') return b.updated_at.localeCompare(a.updated_at)
+    if (sort === 'rating') {
+      const ra = typeof a.metadata.tmdb_rating === 'number' ? a.metadata.tmdb_rating : null
+      const rb = typeof b.metadata.tmdb_rating === 'number' ? b.metadata.tmdb_rating : null
+      if (ra === null || rb === null) {
+        if (ra !== rb) return ra === null ? 1 : -1
+      } else if (ra !== rb) return rb - ra
+      return a.title.localeCompare(b.title) || a.id.localeCompare(b.id)
+    }
     if (sort === 'price') {
       const pa = a.price ? Number(a.price.min) : null
       const pb = b.price ? Number(b.price.min) : null
@@ -212,6 +238,7 @@ function createItemsBackend(tree: Tree, findList: (id: string) => List | undefin
       if (
         !['manual', 'title', 'updated'].includes(sort) &&
         !(sort === 'price' && PRICE_TYPES.has(list.type)) &&
+        !(sort === 'rating' && RATING_TYPES.has(list.type)) &&
         !validField
       ) {
         return problemResponse(400, 'invalid_parameter')
@@ -224,15 +251,26 @@ function createItemsBackend(tree: Tree, findList: (id: string) => List | undefin
       if (availability && !['available', 'included'].includes(availability)) {
         return problemResponse(400, 'invalid_parameter')
       }
+      // Any-of genre match (F-028 W3); combines with `q` and availability.
+      const genres = query.getAll('genre')
       const matching = all
         .filter((item) => item.title.toLowerCase().includes(q))
         .filter((item) => !availability || isAvailable(item, availability === 'included'))
+        .filter((item) => genres.length === 0 || itemGenres(item).some((g) => genres.includes(g)))
         .map((item) => ({ ...item, type: list.type }))
         .sort(bySort(sort))
       return HttpResponse.json({
         data: matching.slice(offset, offset + limit),
         page: { limit, offset, total: matching.length },
       })
+    }),
+
+    // Sorted genre names of the list's items (F-028 W3, api-v4.3.0).
+    http.get(url('/api/v1/lists/:id/genres'), ({ params }) => {
+      const all = itemsOf(String(params.id))
+      if (!all) return problemResponse(404, 'not_found')
+      const genres = [...new Set(all.flatMap(itemGenres))].sort((a, b) => a.localeCompare(b))
+      return HttpResponse.json({ data: genres })
     }),
 
     http.put(url('/api/v1/lists/:id/items/order'), async ({ request, params }) => {

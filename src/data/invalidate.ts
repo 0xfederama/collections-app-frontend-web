@@ -28,12 +28,14 @@ export function invalidateContent(queryClient: QueryClient) {
 
 /**
  * A write on one item that changes its title or status but not where it is (`PATCH`): its list,
- * the tree counts, search results and Home "Recently updated". The trash and the other lists are
- * left alone (a broad `['items']` refetch would overwrite the PATCH answer, see `useUpdateItem`).
+ * the tree counts, the list's genres (F-028), search results and Home "Recently updated". The trash
+ * and the other lists are left alone (a broad `['items']` refetch would overwrite the PATCH answer,
+ * see `useUpdateItem`).
  */
 export function invalidateItemWrite(queryClient: QueryClient, listId: string) {
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: listKeys.items(listId) }),
+    queryClient.invalidateQueries({ queryKey: listKeys.genres(listId) }),
     queryClient.invalidateQueries({ queryKey: listKeys.detail(listId) }),
     queryClient.invalidateQueries({ queryKey: treeKeys.tree }),
     queryClient.invalidateQueries({ queryKey: searchKeys.all }),

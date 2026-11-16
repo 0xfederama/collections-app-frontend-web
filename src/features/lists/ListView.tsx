@@ -17,6 +17,8 @@ import {
 import { listKeys } from '../../data/keys'
 import { NEW_ITEM_ID, typeDefinition } from '../items'
 import { useTypes } from '../settings'
+import { supportsTmdbData } from './tmdb'
+import { useGenreFilter } from './useGenreFilter'
 import { ItemsView } from './ItemsView'
 import { ItemsSkeleton } from './ItemsSkeleton'
 import { ListHeader } from './ListHeader'
@@ -61,12 +63,16 @@ export function ListView({ treeList }: { treeList: List }) {
       void client.invalidateQueries({ queryKey: listKeys.detail(listId) })
     }
   }, [client, listId, treeVersion])
+  // Movie and TV lists only (F-028 W3): the genres the list has, and the chosen ones.
+  const tmdb = supportsTmdbData(definition)
+  const genreFilter = useGenreFilter(listId, tmdb)
   const params = buildItemsParams({
     sortOverride,
     q,
     filter: fieldFilter,
     definition,
     availability,
+    genres: genreFilter.selected,
   })
   const itemsQuery = useListItems(listId, params)
   const { items, total } = flattenItems(itemsQuery.data)
@@ -177,6 +183,7 @@ export function ListView({ treeList }: { treeList: List }) {
     setFilter('')
     setFieldFilter(null)
     setAvailability(null)
+    genreFilter.setSelected([])
   }
   // F008-W9: "New item" opens the draft item page; the draft row shows while that route is open.
   const navigate = useNavigate()
@@ -218,7 +225,8 @@ export function ListView({ treeList }: { treeList: List }) {
   }
 
   const mode = list?.display_mode ?? 'grid'
-  const filtered = q !== '' || activeFilter !== null || availability !== null
+  const filtered =
+    q !== '' || activeFilter !== null || availability !== null || genreFilter.selected.length > 0
   const countLabel = !list
     ? ''
     : filtered && itemsQuery.isSuccess
@@ -260,6 +268,15 @@ export function ListView({ treeList }: { treeList: List }) {
         onFieldFilter={setFieldFilter}
         availability={availability}
         onAvailability={setAvailability}
+        genreFilter={
+          tmdb
+            ? {
+                genres: genreFilter.genres ?? [],
+                value: genreFilter.selected,
+                onChange: genreFilter.setSelected,
+              }
+            : undefined
+        }
         onAddItem={addItem}
         menuExtras={menuExtras}
       />

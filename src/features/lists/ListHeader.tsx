@@ -22,6 +22,8 @@ import {
   type FieldFilterValue,
 } from './FieldFilter'
 import { supportsAvailability, type Availability } from './availability'
+import { supportsTmdbData } from './tmdb'
+import { GenreChips, type GenreChoicesProps } from './GenreFilter'
 
 const baseSortOptions: SelectOption[] = [
   { value: 'manual', label: 'Manual' },
@@ -34,6 +36,8 @@ export function sortOptionsFor(definition: TypeDefinition): SelectOption[] {
   return [
     ...baseSortOptions,
     ...(hasPrice(definition) ? [{ value: 'price', label: 'Price' }] : []),
+    // The TMDB score, movie and TV lists only (F-028 W2); the server sorts it, unrated last.
+    ...(supportsTmdbData(definition) ? [{ value: 'rating', label: 'Rating' }] : []),
     // A stores field holds a list of store keys, which has no order to sort by (F016-W4).
     ...definition.fields
       .filter((field) => field.type !== 'stores')
@@ -68,6 +72,8 @@ export interface ListHeaderProps {
   /** The applied availability choice; changing it is offered on movie and TV lists only (F-026 W4). */
   availability: Availability | null
   onAvailability: (value: Availability | null) => void
+  /** Movie and TV lists only (F-028 W3): the genres the list has (`null` hides the genre filter) and the chosen ones. */
+  genreFilter?: GenreChoicesProps
   onAddItem: () => void
   /** Type-specific entries for the "…" menu (the movie extras, roadmap 36). */
   menuExtras?: MenuItem[]
@@ -179,6 +185,7 @@ export function ListHeader(props: ListHeaderProps) {
                 ? { value: props.availability, onChange: props.onAvailability }
                 : undefined
             }
+            genres={props.genreFilter}
           />
           {/* Like "+ Filter": an icon button, the active sort is checked inside its menu (F-025 W8). */}
           <SortMenu
@@ -201,6 +208,7 @@ export function ListHeader(props: ListHeaderProps) {
         </div>
         {(describeFieldFilter(props.definition.fields, props.fieldFilter) ||
           props.availability ||
+          (props.genreFilter?.value.length ?? 0) > 0 ||
           props.canMakeDefault) && (
           <div className="mt-2 flex flex-wrap gap-2">
             {props.canMakeDefault && (
@@ -216,6 +224,9 @@ export function ListHeader(props: ListHeaderProps) {
               onChange={props.onFieldFilter}
             />
             <AvailabilityChip value={props.availability} onChange={props.onAvailability} />
+            {props.genreFilter && (
+              <GenreChips value={props.genreFilter.value} onChange={props.genreFilter.onChange} />
+            )}
           </div>
         )}
       </div>
