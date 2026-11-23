@@ -164,6 +164,7 @@ function DetailPanel({ listId, search }: { listId: string | undefined; search: s
   return (
     <aside
       aria-label="Item details"
+      aria-keyshortcuts="ArrowUp ArrowDown"
       className="m-3.5 ml-0 flex w-[420px] shrink-0 animate-drawer-in-right flex-col overflow-hidden rounded-xl material-strong shadow-sheet"
     >
       <div className="flex shrink-0 justify-end px-2 pt-2">

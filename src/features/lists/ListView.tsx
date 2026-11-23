@@ -31,6 +31,7 @@ import { useDebouncedFilter } from './useDebouncedFilter'
 import { movieMenuItems } from './movieExtras'
 import { useRandomPick } from './useRandomPick'
 import { useShareList } from './useShareList'
+import { useItemArrowNav } from './useItemArrowNav'
 
 /**
  * The list screen in the shell. URL state (UI_SPEC §1, D-063): `?q=` is the title
@@ -91,6 +92,7 @@ export function ListView({ treeList }: { treeList: List }) {
       onPick: randomPick.pick,
     }),
   ]
+  const arrowAnnouncer = useItemArrowNav(items, listId, search)
 
   const [filter, setFilter] = useDebouncedFilter(q, setSearchParams)
 
@@ -287,6 +289,7 @@ export function ListView({ treeList }: { treeList: List }) {
         menuExtras={menuExtras}
       />
       {share.dialog}
+      {arrowAnnouncer}
       {randomPick.banner}
       {randomPick.status}
       {itemsQuery.isError ? (
