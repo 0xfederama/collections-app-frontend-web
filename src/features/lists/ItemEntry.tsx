@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { cx } from '../../lib/cx'
 import type { DisplayMode, ItemSummary } from './api'
 import { ItemThumb } from './ItemThumb'
@@ -72,6 +72,8 @@ function EntryRow({
   press: ReturnType<typeof useLongPress>
 }) {
   const to = { pathname: `/lists/${item.list_id}/items/${item.id}`, search }
+  // The open item (route param) is marked, so arrow-key navigation shows where it is.
+  const current = useParams().itemId === item.id
   const slots = { item, definition }
   // F009-W3 / F016-W3: one pin reads next to the title, two add one in the right corner, three put
   // the first two next to the title and the third in the corner.
@@ -86,6 +88,7 @@ function EntryRow({
     <Link
       to={to}
       onClick={onOpen}
+      aria-current={current ? 'true' : undefined}
       className={cx(linkClass, mode === 'grid' ? 'line-clamp-2' : 'truncate')}
     >
       {item.title}
@@ -95,6 +98,7 @@ function EntryRow({
   const shell = cx(
     'group/entry relative list-none [-webkit-touch-callout:none] pointer-coarse:select-none',
     surface,
+    'has-[a[aria-current=true]]:border-accent has-[a[aria-current=true]]:bg-accent-tint',
     reorder?.isDragging && 'z-20 shadow-lg ring-2 ring-focus-ring',
     // The random pick (roadmap 36) sets `data-picked` for a moment.
     'transition-shadow duration-500 motion-reduce:transition-none data-[picked]:ring-2 data-[picked]:ring-accent',
