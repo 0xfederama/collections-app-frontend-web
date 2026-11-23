@@ -38,6 +38,7 @@ export default defineConfig({
         '**/24-mobile-adds-sort.spec.ts',
         '**/26-movie-extras.spec.ts',
         '**/27-all-items.spec.ts',
+        '**/28-share-list.spec.ts',
       ],
       use: { ...devices['iPhone 15'] },
     },
