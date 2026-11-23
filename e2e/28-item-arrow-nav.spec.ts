@@ -13,7 +13,7 @@ test.describe('roadmap 40 arrow keys between items', () => {
   }) => {
     const list = await createList(request, uniqueName('Arrows'), null)
     const titles = ['Alpha one', 'Bravo two', 'Charlie three']
-    const created = []
+    const created: { id: string }[] = []
     for (const title of titles) created.push(await createItem(request, list.id, title))
     const urlOf = (index: number) => new RegExp(`/lists/${list.id}/items/${created[index]!.id}$`)
 
