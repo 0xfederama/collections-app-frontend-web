@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { RouterProvider } from 'react-router/dom'
 import { createTestRouter } from '../../app/router'
 import { ToastProvider } from '../../components/ui'
@@ -1948,5 +1948,54 @@ describe('F-028 W3 genre filter', () => {
     await waitFor(() => expect(router.state.location.search).toBe(''))
     // The list element can be replaced while the view settles, so wait on its content.
     await waitFor(() => expect(titles()).toEqual(['Heat', 'Up', 'Alien']))
+  })
+})
+
+describe('roadmap 40 share in the list menu', () => {
+  const openMenu = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(
+      within(screen.getByRole('main')).getByRole('button', { name: /More actions for/ }),
+    )
+  }
+  const stubShare = (share: ((data: { text: string }) => Promise<void>) | undefined) =>
+    Object.defineProperty(navigator, 'share', { value: share, configurable: true })
+
+  it('shares the shown items (filtered, in order) and has the Refresh icon', async () => {
+    const share = vi.fn().mockResolvedValue(undefined)
+    stubShare(share)
+    useBackend({
+      items: [makeItem(1, { title: 'Beta 🎬' }), makeItem(2, { title: 'Alpha' })],
+    })
+    const user = userEvent.setup()
+    renderList(at('?q=Beta'))
+    await itemsList()
+    await openMenu(user)
+    await user.click(await screen.findByRole('menuitem', { name: /^Share/ }))
+    await waitFor(() => expect(share).toHaveBeenCalledWith({ text: '* Beta 🎬' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    stubShare(undefined)
+  })
+
+  it('opens the copy dialog without navigator.share', async () => {
+    stubShare(undefined)
+    useBackend({ items: [makeItem(1, { title: 'Solo' })] })
+    const user = userEvent.setup()
+    renderList(at())
+    await itemsList()
+    await openMenu(user)
+    await user.click(await screen.findByRole('menuitem', { name: /^Share/ }))
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByRole('textbox')).toHaveValue('* Solo')
+  })
+
+  it('disables Share when nothing is shown', async () => {
+    useBackend({ items: [] })
+    const user = userEvent.setup()
+    renderList(at())
+    await screen.findByRole('heading', { level: 1 })
+    await openMenu(user)
+    const share = await screen.findByRole('menuitem', { name: /^Share/ })
+    expect(share).toHaveAttribute('aria-disabled', 'true')
+    expect(share).toHaveTextContent('Nothing to share')
   })
 })

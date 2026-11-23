@@ -24,6 +24,11 @@ describe('F025-W11 Refresh details in the list menu', () => {
     expect(refreshItem()).toBeInTheDocument()
   })
 
+  it('roadmap 40: has the refresh icon', async () => {
+    await openMenu(ID.watchlist)
+    expect(refreshItem()?.querySelector('svg.lucide-refresh-cw')).toBeInTheDocument()
+  })
+
   it('is offered for a TV list with items', async () => {
     await openMenu('7c1e5a10-0000-4000-8000-000000000014')
     expect(refreshItem()).toBeInTheDocument()

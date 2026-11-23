@@ -1,4 +1,5 @@
 import { type MenuItem } from '../../components/ui'
+import { RefreshCw } from '../../components/ui/icons'
 import { typeToValue, valueToType } from '../items'
 import { useTreeDialogs } from './useTreeDialogs'
 import { NodeMenu } from './NodeMenu'
@@ -13,7 +14,7 @@ import { useRefreshDetails } from './useRefreshDetails'
  * The icon is changed from the header icon button (F018-W1), not from here.
  * It owns its dialogs, so it works outside the sidebar. After a delete it navigates home when
  * that list was open. Type lives here (F008-W5); a change on a list with items asks first.
- * `extra` entries (the movie extras, roadmap 36) go after Type, in their own group.
+ * `extra` entries (Share, roadmap 40, and the movie extras, roadmap 36) go after Type, in their own group.
  */
 export function ListActionsMenu({ list, extra = [] }: { list: List; extra?: MenuItem[] }) {
   const { actions, dialogs } = useTreeDialogs()
@@ -33,6 +34,7 @@ export function ListActionsMenu({ list, extra = [] }: { list: List; extra?: Menu
       ? ([
           {
             label: 'Refresh details',
+            icon: <RefreshCw />,
             disabled: refresh.pending,
             onSelect: () => void refresh.run(),
           },

@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.7.0 — 2026-11-23
+
+Contract unchanged (`api-v4.3.0`). Roadmap 40, D-167.
+
+### Added
+
+- Share a list as text: "Share" in the list's "…" menu writes the titles the list shows (its current sort, search and filters) as `* Title` lines and opens the system share sheet, so on iOS you can copy it or send it to WhatsApp. Where the browser has no share sheet (for example on plain http, such as `http://raspberrypi.local`) or sharing fails, a dialog shows the text with a Copy button. An empty list or view has nothing to share.
+- Desktop (≥ 1280 px, item open beside the list): ↑ and ↓ open the previous and next item of the list as shown, stopping at the first and last; the open row is highlighted and announced to screen readers. The keys are ignored while typing, in menus and dialogs, and with a modifier held.
+
+### Changed
+
+- "Refresh details" in the list menu has a refresh icon.
+
 ## 3.6.1 — 2026-11-16
 
 Contract unchanged (`api-v4.3.0`). Roadmap 39, D-166.
