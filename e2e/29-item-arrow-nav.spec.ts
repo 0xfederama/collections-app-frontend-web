@@ -15,7 +15,8 @@ test.describe('roadmap 40 arrow keys between items', () => {
     const titles = ['Alpha one', 'Bravo two', 'Charlie three']
     const created: { id: string }[] = []
     for (const title of titles) created.push(await createItem(request, list.id, title))
-    const urlOf = (index: number) => new RegExp(`/lists/${list.id}/items/${created[index]!.id}$`)
+    const urlOf = (index: number) =>
+      new RegExp(`/lists/${list.id}/items/${created[index]!.id}(\\?|$)`)
 
     await page.goto(`/lists/${list.id}?sort=title`)
     await page.getByRole('link', { name: 'Bravo two' }).click()

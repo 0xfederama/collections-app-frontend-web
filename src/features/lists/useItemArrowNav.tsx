@@ -11,6 +11,15 @@ const OPEN_LAYER =
 /** dnd-kit marks the row it is dragging; the item list's own keyboard drag uses the arrows. */
 const DRAGGING = '[data-dnd-dragging]'
 
+/** The item id in the address bar when it shows an item of this list. */
+function openItemId(listId: string): string | undefined {
+  const prefix = `/lists/${listId}/items/`
+  const { pathname } = window.location
+  return pathname.startsWith(prefix)
+    ? decodeURIComponent(pathname.slice(prefix.length).split('/')[0] ?? '') || undefined
+    : undefined
+}
+
 const reducedMotion = () =>
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -42,11 +51,14 @@ export function useItemArrowNav(
       if (event.defaultPrevented) return
       if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return
       const current = latest.current
-      if (!current.wide || !current.itemId || current.itemId === NEW_ITEM_ID) return
+      // The URL, not the last render: a press can come before the router re-renders (and the
+      // announcement's own re-render would otherwise restore the previous item id).
+      const itemId = openItemId(current.listId) ?? current.itemId
+      if (!current.wide || !itemId || itemId === NEW_ITEM_ID) return
       const target = event.target as Element | null
       if (target?.closest?.(OWNS_ARROWS)) return
       if (document.querySelector(`${OPEN_LAYER}, ${DRAGGING}`)) return
-      const index = current.items.findIndex((item) => item.id === current.itemId)
+      const index = current.items.findIndex((item) => item.id === itemId)
       if (index === -1) return
       const next = current.items[index + (event.key === 'ArrowDown' ? 1 : -1)]
       event.preventDefault()
